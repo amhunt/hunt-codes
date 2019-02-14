@@ -1,6 +1,7 @@
 .App {
   text-align: left;
   height: 100vh;
+  overflow: hidden;
   cursor: url(https://s3-us-west-2.amazonaws.com/hunt.codes/cursor.png), pointer;
 }
 
@@ -14,22 +15,64 @@
   animation-duration: 4s;
 }
 
+#balloons {
+  margin: 1em auto;
+  -webkit-perspective: 1200px;
+  -moz-perspective: 1200px;
+  -ms-perspective: 1200px;
+  perspective: 1200px;
+}
+
+@-webkit-keyframes spinner {
+  from { -webkit-transform: rotateY(0deg);    }
+  to   { -webkit-transform: rotateY(-360deg); }
+}
+
+@keyframes spinner {
+  from {
+    -moz-transform: rotateY(0deg);
+    -ms-transform: rotateY(0deg);
+    transform: rotateY(0deg);
+  }
+  to {
+    -moz-transform: rotateY(-360deg);
+    -ms-transform: rotateY(-360deg);
+    transform: rotateY(-360deg);
+  }
+}
+
+#spinner {
+  -webkit-animation-name: spinner;
+  -webkit-animation-timing-function: linear;
+  -webkit-animation-iteration-count: infinite;
+  -webkit-animation-duration: 6s;
+
+  animation-name: spinner;
+  animation-timing-function: linear;
+  animation-iteration-count: infinite;
+  animation-duration: 6s;
+
+  -webkit-transform-style: preserve-3d;
+  -moz-transform-style: preserve-3d;
+  -ms-transform-style: preserve-3d;
+  transform-style: preserve-3d;
+}
+
 .App-transamerica {
-  position: absolute;
-  bottom: -40px;
+  position: fixed;
+  bottom: 0;
   right: 15vw;
   height: 30vh;
   opacity: 0;
-  transition: opacity 1s, bottom 1s;
+  transition: opacity 1s;
 }
 
 .App-transamerica-opaque {
   opacity: 100;
-  bottom: 0;
 }
 
 .App-gg-bridge {
-  position: absolute;
+  position: fixed;
   bottom: 0;
   right: -350px;
   height: 40vh;
@@ -44,7 +87,7 @@
 }
 
 .App-name {
-  right: 20vw;
+  left: 50vw;
   top: 45vh;
   position: absolute;
   font-weight: 600;
@@ -92,6 +135,29 @@ a:hover {
   to {
     color: yellow;
   }
+}
+
+.App-background2 {
+  height: 100vh;
+  background: linear-gradient(
+    196deg,
+    hsla(210, 100%, 45.1%, 0) 0%,
+    hsla(210, 100%, 45.1%, 0.007) 9.3%,
+    hsla(210, 100%, 45.1%, 0.027) 17.9%,
+    hsla(210, 100%, 45.1%, 0.058) 26%,
+    hsla(210, 100%, 45.1%, 0.098) 33.5%,
+    hsla(210, 100%, 45.1%, 0.145) 40.6%,
+    hsla(210, 100%, 45.1%, 0.197) 47.3%,
+    hsla(210, 100%, 45.1%, 0.252) 53.7%,
+    hsla(210, 100%, 45.1%, 0.308) 59.8%,
+    hsla(210, 100%, 45.1%, 0.363) 65.7%,
+    hsla(210, 100%, 45.1%, 0.415) 71.4%,
+    hsla(210, 100%, 45.1%, 0.462) 77.1%,
+    hsla(210, 100%, 45.1%, 0.502) 82.7%,
+    hsla(210, 100%, 45.1%, 0.533) 88.3%,
+    hsla(210, 100%, 45.1%, 0.553) 94.1%,
+    hsla(210, 100%, 45.1%, 0.56) 100%
+  );
 }
 
 .App-background {

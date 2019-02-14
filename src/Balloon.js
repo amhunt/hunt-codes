@@ -1,4 +1,5 @@
 import React, { Component } from 'react';
+
 import './App.css';
 
 const letters = '0123456789ABCDEF';
@@ -28,26 +29,24 @@ class Balloon extends Component {
     if (!this.props.hovered) {
       this.setState({ strokeColor: getRandomColor() });
     }
-    setTimeout(this.changeColor, 200);
+    setTimeout(this.changeColor, 30);
   }
 
   render() {
-    const { instanceNum, hovered, paddingLeft, rotateVal } = this.props;
+    const { hovered, paddingLeft } = this.props;
     const { strokeColor } = this.state;
     return (
       <svg
         width="167px"
         height="450px"
         style={{
-          transition: '10s',
           position: 'absolute',
-          transform: `rotate3d(0, 1, 0, ${rotateVal}deg)`,
           overflow: 'visible',
           left: paddingLeft,
         }}
         viewBox="0 0 167 450"
         version="1.1"
-        id={`balloon-${instanceNum}`}
+        id="spinner"
         xmlns="http://www.w3.org/2000/svg"
       >
         <title>balloon</title>
