@@ -50,7 +50,7 @@ class Balloon extends Component {
         xmlns="http://www.w3.org/2000/svg"
       >
         <title>balloon</title>
-        <g stroke="none" strokeWidth={hovered ? 5 : 3} fill="none" fillRule="evenodd">
+        <g stroke="none" strokeWidth={hovered ? 15 : 10} fill="none" fillRule="evenodd">
           <g
             id="balloon"
             className="App-logo"

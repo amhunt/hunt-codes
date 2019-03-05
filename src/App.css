@@ -86,14 +86,25 @@
   opacity: 100;
 }
 
-.App-name {
+.App-info {
   left: 50vw;
-  top: 45vh;
+  top: 50%;
   position: absolute;
   font-weight: 600;
   font-size: 28px;
   color: #4a4a4a;
   z-index: 2;
+}
+
+@media (max-width: 600px) {
+  .App-info {
+    left: 20px;
+    bottom: 10px;
+    top: auto;
+  }
+  .App-balloon {
+    top: 20px;
+  }
 }
 
 button {

@@ -17,22 +17,14 @@ const typedOptions = {
   loop: true,
 };
 
+const NUM_BALLONS = 3;
+
 class App extends Component {
-  constructor(props) {
-    super(props);
-
-    this.state = {
-      sfCount: 0,
-      hovered: false,
-      numBalloons: 3,
-      clickCount: 0,
-    };
-
-    this.handleSFPress = this.handleSFPress.bind(this);
-    this.onMouseEnter = this.onMouseEnter.bind(this);
-    this.onMouseLeave = this.onMouseLeave.bind(this);
-    this.handleBalloonClick = this.handleBalloonClick.bind(this);
-  }
+  state = {
+    sfCount: 0,
+    hovered: false,
+    clickCount: 0,
+  };
 
   componentDidMount() {
     const balloon = document.getElementById('balloons');
@@ -41,35 +33,34 @@ class App extends Component {
     this.typed = new Typed(this.el, typedOptions);
   }
 
-  handleSFPress() {
+  handleSFPress = () => {
     this.setState(({ sfCount }) => ({ sfCount: (sfCount + 1) % 3 }));
   }
 
-  handleBalloonClick() {
+  handleBalloonClick = () => {
     this.setState(({ clickCount }) => ({
-      numBalloons: Math.floor(Math.random() * Math.floor(5) + 1),
       clickCount: clickCount + 1,
     }));
   }
 
-  onMouseEnter() {
+  onMouseEnter = () => {
     this.setState({ hovered: true });
   }
 
-  onMouseLeave() {
+  onMouseLeave = () => {
     this.setState({ hovered: false });
   }
 
   render() {
-    const { sfCount, numBalloons, clickCount } = this.state;
-    const balloonArr = new Array(numBalloons).fill(0);
+    const { sfCount, clickCount } = this.state;
+    const balloonArr = new Array(NUM_BALLONS).fill(0);
     return (
       <div className="App App-background">
         <div className="App-background App-background2">
           <div
             id="balloons"
             onClick={this.handleBalloonClick}
-            style={{ left: `${15 + numBalloons}vw` }}
+            style={{ left: '30vw' }}
             className="App-balloon"
           >
             {balloonArr.map((_, index) => (
@@ -81,7 +72,7 @@ class App extends Component {
               />
             ))}
           </div>
-          <div className="App-name">
+          <div className="App-info">
             <p>
               <a
                 target="_blank"
