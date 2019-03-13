@@ -1,8 +1,8 @@
 .App {
-  text-align: left;
+  cursor: url(https://s3-us-west-2.amazonaws.com/hunt.codes/cursor.png), pointer;
   height: 100vh;
   overflow: hidden;
-  cursor: url(https://s3-us-west-2.amazonaws.com/hunt.codes/cursor.png), pointer;
+  text-align: left;
 }
 
 .App-balloon {
@@ -24,8 +24,12 @@
 }
 
 @-webkit-keyframes spinner {
-  from { -webkit-transform: rotateY(0deg);    }
-  to   { -webkit-transform: rotateY(-360deg); }
+  from {
+    -webkit-transform: rotateY(0deg);
+  }
+  to {
+    -webkit-transform: rotateY(-360deg);
+  }
 }
 
 @keyframes spinner {
@@ -87,11 +91,12 @@
 }
 
 .App-info {
-  left: 50vw;
-  top: 50%;
-  position: absolute;
+  color: #222222;
   font-size: 28px;
-  color: #4a4a4a;
+  left: 50vw;
+  position: absolute;
+  top: 50%;
+  transform: translateY(-50%);
   z-index: 2;
 }
 
@@ -101,19 +106,25 @@
     bottom: 10px;
     top: auto;
   }
+
   .App-balloon {
     top: 20px;
+  }
+
+  .App-transamerica {
+    right: 30vw;
   }
 }
 
 button {
   background: none;
-  color: inherit;
   border: none;
-  padding: 0;
-  font: inherit;
+  color: inherit;
   cursor: pointer;
+  font: inherit;
   outline: inherit;
+  text-shadow: inherit;
+  padding: 0;
 }
 
 p {
@@ -126,7 +137,8 @@ a {
   color: unset;
 }
 
-a, button {
+a,
+button {
   cursor: url(https://s3-us-west-2.amazonaws.com/hunt.codes/cursor.png), pointer;
 }
 
@@ -136,15 +148,6 @@ button:hover {
 
 a:hover {
   text-decoration: underline;
-}
-
-@keyframes balloon {
-  from {
-    color: red;
-  }
-  to {
-    color: yellow;
-  }
 }
 
 .App-background2 {
@@ -168,6 +171,12 @@ a:hover {
     hsla(210, 100%, 45.1%, 0.553) 94.1%,
     hsla(210, 100%, 45.1%, 0.56) 100%
   );
+}
+
+@media (max-width: 600px) {
+  .App-info {
+    text-shadow: -1px -1px 0 hsl(0, 100%, 100%), -2px -2px 1px hsl(80, 0%, 80%);
+  }
 }
 
 .App-background {

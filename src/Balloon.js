@@ -1,10 +1,11 @@
-import React, { Component } from 'react';
+import React, { Component } from "react";
 
-import './App.css';
+import "./App.css";
 
-const letters = '0123456789ABCDEF';
+const letters = "0123456789ABCDEF";
+
 function getRandomColor() {
-  let color = '#';
+  let color = "#";
   for (let i = 0; i < 6; i++) {
     color += letters[Math.floor(Math.random() * 16)];
   }
@@ -12,50 +13,45 @@ function getRandomColor() {
 }
 
 class Balloon extends Component {
-  constructor(props) {
-    super(props);
-    this.state = {
-      strokeColor: getRandomColor(),
-    };
-
-    this.changeColor = this.changeColor.bind(this);
-  }
+  state = {
+    strokeColor: getRandomColor(),
+  };
 
   componentDidMount() {
-    setInterval(this.changeColor, 30);
+    setInterval(this.changeColor, 600);
   }
 
-  changeColor() {
+  changeColor = () => {
     if (!this.props.hovered) {
       this.setState({ strokeColor: getRandomColor() });
     }
-  }
+  };
 
   render() {
-    const { hovered, paddingLeft } = this.props;
+    const { hovered, paddingLeft, paddingTop } = this.props;
     const { strokeColor } = this.state;
-
-    let isSmall = false;
-    if (typeof window !== 'undefined') {
-      isSmall = window.screen && window.screen.width < 600;
-    }
 
     return (
       <svg
+        id="spinner"
+        height={`calc(100vh - 300px)`}
         width="167px"
-        height={`calc(100vh - ${isSmall ? 300 : 280}px)`}
         style={{
-          position: 'absolute',
-          overflow: 'visible',
+          position: "absolute",
+          overflow: "visible",
           left: paddingLeft,
+          top: paddingTop,
         }}
         viewBox="0 0 167 450"
-        version="1.1"
-        id="spinner"
         xmlns="http://www.w3.org/2000/svg"
       >
         <title>balloon</title>
-        <g stroke="none" strokeWidth={hovered ? 15 : 10} fill="none" fillRule="evenodd">
+        <g
+          stroke="none"
+          strokeWidth={hovered ? 15 : 10}
+          fill="none"
+          fillRule="evenodd"
+        >
           <g
             id="balloon"
             className="App-logo"
