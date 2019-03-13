@@ -22,23 +22,28 @@ class Balloon extends Component {
   }
 
   componentDidMount() {
-    this.changeColor();
+    setInterval(this.changeColor, 30);
   }
 
   changeColor() {
     if (!this.props.hovered) {
       this.setState({ strokeColor: getRandomColor() });
     }
-    setTimeout(this.changeColor, 30);
   }
 
   render() {
     const { hovered, paddingLeft } = this.props;
     const { strokeColor } = this.state;
+
+    let isSmall = false;
+    if (typeof window !== 'undefined') {
+      isSmall = window.screen && window.screen.width < 600;
+    }
+
     return (
       <svg
         width="167px"
-        height="450px"
+        height={`calc(100vh - ${isSmall ? 300 : 280}px)`}
         style={{
           position: 'absolute',
           overflow: 'visible',
