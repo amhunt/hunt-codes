@@ -4,7 +4,7 @@ import Typed from "typed.js";
 import "./App.css";
 import Transamerica from "./transamerica.svg";
 import GoldenGate from "./gg-bridge.png";
-import Balloon from "./Balloon";
+import Logo from "./Logo";
 
 const typedOptions = {
   strings: ["interested in working together?", "andrew^500@hunt.codes^4000"],
@@ -13,15 +13,12 @@ const typedOptions = {
   loop: true,
 };
 
-const NUM_BALLONS = 3;
-
 class App extends Component {
   state = {
-    clickCount: 0,
     cursorPositionX: 0,
     cursorPositionY: 0,
     hovered: false,
-    sfCount: 1,
+    sfCount: 0,
   };
 
   componentDidMount() {
@@ -36,12 +33,6 @@ class App extends Component {
 
   handleSFPress = () => {
     this.setState(({ sfCount }) => ({ sfCount: (sfCount + 1) % 3 }));
-  };
-
-  handleBalloonClick = () => {
-    this.setState(({ clickCount }) => ({
-      clickCount: clickCount + 1,
-    }));
   };
 
   getCursorXY = (e) => {
@@ -69,13 +60,7 @@ class App extends Component {
   };
 
   render() {
-    const {
-      clickCount,
-      cursorPositionX,
-      cursorPositionY,
-      sfCount,
-    } = this.state;
-    const balloonArr = new Array(NUM_BALLONS).fill(0);
+    const { cursorPositionX, cursorPositionY, sfCount } = this.state;
 
     const cursorRatioX =
       (cursorPositionX / document.body.clientWidth) * 2 - 1 || 0;
@@ -93,18 +78,14 @@ class App extends Component {
           <div
             id="balloons"
             onClick={this.handleBalloonClick}
-            style={{ left: "30vw" }}
+            style={{ left: "20vw" }}
             className="App-balloon"
           >
-            {balloonArr.map((_, index) => (
-              <Balloon
-                key={index + clickCount * NUM_BALLONS}
-                flipped={index % 2 === 1}
-                hovered={this.state.hovered}
-                paddingLeft={index * (40 * cursorRatioX) + (isSmall ? 48 : 0)}
-                paddingTop={isSmall ? 16 : 40 * cursorRatioY}
-              />
-            ))}
+            <Logo
+              hovered={this.state.hovered}
+              paddingLeft={40 * cursorRatioX + (isSmall ? 48 : 0)}
+              paddingTop={isSmall ? 16 : 40 * cursorRatioY}
+            />
           </div>
           <div className="App-info">
             <p>andrew hunt</p>
