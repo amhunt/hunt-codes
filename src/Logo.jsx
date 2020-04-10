@@ -2,27 +2,47 @@ import React, { Component } from "react";
 
 import "./App.css";
 
-const letters = "0123456789ABCDEF";
-
-function getRandomColor() {
-  let color = "#";
-  for (let i = 0; i < 6; i++) {
-    color += letters[Math.floor(Math.random() * 6)];
-  }
-  return color;
+// Pantone colors of the years 2000 - 2020
+// except for 2006 and 2015 🤮
+const colorOptions = [
+  "#9BB7D4",
+  "#C74375",
+  "#BF1932",
+  "#7BC4C4",
+  "#E2583E",
+  "#53B0AE",
+  "#9B1B30",
+  "#5A5B9F",
+  "#F0C05A",
+  "#45B5AA",
+  "#D94F70",
+  "#DD4124",
+  "#009473",
+  "#B163A3",
+  "#F7CAC9",
+  "#92A8D1",
+  "#88B04B",
+  "#5F4B8B",
+  "#FF6F61",
+  "#0F4C81",
+];
+function getPantoneColor() {
+  return colorOptions[Math.floor(Math.random() * colorOptions.length)];
 }
 
-function invertHex(hex) {
-  const sansPound = hex.slice(1);
-  return (Number(`0x1${sansPound}`) ^ 0xffffff)
-    .toString(16)
-    .substr(1)
-    .toUpperCase();
-}
+// Unused for now
+// function invertHex(hex) {
+//   const sansPound = hex.slice(1);
+//   return (Number(`0x1${sansPound}`) ^ 0xffffff)
+//     .toString(16)
+//     .substr(1)
+//     .toUpperCase();
+// }
 
 class Logo extends Component {
   state = {
-    strokeColor: getRandomColor(),
+    strokeColor1: getPantoneColor(),
+    strokeColor2: getPantoneColor(),
   };
 
   componentDidMount() {
@@ -31,29 +51,28 @@ class Logo extends Component {
 
   changeColor = () => {
     if (!this.props.hovered) {
-      this.setState({ strokeColor: getRandomColor() });
+      this.setState({
+        strokeColor1: getPantoneColor(),
+        strokeColor2: getPantoneColor(),
+      });
     }
   };
 
   render() {
-    const { hovered, paddingLeft, paddingTop } = this.props;
-    const { strokeColor } = this.state;
+    const { paddingLeft1, paddingTop1, paddingLeft2, paddingTop2 } = this.props;
+    const { strokeColor1, strokeColor2 } = this.state;
 
     return (
-      <>
+      <div className="centerDiv">
         {/* Square */}
         <svg
-          id="spinner"
-          width="263"
-          height={`calc(100vh - ${hovered ? 280 : 300}px)`}
           viewBox="0 0 263 265"
           fill="none"
           xmlns="http://www.w3.org/2000/svg"
+          className="logoComponent logo1"
           style={{
-            position: "absolute",
-            overflow: "visible",
-            left: paddingLeft,
-            top: paddingTop,
+            left: paddingLeft1,
+            top: paddingTop1,
           }}
         >
           <path
@@ -66,33 +85,28 @@ class Logo extends Component {
               x1="131.5"
               y1="0"
               x2="131.5"
-              y2="265"
+              y2="290"
               gradientUnits="userSpaceOnUse"
             >
-              <stop stopColor={strokeColor} />
-              <stop offset="1" stopOpacity="0" />
+              <stop stopOpacity="0" stopColor="#fff" />
+              <stop stopOpacity="1" stopColor={strokeColor1} />
             </linearGradient>
           </defs>
         </svg>
         {/* Triangle */}
         <svg
-          id="spinner"
-          width="255"
-          height={`calc(100vh - ${hovered ? 490 : 500}px)`}
           viewBox="0 0 255 327"
           fill="none"
           xmlns="http://www.w3.org/2000/svg"
+          className="logoComponent logo2"
           style={{
-            position: "absolute",
-            overflow: "visible",
-            left: paddingLeft * 1.7 + 50,
-            top: paddingTop * 1.7,
+            left: paddingLeft2,
+            top: paddingTop2,
           }}
         >
           <path
             d="M0.591187 44L159 327L255 25C119 -24 45.8689 12 0.591187 44Z"
             fill="url(#paint1_linear)"
-            fillOpacity="0.5"
           />
           <defs>
             <linearGradient
@@ -103,12 +117,12 @@ class Logo extends Component {
               y2="481"
               gradientUnits="userSpaceOnUse"
             >
-              <stop stopColor={`#${invertHex(strokeColor)}`} />
-              <stop offset="1" />
+              <stop stopOpacity="0" stopColor="#fff" />
+              <stop stopOpacity="1" stopColor={strokeColor2} />
             </linearGradient>
           </defs>
         </svg>
-      </>
+      </div>
     );
   }
 }

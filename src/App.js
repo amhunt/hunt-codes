@@ -1,124 +1,39 @@
-import React, { Component } from "react";
-import Typed from "typed.js";
+import React, { useState, useEffect } from "react";
+import { BrowserRouter as Router, Switch, Route } from "react-router-dom";
 
 import "./App.css";
 import Transamerica from "./transamerica.svg";
 import GoldenGate from "./gg-bridge.png";
-import Logo from "./Logo";
+import Home from "./Home";
+import Resume from "./Resume";
 
-const typedOptions = {
-  strings: ["interested in working together?", "andrew^500@hunt.codes^4000"],
-  typeSpeed: 40,
-  smartBackspace: true,
-  loop: true,
-};
+const App = () => {
+  const [sfCount, setSfCount] = useState(0);
+  const [homeOpacity, setHomeOpacity] = useState(0);
 
-class App extends Component {
-  state = {
-    cursorPositionX: 0,
-    cursorPositionY: 0,
-    hovered: false,
-    sfCount: 0,
-  };
+  const handleSFPress = (optionalForce) =>
+    setSfCount(
+      typeof optionalForce != "undefined" ? optionalForce : (sfCount + 1) % 3
+    );
 
-  componentDidMount() {
-    const balloon = document.getElementById("balloons");
-    if (balloon) {
-      balloon.addEventListener("mouseenter", this.onMouseEnter);
-      balloon.addEventListener("mouseleave", this.onMouseLeave);
-    }
-    this.typed = new Typed(this.el, typedOptions);
-    document.onmousemove = this.getCursorXY;
-  }
+  useEffect(() => setHomeOpacity(1), []);
 
-  handleSFPress = () => {
-    this.setState(({ sfCount }) => ({ sfCount: (sfCount + 1) % 3 }));
-  };
-
-  getCursorXY = (e) => {
-    const cursorPositionX = window.Event
-      ? e.pageX
-      : e.clientX +
-        (document.documentElement.scrollLeft
-          ? document.documentElement.scrollLeft
-          : document.body.scrollLeft);
-    const cursorPositionY = window.Event
-      ? e.pageY
-      : e.clientY +
-        (document.documentElement.scrollTop
-          ? document.documentElement.scrollTop
-          : document.body.scrollTop);
-    this.setState({ cursorPositionX, cursorPositionY });
-  };
-
-  onMouseEnter = () => {
-    this.setState({ hovered: true });
-  };
-
-  onMouseLeave = () => {
-    this.setState({ hovered: false });
-  };
-
-  render() {
-    const { cursorPositionX, cursorPositionY, sfCount } = this.state;
-
-    const cursorRatioX =
-      (cursorPositionX / document.body.clientWidth) * 2 - 1 || 0;
-    const cursorRatioY =
-      (cursorPositionY / document.body.clientHeight) * 2 - 1 || 0;
-
-    let isSmall = false;
-    if (typeof window !== "undefined") {
-      isSmall = window.innerWidth < 600;
-    }
-
-    return (
+  return (
+    <Router>
       <div className="App App-background">
-        <div className="App-background App-background2">
-          <div
-            id="balloons"
-            onClick={this.handleBalloonClick}
-            style={{ left: "20vw" }}
-            className="App-balloon"
-          >
-            <Logo
-              hovered={this.state.hovered}
-              paddingLeft={40 * cursorRatioX + (isSmall ? 48 : 0)}
-              paddingTop={isSmall ? 16 : 40 * cursorRatioY}
+        <Switch>
+          <Route exact path="/">
+            <Home
+              homeOpacity={homeOpacity}
+              setHomeOpacity={setHomeOpacity}
+              handleSFPress={handleSFPress}
             />
-          </div>
-          <div className="App-info">
-            <p>andrew hunt</p>
-            <p>
-              <a
-                target="_blank"
-                rel="noopener noreferrer"
-                href="https://www.github.com/amhunt"
-              >
-                software development
-              </a>
-            </p>
-            <p>
-              <a
-                target="_blank"
-                rel="noopener noreferrer"
-                href="https://www.linkedin.com/in/andrewmhunt/"
-              >
-                airbnb
-              </a>
-            </p>
-            <p>
-              <button onClick={this.handleSFPress}>san francisco</button>
-            </p>
-            <p>
-              <span
-                className="typed"
-                ref={(el) => {
-                  this.el = el;
-                }}
-              />
-            </p>
-          </div>
+          </Route>
+          <Route path="/resume">
+            <Resume handleSFPress={handleSFPress} />
+          </Route>
+        </Switch>
+        <div style={{ height: "100vh" }}>
           <img
             className={`App-gg-bridge${
               sfCount > 0 ? " App-gg-bridge-opaque" : ""
@@ -135,8 +50,8 @@ class App extends Component {
           />
         </div>
       </div>
-    );
-  }
-}
+    </Router>
+  );
+};
 
 export default App;

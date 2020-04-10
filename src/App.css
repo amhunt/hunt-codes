@@ -1,58 +1,32 @@
 .App {
-  cursor: url(https://s3-us-west-2.amazonaws.com/hunt.codes/cursor.png), pointer;
+  cursor: pointer;
+  cursor: url(https://s3-us-west-2.amazonaws.com/hunt.codes/cursor.svg), auto;
   height: 100vh;
   overflow: hidden;
   text-align: left;
 }
 
-.App-balloon {
-  top: 140px;
+.logoWrapper {
+  align-items: center;
+  display: flex;
+  height: 100%;
+  justify-content: center;
   position: absolute;
+  transition: opacity 5s ease;
+  width: 50%;
 }
 
-.App-logo {
-  animation-name: balloon;
-  animation-duration: 4s;
-}
+.logoComponent {
+  position: absolute;
+  overflow: visible;
+  max-width: 500px;
 
-#balloons {
-  margin: 1em auto;
-  -webkit-perspective: 1200px;
-  -moz-perspective: 1200px;
-  -ms-perspective: 1200px;
-  perspective: 1200px;
-}
-
-@-webkit-keyframes spinner {
-  from {
-    -webkit-transform: rotateY(0deg);
-  }
-  to {
-    -webkit-transform: rotateY(-360deg);
-  }
-}
-
-@keyframes spinner {
-  from {
-    -moz-transform: rotateY(0deg);
-    -ms-transform: rotateY(0deg);
-    transform: rotateY(0deg);
-  }
-  to {
-    -moz-transform: rotateY(-360deg);
-    -ms-transform: rotateY(-360deg);
-    transform: rotateY(-360deg);
-  }
-}
-
-#spinner {
-  transition: height 0.1s ease-out;
-  -webkit-animation-name: spinner;
+  -webkit-animation-name: spin;
   -webkit-animation-timing-function: linear;
   -webkit-animation-iteration-count: infinite;
   -webkit-animation-duration: 10s;
 
-  animation-name: spinner;
+  animation-name: spin;
   animation-timing-function: linear;
   animation-iteration-count: infinite;
   animation-duration: 10s;
@@ -61,6 +35,16 @@
   -moz-transform-style: preserve-3d;
   -ms-transform-style: preserve-3d;
   transform-style: preserve-3d;
+}
+
+.centerDiv {
+  position: relative;
+  left: -10vw;
+  top: -6vw;
+}
+
+h2 {
+  margin-top: 40px;
 }
 
 .App-transamerica {
@@ -78,12 +62,12 @@
 
 .App-gg-bridge {
   position: fixed;
-  bottom: 0;
+  bottom: -6px;
   right: -350px;
   height: 40vh;
   opacity: 0;
   z-index: 1;
-  transition: opacity 1s, right 2s;
+  transition: opacity 1s, right 1.5s;
 }
 
 .App-gg-bridge-opaque {
@@ -91,29 +75,109 @@
   opacity: 100;
 }
 
-.App-info {
+.homeInfoContainer {
   color: #222222;
   font-size: 28px;
   left: 50vw;
-  position: absolute;
+  position: fixed;
   top: 50%;
   transform: translateY(-50%);
+  transition: opacity 1s ease;
   z-index: 2;
+  opacity: 0;
+}
+
+.Resume-container {
+  margin: auto;
+  max-height: calc(100% - 240px);
+  max-width: 700px;
+  overflow-y: scroll;
+  padding-bottom: 160px;
+  padding-left: 32px;
+  padding-right: 32px;
+  padding-top: 80px;
+  transition: opacity 1s ease;
+}
+
+.Resume-container::-webkit-scrollbar {
+  display: none;
+}
+
+.splitRow {
+  display: flex;
+  justify-content: space-between;
+}
+
+.logo1 {
+  width: 20vw;
+}
+
+.logo2 {
+  width: 16vw;
+}
+
+@media (max-width: 1000px) {
+  .App-gg-bridge {
+    height: 30vh;
+  }
+}
+
+@media (max-width: 800px) {
+  .Resume-container {
+    padding-bottom: 240px;
+    padding-top: 40px;
+    max-height: calc(100% - 280px);
+  }
+
+  .splitRow {
+    display: unset;
+  }
+
+  .firstSplitRowItem {
+    margin-bottom: 8px;
+  }
+
+  .secondSplitRowItem {
+    font-size: 16px;
+    margin-top: 8px;
+  }
 }
 
 @media (max-width: 600px) {
-  .App-info {
-    left: 20px;
-    bottom: 10px;
-    top: auto;
-  }
-
-  .App-balloon {
-    top: 20px;
+  .homeInfoContainer {
+    left: 24px;
+    text-shadow: -1px -1px 0 hsl(0, 100%, 100%), -2px -2px 1px hsl(80, 0%, 80%);
+    top: calc(100vh - 300px);
+    transform: unset;
   }
 
   .App-transamerica {
     right: 30vw;
+  }
+
+  .App-gg-bridge {
+    height: 20vh;
+  }
+
+  .logoWrapper {
+    width: 100%;
+    height: 50%;
+  }
+
+  .logoComponent {
+    position: fixed;
+    right: 24px;
+    top: 40px;
+  }
+
+  .logo1 {
+    width: 200px;
+    padding-top: 32px;
+    padding-right: 32px;
+  }
+
+  .logo2 {
+    width: 150px;
   }
 }
 
@@ -121,7 +185,6 @@ button {
   background: none;
   border: none;
   color: inherit;
-  cursor: pointer;
   font: inherit;
   outline: inherit;
   text-shadow: inherit;
@@ -140,7 +203,7 @@ a {
 
 a,
 button {
-  cursor: url(https://s3-us-west-2.amazonaws.com/hunt.codes/cursor.png), pointer;
+  cursor: url(https://s3-us-west-2.amazonaws.com/hunt.codes/cursor.svg), auto;
 }
 
 button:hover {
@@ -151,6 +214,49 @@ a:hover {
   text-decoration: underline;
 }
 
+.color1:hover {
+  color: rgb(219, 0, 7);
+}
+
+.color2:hover {
+  color: rgb(252, 121, 9);
+}
+
+.color3:hover {
+  color: rgb(15, 114, 25);
+}
+
+.color4:hover {
+  color: rgb(1, 43, 255);
+}
+
+.color5:hover {
+  color: rgb(98, 0, 117);
+}
+
+@-webkit-keyframes spin {
+  from {
+    -webkit-transform: rotateY(0deg);
+  }
+  to {
+    -webkit-transform: rotateY(-360deg);
+  }
+}
+
+@keyframes spin {
+  from {
+    -moz-transform: rotateY(0deg);
+    -ms-transform: rotateY(0deg);
+    transform: rotateY(0deg);
+  }
+  to {
+    -moz-transform: rotateY(-360deg);
+    -ms-transform: rotateY(-360deg);
+    transform: rotateY(-360deg);
+  }
+}
+
+/* Unused blue gradient background */
 .App-background2 {
   height: 100vh;
   background: linear-gradient(
@@ -172,12 +278,6 @@ a:hover {
     hsla(210, 100%, 45.1%, 0.553) 94.1%,
     hsla(210, 100%, 45.1%, 0.56) 100%
   );
-}
-
-@media (max-width: 600px) {
-  .App-info {
-    text-shadow: -1px -1px 0 hsl(0, 100%, 100%), -2px -2px 1px hsl(80, 0%, 80%);
-  }
 }
 
 .App-background {
