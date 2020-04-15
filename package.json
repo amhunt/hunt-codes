@@ -3,17 +3,21 @@
   "version": "0.1.0",
   "private": true,
   "dependencies": {
+    "@types/jest": "^25.2.1",
+    "@types/node": "^13.11.1",
+    "@types/react-dom": "^16.9.6",
+    "@types/typed.js": "^2.0.9",
     "react": "^16.8.1",
     "react-dom": "^16.8.1",
     "react-router-dom": "^5.1.2",
     "react-scripts": "3.4.1",
-    "typed.js": "^2.0.10",
-    "typescript": "^3.6.2"
+    "typed.js": "^2.0.11",
+    "typescript": "^3.8.3"
   },
   "scripts": {
     "start": "react-scripts start",
     "build": "react-scripts build",
-    "deploy": "aws s3 sync build/ s3://hunt.codes --acl public-read",
+    "deploy": "aws s3 sync build/ s3://hunt.codes --acl public-read --delete",
     "test": "react-scripts test",
     "eject": "react-scripts eject"
   },
@@ -25,5 +29,9 @@
     "not dead",
     "not ie <= 11",
     "not op_mini all"
-  ]
+  ],
+  "devDependencies": {
+    "@types/react": "^16.9.34",
+    "@types/react-router-dom": "^5.1.4"
+  }
 }
