@@ -31,21 +31,13 @@ function getPantoneColor() {
   return colorOptions[Math.floor(Math.random() * colorOptions.length)];
 }
 
-const Logo = ({
-  hovered,
-  paddingLeft1,
-  paddingTop1,
-  paddingLeft2,
-  paddingTop2,
-}) => {
+const Logo = ({ paddingLeft1, paddingTop1, paddingLeft2, paddingTop2 }) => {
   const [strokeColor1, setStrokeColor1] = useState(getPantoneColor());
   const [strokeColor2, setStrokeColor2] = useState(getPantoneColor());
   const changeColor = useCallback(() => {
-    if (!hovered) {
-      setStrokeColor1(getPantoneColor());
-      setStrokeColor2(getPantoneColor());
-    }
-  }, [hovered]);
+    setStrokeColor1(getPantoneColor());
+    setStrokeColor2(getPantoneColor());
+  }, []);
 
   useEffect(() => {
     const interval = setInterval(changeColor, 500);

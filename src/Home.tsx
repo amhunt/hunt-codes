@@ -16,9 +16,8 @@ const typedOptions = {
 };
 
 const Home = ({ handleSFPress, homeOpacity }) => {
-  const leftHalfEl = useRef<HTMLDivElement>(null); //React.createRef<HTMLDivElement>();
+  const leftHalfEl = useRef<HTMLDivElement>(null);
 
-  const [hovered, setHovered] = useState(false);
   const [logoOpacity, setLogoOpacity] = useState(0);
   const [cursorPositionX, setCursorPositionX] = useState(0);
   const [cursorPositionY, setCursorPositionY] = useState(0);
@@ -37,16 +36,6 @@ const Home = ({ handleSFPress, homeOpacity }) => {
   }, []);
 
   useEffect(() => {
-    const logo = leftHalfEl.current;
-    if (logo) {
-      logo.addEventListener("mouseenter", () => setHovered(true), {
-        passive: true,
-      });
-      logo.addEventListener("mouseleave", () => setHovered(false), {
-        passive: true,
-      });
-    }
-
     new Typed("#typed-js", typedOptions);
     document.onmousemove = getCursorXY;
 
@@ -90,45 +79,57 @@ const Home = ({ handleSFPress, homeOpacity }) => {
         className="logoWrapper"
         style={{ opacity: logoOpacity ? 1 : 0 }}
       >
-        <Logo hovered={hovered} {...(!isSmall && logoPositioningProps)} />
+        <Logo {...(!isSmall && logoPositioningProps)} />
       </div>
       <main className="homeInfoContainer" style={{ opacity: homeOpacity }}>
-        <p>
-          <Link
-            className="color1"
-            onClick={() => handleSFPress(1)}
-            to="/resume"
-          >
-            andrew hunt
+        <p className="hoverableHomeItem">
+          <span className="hiddenEmoji">🌕 </span>
+          <span>
+            <a
+              target="_blank"
+              rel="noopener noreferrer"
+              href="https://www.github.com/amhunt"
+            >
+              frontend engineering
+            </a>
+            &nbsp;at&nbsp;
+            <a
+              target="_blank"
+              rel="noopener noreferrer"
+              href="https://www.jumpstart.me"
+            >
+              jumpstart
+            </a>
+          </span>
+        </p>
+        <p className="hoverableHomeItem">
+          <span className="hiddenEmoji">🌖 </span>
+          <Link onClick={() => handleSFPress(1)} to="/resume">
+            resumé
           </Link>
         </p>
-        <p>
-          <a
-            target="_blank"
-            rel="noopener noreferrer"
-            href="https://www.github.com/amhunt"
-            className="color2"
-          >
-            software development
-          </a>
-        </p>
-        <p>
+        <p className="hoverableHomeItem">
+          <span className="hiddenEmoji">🌗 </span>
           <a
             target="_blank"
             rel="noopener noreferrer"
             href="https://www.linkedin.com/in/andrewmhunt/"
-            className="color3"
           >
-            airbnb
+            linkedin
           </a>
         </p>
-        <p>
-          <button className="color4" onClick={() => handleSFPress()}>
-            san francisco
-          </button>
+        <p className="hoverableHomeItem">
+          <span className="hiddenEmoji">🌘 </span>
+          <button onClick={() => handleSFPress()}>san francisco</button>
         </p>
-        <p className="color5">
-          <span id="typed-js" className="typed" />
+        <p className="hoverableHomeItem">
+          <span className="hiddenEmoji">🌑 </span>
+          <a
+            href="mailto:andrew@hunt.codes"
+            id="typed-js"
+            className="typed"
+            aria-label="email address: andrew@hunt.codes"
+          />
         </p>
       </main>
     </>
