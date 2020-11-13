@@ -13,18 +13,21 @@ const Resume = ({ handleSFPress }) => {
   }, []);
 
   return (
-    <div className="Resume-container" style={{ opacity: opacity ? 1 : 0 }}>
+    <div className="resume-container" style={{ opacity: opacity ? 1 : 0 }}>
       <Link to="/" onClick={() => handleSFPress(0)}>
         Back
       </Link>
       <h1>Andrew Hunt</h1>
-      Hey! I’m a developer in San Francisco who enjoys building delightful
-      products. I'm currently specializing in frontend development. For
-      consulting inquiries, please email me at{" "}
-      <a href="mailto:andrew@hunt.codes?Subject=Hey%20Andrew">
-        andrew@hunt.codes
-      </a>
-      .<h2>Experience</h2>
+      <p>
+        Hey! I’m a developer in San Francisco who enjoys building delightful
+        products. I'm currently specializing in frontend development. For
+        consulting inquiries, please email me at{" "}
+        <a href="mailto:andrew@hunt.codes?Subject=Hey%20Andrew">
+          andrew@hunt.codes
+        </a>
+        .
+      </p>
+      <h2>Experience</h2>
       <div className="splitRow">
         <h3 className="firstSplitRowItem">
           Software Engineer, Airbnb, San Francisco
@@ -32,7 +35,23 @@ const Resume = ({ handleSFPress }) => {
         <h3 className="secondSplitRowItem">2017 - Present</h3>
       </div>
       <li>
-        Built wide range of features and pages across host and guest products
+        Built dozens of pricing and availability features across Experiences
+        host and guest products
+      </li>
+      <li>
+        Ran &gt;20 A/B tests, resulting in a compounded Experiences bookings
+        lift of &gt;10%
+      </li>
+      <li>
+        Planned and executed on performance initiatives, improving TTI by
+        &gt;30% on 10+ pages
+      </li>
+      <li>
+        Oversaw conversion of legacy code to TypeScript, evangelized best
+        practices across org
+      </li>
+      <li>
+        Migrated the Experience Host web app from Rails to an Express framework
       </li>
       <li>
         Worked extensively in React, Redux, TypeScript, Rails, Apollo GraphQL,
