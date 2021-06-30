@@ -30,9 +30,24 @@ const Resume = ({ handleSFPress }) => {
       <h2>Experience</h2>
       <div className="splitRow">
         <h3 className="firstSplitRowItem">
+          Software Engineer, Jumpstart, San Francisco
+        </h3>
+        <h3 className="secondSplitRowItem">2020 - 2021</h3>
+      </div>
+      <li>Built out Recruiter Analytics platform</li>
+      <li>Introduced TypeScript to the codebase and evangelized</li>
+      <li>
+        Led frontend platform group, which oversees quality and performance
+        initiatives
+      </li>
+      <li>
+        Improved performance of core Recruiter app by 40% (Time to Interactive)
+      </li>
+      <div className="splitRow">
+        <h3 className="firstSplitRowItem">
           Software Engineer, Airbnb, San Francisco
         </h3>
-        <h3 className="secondSplitRowItem">2017 - Present</h3>
+        <h3 className="secondSplitRowItem">2017 - 2020</h3>
       </div>
       <li>
         Built dozens of pricing and availability features across Experiences
@@ -43,8 +58,8 @@ const Resume = ({ handleSFPress }) => {
         lift of &gt;10%
       </li>
       <li>
-        Planned and executed on performance initiatives, improving TTI by
-        &gt;30% on 10+ pages
+        Planned and executed on performance initiatives, improving Time to
+        Interactive by &gt;30% on 10+ pages
       </li>
       <li>
         Oversaw conversion of legacy code to TypeScript, evangelized best

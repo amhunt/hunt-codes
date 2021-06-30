@@ -85,27 +85,20 @@ const Home = ({ handleSFPress, homeOpacity }) => {
         <p className="hoverableHomeItem">
           <span className="hiddenEmoji">🌕 </span>
           <span>
+            engineering at&nbsp;
             <a
               target="_blank"
               rel="noopener noreferrer"
-              href="https://www.github.com/amhunt"
+              href="https://www.ziphq.com"
             >
-              frontend engineering
-            </a>
-            &nbsp;at&nbsp;
-            <a
-              target="_blank"
-              rel="noopener noreferrer"
-              href="https://www.jumpstart.me"
-            >
-              jumpstart
+              zip
             </a>
           </span>
         </p>
         <p className="hoverableHomeItem">
           <span className="hiddenEmoji">🌖 </span>
           <Link onClick={() => handleSFPress(1)} to="/resume">
-            resumé
+            resume
           </Link>
         </p>
         <p className="hoverableHomeItem">
@@ -120,10 +113,30 @@ const Home = ({ handleSFPress, homeOpacity }) => {
         </p>
         <p className="hoverableHomeItem">
           <span className="hiddenEmoji">🌘 </span>
-          <button onClick={() => handleSFPress()}>san francisco</button>
+          <a
+            target="_blank"
+            rel="noopener noreferrer"
+            href="https://www.github.com/amhunt"
+          >
+            github
+          </a>
         </p>
         <p className="hoverableHomeItem">
           <span className="hiddenEmoji">🌑 </span>
+          <a
+            target="_blank"
+            rel="noopener noreferrer"
+            href="https://andrew-hunt.medium.com/"
+          >
+            blog
+          </a>
+        </p>
+        <p className="hoverableHomeItem">
+          <span className="hiddenEmoji">🌒 </span>
+          <button onClick={() => handleSFPress()}>san francisco</button>
+        </p>
+        <p className="hoverableHomeItem">
+          <span className="hiddenEmoji">🌓</span>
           <a
             href="mailto:andrew@hunt.codes"
             id="typed-js"

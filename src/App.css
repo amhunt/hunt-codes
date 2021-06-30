@@ -86,7 +86,7 @@ p {
   font-size: 28px;
   left: 50vw;
   position: fixed;
-  top: 50%;
+  top: calc(50% + 100px);
   transform: translateY(-50%);
   transition: opacity 0.5s ease;
   z-index: 2;
@@ -106,6 +106,14 @@ p {
 
 .headerCharacter:hover {
   fill: white;
+}
+
+.headerCharacter.highlighted {
+  fill: #000;
+}
+
+.headerCharacter.highlighted2 {
+  fill: black;
 }
 
 .hiddenEmoji {
@@ -183,6 +191,7 @@ p {
     left: 24px;
     text-shadow: -1px -1px 0 hsl(0, 100%, 100%), -2px -2px 1px hsl(80, 0%, 80%);
     bottom: 32px;
+    top: 50%;
     transform: unset;
   }
 
@@ -208,7 +217,7 @@ p {
 
   .centerDiv {
     position: fixed;
-    left: 50%;
+    left: calc(50% - 100px);
     transform: translateX(-50%);
     top: 100px;
   }
@@ -251,13 +260,14 @@ li {
 .App,
 a,
 button {
-  cursor: url(/cursor.svg), auto;
+  cursor: url(/cursor.svg) 0 6, auto;
 }
 
 button:hover,
 a:hover {
   text-decoration: underline;
   color: #004225;
+  cursor: url(/cursor_pointer.png) 16 0, auto;
 }
 
 @-webkit-keyframes spin {
