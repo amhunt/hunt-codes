@@ -260,14 +260,14 @@ li {
 .App,
 a,
 button {
-  cursor: url(/cursor.svg) 0 6, auto;
+  cursor: url(./cursor.svg) 0 6, auto;
 }
 
 button:hover,
 a:hover {
   text-decoration: underline;
   color: #004225;
-  cursor: url(/cursor_pointer.png) 16 0, auto;
+  cursor: url(./cursor_pointer.png) 16 0, auto;
 }
 
 @-webkit-keyframes spin {

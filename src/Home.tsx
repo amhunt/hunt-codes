@@ -15,7 +15,7 @@ const typedOptions = {
   typeSpeed: 40,
 };
 
-const Home = ({ handleSFPress, homeOpacity }) => {
+const Home = ({ handleSFPress, homeOpacity }: { handleSFPress: (num?: number) => void; homeOpacity: number }) => {
   const leftHalfEl = useRef<HTMLDivElement>(null);
 
   const [logoOpacity, setLogoOpacity] = useState(0);

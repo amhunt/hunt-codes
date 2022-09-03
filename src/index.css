@@ -14,12 +14,12 @@ code {
 
 @font-face {
   font-family: "infini";
-  src: url("/infini-regular.woff");
+  src: url("./infini-regular.woff");
 }
 
 @font-face {
   font-family: "nova";
-  src: url("/NovaMono-Regular.ttf");
+  src: url("./NovaMono-Regular.ttf");
 }
 
 .nameTitle {

@@ -31,7 +31,7 @@ function getPantoneColor() {
   return colorOptions[Math.floor(Math.random() * colorOptions.length)];
 }
 
-const Logo = ({ paddingLeft1, paddingTop1, paddingLeft2, paddingTop2 }) => {
+const Logo = ({ paddingLeft1, paddingTop1, paddingLeft2, paddingTop2 }: { paddingLeft1?: number, paddingTop1?: number, paddingLeft2?: number, paddingTop2?: number, }) => {
   const [strokeColor1, setStrokeColor1] = useState(getPantoneColor());
   const [strokeColor2, setStrokeColor2] = useState(getPantoneColor());
   const changeColor = useCallback(() => {
