@@ -59,7 +59,7 @@ p {
   right: 15vw;
   height: 30vh;
   opacity: 0;
-  transition: opacity 1s;
+  transition: opacity 200ms;
 }
 
 .App-transamerica-opaque {
@@ -73,7 +73,7 @@ p {
   height: 40vh;
   opacity: 0;
   z-index: 1;
-  transition: opacity 1s, right 1.5s;
+  transition: opacity 200ms ease, right 3s;
 }
 
 .App-gg-bridge-opaque {
@@ -88,7 +88,7 @@ p {
   position: fixed;
   top: calc(50% + 100px);
   transform: translateY(-50%);
-  transition: opacity 0.5s ease;
+  transition: opacity 300ms ease;
   z-index: 2;
   opacity: 0;
 }

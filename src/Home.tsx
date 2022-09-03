@@ -15,7 +15,7 @@ const typedOptions = {
   typeSpeed: 40,
 };
 
-const Home = ({ handleSFPress, homeOpacity }: { handleSFPress: (num?: number) => void; homeOpacity: number }) => {
+const Home = ({ homeOpacity }: {  homeOpacity: number }) => {
   const leftHalfEl = useRef<HTMLDivElement>(null);
 
   const [logoOpacity, setLogoOpacity] = useState(0);
@@ -97,7 +97,7 @@ const Home = ({ handleSFPress, homeOpacity }: { handleSFPress: (num?: number) =>
         </p>
         <p className="hoverableHomeItem">
           <span className="hiddenEmoji">🌖 </span>
-          <Link onClick={() => handleSFPress(1)} to="/resume">
+          <Link  to="/resume">
             resume
           </Link>
         </p>
@@ -130,10 +130,6 @@ const Home = ({ handleSFPress, homeOpacity }: { handleSFPress: (num?: number) =>
           >
             blog
           </a>
-        </p>
-        <p className="hoverableHomeItem">
-          <span className="hiddenEmoji">🌒 </span>
-          <button onClick={() => handleSFPress()}>san francisco</button>
         </p>
         <p className="hoverableHomeItem">
           <span className="hiddenEmoji">🌓</span>

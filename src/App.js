@@ -2,7 +2,6 @@ import React, { useState, useEffect } from "react";
 import { BrowserRouter as Router, Switch, Route } from "react-router-dom";
 
 import "./App.css";
-import Transamerica from "./transamerica.svg";
 import GoldenGate from "./gg-bridge.png";
 import Home from "./Home";
 import Resume from "./Resume";
@@ -15,23 +14,21 @@ for (let c of andrewHunt) {
 }
 
 const App = () => {
-  const [sfCount, setSfCount] = useState(0);
+  const [showBridge, setShowBridge] = useState(false);
   const [homeOpacity, setHomeOpacity] = useState(0);
-  const handleSFPress = (optionalForce) =>
-    setSfCount(
-      typeof optionalForce != "undefined" ? optionalForce : (sfCount + 1) % 3
-    );
   const [highlightedCharIdx, setHighlightedCharIdx] = useState(0);
   const [highlightedCharIdx2, setHighlightedCharIdx2] = useState(0);
 
   // fade home content in once mounted
-  useEffect(() => setHomeOpacity(1), []);
+  useEffect(() => {
+    setHomeOpacity(1);
+    setShowBridge(true);
+  }, []);
   useEffect(() => {
     const interval = setInterval(
       () => setHighlightedCharIdx((highlightedCharIdx + 1) % nameArr.length),
       200
     );
-    console.log("setInterval");
 
     return () => {
       clearInterval(interval);
@@ -43,7 +40,6 @@ const App = () => {
       () => setHighlightedCharIdx2((highlightedCharIdx2 + 1) % nameArr.length),
       300
     );
-    console.log("setInterval");
     return () => {
       clearInterval(interval2);
     };
@@ -86,28 +82,20 @@ const App = () => {
             <Home
               homeOpacity={homeOpacity}
               setHomeOpacity={setHomeOpacity}
-              handleSFPress={handleSFPress}
             />
           </Route>
           <Route path="/resume">
-            <Resume handleSFPress={handleSFPress} />
+            <Resume  />
           </Route>
         </Switch>
       </Router>
       <div style={{ height: "100vh" }}>
         <img
           className={`App-gg-bridge${
-            sfCount > 0 ? " App-gg-bridge-opaque" : ""
+            showBridge ? " App-gg-bridge-opaque" : ""
           }`}
           src={GoldenGate}
           alt="golden gate bridge"
-        />
-        <img
-          className={`App-transamerica${
-            sfCount > 1 ? " App-transamerica-opaque" : ""
-          }`}
-          src={Transamerica}
-          alt="sf building"
         />
       </div>
     </div>

@@ -3,7 +3,7 @@ import { Link } from "react-router-dom";
 
 import "./App.css";
 
-const Resume = ({ handleSFPress }) => {
+const Resume = () => {
   const [opacity, setOpacity] = useState(false);
   useEffect(() => {
     const timer = setTimeout(() => {
@@ -14,7 +14,7 @@ const Resume = ({ handleSFPress }) => {
 
   return (
     <div className="resume-container" style={{ opacity: opacity ? 1 : 0 }}>
-      <Link to="/" onClick={() => handleSFPress(0)}>
+      <Link to="/">
         Back
       </Link>
       <h1>Andrew Hunt</h1>
