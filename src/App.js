@@ -22,7 +22,7 @@ const App = () => {
   // fade home content in once mounted
   useEffect(() => {
     setHomeOpacity(1);
-    setShowBridge(true);
+    setTimeout(() => setShowBridge(true), 500);
   }, []);
   useEffect(() => {
     const interval = setInterval(
@@ -45,7 +45,6 @@ const App = () => {
     };
   }, [highlightedCharIdx2]);
 
-  console.log(window.location?.pathname);
   const dimHeader = window.location?.pathname?.includes("resume");
 
   return (

@@ -98,7 +98,7 @@ const Home = ({ homeOpacity }: {  homeOpacity: number }) => {
         <p className="hoverableHomeItem">
           <span className="hiddenEmoji">🌖 </span>
           <Link  to="/resume">
-            resume
+            about
           </Link>
         </p>
         <p className="hoverableHomeItem">
@@ -121,7 +121,7 @@ const Home = ({ homeOpacity }: {  homeOpacity: number }) => {
             github
           </a>
         </p>
-        <p className="hoverableHomeItem">
+        {/* <p className="hoverableHomeItem">
           <span className="hiddenEmoji">🌑 </span>
           <a
             target="_blank"
@@ -130,7 +130,7 @@ const Home = ({ homeOpacity }: {  homeOpacity: number }) => {
           >
             blog
           </a>
-        </p>
+        </p> */}
         <p className="hoverableHomeItem">
           <span className="hiddenEmoji">🌓</span>
           <a
