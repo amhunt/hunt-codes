@@ -78,13 +78,10 @@ const App = () => {
       <Router>
         <Switch>
           <Route exact path="/">
-            <Home
-              homeOpacity={homeOpacity}
-              setHomeOpacity={setHomeOpacity}
-            />
+            <Home homeOpacity={homeOpacity} setHomeOpacity={setHomeOpacity} />
           </Route>
           <Route path="/resume">
-            <Resume  />
+            <Resume />
           </Route>
         </Switch>
       </Router>

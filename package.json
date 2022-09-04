@@ -7,6 +7,9 @@
     "@types/node": "^13.11.1",
     "@types/react-dom": "^16.9.6",
     "@types/typed.js": "^2.0.9",
+    "husky": "^8.0.1",
+    "lint-staged": "^13.0.3",
+    "prettier": "^2.7.1",
     "react": "^16.8.1",
     "react-dom": "^16.8.1",
     "react-feather": "^2.0.10",
@@ -14,6 +17,16 @@
     "react-scripts": "^5.0.0",
     "typed.js": "^2.0.11",
     "typescript": "^3.8.3"
+  },
+  "husky": {
+    "hooks": {
+      "pre-commit": "lint-staged"
+    }
+  },
+  "lint-staged": {
+    "src/**/*.{js,jsx,ts,tsx,json,css,scss,md}": [
+      "prettier --write"
+    ]
   },
   "scripts": {
     "start": "react-scripts start",
@@ -24,16 +37,20 @@
     "eject": "react-scripts eject"
   },
   "eslintConfig": {
-    "extends": "react-app"
+    "extends": [
+      "react-app",
+      "plugin:react/recommended"
+    ]
   },
   "browserslist": [
-    ">0.2%",
+    ">0.5%",
     "not dead",
     "not ie <= 11",
     "not op_mini all"
   ],
   "devDependencies": {
     "@types/react": "^16.9.34",
-    "@types/react-router-dom": "^5.1.4"
+    "@types/react-router-dom": "^5.1.4",
+    "eslint-plugin-react": "^7.31.4"
   }
 }
