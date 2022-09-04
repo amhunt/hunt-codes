@@ -69,6 +69,7 @@ const Logo = ({
       >
         <path
           d="M263 0L26.4015 7.91045L0 256.101L252.846 265L263 0Z"
+          // eslint-disable-next-line react/no-unknown-property
           fill="url(#paint0_linear)"
         />
         <defs>
@@ -98,6 +99,7 @@ const Logo = ({
       >
         <path
           d="M0.591187 44L159 327L255 25C119 -24 45.8689 12 0.591187 44Z"
+          // eslint-disable-next-line react/no-unknown-property
           fill="url(#paint1_linear)"
         />
         <defs>

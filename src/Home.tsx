@@ -15,7 +15,7 @@ const typedOptions = {
   typeSpeed: 40,
 };
 
-const Home = ({ homeOpacity }: {  homeOpacity: number }) => {
+const Home = ({ homeOpacity }: { homeOpacity: number }) => {
   const leftHalfEl = useRef<HTMLDivElement>(null);
 
   const [logoOpacity, setLogoOpacity] = useState(0);
@@ -85,7 +85,7 @@ const Home = ({ homeOpacity }: {  homeOpacity: number }) => {
         <p className="hoverableHomeItem">
           <span className="hiddenEmoji">🌕 </span>
           <span>
-            engineering at&nbsp;
+            engineer at&nbsp;
             <a
               target="_blank"
               rel="noopener noreferrer"
@@ -97,9 +97,7 @@ const Home = ({ homeOpacity }: {  homeOpacity: number }) => {
         </p>
         <p className="hoverableHomeItem">
           <span className="hiddenEmoji">🌖 </span>
-          <Link  to="/resume">
-            about
-          </Link>
+          <Link to="/resume">about</Link>
         </p>
         <p className="hoverableHomeItem">
           <span className="hiddenEmoji">🌗 </span>

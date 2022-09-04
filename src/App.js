@@ -1,6 +1,8 @@
 import React, { useState, useEffect } from "react";
 import { BrowserRouter as Router, Switch, Route } from "react-router-dom";
 
+import Galaxy from "./Galaxy.tsx";
+
 import "./App.css";
 import GoldenGate from "./gg-bridge.png";
 import Home from "./Home";
@@ -48,7 +50,7 @@ const App = () => {
   const dimHeader = window.location?.pathname?.includes("resume");
 
   return (
-    <div className="App App-background">
+    <div className="App ">
       <svg
         className="nameTitle"
         viewBox="0 0 100 20"
@@ -85,6 +87,8 @@ const App = () => {
           </Route>
         </Switch>
       </Router>
+      <div className="App-background"></div>
+      <Galaxy />
       <div style={{ height: "100vh" }}>
         <img
           className={`App-gg-bridge${

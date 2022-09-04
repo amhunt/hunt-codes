@@ -3,6 +3,7 @@
   height: 100vh;
   overflow: hidden;
   text-align: left;
+  position: relative;
 }
 
 .logoWrapper {
@@ -94,6 +95,38 @@ p {
   opacity: 0;
 }
 
+@keyframes planet1Anim {
+  0% {  
+    transform: translate(10%, 70%);
+    filter: drop-shadow(0px 0px 0px rgb(255, 85, 0));
+  }
+  100% {  
+    transform: translate(10%, 20%);
+    filter: drop-shadow(0px 0px 100px rgba(255, 98, 0, 0.75));
+  }
+}
+
+.planet1 {
+  position: absolute;
+  top: -50%;
+  left: -50%;
+  right: -50%;
+  bottom: -50%;
+  transform: translate(10%, 20%);
+  animation: 10s linear planet1Anim;
+  animation-timing-function: ease-out;
+  filter: drop-shadow(0px 0px 100px rgba(255, 98, 0, 0.75));
+  background-repeat: no-repeat;
+  background: radial-gradient(
+    circle at center, 
+    #ffce73aa 0%, 
+    #ffce73 20%, 
+
+    #ffbb00e1 30%, 
+    transparent 30%);
+  /* background: radial-gradient(circle at center, transparent, transparent 25%, #ffe100 40%, transparent 40%); */
+}
+
 .nameTitle {
   position: absolute;
   fill: #004225;
@@ -103,6 +136,7 @@ p {
   top: 32px;
   width: calc(100% - 64px);
   transition: fill 3s ease, opacity 1s ease;
+  z-index: 3;
 }
 
 .headerCharacter:hover {
@@ -138,7 +172,8 @@ li > ul > li {
   max-height: calc(100%);
   overflow-y: scroll;
   transition: opacity 1s ease;
-  z-index: 2;
+  z-index: 4;
+  position: relative;
 }
 
 .resume-container::-webkit-scrollbar {
@@ -326,7 +361,26 @@ a:hover {
   );
 }
 
+
+@keyframes backgroundAnim {
+  0% {  
+    /* transform: translate(10%, 70%); */
+    filter: hue-rotate(45deg);
+  }
+  100% {  
+    /* transform: translate(10%, 20%); */
+    filter: hue-rotate(210deg);
+  }
+}
+
 .App-background {
+  top: 0px;
+  bottom: 0px;
+  left: 0px;
+  right: 0%;
+  position: absolute;
+  filter: hue-rotate(200deg);
+  animation: 10s linear backgroundAnim;
   background: linear-gradient(
     168deg,
     hsl(337.38, 100%, 88.04%) 0%,

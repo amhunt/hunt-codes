@@ -51,9 +51,8 @@ const Resume = () => {
         </ul>
         <p>
           <b>Things I know well</b> (in order)<b>:</b> TypeScript/JavaScript,
-          React, ESLint, Cloudflare, Webpack, D3, Visx, Webflow, Jest,
-          Storybook, Chromatic, Redux, S3, Material UI, GitHub Actions, GraphQL,
-          Vue
+          React, ESLint, Webpack, D3, Visx, Webflow, Jest, Storybook, Chromatic,
+          Redux, S3, Cloudflare, Material UI, GitHub Actions, GraphQL, Vue
         </p>
         <p>
           <b>
