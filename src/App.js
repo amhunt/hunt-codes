@@ -1,9 +1,10 @@
 import React, { useState, useEffect } from "react";
 import { BrowserRouter as Router, Switch, Route } from "react-router-dom";
 
+import "./App.scss";
+
 import Galaxy from "./Galaxy.tsx";
 
-import "./App.css";
 import GoldenGate from "./gg-bridge.png";
 import Home from "./Home";
 import Resume from "./Resume";

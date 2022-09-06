@@ -2,8 +2,6 @@ import React, { useEffect, useState } from "react";
 import { ArrowLeftCircle } from "react-feather";
 import { Link } from "react-router-dom";
 
-import "./App.css";
-
 const Resume = () => {
   const [opacity, setOpacity] = useState(false);
   useEffect(() => {

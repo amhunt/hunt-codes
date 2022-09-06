@@ -2,7 +2,6 @@ import React, { useEffect, useState, useCallback, useRef } from "react";
 import { Link } from "react-router-dom";
 import Typed from "typed.js";
 
-import "./App.css";
 import Logo from "./Logo";
 
 const typedOptions = {

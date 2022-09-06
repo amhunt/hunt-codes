@@ -96,11 +96,11 @@ p {
 }
 
 @keyframes planet1Anim {
-  0% {  
+  0% {
     transform: translate(10%, 70%);
     filter: drop-shadow(0px 0px 0px rgb(255, 85, 0));
   }
-  100% {  
+  100% {
     transform: translate(10%, 20%);
     filter: drop-shadow(0px 0px 100px rgba(255, 98, 0, 0.75));
   }
@@ -118,19 +118,20 @@ p {
   filter: drop-shadow(0px 0px 100px rgba(255, 98, 0, 0.75));
   background-repeat: no-repeat;
   background: radial-gradient(
-    circle at center, 
-    #ffce73aa 0%, 
-    #ffce73 20%, 
+    circle at center,
+    #ffce73aa 0%,
+    #ffce73 20%,
 
-    #ffbb00e1 30%, 
-    transparent 30%);
+    #ffbb00e1 30%,
+    transparent 30%
+  );
   /* background: radial-gradient(circle at center, transparent, transparent 25%, #ffe100 40%, transparent 40%); */
 }
 
 .nameTitle {
   position: absolute;
   fill: #004225;
-  opacity: 0.85;
+  opacity: 0.75;
   left: 32px;
   right: 32px;
   top: 32px;
@@ -140,15 +141,15 @@ p {
 }
 
 .headerCharacter:hover {
-  fill: white;
+  fill: white !important;
 }
 
 .headerCharacter.highlighted {
-  fill: #000;
+  fill: #002d19;
 }
 
 .headerCharacter.highlighted2 {
-  fill: black;
+  fill: #00562f;
 }
 
 .hiddenEmoji {
@@ -189,7 +190,6 @@ li > ul > li {
   padding-right: 32px;
   padding-bottom: 160px;
 }
-
 
 .splitRow {
   display: flex;
@@ -361,13 +361,12 @@ a:hover {
   );
 }
 
-
 @keyframes backgroundAnim {
-  0% {  
+  0% {
     /* transform: translate(10%, 70%); */
     filter: hue-rotate(45deg);
   }
-  100% {  
+  100% {
     /* transform: translate(10%, 20%); */
     filter: hue-rotate(210deg);
   }

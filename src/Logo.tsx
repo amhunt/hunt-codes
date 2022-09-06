@@ -1,7 +1,5 @@
 import React, { useEffect, useState, useCallback } from "react";
 
-import "./App.css";
-
 // Pantone colors of the years 2000 - 2020
 // except for 2006 and 2015 🤮
 const colorOptions = [
