@@ -65,7 +65,9 @@ const Logo = ({
         style={{
           left: paddingLeft1,
           top: paddingTop1,
-          WebkitBoxReflect: `below ${ MIRROR_OFFSET_PX - (paddingTop1 ?? 0)}px linear-gradient(transparent 0%, transparent 50%, #000d 100%)`,
+          WebkitBoxReflect: `below ${
+            MIRROR_OFFSET_PX - (paddingTop1 ?? 0)
+          }px linear-gradient(transparent 0%, transparent 50%, #000d 100%)`,
         }}
       >
         <path
@@ -96,12 +98,13 @@ const Logo = ({
         style={{
           left: paddingLeft2,
           top: paddingTop2,
-          WebkitBoxReflect: `below ${ MIRROR_OFFSET_PX - (paddingTop2 ?? 0)}px linear-gradient(transparent 0%, transparent 50%, #000d 100%)`,
+          WebkitBoxReflect: `below ${
+            MIRROR_OFFSET_PX - (paddingTop2 ?? 0)
+          }px linear-gradient(transparent 0%, transparent 50%, #000d 100%)`,
         }}
       >
         <path
           d="M0.591187 44L159 327L255 25C119 -24 45.8689 12 0.591187 44Z"
-          // eslint-disable-next-line react/no-unknown-property
           fill="url(#paint1_linear)"
         />
         <defs>
