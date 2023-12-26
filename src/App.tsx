@@ -3,7 +3,7 @@ import { BrowserRouter as Router, Switch, Route } from "react-router-dom";
 
 import "./App.scss";
 
-import Galaxy from "./Galaxy.tsx";
+import Galaxy from "./Galaxy";
 
 import GoldenGate from "./gg-bridge.png";
 import Home from "./Home";
@@ -11,7 +11,7 @@ import Resume from "./Resume";
 
 // Needed to get hover state on individual chars
 const andrewHunt = "andrewhunt";
-const nameArr = [];
+const nameArr: string[] = [];
 for (let c of andrewHunt) {
   nameArr.push(c);
 }
@@ -59,7 +59,7 @@ const App = () => {
         style={
           dimHeader
             ? { opacity: 0.3, fill: "white", pointerEvents: "none" }
-            : null
+            : undefined
         }
       >
         <g y="-1" textLength="100%" alignmentBaseline="hanging" color="#004225">
@@ -68,8 +68,9 @@ const App = () => {
               key={idx}
               textLength="100%"
               x={idx * 10}
-              className={`headerCharacter ${highlightedCharIdx === idx ? "highlighted" : ""
-                } ${highlightedCharIdx2 === idx ? "highlighted2" : ""}`}
+              className={`headerCharacter ${
+                highlightedCharIdx === idx ? "highlighted" : ""
+              } ${highlightedCharIdx2 === idx ? "highlighted2" : ""}`}
               alignmentBaseline="hanging"
             >
               {c}
@@ -80,7 +81,7 @@ const App = () => {
       <Router>
         <Switch>
           <Route exact path="/">
-            <Home homeOpacity={homeOpacity} setHomeOpacity={setHomeOpacity} />
+            <Home homeOpacity={homeOpacity} />
           </Route>
           <Route path="/resume">
             <Resume />
@@ -90,8 +91,9 @@ const App = () => {
         <Galaxy />
         <div style={{ height: "100vh" }}>
           <img
-            className={`App-gg-bridge${showBridge ? " App-gg-bridge-opaque" : ""
-              }`}
+            className={`App-gg-bridge${
+              showBridge ? " App-gg-bridge-opaque" : ""
+            }`}
             src={GoldenGate}
             alt="golden gate bridge"
           />
