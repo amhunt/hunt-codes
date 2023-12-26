@@ -9,8 +9,8 @@
 .logoWrapper {
   align-items: center;
   display: flex;
-  height: 100%;
   justify-content: center;
+  height: 100%;
   position: absolute;
   transition: opacity 5s ease;
   width: 50%;
@@ -95,7 +95,7 @@ p {
   opacity: 0;
 }
 
-@keyframes planet1Anim {
+@keyframes sunrise {
   0% {
     transform: translate(10%, 70%);
     filter: drop-shadow(0px 0px 0px rgb(255, 85, 0));
@@ -106,26 +106,36 @@ p {
   }
 }
 
+@keyframes nightfall {
+  0% {
+    filter: hue-rotate(0deg) drop-shadow(0px 0px 100px rgba(255, 98, 0, 0.75)) brightness(100%);
+    backdrop-filter: hue-rotate(0deg);
+  }
+  100% {
+    backdrop-filter: hue-rotate(70deg) brightness(50%);
+    filter: hue-rotate(70deg) drop-shadow(0px 0px 100px rgba(255, 98, 0, 0.75))
+      brightness(20%);
+  }
+}
+
 .planet1 {
   position: absolute;
-  top: -50%;
-  left: -50%;
-  right: -50%;
-  bottom: -50%;
+  inset: -50%;
   transform: translate(10%, 20%);
-  animation: 10s linear planet1Anim;
-  animation-timing-function: ease-out;
-  filter: drop-shadow(0px 0px 100px rgba(255, 98, 0, 0.75));
+  animation: 2s linear both sunrise;
+  transition: filter 1s ease, backdrop-filter 1s ease;
   background-repeat: no-repeat;
-  background: radial-gradient(
+  background-image: radial-gradient(
     circle at center,
     #ffce73aa 0%,
     #ffce73 20%,
-
     #ffbb00e1 30%,
     transparent 30%
   );
-  /* background: radial-gradient(circle at center, transparent, transparent 25%, #ffe100 40%, transparent 40%); */
+}
+
+.planet1_darkened {
+  animation: 2s linear both sunrise, 2s linear both nightfall;
 }
 
 .nameTitle {
@@ -175,6 +185,7 @@ li > ul > li {
   transition: opacity 1s ease;
   z-index: 4;
   position: relative;
+  color: #eeeeee;
 }
 
 .resume-container::-webkit-scrollbar {
@@ -211,7 +222,7 @@ li > ul > li {
 }
 
 @media (max-width: 800px) {
-  .resume-container {
+  .resume-contaner {
     padding-bottom: 240px;
     padding-top: 40px;
     max-height: calc(100% - 280px);
@@ -373,10 +384,7 @@ a:hover {
 }
 
 .App-background {
-  top: 0px;
-  bottom: 0px;
-  left: 0px;
-  right: 0%;
+  inset: 0;
   position: absolute;
   filter: hue-rotate(200deg);
   animation: 10s linear backgroundAnim;

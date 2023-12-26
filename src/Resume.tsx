@@ -26,16 +26,21 @@ const Resume = () => {
           </a>
           .
         </p>
-        <h4>Work I love:</h4>
+        <h4>Work I’m passionate about:</h4>
         <ul>
           <li>
-            Frontend architecture and dev experience: increase frontend dev
-            velocity, reduce bugs, and improve product/UX quality
+            Frontend architecture and dev experience: I believe frontend
+            developer infrastructure should be the first line of defense to
+            increase developer velocity, reduce bugs, and improve quality and
+            consistency for the end user.
           </li>
-          <li>Component systemization</li>
           <li>
-            Product: Working closely with designers + researchers to build
-            delightful, interactive web products
+            Component systemization: I believe in the power of well-structured
+            component systems to streamline web development.
+          </li>
+          <li>
+            Product collaboration: I thrive when working closely with designers
+            + researchers to build delightful, engaging web products.
             <ul>
               <li>
                 <em>
@@ -45,7 +50,14 @@ const Resume = () => {
               </li>
             </ul>
           </li>
-          <li>Performance optimization</li>
+          <li>
+            Performance optimization: I’m committed to optimizing web
+            applications for top-notch performance, ensuring a smooth and
+            responsive experience for users. I also believe premature
+            optimization is too common in frontend development, and that
+            performance optimization should be done in a data-driven,
+            user-centered way.
+          </li>
         </ul>
         <p>
           <b>Things I know well</b> (in order)<b>:</b> TypeScript/JavaScript,

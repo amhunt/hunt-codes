@@ -68,9 +68,8 @@ const App = () => {
               key={idx}
               textLength="100%"
               x={idx * 10}
-              className={`headerCharacter ${
-                highlightedCharIdx === idx ? "highlighted" : ""
-              } ${highlightedCharIdx2 === idx ? "highlighted2" : ""}`}
+              className={`headerCharacter ${highlightedCharIdx === idx ? "highlighted" : ""
+                } ${highlightedCharIdx2 === idx ? "highlighted2" : ""}`}
               alignmentBaseline="hanging"
             >
               {c}
@@ -87,18 +86,17 @@ const App = () => {
             <Resume />
           </Route>
         </Switch>
+        <div className="App-background"></div>
+        <Galaxy />
+        <div style={{ height: "100vh" }}>
+          <img
+            className={`App-gg-bridge${showBridge ? " App-gg-bridge-opaque" : ""
+              }`}
+            src={GoldenGate}
+            alt="golden gate bridge"
+          />
+        </div>
       </Router>
-      <div className="App-background"></div>
-      <Galaxy />
-      <div style={{ height: "100vh" }}>
-        <img
-          className={`App-gg-bridge${
-            showBridge ? " App-gg-bridge-opaque" : ""
-          }`}
-          src={GoldenGate}
-          alt="golden gate bridge"
-        />
-      </div>
     </div>
   );
 };

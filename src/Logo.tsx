@@ -29,6 +29,8 @@ function getPantoneColor() {
   return colorOptions[Math.floor(Math.random() * colorOptions.length)];
 }
 
+const MIRROR_OFFSET_PX = 32;
+
 const Logo = ({
   paddingLeft1,
   paddingTop1,
@@ -63,6 +65,7 @@ const Logo = ({
         style={{
           left: paddingLeft1,
           top: paddingTop1,
+          WebkitBoxReflect: `below ${ MIRROR_OFFSET_PX - (paddingTop1 ?? 0)}px linear-gradient(transparent 0%, transparent 50%, #000d 100%)`,
         }}
       >
         <path
@@ -93,6 +96,7 @@ const Logo = ({
         style={{
           left: paddingLeft2,
           top: paddingTop2,
+          WebkitBoxReflect: `below ${ MIRROR_OFFSET_PX - (paddingTop2 ?? 0)}px linear-gradient(transparent 0%, transparent 50%, #000d 100%)`,
         }}
       >
         <path

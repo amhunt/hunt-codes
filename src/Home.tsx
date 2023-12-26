@@ -82,6 +82,10 @@ const Home = ({ homeOpacity }: { homeOpacity: number }) => {
       </div>
       <main className="homeInfoContainer" style={{ opacity: homeOpacity }}>
         <p className="hoverableHomeItem">
+          <span className="hiddenEmoji">🌖 </span>
+          <Link to="/resume">about</Link>
+        </p>
+        <p className="hoverableHomeItem">
           <span className="hiddenEmoji">🌕 </span>
           <span>
             engineer at&nbsp;
@@ -93,10 +97,6 @@ const Home = ({ homeOpacity }: { homeOpacity: number }) => {
               zip
             </a>
           </span>
-        </p>
-        <p className="hoverableHomeItem">
-          <span className="hiddenEmoji">🌖 </span>
-          <Link to="/resume">about</Link>
         </p>
         <p className="hoverableHomeItem">
           <span className="hiddenEmoji">🌗 </span>
@@ -129,7 +129,7 @@ const Home = ({ homeOpacity }: { homeOpacity: number }) => {
           </a>
         </p> */}
         <p className="hoverableHomeItem">
-          <span className="hiddenEmoji">🌓</span>
+          <span className="hiddenEmoji">🌑 </span>
           <a
             href="mailto:andrew@hunt.codes"
             id="typed-js"

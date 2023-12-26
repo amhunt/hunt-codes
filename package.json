@@ -7,6 +7,7 @@
     "@types/node": "^13.11.1",
     "@types/react-dom": "^16.9.6",
     "@types/typed.js": "^2.0.9",
+    "classnames": "^2.3.2",
     "husky": "^8.0.1",
     "lint-staged": "^13.0.3",
     "prettier": "^2.7.1",
