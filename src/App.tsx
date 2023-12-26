@@ -89,7 +89,7 @@ const App = () => {
         </Switch>
         <div className="App-background"></div>
         <Galaxy />
-        <div style={{ height: "100vh" }}>
+        <div className="h-screen">
           <img
             className={`App-gg-bridge${
               showBridge ? " App-gg-bridge-opaque" : ""

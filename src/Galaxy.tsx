@@ -5,12 +5,7 @@ import { useLocation } from "react-router-dom";
 const Galaxy = () => {
   const location = useLocation();
   return (
-    <div
-      style={{
-        position: "fixed",
-        inset: 0,
-      }}
-    >
+    <div className="fixed inset-0">
       <div
         className={cx(
           "planet1",
