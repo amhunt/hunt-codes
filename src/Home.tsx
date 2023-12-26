@@ -88,13 +88,13 @@ const Home = ({ homeOpacity }: { homeOpacity: number }) => {
         <p className="hoverableHomeItem">
           <span className="hiddenEmoji">🌕 </span>
           <span>
-            engineer at&nbsp;
+            currently @{" "}
             <a
               target="_blank"
               rel="noopener noreferrer"
               href="https://www.ziphq.com"
             >
-              zip
+              ziphq.com
             </a>
           </span>
         </p>

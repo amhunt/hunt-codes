@@ -51,12 +51,10 @@ const Resume = () => {
             </ul>
           </li>
           <li>
-            Performance optimization: I’m committed to optimizing web
-            applications for top-notch performance, ensuring a smooth and
-            responsive experience for users. I also believe premature
-            optimization is too common in frontend development, and that
-            performance optimization should be done in a data-driven,
-            user-centered way.
+            Performance optimization: I’m committed to ensuring a smooth and
+            responsive experience for users. I believe it’s key to prioritize
+            data-driven and user-centric performance improvements, rather than
+            investing in blind optimizations.
           </li>
         </ul>
         <p>
