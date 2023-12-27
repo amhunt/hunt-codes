@@ -1,19 +1,31 @@
-import React from "react";
+import React, { useState } from "react";
 import cx from "classnames";
-import { useLocation } from "react-router-dom";
 
-const Galaxy = () => {
-  const location = useLocation();
+const Galaxy = ({ isNightMode }: { isNightMode: boolean }) => {
+  const [hasMounted, setHasMounted] = useState(false);
+
+  React.useEffect(() => {
+    setHasMounted(true);
+  }, []);
+
   return (
-    <div className="fixed inset-0">
+    <div className="planet-container">
       <div
         className={cx(
           "planet1",
-          location.pathname.includes("resume") && "planet1_darkened"
+          "planet1_day",
+          hasMounted && (!isNightMode ? "on" : "off")
+        )}
+      />
+      <div
+        className={cx(
+          "planet1",
+          "planet1_night",
+          !hasMounted ? "unmounted" : isNightMode ? "on" : "off"
         )}
       />
     </div>
   );
 };
 
-export default Galaxy;
+export default React.memo(Galaxy);

@@ -72,7 +72,6 @@ const Logo = ({
       >
         <path
           d="M263 0L26.4015 7.91045L0 256.101L252.846 265L263 0Z"
-          // eslint-disable-next-line react/no-unknown-property
           fill="url(#paint0_linear)"
         />
         <defs>

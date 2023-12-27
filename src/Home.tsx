@@ -3,6 +3,14 @@ import { Link } from "react-router-dom";
 import Typed from "typed.js";
 
 import Logo from "./Logo";
+import {
+  Briefcase,
+  Info,
+  GitHub,
+  Linkedin,
+  Mail,
+  Columns,
+} from "react-feather";
 
 const typedOptions = {
   loop: true,
@@ -35,10 +43,14 @@ const Home = ({ homeOpacity }: { homeOpacity: number }) => {
   }, []);
 
   useEffect(() => {
-    new Typed("#typed-js", typedOptions);
+    const typed = new Typed("#typed-js", typedOptions);
     document.onmousemove = getCursorXY;
 
-    setTimeout(() => setLogoOpacity(1), 1000);
+    const timeout = setTimeout(() => setLogoOpacity(1), 1000);
+    return () => {
+      clearTimeout(timeout);
+      typed.destroy();
+    };
   }, [getCursorXY]);
 
   const cursorRatioX = cursorPositionX
@@ -53,7 +65,7 @@ const Home = ({ homeOpacity }: { homeOpacity: number }) => {
   let cursorMultiplier1 = 30;
   let cursorMultiplier2 = 50;
   if (typeof window !== "undefined") {
-    if (window.innerWidth < 600) {
+    if (window.innerWidth < 768) {
       isSmall = true;
     }
     if (window.innerWidth < 1000) {
@@ -75,20 +87,47 @@ const Home = ({ homeOpacity }: { homeOpacity: number }) => {
     <>
       <div
         ref={leftHalfEl}
-        className="logoWrapper"
+        className="logoWrapper flex items-center justify-center h-full pointer-events-none md:w-[50%] w-full"
         style={{ opacity: logoOpacity ? 1 : 0 }}
       >
         <Logo {...(!isSmall && logoPositioningProps)} />
       </div>
-      <main className="homeInfoContainer" style={{ opacity: homeOpacity }}>
-        <p className="hoverableHomeItem">
-          <span className="hiddenEmoji">🌖 </span>
-          <Link to="/resume">about</Link>
+      <main
+        className="w-[400px] homeInfoContainer"
+        style={{ opacity: homeOpacity }}
+      >
+        <p className="hoverableHomeItem justify-between">
+          <Link className="flex items-center gap-2" to="/about">
+            <span className="hiddenEmoji">
+              <Info />
+            </span>
+            about me
+          </Link>
+          <div className="flex items-center gap-1">
+            <a
+              target="_blank"
+              rel="noopener noreferrer"
+              href="https://www.linkedin.com/in/andrewmhunt/"
+              className="flex transition-colors items-center justify-center w-12 h-12 p-2 rounded-full hover:bg-gray-300"
+            >
+              <Linkedin />
+            </a>
+            <a
+              target="_blank"
+              rel="noopener noreferrer"
+              href="https://www.github.com/amhunt"
+              className="flex transition-colors items-center justify-center w-12 h-12 p-2 rounded-full hover:bg-gray-300"
+            >
+              <GitHub />
+            </a>
+          </div>
         </p>
         <p className="hoverableHomeItem">
-          <span className="hiddenEmoji">🌕 </span>
+          <span className="hiddenEmoji">
+            <Briefcase className="purp" />
+          </span>
           <span>
-            currently @{" "}
+            staff eng @{" "}
             <a
               target="_blank"
               rel="noopener noreferrer"
@@ -98,40 +137,24 @@ const Home = ({ homeOpacity }: { homeOpacity: number }) => {
             </a>
           </span>
         </p>
-        <p className="hoverableHomeItem">
-          <span className="hiddenEmoji">🌗 </span>
+        <p>
           <a
+            className="hoverableHomeItem"
             target="_blank"
             rel="noopener noreferrer"
-            href="https://www.linkedin.com/in/andrewmhunt/"
+            href="https://engineering.ziphq.com/material-ui/"
           >
-            linkedin
+            <span className="hiddenEmoji">
+              <Columns />
+            </span>
+            material ui blog post
           </a>
         </p>
-        <p className="hoverableHomeItem">
-          <span className="hiddenEmoji">🌘 </span>
-          <a
-            target="_blank"
-            rel="noopener noreferrer"
-            href="https://www.github.com/amhunt"
-          >
-            github
-          </a>
-        </p>
-        {/* <p className="hoverableHomeItem">
-          <span className="hiddenEmoji">🌑 </span>
-          <a
-            target="_blank"
-            rel="noopener noreferrer"
-            href="https://andrew-hunt.medium.com/"
-          >
-            blog
-          </a>
-        </p> */}
-        <p className="hoverableHomeItem">
-          <span className="hiddenEmoji">🌑 </span>
-          <a
-            href="mailto:andrew@hunt.codes"
+        <p className="h-20 hoverableHomeItem">
+          <span className="hiddenEmoji">
+            <Mail />
+          </span>
+          <span
             id="typed-js"
             className="typed"
             aria-label="email address: andrew@hunt.codes"

@@ -30,3 +30,15 @@ code {
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
+
+@layer base {
+  ul, ol {
+    list-style: revert;
+    padding: revert;
+  }
+
+  h1, h2, h3 {
+    margin: revert;
+    padding: revert;
+  }
+}

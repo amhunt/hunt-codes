@@ -7,36 +7,28 @@
 }
 
 .logoWrapper {
-  align-items: center;
-  display: flex;
-  justify-content: center;
-  height: 100%;
   position: absolute;
   transition: opacity 5s ease;
-  width: 50%;
-  pointer-events: none;
   z-index: 1;
 }
 
 .logoComponent {
   position: absolute;
   overflow: visible;
-  max-width: 500px;
-
-  -webkit-animation-name: spin;
-  -webkit-animation-timing-function: linear;
-  -webkit-animation-iteration-count: infinite;
-  -webkit-animation-duration: 10s;
-
+  max-width: 400px;
   animation-name: spin;
   animation-timing-function: linear;
   animation-iteration-count: infinite;
   animation-duration: 10s;
-
-  -webkit-transform-style: preserve-3d;
-  -moz-transform-style: preserve-3d;
-  -ms-transform-style: preserve-3d;
   transform-style: preserve-3d;
+}
+
+.logo1 {
+  width: 16vw;
+}
+
+.logo2 {
+  width: 13vw;
 }
 
 .centerDiv {
@@ -54,19 +46,6 @@ p {
   line-height: 1.75rem;
 }
 
-.App-transamerica {
-  position: fixed;
-  bottom: 0;
-  right: 15vw;
-  height: 30vh;
-  opacity: 0;
-  transition: opacity 200ms;
-}
-
-.App-transamerica-opaque {
-  opacity: 100;
-}
-
 .App-gg-bridge {
   position: fixed;
   bottom: -10px;
@@ -75,7 +54,9 @@ p {
   opacity: 0;
   z-index: 3;
   pointer-events: none;
-  transition: opacity 1s, right 1s;
+  transition:
+    opacity 1s,
+    right 1s;
 }
 
 .App-gg-bridge-opaque {
@@ -84,58 +65,114 @@ p {
 }
 
 .homeInfoContainer {
-  color: #222222;
-  font-size: 28px;
-  left: 50vw;
+  color: #111;
+  font-size: 24px;
+  left: calc(60vw - 120px);
   position: fixed;
-  top: calc(50% + 100px);
-  transform: translateY(-50%);
+  bottom: 20vh;
   transition: opacity 300ms ease;
   z-index: 2;
   opacity: 0;
 }
 
+.planet-container {
+  position: fixed;
+  inset: 0;
+  z-index: 1;
+}
+
+.planet1 {
+  position: absolute;
+  inset: -50%;
+  transition: opacity 500ms ease;
+  transition-delay: 1s;
+  transform: translateY(160vh);
+  opacity: 0;
+}
+
+.planet1_day {
+  background-image: radial-gradient(
+    circle at 60% 50%,
+    #e5bd73 0%,
+    #ffce73 20%,
+    #ffbb00 30%,
+    transparent 30%
+  );
+  filter: drop-shadow(0px 0px 100px rgba(255, 98, 0, 0.75));
+
+  &.unmounted {
+    opacity: 0;
+  }
+
+  &.on {
+    animation: 1s ease-in 1s both sunrise;
+    opacity: 1;
+  }
+
+  &.off {
+    animation: 1s ease-in both planetset;
+    opacity: 1;
+  }
+}
+
+.planet1_night {
+  background-image: radial-gradient(
+    circle at 60% 50%,
+    #071b47 0%,
+    #101524 20%,
+    #1b243f 30%,
+    transparent 30%
+  );
+  filter: drop-shadow(0px 0px 100px rgba(106, 5, 201, 0.75));
+
+  &.unmounted {
+    opacity: 0;
+  }
+
+  &.on {
+    opacity: 1;
+    animation: 1s ease-in 1s both nightfall;
+  }
+
+  &.off {
+    opacity: 1;
+    animation: 1s ease-in both planetset;
+  }
+}
+
 @keyframes sunrise {
   0% {
-    transform: translate(10%, 70%);
+    transform: translateY(160vh);
     filter: drop-shadow(0px 0px 0px rgb(255, 85, 0));
   }
   100% {
-    transform: translate(10%, 20%);
+    transform: translateY(20%);
     filter: drop-shadow(0px 0px 100px rgba(255, 98, 0, 0.75));
   }
 }
 
 @keyframes nightfall {
   0% {
-    filter: hue-rotate(0deg) drop-shadow(0px 0px 100px rgba(255, 98, 0, 0.75)) brightness(100%);
-    backdrop-filter: hue-rotate(0deg);
+    transform: translateY(160vh);
+    filter: drop-shadow(0px 0px 100px rgba(106, 5, 201, 0.25));
+  }
+  50% {
+    transform: translateY(20%);
+    filter: drop-shadow(0px 0px 100px rgba(106, 5, 201, 0.95));
   }
   100% {
-    backdrop-filter: hue-rotate(70deg) brightness(50%);
-    filter: hue-rotate(70deg) drop-shadow(0px 0px 100px rgba(255, 98, 0, 0.75))
-      brightness(20%);
+    transform: translateY(20%);
+    filter: drop-shadow(0px 0px 100px rgba(106, 5, 201, 0.75));
   }
 }
 
-.planet1 {
-  position: absolute;
-  inset: -50%;
-  transform: translate(10%, 20%);
-  animation: 2s linear both sunrise;
-  transition: filter 1s ease, backdrop-filter 1s ease;
-  background-repeat: no-repeat;
-  background-image: radial-gradient(
-    circle at center,
-    #ffce73aa 0%,
-    #ffce73 20%,
-    #ffbb00e1 30%,
-    transparent 30%
-  );
-}
-
-.planet1_darkened {
-  animation: 2s linear both sunrise, 2s linear both nightfall;
+@keyframes planetset {
+  0% {
+    transform: translateY(20%);
+  }
+  100% {
+    transform: translateY(160vh);
+  }
 }
 
 .nameTitle {
@@ -146,7 +183,9 @@ p {
   right: 32px;
   top: 32px;
   width: calc(100% - 64px);
-  transition: fill 3s ease, opacity 1s ease;
+  transition:
+    fill 3s ease,
+    opacity 1s ease;
   z-index: 3;
 }
 
@@ -164,15 +203,20 @@ p {
 
 .hiddenEmoji {
   opacity: 0;
-  padding-right: 8px;
+  width: 24px;
 }
 
 .hoverableHomeItem {
   display: flex;
-}
+  align-items: center;
+  gap: 8px;
+  min-height: 40px;
 
-.hoverableHomeItem:hover > .hiddenEmoji {
-  opacity: 1;
+  &:hover {
+    .hiddenEmoji {
+      opacity: 1;
+    }
+  }
 }
 
 li > ul > li {
@@ -194,9 +238,8 @@ li > ul > li {
 
 .resume-inner-container {
   margin: auto;
-
   padding-top: 80px;
-  max-width: 750px;
+  max-width: 767px;
   padding-left: 32px;
   padding-right: 32px;
   padding-bottom: 160px;
@@ -207,25 +250,16 @@ li > ul > li {
   justify-content: space-between;
 }
 
-.logo1 {
-  width: 20vw;
-}
-
-.logo2 {
-  width: 16vw;
-}
-
 @media (max-width: 1000px) {
   .App-gg-bridge {
     height: 30vh;
   }
 }
 
-@media (max-width: 800px) {
-  .resume-contaner {
+@media (max-width: 767px) {
+  .resume-container {
     padding-bottom: 240px;
     padding-top: 40px;
-    max-height: calc(100% - 280px);
   }
 
   .splitRow {
@@ -240,14 +274,16 @@ li > ul > li {
     font-size: 16px;
     margin-top: 8px;
   }
-}
 
-@media (max-width: 600px) {
   .homeInfoContainer {
+    transition: color 1000ms ease-in-out;
     left: 24px;
-    text-shadow: -1px -1px 0 hsl(0, 100%, 100%), -2px -2px 1px hsl(80, 0%, 80%);
-    bottom: 32px;
-    top: 50%;
+    right: 24px;
+    width: unset;
+    text-shadow:
+      -1px -1px 0 hsl(0, 100%, 100%),
+      -2px -2px 1px hsl(80, 0%, 80%);
+    bottom: 48px;
     transform: unset;
   }
 
@@ -258,8 +294,8 @@ li > ul > li {
     width: calc(100% - 32px);
   }
 
-  .App-transamerica {
-    right: 30vw;
+  .hiddenEmoji {
+    opacity: 1;
   }
 
   .App-gg-bridge {
@@ -300,13 +336,30 @@ button {
 }
 
 p {
-  margin-block-start: 0.5em;
-  margin-block-end: 0.5em;
+  margin-block-start: 0.25em;
+  margin-block-end: 0.25em;
+}
+
+$purp: #412596;
+
+.purp {
+  color: $purp;
 }
 
 a {
-  text-decoration: none;
-  color: unset;
+  color: $purp;
+
+  :hover {
+    color: #13004b;
+  }
+
+  &.inverse {
+    color: #c8b6ff;
+
+    :hover {
+      color: #806eb8;
+    }
+  }
 }
 
 li {
@@ -316,14 +369,17 @@ li {
 .App,
 a,
 button {
-  cursor: url(./cursor.svg) 0 6, auto;
+  cursor:
+    url(./cursor.svg) 0 6,
+    auto;
 }
 
 button:hover,
 a:hover {
   text-decoration: underline;
-  color: #004225;
-  cursor: url(./cursor_pointer.png) 16 0, auto;
+  cursor:
+    url(./cursor_pointer.png) 16 0,
+    auto;
 }
 
 @-webkit-keyframes spin {
@@ -348,37 +404,11 @@ a:hover {
   }
 }
 
-/* Unused blue gradient background */
-.App-background2 {
-  height: 100vh;
-  background: linear-gradient(
-    196deg,
-    hsla(210, 100%, 45.1%, 0) 0%,
-    hsla(210, 100%, 45.1%, 0.007) 9.3%,
-    hsla(210, 100%, 45.1%, 0.027) 17.9%,
-    hsla(210, 100%, 45.1%, 0.058) 26%,
-    hsla(210, 100%, 45.1%, 0.098) 33.5%,
-    hsla(210, 100%, 45.1%, 0.145) 40.6%,
-    hsla(210, 100%, 45.1%, 0.197) 47.3%,
-    hsla(210, 100%, 45.1%, 0.252) 53.7%,
-    hsla(210, 100%, 45.1%, 0.308) 59.8%,
-    hsla(210, 100%, 45.1%, 0.363) 65.7%,
-    hsla(210, 100%, 45.1%, 0.415) 71.4%,
-    hsla(210, 100%, 45.1%, 0.462) 77.1%,
-    hsla(210, 100%, 45.1%, 0.502) 82.7%,
-    hsla(210, 100%, 45.1%, 0.533) 88.3%,
-    hsla(210, 100%, 45.1%, 0.553) 94.1%,
-    hsla(210, 100%, 45.1%, 0.56) 100%
-  );
-}
-
 @keyframes backgroundAnim {
   0% {
-    /* transform: translate(10%, 70%); */
     filter: hue-rotate(45deg);
   }
   100% {
-    /* transform: translate(10%, 20%); */
     filter: hue-rotate(210deg);
   }
 }
@@ -386,8 +416,65 @@ a:hover {
 .App-background {
   inset: 0;
   position: absolute;
-  filter: hue-rotate(200deg);
+  filter: hue-rotate(210deg);
+  transition: 500ms opacity ease-in-out;
   animation: 10s linear backgroundAnim;
+
+  &.on {
+    z-index: 0;
+    transition-delay: 500ms;
+    opacity: 1;
+  }
+
+  &.off {
+    opacity: -1;
+    transition-delay: 700ms;
+  }
+}
+
+.App-background_night {
+  background-color: black;
+  background-image: radial-gradient(
+      white,
+      rgba(255, 255, 255, 0.2) 2px,
+      transparent 25px
+    ),
+    radial-gradient(white, rgba(255, 255, 255, 0.15) 1px, transparent 20px),
+    radial-gradient(white, rgba(255, 255, 255, 0.1) 2px, transparent 10px),
+    radial-gradient(
+      rgba(255, 255, 255, 0.4),
+      rgba(255, 255, 255, 0.1) 2px,
+      transparent 17px
+    ),
+    radial-gradient(white, rgba(255, 255, 255, 0.2) 2px, transparent 25px),
+    radial-gradient(white, rgba(255, 255, 255, 0.15) 1px, transparent 20px),
+    radial-gradient(white, rgba(255, 255, 255, 0.1) 2px, transparent 10px),
+    radial-gradient(
+      rgba(255, 255, 255, 0.4),
+      rgba(255, 255, 255, 0.1) 2px,
+      transparent 17px
+    );
+  background-size:
+    550px 550px,
+    350px 350px,
+    250px 250px,
+    150px 150px,
+    280px 280px,
+    310px 310px,
+    610px 610px,
+    820px 820px;
+  background-position:
+    0 0,
+    40px 60px,
+    130px 270px,
+    70px 100px,
+    10px 10px,
+    80px 20px,
+    123px 214px,
+    20px 300px;
+}
+
+.App-background_day {
   background: linear-gradient(
     168deg,
     hsl(337.38, 100%, 88.04%) 0%,

@@ -4,6 +4,7 @@ import { Link } from "react-router-dom";
 
 const Resume = () => {
   const [opacity, setOpacity] = useState(false);
+
   useEffect(() => {
     const timer = setTimeout(() => {
       setOpacity(true);
@@ -14,14 +15,17 @@ const Resume = () => {
   return (
     <div className="resume-container" style={{ opacity: opacity ? 1 : 0 }}>
       <div className="resume-inner-container">
-        <Link to="/">
+        <Link className="mb-8 block inverse" to="/">
           <ArrowLeftCircle size={40} />
         </Link>
-        <h1>About me</h1>
+        <h1 className="mb-4">About me</h1>
         <p>
           Hey! I’m a web engineer in San Francisco. For consulting inquiries,
           reach out to{" "}
-          <a href="mailto:andrew@hunt.codes?Subject=Hey%20Andrew">
+          <a
+            className="link inverse"
+            href="mailto:andrew@hunt.codes?Subject=Hey%20Andrew"
+          >
             andrew@hunt.codes
           </a>
           .
@@ -199,4 +203,4 @@ const Resume = () => {
   );
 };
 
-export default Resume;
+export default React.memo(Resume);
