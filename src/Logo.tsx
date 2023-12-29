@@ -29,7 +29,7 @@ function getPantoneColor() {
   return colorOptions[Math.floor(Math.random() * colorOptions.length)];
 }
 
-const MIRROR_OFFSET_PX = 32;
+const MIRROR_OFFSET_PX = 80;
 
 const Logo = ({
   paddingLeft1,
@@ -55,7 +55,7 @@ const Logo = ({
   }, [changeColor]);
 
   return (
-    <div className="centerDiv">
+    <>
       {/* Square */}
       <svg
         viewBox="0 0 263 265"
@@ -120,7 +120,7 @@ const Logo = ({
           </linearGradient>
         </defs>
       </svg>
-    </div>
+    </>
   );
 };
 

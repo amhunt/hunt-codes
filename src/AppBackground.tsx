@@ -14,6 +14,13 @@ for (let c of andrewHunt) {
   nameArr.push(c);
 }
 
+const stars = Array.from({ length: 200 }, () => ({
+  x: Math.random() * window.innerWidth,
+  y: Math.random() * window.innerHeight,
+  r: Math.random() * 2,
+  animationDelay: `${Math.random() * 4000}ms`,
+}));
+
 const AppBg = ({ showBridge }: { showBridge: boolean }) => {
   const location = useLocation();
 
@@ -46,14 +53,14 @@ const AppBg = ({ showBridge }: { showBridge: boolean }) => {
   return (
     <>
       <svg
-        className="nameTitle"
+        className={cx(
+          "nameTitle",
+          isNightMode
+            ? "opacity-30 pointer-events-none fill-white night"
+            : "fill-[#004225] opacity-75"
+        )}
         viewBox="0 0 100 20"
         xmlns="http://www.w3.org/2000/svg"
-        style={
-          isNightMode
-            ? { opacity: 0.3, fill: "white", pointerEvents: "none" }
-            : undefined
-        }
       >
         <g y="-1" textLength="100%" alignmentBaseline="hanging" color="#004225">
           {nameArr.map((c, idx) => (
@@ -61,9 +68,12 @@ const AppBg = ({ showBridge }: { showBridge: boolean }) => {
               key={idx}
               textLength="100%"
               x={idx * 10}
-              className={`headerCharacter ${
-                highlightedCharIdx === idx ? "highlighted" : ""
-              } ${highlightedCharIdx2 === idx ? "highlighted2" : ""}`}
+              className={cx(
+                "headerCharacter",
+                highlightedCharIdx === idx && "highlighted",
+                highlightedCharIdx2 === idx && "highlighted2",
+                c === "h" ? "z-10" : "z-0"
+              )}
               alignmentBaseline="hanging"
             >
               {c}
@@ -84,17 +94,35 @@ const AppBg = ({ showBridge }: { showBridge: boolean }) => {
           "App-background_night",
           isNightMode ? "on" : "off"
         )}
-      />
+      >
+        {stars.map((star, i) => (
+          <div
+            key={i}
+            className={cx("star", star.r < 0.1 && "star_disco")}
+            style={{
+              left: star.x,
+              top: star.y,
+              width: star.r,
+              height: star.r,
+              animationDelay: star.animationDelay,
+            }}
+          />
+        ))}
+      </div>
       <Galaxy isNightMode={isNightMode} />
       <div className="h-screen">
         <img
           className={`App-gg-bridge ${
-            showBridge ? "App-gg-bridge-opaque" : ""
+            showBridge && !isNightMode ? "App-gg-bridge-opaque" : ""
           }`}
           src={GoldenGate}
           alt="golden gate bridge"
         />
       </div>
+
+      {isNightMode && (
+        <img src="disco" className="absolute left-4 bottom-4 w-8" />
+      )}
     </>
   );
 };

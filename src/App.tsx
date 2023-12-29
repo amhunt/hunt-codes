@@ -20,7 +20,7 @@ const App = () => {
   // fade home content in once mounted
   useEffect(() => {
     setHomeOpacity(1);
-    setTimeout(() => setShowBridge(true), 500);
+    setTimeout(() => setShowBridge(true), 1500);
   }, []);
 
   return (

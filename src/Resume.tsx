@@ -1,6 +1,61 @@
 import React, { useEffect, useState } from "react";
-import { ArrowLeftCircle } from "react-feather";
+import { ArrowLeftCircle, Calendar } from "react-feather";
 import { Link } from "react-router-dom";
+
+const experienceItems = [
+  {
+    title: "Software Engineer, ZipHQ",
+    location: "San Francisco",
+    date: "2021 - Present",
+    description: [
+      "Build new features and pages across the product",
+      "Lead efforts to standardize and improve shared components",
+      {
+        item: "Dev infra – CI/Quality/Dev experience:",
+        subbullets: [
+          "TypeScript correctness + coverage CI checks",
+          "Testing: Jest unit testing, Datadog Synthetic tests, and visual regression testing via Storybook/Chromatic",
+          "Built FE/BE logging system with Segment",
+        ],
+      },
+      "Manage build & deploy systems: Architected much of frontend build+deploy systems, across Webpack, Jenkins, Docker, S3, Cloudflare, and Webflow",
+      "Build & maintain frontend infra: dev server, HMR, logging, sourcemaps, TS/React usage, third-party package usage/maintenance",
+      "TypeScript: enabled TypeScript in repo and led migration of frontend code to 98% coverage",
+      "Performance: reduced page load times by 50%, primarily via code splitting (70% reduction in core bundle size) and routing optimizations",
+    ],
+  },
+  {
+    title: "Software Engineer, Untapped (fka Jumpstart)",
+    location: "San Francisco",
+    date: "2020 - 2021",
+    description: [
+      "Built out Recruiter Analytics platform",
+      "Introduced TypeScript to the codebase and evangelized",
+      "Led frontend platform group, overseeing all quality and performance initiatives",
+      "Improved core app performance by 40%",
+    ],
+  },
+  {
+    title: "Software Engineer, Airbnb",
+    location: "San Francisco",
+    date: "2017 - 2020",
+    description: [
+      "Built dozens of pricing and availability features across Experiences host and guest products",
+      "Ran >20 A/B tests, resulting in a compounded bookings lift of >10% for the Experiences product",
+      "Planned and executed on performance initiatives, reducing load times by >30% on 10+ pages",
+      "Oversaw conversion of legacy code to TypeScript, evangelized best practices across org",
+    ],
+  },
+  {
+    title: "Software Engineering Intern, Airbnb",
+    location: "San Francisco",
+    date: "Summer 2016",
+    description: [
+      "Built landing pages for new features",
+      "Contributed components to company frontend framework",
+    ],
+  },
+];
 
 const Resume = () => {
   const [opacity, setOpacity] = useState(false);
@@ -15,11 +70,11 @@ const Resume = () => {
   return (
     <div className="resume-container" style={{ opacity: opacity ? 1 : 0 }}>
       <div className="resume-inner-container">
-        <Link className="mb-8 block inverse" to="/">
+        <Link className="mb-12 block inverse" to="/">
           <ArrowLeftCircle size={40} />
         </Link>
-        <h1 className="mb-4">About me</h1>
-        <p>
+        <h1 className="mb-6">About me</h1>
+        <h4>
           Hey! I’m a web engineer in San Francisco. For consulting inquiries,
           reach out to{" "}
           <a
@@ -29,178 +84,108 @@ const Resume = () => {
             andrew@hunt.codes
           </a>
           .
-        </p>
-        <h4>Work I’m passionate about:</h4>
-        <ul>
+        </h4>
+        <div className="resume-divider" />
+        <h3>Work I’m passionate about:</h3>
+        <ul className="hor-list">
           <li>
-            Frontend architecture and dev experience: I believe frontend
-            developer infrastructure should be the first line of defense to
-            increase developer velocity, reduce bugs, and improve quality and
-            consistency for the end user.
+            <div className="card-title">Dev infra</div>I believe a solid
+            foundation and developer experience is the best way to increase
+            velocity, reduce bugs, and improve the user’s experience.
           </li>
           <li>
-            Component systemization: I believe in the power of well-structured
-            component systems to streamline web development.
+            <div className="card-title">Component systems</div>A well-structured
+            and robust component system should accelerate design and engineering
+            work, reduce bugs, and create a consistent user experience.
           </li>
           <li>
-            Product collaboration: I thrive when working closely with designers
-            + researchers to build delightful, engaging web products.
-            <ul>
-              <li>
-                <em>
-                  E.g. data viz, games, marketing pages, animation, search
-                  experiences
-                </em>
-              </li>
-            </ul>
+            <div className="card-title">Product collaboration</div>I thrive when
+            working closely with designers + researchers to build delightful,
+            engaging web products.{" "}
+            <em>
+              E.g. data viz, games, marketing pages, animation, search
+              experiences
+            </em>
           </li>
           <li>
-            Performance optimization: I’m committed to ensuring a smooth and
-            responsive experience for users. I believe it’s key to prioritize
-            data-driven and user-centric performance improvements, rather than
-            investing in blind optimizations.
+            <div className="card-title">Performance optimization</div>
+            I’m committed to ensuring a smooth and responsive experience for
+            users. I believe performance is a complex problem that should be
+            tackled with a data-driven and user-centric approach.
           </li>
         </ul>
         <p>
-          <b>Things I know well</b> (in order)<b>:</b> TypeScript/JavaScript,
-          React, ESLint, Webpack, D3, Visx, Webflow, Jest, Storybook, Chromatic,
-          Redux, S3, Cloudflare, Material UI, GitHub Actions, GraphQL, Vue
+          <div className="card-title">
+            Tools and frameworks I know fairly well:
+          </div>
+          TypeScript / JS, ESLint, Material UI, GitHub Actions, Visx, React,
+          GraphQL, Storybook, D3, Tailwind, Chromatic, Webflow, Cloudflare,
+          Jest, Webpack, S3, Vue, Redux, Vite
         </p>
-        <p>
-          <b>
-            Things I know <em>less</em> well:
-          </b>{" "}
-          Python, Tailwind CSS, Bootstrap, Solidity, Java
-        </p>
+
+        <div className="resume-divider" />
+
         <h2>Experience</h2>
-        <div className="splitRow">
-          <h3 className="firstSplitRowItem">
-            Software Engineer, ZipHQ, San Francisco
-          </h3>
-          <h3 className="secondSplitRowItem">2021 - Present</h3>
-        </div>
-        <li>Build new features and pages across the product</li>
-        <li>
-          Componentization: Lead efforts to dedupe, standardize, and improve
-          interactions for shared components, swapping out Bootstrap for
-          Material UI
-        </li>
-        <li>
-          Dev infra – CI/Quality:
-          <ul>
-            <li>TypeScript correctness + coverage CI checks</li>
-            <li>
-              Testing: Jest unit testing, Datadog Synthetic tests, and visual
-              regression testing via Storybook/Chromatic
-            </li>
-            <li>Built FE/BE logging system with Segment</li>
-          </ul>
-        </li>
-        <li>
-          Dev infra – build + deploy: Architected much of Zip&apos;s current
-          frontend build systems, across Webpack, Jenkins, Docker, S3,
-          Cloudflare, and Webflow (marketing site)
-        </li>
-        <li>
-          Dev experience: enabled hot reloads, sourcemaps, and robust lint rules
-          to encourage modern, standardized TS/React practices
-        </li>
-        <li>
-          TypeScript: enabled TypeScript and led migration of frontend code to
-          90% coverage
-        </li>
-        <li>
-          Performance: reduced page load times by 50%, primarily via code
-          splitting (70% core bundle size reduction) and routing optimization
-        </li>
-        <div className="splitRow">
-          <h3 className="firstSplitRowItem">
-            Software Engineer, Untapped (fka Jumpstart), San Francisco
-          </h3>
-          <h3 className="secondSplitRowItem">2020 - 2021</h3>
-        </div>
-        <li>Built out Recruiter Analytics platform</li>
-        <li>Introduced TypeScript to the codebase and evangelized</li>
-        <li>
-          Led frontend platform group, overseeing all quality and performance
-          initiatives
-        </li>
-        <li>Improved core app performance by 40%</li>
-        <div className="splitRow">
-          <h3 className="firstSplitRowItem">
-            Software Engineer, Airbnb, San Francisco
-          </h3>
-          <h3 className="secondSplitRowItem">2017 - 2020</h3>
-        </div>
-        <li>
-          Built dozens of pricing and availability features across Experiences
-          host and guest products
-        </li>
-        <li>
-          Ran &gt;20 A/B tests, resulting in a compounded bookings lift of
-          &gt;10% for the Experiences product
-        </li>
-        <li>
-          Planned and executed on performance initiatives, reducing load times
-          by &gt;30% on 10+ pages
-        </li>
-        <li>
-          Oversaw conversion of legacy code to TypeScript, evangelized best
-          practices across org
-        </li>
-        <div className="splitRow">
-          <h3 className="firstSplitRowItem">
-            Software Engineering Intern, Airbnb, San Francisco
-          </h3>
-          <h3 className="secondSplitRowItem">Summer 2016</h3>
-        </div>
-        <li>Built landing pages for new features</li>
-        <li>Contributed components to company frontend framework</li>
-        <div className="splitRow">
-          <h3 className="firstSplitRowItem">
-            Software Engineering Intern, AetherWorks, New York
-          </h3>
-          <h3 className="secondSplitRowItem">Summer 2015</h3>
-        </div>
-        <li>
-          Built backend job to process usage data and connect with Slack and
-          Geckoboard integrations
-        </li>
-        <div className="splitRow">
-          <h3 className="firstSplitRowItem">
-            Software Engineering Intern, Lewis-Sigler Institute, Princeton
-          </h3>
-          <h3 className="secondSplitRowItem">Summer 2014</h3>
-        </div>
-        <li>
-          Designed force-directed graph clustering algorithm to identify gene
-          functions
-        </li>
-        <div className="splitRow">
-          <h3 className="firstSplitRowItem">
-            Product Management Intern, Autodesk, Portland
-          </h3>
-          <h3 className="secondSplitRowItem">Summer 2013</h3>
-        </div>
-        <li>
-          Conducted user research sessions on Autodesk professional products
-        </li>
-        <li>Helped design + build a gamified CAD learning app for students</li>
-        <li>
-          Built CAD-based interactive tutorials for Lego Mindstorm release
-        </li>
+        {experienceItems.map((item) => (
+          <React.Fragment key={item.title}>
+            <div className="splitRow">
+              <h4 className="flex items-center">
+                {item.title}{" "}
+                <span className="pill location-pill">{item.location}</span>
+              </h4>
+              <h4 className="flex items-center gap-2">
+                {item.date}
+                <Calendar size={12} />
+              </h4>
+            </div>
+            <ul>
+              {item.description.map((d, idx) => (
+                <li key={idx}>
+                  {typeof d === "string" ? (
+                    d
+                  ) : (
+                    <>
+                      {d.item}
+                      <ul>{d.subbullets?.map((s) => <li key={s}>{s}</li>)}</ul>
+                    </>
+                  )}
+                </li>
+              ))}
+            </ul>
+          </React.Fragment>
+        ))}
+        <div className="resume-divider" />
         <h2>Education</h2>
         <div className="splitRow">
-          <h3 className="firstSplitRowItem">
-            Princeton University, BSE, Computer Science
-          </h3>
-          <h3 className="secondSplitRowItem">September 2013 — June 2017</h3>
+          <h4 className="flex items-center">
+            Princeton University
+            <span className="pill location-pill">BSE</span>
+            <span className="pill location-pill">Computer Science</span>
+          </h4>
+          <h4>September 2013 — June 2017</h4>
         </div>
+        <div className="resume-divider" />
         <h2>Other interests</h2>
-        Music - production/voice/piano, Crosswords, Politics, Running, Web3
+        <div className="flex flex-wrap gap-2">
+          {interests.map((i) => (
+            <span className="pill interest-pill" key={i}>
+              {i}
+            </span>
+          ))}
+        </div>
       </div>
     </div>
   );
 };
+
+const interests = [
+  "Singing",
+  "Easter Eggs",
+  "Crosswords",
+  "Music Production",
+  "Politics",
+  "Running",
+  "Web3",
+];
 
 export default React.memo(Resume);

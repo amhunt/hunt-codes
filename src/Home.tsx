@@ -1,6 +1,7 @@
 import React, { useEffect, useState, useCallback, useRef } from "react";
 import { Link } from "react-router-dom";
 import Typed from "typed.js";
+import cx from "classnames";
 
 import Logo from "./Logo";
 import {
@@ -60,41 +61,58 @@ const Home = ({ homeOpacity }: { homeOpacity: number }) => {
     ? (cursorPositionY / document.body.clientHeight) * 2 - 1
     : 0;
 
-  let isSmall = false;
-  let isMediumOrSmaller = false;
+  const [size, setSize] = useState<"sm" | "md" | "lg">(
+    window.innerWidth < 768 ? "sm" : window.innerWidth < 1000 ? "md" : "lg"
+  );
+
+  // this useEffect sets up a listener for window resize events, to update a width state value
+
+  useEffect(() => {
+    const handleResize = () => {
+      if (window.innerWidth < 768) {
+        setSize("sm");
+      } else if (window.innerWidth < 1000) {
+        setSize("md");
+      } else {
+        setSize("lg");
+      }
+    };
+    window.addEventListener("resize", handleResize);
+    return () => {
+      window.removeEventListener("resize", handleResize);
+    };
+  }, []);
+
+  const isSmall = size === "sm";
+  const isMdOrLess = size === "sm" || size === "md";
   let cursorMultiplier1 = 30;
   let cursorMultiplier2 = 50;
-  if (typeof window !== "undefined") {
-    if (window.innerWidth < 768) {
-      isSmall = true;
-    }
-    if (window.innerWidth < 1000) {
-      isMediumOrSmaller = true;
-      cursorMultiplier1 = 15;
-      cursorMultiplier2 = 25;
-    }
+
+  if (isMdOrLess) {
+    cursorMultiplier1 = 15;
+    cursorMultiplier2 = 25;
   }
   const logoPositioningProps = {
-    paddingLeft1: isSmall ? undefined : cursorMultiplier1 * cursorRatioX,
-    paddingTop1: isSmall ? 0 : cursorMultiplier1 * cursorRatioY,
-    paddingLeft2: isSmall
-      ? undefined
-      : cursorMultiplier2 * cursorRatioX + (isMediumOrSmaller ? 40 : 100),
-    paddingTop2: isSmall ? 0 : cursorMultiplier2 * cursorRatioY - 80,
+    paddingLeft1: cursorMultiplier1 * cursorRatioX,
+    paddingTop1: cursorMultiplier1 * cursorRatioY + 40,
+    paddingLeft2: cursorMultiplier2 * cursorRatioX + (isMdOrLess ? 40 : 100),
+    paddingTop2: cursorMultiplier2 * cursorRatioY,
   };
 
   return (
     <>
       <div
         ref={leftHalfEl}
-        className="logoWrapper flex items-center justify-center h-full pointer-events-none md:w-[50%] w-full"
+        className="logoWrapper flex items-center justify-center pointer-events-none"
         style={{ opacity: logoOpacity ? 1 : 0 }}
       >
-        <Logo {...(!isSmall && logoPositioningProps)} />
+        <Logo {...(size !== "sm" && logoPositioningProps)} />
       </div>
       <main
-        className="w-[400px] homeInfoContainer"
-        style={{ opacity: homeOpacity }}
+        className={cx(
+          "w-[400px] homeInfoContainer",
+          logoOpacity === 1 && "show"
+        )}
       >
         <p className="hoverableHomeItem justify-between">
           <Link className="flex items-center gap-2" to="/about">
@@ -108,7 +126,7 @@ const Home = ({ homeOpacity }: { homeOpacity: number }) => {
               target="_blank"
               rel="noopener noreferrer"
               href="https://www.linkedin.com/in/andrewmhunt/"
-              className="flex transition-colors items-center justify-center w-12 h-12 p-2 rounded-full hover:bg-gray-300"
+              className="flex transition-colors items-center justify-center w-12 h-12 p-2 rounded-full bg-opacity-25 hover:bg-[#5efffc57]"
             >
               <Linkedin />
             </a>
@@ -116,7 +134,7 @@ const Home = ({ homeOpacity }: { homeOpacity: number }) => {
               target="_blank"
               rel="noopener noreferrer"
               href="https://www.github.com/amhunt"
-              className="flex transition-colors items-center justify-center w-12 h-12 p-2 rounded-full hover:bg-gray-300"
+              className="flex transition-colors items-center justify-center w-12 h-12 p-2 rounded-full hover:bg-[#5efffc57]"
             >
               <GitHub />
             </a>

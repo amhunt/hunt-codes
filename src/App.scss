@@ -1,3 +1,13 @@
+$purp: #412596;
+$purp-light: #9e80f9;
+$purp-light-transparent: #9674f999;
+$purp-light-transparent-25: #ab8ffd44;
+$green-light-transparent: #84ff5e25;
+
+.purp {
+  color: $purp;
+}
+
 .App {
   cursor: pointer;
   height: 100vh;
@@ -6,10 +16,46 @@
   position: relative;
 }
 
+.card-title {
+  margin-bottom: 4px;
+  font-weight: 700;
+}
+
+.resume-divider {
+  width: 100%;
+  height: 1px;
+  background: $purp-light;
+  margin: 32px 0;
+  mix-blend-mode: hard-light;
+  z-index: 2;
+}
+
+.hor-list {
+  display: grid;
+  gap: 24px;
+  grid-template-columns: repeat(2, 1fr);
+  list-style-type: none;
+  padding: 0;
+  margin: 0;
+  margin-bottom: 32px;
+
+  > li {
+    margin: 0;
+    background: $green-light-transparent;
+    padding: 16px;
+    border-radius: 8px;
+  }
+}
+
 .logoWrapper {
+  position: fixed;
+  overflow: visible;
+  bottom: 0;
+  left: 10vh;
+  top: calc(50vh - 40px);
   position: absolute;
   transition: opacity 5s ease;
-  z-index: 1;
+  z-index: 2;
 }
 
 .logoComponent {
@@ -24,17 +70,11 @@
 }
 
 .logo1 {
-  width: 16vw;
+  width: calc(32px + 12vw);
 }
 
 .logo2 {
-  width: 13vw;
-}
-
-.centerDiv {
-  position: relative;
-  left: -10vw;
-  top: -6vw;
+  width: calc(32px + 9vw);
 }
 
 h2 {
@@ -52,7 +92,7 @@ p {
   right: -350px;
   height: 40vh;
   opacity: 0;
-  z-index: 3;
+  z-index: 4;
   pointer-events: none;
   transition:
     opacity 1s,
@@ -67,18 +107,24 @@ p {
 .homeInfoContainer {
   color: #111;
   font-size: 24px;
-  left: calc(60vw - 120px);
+  left: 68vw;
+  transform: translateX(-50%);
   position: fixed;
   bottom: 20vh;
-  transition: opacity 300ms ease;
-  z-index: 2;
+  transition: opacity 400ms ease;
+  transition-delay: 1.5s;
+  z-index: 3;
   opacity: 0;
+
+  &.show {
+    opacity: 1;
+  }
 }
 
 .planet-container {
   position: fixed;
   inset: 0;
-  z-index: 1;
+  z-index: 2;
 }
 
 .planet1 {
@@ -92,38 +138,38 @@ p {
 
 .planet1_day {
   background-image: radial-gradient(
-    circle at 60% 50%,
+    circle at 60% 60%,
     #e5bd73 0%,
     #ffce73 20%,
     #ffbb00 30%,
     transparent 30%
   );
-  filter: drop-shadow(0px 0px 100px rgba(255, 98, 0, 0.75));
+  filter: drop-shadow(0px 0px 0px rgb(255, 225, 0));
 
   &.unmounted {
     opacity: 0;
   }
 
   &.on {
-    animation: 1s ease-in 1s both sunrise;
+    animation: 2s ease-in 1s both sunrise;
     opacity: 1;
   }
 
   &.off {
-    animation: 1s ease-in both planetset;
+    animation: 1s ease-in both sunset;
     opacity: 1;
   }
 }
 
 .planet1_night {
   background-image: radial-gradient(
-    circle at 60% 50%,
-    #071b47 0%,
-    #101524 20%,
-    #1b243f 30%,
+    circle at 40% 60%,
+    #091227 0%,
+    #090c15 10%,
+    #0b173e 30%,
     transparent 30%
   );
-  filter: drop-shadow(0px 0px 100px rgba(106, 5, 201, 0.75));
+  filter: drop-shadow(0px 0px 40px 100px $purp-light-transparent);
 
   &.unmounted {
     opacity: 0;
@@ -131,62 +177,74 @@ p {
 
   &.on {
     opacity: 1;
-    animation: 1s ease-in 1s both nightfall;
+    animation: 2s ease-in 1s both nightfall;
   }
 
   &.off {
     opacity: 1;
-    animation: 1s ease-in both planetset;
+    animation: 1s ease-in both nightset;
   }
 }
 
 @keyframes sunrise {
   0% {
     transform: translateY(160vh);
-    filter: drop-shadow(0px 0px 0px rgb(255, 85, 0));
+    filter: drop-shadow(0px 0px 0px rgb(255, 225, 0));
   }
   100% {
     transform: translateY(20%);
-    filter: drop-shadow(0px 0px 100px rgba(255, 98, 0, 0.75));
+    filter: drop-shadow(0px 0px 40px rgb(255, 123, 0));
+  }
+}
+
+@keyframes sunset {
+  0% {
+    transform: translateY(20%);
+    filter: drop-shadow(0px 0px 40px rgb(255, 123, 0));
+  }
+  100% {
+    transform: translateY(160vh);
+    filter: drop-shadow(0px 0px 0px rgb(255, 225, 0));
   }
 }
 
 @keyframes nightfall {
   0% {
     transform: translateY(160vh);
-    filter: drop-shadow(0px 0px 100px rgba(106, 5, 201, 0.25));
-  }
-  50% {
-    transform: translateY(20%);
-    filter: drop-shadow(0px 0px 100px rgba(106, 5, 201, 0.95));
+    filter: drop-shadow(0px 0px 0px $purp-light-transparent);
   }
   100% {
-    transform: translateY(20%);
-    filter: drop-shadow(0px 0px 100px rgba(106, 5, 201, 0.75));
+    transform: translateY(32%);
+    filter: drop-shadow(0px 0px 32px $purp-light-transparent);
   }
 }
 
-@keyframes planetset {
+@keyframes nightset {
   0% {
-    transform: translateY(20%);
+    transform: translateY(32%);
+    filter: drop-shadow(0px 0px 32px $purp-light-transparent);
   }
   100% {
     transform: translateY(160vh);
+    filter: drop-shadow(0px 0px 0px $purp-light-transparent);
   }
 }
 
 .nameTitle {
   position: absolute;
-  fill: #004225;
-  opacity: 0.75;
-  left: 32px;
-  right: 32px;
-  top: 32px;
-  width: calc(100% - 64px);
+  left: 24px;
+  right: 24px;
+  top: 24px;
+  width: calc(100% - 48px);
   transition:
     fill 3s ease,
     opacity 1s ease;
-  z-index: 3;
+  z-index: 20;
+  mix-blend-mode: multiply;
+
+  &.night {
+    mix-blend-mode: difference;
+  }
 }
 
 .headerCharacter:hover {
@@ -219,21 +277,50 @@ p {
   }
 }
 
+.star {
+  position: absolute;
+  background: white;
+  box-shadow: 0 0 1px 1px $purp-light-transparent-25;
+  border-radius: 50%;
+  animation: 4s ease-in-out infinite alternate star;
+
+  &.star_disco {
+    box-shadow: 0 0 1px 5px $purp-light-transparent-25;
+    animation: 4s ease-in-out infinite alternate star-disco;
+  }
+}
+
+@keyframes star {
+  0% {
+    transform: scale(1);
+  }
+  100% {
+    transform: scale(1.7);
+  }
+}
+
+@keyframes star-disco {
+  0% {
+    transform: scale(1);
+    filter: hue-rotate(0deg);
+  }
+  100% {
+    transform: scale(2.2);
+    filter: hue-rotate(360deg);
+  }
+}
+
 li > ul > li {
   padding-bottom: 0px;
 }
 
 .resume-container {
-  max-height: calc(100%);
+  max-height: 100%;
   overflow-y: scroll;
   transition: opacity 1s ease;
   z-index: 4;
   position: relative;
   color: #eeeeee;
-}
-
-.resume-container::-webkit-scrollbar {
-  display: none;
 }
 
 .resume-inner-container {
@@ -248,6 +335,76 @@ li > ul > li {
 .splitRow {
   display: flex;
   justify-content: space-between;
+  align-items: center;
+}
+
+.pill {
+  border-radius: 16px;
+  padding: 3px 8px;
+  font-size: 10px;
+  color: white;
+  font-weight: 500;
+  text-transform: uppercase;
+  white-space: nowrap;
+}
+
+.location-pill {
+  background: #84ff5e44;
+  margin-left: 8px;
+}
+
+.interest-pill {
+  background-color: #462d93;
+  animation: rainbowFromRedToIndigo 7s ease-in-out infinite;
+
+  &:nth-of-type(1) {
+    animation-delay: 0s;
+  }
+  &:nth-of-type(2) {
+    animation-delay: 1s;
+  }
+  &:nth-of-type(3) {
+    animation-delay: 2s;
+  }
+  &:nth-of-type(4) {
+    animation-delay: 3s;
+  }
+  &:nth-of-type(5) {
+    animation-delay: 4s;
+  }
+  &:nth-of-type(6) {
+    animation-delay: 5s;
+  }
+  &:nth-of-type(7) {
+    animation-delay: 6s;
+  }
+}
+
+@keyframes rainbowFromRedToIndigo {
+  0% {
+    background-color: #e8141666;
+  }
+  14% {
+    background-color: #ffa50066;
+  }
+  28% {
+    background-color: #faeb3666;
+  }
+  42% {
+    background-color: #79c31666;
+  }
+  56% {
+    background-color: #487de766;
+  }
+  70% {
+    background-color: #4b369d66;
+  }
+  84% {
+    background-color: #70369d66;
+  }
+  100% {
+    background-color: #e8141666;
+  }
 }
 
 @media (max-width: 1000px) {
@@ -264,15 +421,6 @@ li > ul > li {
 
   .splitRow {
     display: unset;
-  }
-
-  .firstSplitRowItem {
-    margin-bottom: 8px;
-  }
-
-  .secondSplitRowItem {
-    font-size: 16px;
-    margin-top: 8px;
   }
 
   .homeInfoContainer {
@@ -303,25 +451,22 @@ li > ul > li {
   }
 
   .logoWrapper {
-    width: 100%;
-    height: 50%;
+    left: 0;
+    right: 0;
+    top: 0;
+    bottom: 200px;
   }
 
-  .centerDiv {
-    position: fixed;
-    left: calc(50% - 100px);
-    transform: translateX(-50%);
-    top: 100px;
-  }
+  .logoComponent {
+    &.logo1 {
+      width: 200px;
+      padding-top: 32px;
+      padding-right: 32px;
+    }
 
-  .logo1 {
-    width: 200px;
-    padding-top: 32px;
-    padding-right: 32px;
-  }
-
-  .logo2 {
-    width: 150px;
+    &.logo2 {
+      width: 140px;
+    }
   }
 }
 
@@ -340,21 +485,16 @@ p {
   margin-block-end: 0.25em;
 }
 
-$purp: #412596;
-
-.purp {
-  color: $purp;
-}
-
 a {
   color: $purp;
+  transition: color 50ms ease-in-out;
 
-  :hover {
-    color: #13004b;
+  &:hover {
+    color: #010c73;
   }
 
   &.inverse {
-    color: #c8b6ff;
+    color: $purp-light;
 
     :hover {
       color: #806eb8;
@@ -421,7 +561,7 @@ a:hover {
   animation: 10s linear backgroundAnim;
 
   &.on {
-    z-index: 0;
+    z-index: 1;
     transition-delay: 500ms;
     opacity: 1;
   }
@@ -434,44 +574,6 @@ a:hover {
 
 .App-background_night {
   background-color: black;
-  background-image: radial-gradient(
-      white,
-      rgba(255, 255, 255, 0.2) 2px,
-      transparent 25px
-    ),
-    radial-gradient(white, rgba(255, 255, 255, 0.15) 1px, transparent 20px),
-    radial-gradient(white, rgba(255, 255, 255, 0.1) 2px, transparent 10px),
-    radial-gradient(
-      rgba(255, 255, 255, 0.4),
-      rgba(255, 255, 255, 0.1) 2px,
-      transparent 17px
-    ),
-    radial-gradient(white, rgba(255, 255, 255, 0.2) 2px, transparent 25px),
-    radial-gradient(white, rgba(255, 255, 255, 0.15) 1px, transparent 20px),
-    radial-gradient(white, rgba(255, 255, 255, 0.1) 2px, transparent 10px),
-    radial-gradient(
-      rgba(255, 255, 255, 0.4),
-      rgba(255, 255, 255, 0.1) 2px,
-      transparent 17px
-    );
-  background-size:
-    550px 550px,
-    350px 350px,
-    250px 250px,
-    150px 150px,
-    280px 280px,
-    310px 310px,
-    610px 610px,
-    820px 820px;
-  background-position:
-    0 0,
-    40px 60px,
-    130px 270px,
-    70px 100px,
-    10px 10px,
-    80px 20px,
-    123px 214px,
-    20px 300px;
 }
 
 .App-background_day {
