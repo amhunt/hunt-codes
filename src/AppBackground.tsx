@@ -6,6 +6,7 @@ import "./App.scss";
 import Galaxy from "./Galaxy";
 
 import GoldenGate from "./gg-bridge.png";
+import useWindowSize from "useWindowSize";
 
 // Needed to get hover state on individual chars
 const andrewHunt = "andrewhunt";
@@ -22,12 +23,12 @@ const stars = Array.from({ length: 200 }, () => ({
 }));
 
 const AppBg = ({ showBridge }: { showBridge: boolean }) => {
+  const size = useWindowSize();
   const location = useLocation();
 
   const isNightMode = location.pathname.includes("about");
 
   const [highlightedCharIdx, setHighlightedCharIdx] = useState(0);
-  const [highlightedCharIdx2, setHighlightedCharIdx2] = useState(0);
 
   useEffect(() => {
     const interval = setInterval(
@@ -40,16 +41,6 @@ const AppBg = ({ showBridge }: { showBridge: boolean }) => {
     };
   }, [highlightedCharIdx]);
 
-  useEffect(() => {
-    const interval2 = setInterval(
-      () => setHighlightedCharIdx2((highlightedCharIdx2 + 1) % nameArr.length),
-      300
-    );
-    return () => {
-      clearInterval(interval2);
-    };
-  }, [highlightedCharIdx2]);
-
   return (
     <>
       <svg
@@ -59,27 +50,26 @@ const AppBg = ({ showBridge }: { showBridge: boolean }) => {
             ? "opacity-30 pointer-events-none fill-white night"
             : "fill-[#004225] opacity-75"
         )}
-        viewBox="0 0 100 20"
+        viewBox={size === "lg" ? "0 0 200 20" : "0 0 100 20"}
         xmlns="http://www.w3.org/2000/svg"
       >
-        <g y="-1" textLength="100%" alignmentBaseline="hanging" color="#004225">
+        <text textLength="100%" color="#004225">
           {nameArr.map((c, idx) => (
-            <text
+            <tspan
               key={idx}
-              textLength="100%"
-              x={idx * 10}
               className={cx(
-                "headerCharacter",
-                highlightedCharIdx === idx && "highlighted",
-                highlightedCharIdx2 === idx && "highlighted2",
+                highlightedCharIdx === idx &&
+                  (isNightMode
+                    ? "highlightedChar_night"
+                    : "highlightedChar_day"),
                 c === "h" ? "z-10" : "z-0"
               )}
               alignmentBaseline="hanging"
             >
               {c}
-            </text>
+            </tspan>
           ))}
-        </g>
+        </text>
       </svg>
       <div
         className={cx(
@@ -119,10 +109,6 @@ const AppBg = ({ showBridge }: { showBridge: boolean }) => {
           alt="golden gate bridge"
         />
       </div>
-
-      {isNightMode && (
-        <img src="disco" className="absolute left-4 bottom-4 w-8" />
-      )}
     </>
   );
 };

@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from "react";
-import { ArrowLeftCircle, Calendar } from "react-feather";
+import { ArrowLeftCircle, Calendar, Music } from "react-feather";
 import { Link } from "react-router-dom";
 
 const experienceItems = [
@@ -59,6 +59,7 @@ const experienceItems = [
 
 const Resume = () => {
   const [opacity, setOpacity] = useState(false);
+  const [musicEnabled, setMusicEnabled] = useState(false);
 
   useEffect(() => {
     const timer = setTimeout(() => {
@@ -70,13 +71,25 @@ const Resume = () => {
   return (
     <div className="resume-container" style={{ opacity: opacity ? 1 : 0 }}>
       <div className="resume-inner-container">
-        <Link className="mb-12 block inverse" to="/">
+        <Link
+          className="mb-12 block inverse xl:sticky xl:top-[200px] xl:-ml-16"
+          to="/"
+        >
           <ArrowLeftCircle size={40} />
         </Link>
         <h1 className="mb-6">About me</h1>
         <h4>
-          Hey! I’m a web engineer in San Francisco. For consulting inquiries,
-          reach out to{" "}
+          Hey! I’m a web engineer in San Francisco. I’m currently working a
+          staff engineer at{" "}
+          <a
+            target="_blank"
+            rel="noreferrer"
+            className="link inverse"
+            href="https://ziphq.com"
+          >
+            Zip
+          </a>
+          . For consulting inquiries, reach out to{" "}
           <a
             className="link inverse"
             href="mailto:andrew@hunt.codes?Subject=Hey%20Andrew"
@@ -91,7 +104,7 @@ const Resume = () => {
           <li>
             <div className="card-title">Dev infra</div>I believe a solid
             foundation and developer experience is the best way to increase
-            velocity, reduce bugs, and improve the user’s experience.
+            velocity, reduce bugs, and improve users’ experience.
           </li>
           <li>
             <div className="card-title">Component systems</div>A well-structured
@@ -101,27 +114,23 @@ const Resume = () => {
           <li>
             <div className="card-title">Product collaboration</div>I thrive when
             working closely with designers + researchers to build delightful,
-            engaging web products.{" "}
-            <em>
-              E.g. data viz, games, marketing pages, animation, search
-              experiences
-            </em>
+            engaging web products.
           </li>
           <li>
-            <div className="card-title">Performance optimization</div>
-            I’m committed to ensuring a smooth and responsive experience for
-            users. I believe performance is a complex problem that should be
-            tackled with a data-driven and user-centric approach.
+            <div className="card-title">Performance</div>
+            I’m committed to ensuring a speedy and responsive experience for
+            users. Performance can be a complex problem, and I believe it should
+            be approached with a data-driven and user-centric approach.
           </li>
         </ul>
-        <p>
+        <div>
           <div className="card-title">
             Tools and frameworks I know fairly well:
           </div>
           TypeScript / JS, ESLint, Material UI, GitHub Actions, Visx, React,
           GraphQL, Storybook, D3, Tailwind, Chromatic, Webflow, Cloudflare,
           Jest, Webpack, S3, Vue, Redux, Vite
-        </p>
+        </div>
 
         <div className="resume-divider" />
 
@@ -174,6 +183,21 @@ const Resume = () => {
           ))}
         </div>
       </div>
+      {musicEnabled ? (
+        <audio
+          controlsList="nodownload"
+          autoPlay
+          loop
+          className="fixed bottom-4 right-4"
+          controls
+        >
+          <source src="analog.wav" />
+        </audio>
+      ) : (
+        <button className="fixed bottom-4 right-4 flex transition-colors items-center justify-center w-12 h-12 p-2 rounded-full hover:bg-[#5efffc57]">
+          <Music onClick={() => setMusicEnabled(true)} />
+        </button>
+      )}
     </div>
   );
 };

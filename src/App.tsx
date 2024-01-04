@@ -15,11 +15,9 @@ for (let c of andrewHunt) {
 
 const App = () => {
   const [showBridge, setShowBridge] = useState(false);
-  const [homeOpacity, setHomeOpacity] = useState(0);
 
   // fade home content in once mounted
   useEffect(() => {
-    setHomeOpacity(1);
     setTimeout(() => setShowBridge(true), 1500);
   }, []);
 
@@ -28,7 +26,7 @@ const App = () => {
       <Router>
         <Switch>
           <Route exact path="/">
-            <Home homeOpacity={homeOpacity} />
+            <Home />
           </Route>
           <Route path="/about">
             <Resume />

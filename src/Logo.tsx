@@ -1,4 +1,5 @@
 import React, { useEffect, useState, useCallback } from "react";
+import useWindowSize from "useWindowSize";
 
 // Pantone colors of the years 2000 - 2020
 // except for 2006 and 2015 🤮
@@ -42,6 +43,7 @@ const Logo = ({
   paddingLeft2?: number;
   paddingTop2?: number;
 }) => {
+  const size = useWindowSize();
   const [strokeColor1, setStrokeColor1] = useState(getPantoneColor());
   const [strokeColor2, setStrokeColor2] = useState(getPantoneColor());
   const changeColor = useCallback(() => {
@@ -65,9 +67,12 @@ const Logo = ({
         style={{
           left: paddingLeft1,
           top: paddingTop1,
-          WebkitBoxReflect: `below ${
-            MIRROR_OFFSET_PX - (paddingTop1 ?? 0)
-          }px linear-gradient(transparent 0%, transparent 50%, #000d 100%)`,
+          WebkitBoxReflect:
+            size === "sm"
+              ? undefined
+              : `below ${
+                  MIRROR_OFFSET_PX - (paddingTop1 ?? 0)
+                }px linear-gradient(transparent 0%, transparent 50%, #000d 100%)`,
         }}
       >
         <path
@@ -97,9 +102,12 @@ const Logo = ({
         style={{
           left: paddingLeft2,
           top: paddingTop2,
-          WebkitBoxReflect: `below ${
-            MIRROR_OFFSET_PX - (paddingTop2 ?? 0)
-          }px linear-gradient(transparent 0%, transparent 50%, #000d 100%)`,
+          WebkitBoxReflect:
+            size === "sm"
+              ? undefined
+              : `below ${
+                  MIRROR_OFFSET_PX - (paddingTop2 ?? 0)
+                }px linear-gradient(transparent 0%, transparent 50%, #000d 100%)`,
         }}
       >
         <path

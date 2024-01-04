@@ -10,10 +10,8 @@ $green-light-transparent: #84ff5e25;
 
 .App {
   cursor: pointer;
-  height: 100vh;
-  overflow: hidden;
-  text-align: left;
-  position: relative;
+  inset: 0;
+  position: fixed;
 }
 
 .card-title {
@@ -52,10 +50,14 @@ $green-light-transparent: #84ff5e25;
   overflow: visible;
   bottom: 0;
   left: 10vh;
-  top: calc(50vh - 40px);
+  top: calc(50vh - 200px);
   position: absolute;
   transition: opacity 5s ease;
   z-index: 2;
+
+  @media (min-width: 1280px) {
+    top: calc(50vh - 40px);
+  }
 }
 
 .logoComponent {
@@ -91,6 +93,7 @@ p {
   bottom: -10px;
   right: -350px;
   height: 40vh;
+  max-height: 228px;
   opacity: 0;
   z-index: 4;
   pointer-events: none;
@@ -105,16 +108,25 @@ p {
 }
 
 .homeInfoContainer {
-  color: #111;
-  font-size: 24px;
-  left: 68vw;
-  transform: translateX(-50%);
   position: fixed;
-  bottom: 20vh;
+  color: #111;
+  font-size: 20px;
+  width: calc(20vw + 20vh);
+  bottom: 16vh;
+  min-width: 300px;
+  right: calc(-5vw - 7.5vh + 200px);
   transition: opacity 400ms ease;
   transition-delay: 1.5s;
   z-index: 3;
   opacity: 0;
+  // filter: invert(0.6) sepia(1) hue-rotate(187deg);
+  // mix-blend-mode: difference;
+
+  @media (min-width: 1200px) {
+    right: calc(-5vw - 7.5vh + 100px);
+    transform: translateX(-50%);
+    font-size: 28px;
+  }
 
   &.show {
     opacity: 1;
@@ -129,47 +141,59 @@ p {
 
 .planet1 {
   position: absolute;
-  inset: -50%;
   transition: opacity 500ms ease;
   transition-delay: 1s;
-  transform: translateY(160vh);
+  transform: translateY(100vh);
   opacity: 0;
+
+  @media (max-width: 767px) {
+    top: unset !important;
+    bottom: -50vw !important;
+    left: -100px !important;
+    right: -100px !important;
+
+    > svg {
+      width: calc(100vw + 200px) !important;
+      height: calc(100vw + 200px) !important;
+      max-width: unset !important;
+    }
+  }
 }
 
 .planet1_day {
-  background-image: radial-gradient(
-    circle at 60% 60%,
-    #e5bd73 0%,
-    #ffce73 20%,
-    #ffbb00 30%,
-    transparent 30%
-  );
   filter: drop-shadow(0px 0px 0px rgb(255, 225, 0));
+  right: calc(-5vw - 7.5vh);
+  bottom: calc(-20vw - 18vh);
+
+  > svg {
+    width: calc(45vw + 55vh);
+    height: calc(45vw + 55vh);
+  }
 
   &.unmounted {
     opacity: 0;
   }
 
   &.on {
-    animation: 2s ease-in 1s both sunrise;
     opacity: 1;
+    animation: 1.25s ease-in 0.25s both sunrise;
   }
 
   &.off {
-    animation: 1s ease-in both sunset;
     opacity: 1;
+    animation: 1s ease-in both sunset;
   }
 }
 
 .planet1_night {
-  background-image: radial-gradient(
-    circle at 40% 60%,
-    #091227 0%,
-    #090c15 10%,
-    #0b173e 30%,
-    transparent 30%
-  );
   filter: drop-shadow(0px 0px 40px 100px $purp-light-transparent);
+  left: calc(-5vw - 7.5vh);
+  bottom: calc(-10vw - 15vh);
+
+  > svg {
+    width: calc(30vw + 30vh);
+    height: calc(30vw + 30vh);
+  }
 
   &.unmounted {
     opacity: 0;
@@ -177,7 +201,7 @@ p {
 
   &.on {
     opacity: 1;
-    animation: 2s ease-in 1s both nightfall;
+    animation: 1.25s ease-in 0.25s both nightfall;
   }
 
   &.off {
@@ -188,44 +212,44 @@ p {
 
 @keyframes sunrise {
   0% {
-    transform: translateY(160vh);
+    transform: translateY(100vh);
     filter: drop-shadow(0px 0px 0px rgb(255, 225, 0));
   }
   100% {
-    transform: translateY(20%);
+    transform: translateY(0);
     filter: drop-shadow(0px 0px 40px rgb(255, 123, 0));
   }
 }
 
 @keyframes sunset {
   0% {
-    transform: translateY(20%);
+    transform: translateY(0);
     filter: drop-shadow(0px 0px 40px rgb(255, 123, 0));
   }
   100% {
-    transform: translateY(160vh);
+    transform: translateY(100vh);
     filter: drop-shadow(0px 0px 0px rgb(255, 225, 0));
   }
 }
 
 @keyframes nightfall {
   0% {
-    transform: translateY(160vh);
+    transform: translateY(100vh);
     filter: drop-shadow(0px 0px 0px $purp-light-transparent);
   }
   100% {
-    transform: translateY(32%);
-    filter: drop-shadow(0px 0px 32px $purp-light-transparent);
+    transform: translateY(0);
+    filter: drop-shadow(0px 0px 48px $purp-light-transparent);
   }
 }
 
 @keyframes nightset {
   0% {
-    transform: translateY(32%);
-    filter: drop-shadow(0px 0px 32px $purp-light-transparent);
+    transform: translateY(0);
+    filter: drop-shadow(0px 0px 48px $purp-light-transparent);
   }
   100% {
-    transform: translateY(160vh);
+    transform: translateY(100vh);
     filter: drop-shadow(0px 0px 0px $purp-light-transparent);
   }
 }
@@ -239,24 +263,24 @@ p {
   transition:
     fill 3s ease,
     opacity 1s ease;
-  z-index: 20;
+  z-index: 2;
   mix-blend-mode: multiply;
+  max-height: 200px;
+  font-family: "nova", "Helvetica Neue", "Segoe UI", "Roboto", "Oxygen",
+    "Ubuntu", "Cantarell", "Fira Sans", "Droid Sans", sans-serif;
 
   &.night {
     mix-blend-mode: difference;
   }
 }
 
-.headerCharacter:hover {
-  fill: white !important;
-}
-
-.headerCharacter.highlighted {
+.highlightedChar_day {
   fill: #002d19;
 }
 
-.headerCharacter.highlighted2 {
-  fill: #00562f;
+.highlightedChar_night {
+  fill: #6cfc9e;
+  z-index: 100;
 }
 
 .hiddenEmoji {
@@ -266,9 +290,9 @@ p {
 
 .hoverableHomeItem {
   display: flex;
-  align-items: center;
+  // align-items: center;
   gap: 8px;
-  min-height: 40px;
+  min-height: 16px;
 
   &:hover {
     .hiddenEmoji {
@@ -321,15 +345,25 @@ li > ul > li {
   z-index: 4;
   position: relative;
   color: #eeeeee;
+  transition-delay: 500ms;
+
+  @media (min-width: 1280px) {
+    padding-left: 600px;
+  }
 }
 
 .resume-inner-container {
   margin: auto;
-  padding-top: 80px;
-  max-width: 767px;
+  padding-top: 120px;
+  max-width: 800px;
   padding-left: 32px;
   padding-right: 32px;
   padding-bottom: 160px;
+
+  @media (min-width: 1280px) {
+    max-width: 980px;
+    padding-top: 200px;
+  }
 }
 
 .splitRow {
@@ -407,7 +441,7 @@ li > ul > li {
   }
 }
 
-@media (max-width: 1000px) {
+@media (max-width: 1279px) {
   .App-gg-bridge {
     height: 30vh;
   }
@@ -425,13 +459,13 @@ li > ul > li {
 
   .homeInfoContainer {
     transition: color 1000ms ease-in-out;
-    left: 24px;
-    right: 24px;
+    left: 40px;
+    right: 40px;
+    margin: auto;
+    font-size: 18px;
     width: unset;
-    text-shadow:
-      -1px -1px 0 hsl(0, 100%, 100%),
-      -2px -2px 1px hsl(80, 0%, 80%);
-    bottom: 48px;
+    max-width: 360px;
+    bottom: 44px;
     transform: unset;
   }
 
@@ -448,13 +482,14 @@ li > ul > li {
 
   .App-gg-bridge {
     height: 20vh;
+    max-height: 160px;
   }
 
   .logoWrapper {
     left: 0;
     right: 0;
-    top: 0;
-    bottom: 200px;
+    top: 24px;
+    height: 50vh;
   }
 
   .logoComponent {
@@ -488,6 +523,7 @@ p {
 a {
   color: $purp;
   transition: color 50ms ease-in-out;
+  font-weight: 600;
 
   &:hover {
     color: #010c73;
@@ -520,15 +556,6 @@ a:hover {
   cursor:
     url(./cursor_pointer.png) 16 0,
     auto;
-}
-
-@-webkit-keyframes spin {
-  from {
-    -webkit-transform: rotateY(0deg);
-  }
-  to {
-    -webkit-transform: rotateY(-360deg);
-  }
 }
 
 @keyframes spin {
@@ -567,7 +594,7 @@ a:hover {
   }
 
   &.off {
-    opacity: -1;
+    opacity: 0;
     transition-delay: 700ms;
   }
 }

@@ -1,34 +1,34 @@
 import React, { useEffect, useState, useCallback, useRef } from "react";
-import { Link } from "react-router-dom";
 import Typed from "typed.js";
 import cx from "classnames";
 
 import Logo from "./Logo";
-import {
-  Briefcase,
-  Info,
-  GitHub,
-  Linkedin,
-  Mail,
-  Columns,
-} from "react-feather";
+import { GitHub, Linkedin } from "react-feather";
+import useWindowSize from "useWindowSize";
 
 const typedOptions = {
   loop: true,
   smartBackspace: true,
   strings: [
-    "^5000interested in working together?",
-    "andrew^500@hunt.codes^6000",
+    "hey there^500,",
+    "welcome to my website!",
+    "there’s not much content...^500 but there plenty of (tasteless) css!",
+    "^500interested in working together?",
+    "reach out to andrew^200@hunt.codes^5000",
   ],
-  typeSpeed: 40,
+  typeSpeed: 50,
 };
 
-const Home = ({ homeOpacity }: { homeOpacity: number }) => {
+const Home = () => {
   const leftHalfEl = useRef<HTMLDivElement>(null);
 
   const [logoOpacity, setLogoOpacity] = useState(0);
   const [cursorPositionX, setCursorPositionX] = useState(0);
   const [cursorPositionY, setCursorPositionY] = useState(0);
+
+  const size = useWindowSize();
+  const isSmall = size === "sm";
+  const isMdOrLess = size === "sm" || size === "md";
 
   const getCursorXY = useCallback((e: MouseEvent) => {
     const cursorPositionX = window.Event
@@ -54,37 +54,14 @@ const Home = ({ homeOpacity }: { homeOpacity: number }) => {
     };
   }, [getCursorXY]);
 
+  const docHeight = window.innerHeight;
+  const docWidth = window.innerWidth;
   const cursorRatioX = cursorPositionX
-    ? (cursorPositionX / document.body.clientWidth) * 2 - 1
+    ? (cursorPositionX / docWidth) * 2 - 1
     : 0;
   const cursorRatioY = cursorPositionY
-    ? (cursorPositionY / document.body.clientHeight) * 2 - 1
+    ? (cursorPositionY / docHeight) * 2 - 1
     : 0;
-
-  const [size, setSize] = useState<"sm" | "md" | "lg">(
-    window.innerWidth < 768 ? "sm" : window.innerWidth < 1000 ? "md" : "lg"
-  );
-
-  // this useEffect sets up a listener for window resize events, to update a width state value
-
-  useEffect(() => {
-    const handleResize = () => {
-      if (window.innerWidth < 768) {
-        setSize("sm");
-      } else if (window.innerWidth < 1000) {
-        setSize("md");
-      } else {
-        setSize("lg");
-      }
-    };
-    window.addEventListener("resize", handleResize);
-    return () => {
-      window.removeEventListener("resize", handleResize);
-    };
-  }, []);
-
-  const isSmall = size === "sm";
-  const isMdOrLess = size === "sm" || size === "md";
   let cursorMultiplier1 = 30;
   let cursorMultiplier2 = 50;
 
@@ -92,6 +69,7 @@ const Home = ({ homeOpacity }: { homeOpacity: number }) => {
     cursorMultiplier1 = 15;
     cursorMultiplier2 = 25;
   }
+
   const logoPositioningProps = {
     paddingLeft1: cursorMultiplier1 * cursorRatioX,
     paddingTop1: cursorMultiplier1 * cursorRatioY + 40,
@@ -106,21 +84,31 @@ const Home = ({ homeOpacity }: { homeOpacity: number }) => {
         className="logoWrapper flex items-center justify-center pointer-events-none"
         style={{ opacity: logoOpacity ? 1 : 0 }}
       >
-        <Logo {...(size !== "sm" && logoPositioningProps)} />
+        <Logo {...(!isSmall && logoPositioningProps)} />
       </div>
-      <main
-        className={cx(
-          "w-[400px] homeInfoContainer",
-          logoOpacity === 1 && "show"
-        )}
-      >
+      <main className={cx("homeInfoContainer", logoOpacity === 1 && "show")}>
         <p className="hoverableHomeItem justify-between">
-          <Link className="flex items-center gap-2" to="/about">
+          {/* <Link className="flex items-center gap-2" to="/about">
             <span className="hiddenEmoji">
               <Info />
             </span>
-            about me
-          </Link>
+            About me
+          </Link> */}
+          <div className="flex items-center gap-2">
+            {/* <span className="hiddenEmoji">
+              <Briefcase className="purp" />
+            </span> */}
+            <span>
+              Currently @{" "}
+              <a
+                target="_blank"
+                rel="noopener noreferrer"
+                href="https://www.ziphq.com"
+              >
+                Zip
+              </a>
+            </span>
+          </div>
           <div className="flex items-center gap-1">
             <a
               target="_blank"
@@ -140,22 +128,22 @@ const Home = ({ homeOpacity }: { homeOpacity: number }) => {
             </a>
           </div>
         </p>
-        <p className="hoverableHomeItem">
+        {/* <p className="hoverableHomeItem">
           <span className="hiddenEmoji">
             <Briefcase className="purp" />
           </span>
           <span>
-            staff eng @{" "}
+            Currently @{" "}
             <a
               target="_blank"
               rel="noopener noreferrer"
               href="https://www.ziphq.com"
             >
-              ziphq.com
+              Zip
             </a>
           </span>
-        </p>
-        <p>
+        </p> */}
+        {/* <p>
           <a
             className="hoverableHomeItem"
             target="_blank"
@@ -163,20 +151,22 @@ const Home = ({ homeOpacity }: { homeOpacity: number }) => {
             href="https://engineering.ziphq.com/material-ui/"
           >
             <span className="hiddenEmoji">
-              <Columns />
+              <Edit3 />
             </span>
             material ui blog post
           </a>
-        </p>
+        </p> */}
         <p className="h-20 hoverableHomeItem">
-          <span className="hiddenEmoji">
-            <Mail />
+          {/* <span className="hiddenEmoji"> */}
+          {/* <Mail className="purp" /> */}
+          {/* </span> */}
+          <span>
+            <span
+              id="typed-js"
+              className="typed"
+              aria-label="email address: andrew@hunt.codes"
+            />
           </span>
-          <span
-            id="typed-js"
-            className="typed"
-            aria-label="email address: andrew@hunt.codes"
-          />
         </p>
       </main>
     </>
