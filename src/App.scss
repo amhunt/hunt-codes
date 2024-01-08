@@ -161,7 +161,6 @@ p {
 }
 
 .planet1_day {
-  filter: drop-shadow(0px 0px 0px rgb(255, 225, 0));
   right: calc(-5vw - 7.5vh);
   bottom: calc(-20vw - 18vh);
 
@@ -186,9 +185,11 @@ p {
 }
 
 .planet1_night {
-  filter: drop-shadow(0px 0px 40px 100px $purp-light-transparent);
   left: calc(-5vw - 7.5vh);
   bottom: calc(-10vw - 15vh);
+
+  transform: translateY(0);
+  filter: drop-shadow(0px 0px 48px $purp-light-transparent);
 
   > svg {
     width: calc(30vw + 30vh);

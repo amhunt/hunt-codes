@@ -1,5 +1,10 @@
 import React from "react";
 
+let isSafari =
+  navigator.userAgent.indexOf("Safari") > -1 &&
+  // Chrome also has "Safari" in its user-agent string
+  navigator.userAgent.indexOf("Chrome") < 1;
+
 export default function MoonSvg() {
   return (
     <svg
@@ -7,19 +12,34 @@ export default function MoonSvg() {
       height="550"
       viewBox="0 0 550 550"
       fill="none"
+      style={{ shapeRendering: "geometricPrecision" }}
       xmlns="http://www.w3.org/2000/svg"
       xmlnsXlink="http://www.w3.org/1999/xlink"
     >
       <path
         id="circle"
-        transform="rotate(12,275,275)"
         d="
       M 75,275
       a 200,200 0 1,1 400,2
       a 200,200 0 1,1 -400,2
     "
+        strokeWidth={2}
         stroke="url(#paint0_linear_moon)"
         fill="url(#paint0_radial_moon)"
+      />
+
+      <path
+        id="circle2"
+        d="
+      M 75,275
+      a 200,200 0 1,1 400,2
+      a 200,200 0 1,1 -400,2
+    "
+        opacity={0.3}
+        strokeWidth={2}
+        stroke="transparent"
+        fill="url(#paint0_radial_moon_overlay)"
+        z={2}
       />
       <defs>
         <radialGradient
@@ -28,10 +48,23 @@ export default function MoonSvg() {
           cy="0"
           r="1"
           gradientUnits="userSpaceOnUse"
-          gradientTransform="translate(200 280) rotate(86.3225) scale(265.046)"
+          gradientTransform="translate(200 280) scale(275)"
         >
           <stop stopColor="#080556" />
           <stop offset="1" stopColor="#0a0030" />
+        </radialGradient>
+
+        <radialGradient
+          id="paint0_radial_moon_overlay"
+          cx="0"
+          cy="0"
+          r="1.1"
+          gradientUnits="userSpaceOnUse"
+          gradientTransform="translate(380 280) scale(275)"
+        >
+          <stop offset="0%" stopColor="transparent" />
+          <stop offset="80%" stopColor="transparent" />
+          <stop offset="100%" stopColor="#fff" />
         </radialGradient>
 
         <linearGradient id="paint0_linear_moon" gradientUnits="userSpaceOnUse">
@@ -58,27 +91,25 @@ export default function MoonSvg() {
         </style>
       </defs>
 
-      <text fontFamily="Bungee Spice" id="moonText">
+      <text
+        // fill="white"
+        fontFamily="Bungee Spice"
+        // vectorEffect="non-rotation"
+        id="moonText"
+      >
         <textPath
           id="rainbow-text"
           fill="white"
           xmlnsXlink="http://www.w3.org/1999/xlink"
           xlinkHref="#circle"
         >
-          <tspan
-            transform="rotateZ(60deg)"
-            id="spaceship"
-            fontSizeAdjust={5}
-            fontSize={40}
-            dy="-8px"
-            dx="20em"
-          >
+          <tspan fontSize={40} dy="-8px">
             🛸
           </tspan>
-          <tspan dx="15em">
+          <tspan dx="30%">
             <tspan id="wave-emoji">👋</tspan> Hi, I’m Andrew
           </tspan>
-          <tspan dx="25em">nice 2 meet u</tspan>
+          <tspan dx="30%">nice 2 meet u</tspan>
         </textPath>
       </text>
 
@@ -88,15 +119,16 @@ export default function MoonSvg() {
 
           #moonText {
             font-size: 24px;
-            animation: rotate 30s linear infinite;
             transform-origin: center;
+            // The transform-origin is wrong on safari
+            ${isSafari ? "" : `animation: moon-rotate 30s linear infinite;`}
+            shape-rendering: geometricPrecision;
             filter: hue-rotate(90deg);
           }
 
-          #spaceship {
-            animation: rotate 3s linear infinite;
+          #circle2 {
+            animation: moon-rotate 20s reverse linear infinite;
             transform-origin: center;
-            transform: rotateZ(60deg);
           }
 
           #wave-emoji {
@@ -104,25 +136,25 @@ export default function MoonSvg() {
           }
 
           #rainbow-text {
-            animation: wave 2s infinite alternate;
-
+            // animation: wave 2s infinite alternate;
           }
 
           @keyframes wave {
             0% {
-            filter: hue-rotate(0deg) brightness(.76);
-            transform: rotate(0deg);
+              filter: hue-rotate(0deg) brightness(.76);
             }
 
             100% {
-            filter: hue-rotate(360deg) brightness(1.5);
-            transform: rotate(0deg);
+              filter: hue-rotate(360deg) brightness(1.5);
             }
           }
 
-          @keyframes rotate {
+          @keyframes moon-rotate {
             0% {
               transform: rotate(360deg);
+            }
+            51% {
+              transform: rotate(180deg);
             }
 
             100% {
