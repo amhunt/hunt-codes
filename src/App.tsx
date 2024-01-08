@@ -5,6 +5,7 @@ import "./App.scss";
 import Home from "./Home";
 import Resume from "./Resume";
 import AppBackground from "AppBackground";
+import { Music } from "react-feather";
 
 // Needed to get hover state on individual chars
 const andrewHunt = "andrewhunt";

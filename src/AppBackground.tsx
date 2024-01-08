@@ -7,6 +7,7 @@ import Galaxy from "./Galaxy";
 
 import GoldenGate from "./gg-bridge.png";
 import useWindowSize from "useWindowSize";
+import { Music } from "react-feather";
 
 // Needed to get hover state on individual chars
 const andrewHunt = "andrewhunt";
@@ -27,6 +28,7 @@ const AppBg = ({ showBridge }: { showBridge: boolean }) => {
   const location = useLocation();
 
   const isNightMode = location.pathname.includes("about");
+  const [musicEnabled, setMusicEnabled] = useState(false);
 
   const [highlightedCharIdx, setHighlightedCharIdx] = useState(0);
 
@@ -41,8 +43,32 @@ const AppBg = ({ showBridge }: { showBridge: boolean }) => {
     };
   }, [highlightedCharIdx]);
 
+  useEffect(() => {
+    if (isNightMode) {
+      setTimeout(() => setMusicEnabled(true), 4000);
+    }
+  }, [isNightMode]);
+
   return (
     <>
+      {musicEnabled ? (
+        <audio
+          controlsList="nodownload"
+          autoPlay
+          loop
+          className={cx(
+            "z-[10000] fixed bottom-4 left-4",
+            isNightMode && "nightmode"
+          )}
+          controls
+        >
+          <source src="analog.wav" />
+        </audio>
+      ) : (
+        <button className="fixed z-[5000] bottom-4 left-4 flex transition-colors items-center justify-center w-12 h-12 p-2 rounded-full hover:bg-[#5efffc57]">
+          <Music onClick={() => setMusicEnabled(true)} />
+        </button>
+      )}
       <svg
         className={cx(
           "nameTitle",

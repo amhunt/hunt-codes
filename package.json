@@ -48,6 +48,7 @@
     "react-dev-utils": "^12.0.1",
     "react-dom": "^18.2.0",
     "react-feather": "^2.0.10",
+    "react-intersection-observer": "^9.5.3",
     "react-refresh": "^0.14.0",
     "react-router-dom": "^5.3.4",
     "resolve": "^1.22.8",

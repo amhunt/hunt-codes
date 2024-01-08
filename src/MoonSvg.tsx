@@ -1,9 +1,9 @@
 import React from "react";
 
-let isSafari =
+const isSafari =
   navigator.userAgent.indexOf("Safari") > -1 &&
   // Chrome also has "Safari" in its user-agent string
-  navigator.userAgent.indexOf("Chrome") < 1;
+  navigator.userAgent.indexOf("Chrome") === -1;
 
 export default function MoonSvg() {
   return (
@@ -11,8 +11,6 @@ export default function MoonSvg() {
       width="550"
       height="550"
       viewBox="0 0 550 550"
-      fill="none"
-      style={{ shapeRendering: "geometricPrecision" }}
       xmlns="http://www.w3.org/2000/svg"
       xmlnsXlink="http://www.w3.org/1999/xlink"
     >
@@ -29,7 +27,7 @@ export default function MoonSvg() {
       />
 
       <path
-        id="circle2"
+        id="eclipse-overlay"
         d="
       M 75,275
       a 200,200 0 1,1 400,2
@@ -91,25 +89,20 @@ export default function MoonSvg() {
         </style>
       </defs>
 
-      <text
-        // fill="white"
-        fontFamily="Bungee Spice"
-        // vectorEffect="non-rotation"
-        id="moonText"
-      >
+      <text fontFamily="Bungee Spice" id="moonText">
         <textPath
           id="rainbow-text"
           fill="white"
           xmlnsXlink="http://www.w3.org/1999/xlink"
           xlinkHref="#circle"
         >
-          <tspan fontSize={40} dy="-8px">
+          <tspan fontSize={60} dy="-8px">
             🛸
           </tspan>
-          <tspan dx="30%">
+          <tspan dx="40%">
             <tspan id="wave-emoji">👋</tspan> Hi, I’m Andrew
           </tspan>
-          <tspan dx="30%">nice 2 meet u</tspan>
+          <tspan dx="40%">nice 2 meet u</tspan>
         </textPath>
       </text>
 
@@ -120,13 +113,22 @@ export default function MoonSvg() {
           #moonText {
             font-size: 24px;
             transform-origin: center;
-            // The transform-origin is wrong on safari
-            ${isSafari ? "" : `animation: moon-rotate 30s linear infinite;`}
+
+            /* The transform-origin is wrong on safari */
+            ${
+              isSafari
+                ? ""
+                : `
+              transform: rotate(160deg);
+              animation: moon-rotate 30s linear both infinite;
+              `
+            }
+
             shape-rendering: geometricPrecision;
             filter: hue-rotate(90deg);
           }
 
-          #circle2 {
+          #eclipse-overlay {
             animation: moon-rotate 20s reverse linear infinite;
             transform-origin: center;
           }
@@ -136,29 +138,30 @@ export default function MoonSvg() {
           }
 
           #rainbow-text {
-            // animation: wave 2s infinite alternate;
+            animation: wave 5s infinite linear;
           }
 
           @keyframes wave {
             0% {
-              filter: hue-rotate(0deg) brightness(.76);
+              filter: hue-rotate(0deg);
             }
 
             100% {
-              filter: hue-rotate(360deg) brightness(1.5);
+              filter: hue-rotate(360deg);
             }
           }
 
           @keyframes moon-rotate {
             0% {
-              transform: rotate(360deg);
+              transform: rotate(160deg);
             }
-            51% {
-              transform: rotate(180deg);
+
+            50% {
+              transform: rotate(-20deg);
             }
 
             100% {
-              transform: rotate(0deg);
+              transform: rotate(-200deg);
             }
           }
         `}

@@ -1,5 +1,7 @@
 import React, { useEffect, useState } from "react";
-import { ArrowLeftCircle, Calendar, Music } from "react-feather";
+import cx from "classnames";
+import { ArrowLeftCircle, Calendar } from "react-feather";
+import { useInView } from "react-intersection-observer";
 import { Link } from "react-router-dom";
 
 const experienceItems = [
@@ -59,7 +61,11 @@ const experienceItems = [
 
 const Resume = () => {
   const [opacity, setOpacity] = useState(false);
-  const [musicEnabled, setMusicEnabled] = useState(false);
+  const { ref, inView, entry } = useInView({
+    /* Optional options */
+    rootMargin: "-320px",
+    threshold: 0,
+  });
 
   useEffect(() => {
     const timer = setTimeout(() => {
@@ -72,12 +78,18 @@ const Resume = () => {
     <div className="resume-container" style={{ opacity: opacity ? 1 : 0 }}>
       <div className="resume-inner-container">
         <Link
-          className="mb-12 block inverse xl:sticky xl:top-[200px] xl:-ml-16"
+          className={cx(
+            "flex transition-transform items-center gap-4 mb-12 inverse xl:sticky xl:top-[200px] xl:-ml-16",
+            !inView && "-translate-x-32"
+          )}
           to="/"
         >
           <ArrowLeftCircle size={40} />
+          Back to home
         </Link>
-        <h1 className="mb-6">About me</h1>
+        <h1 ref={ref} className="mb-6">
+          About me
+        </h1>
         <h4>
           Hey! I’m a web engineer in San Francisco. I’m currently working a
           staff engineer at{" "}
@@ -183,21 +195,6 @@ const Resume = () => {
           ))}
         </div>
       </div>
-      {musicEnabled ? (
-        <audio
-          controlsList="nodownload"
-          autoPlay
-          loop
-          className="fixed bottom-4 right-4"
-          controls
-        >
-          <source src="analog.wav" />
-        </audio>
-      ) : (
-        <button className="fixed bottom-4 right-4 flex transition-colors items-center justify-center w-12 h-12 p-2 rounded-full hover:bg-[#5efffc57]">
-          <Music onClick={() => setMusicEnabled(true)} />
-        </button>
-      )}
     </div>
   );
 };

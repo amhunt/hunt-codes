@@ -3,7 +3,7 @@ import Typed from "typed.js";
 import cx from "classnames";
 
 import Logo from "./Logo";
-import { GitHub, Linkedin } from "react-feather";
+import { GitHub, Linkedin, Music } from "react-feather";
 import useWindowSize from "useWindowSize";
 
 const typedOptions = {
@@ -18,6 +18,8 @@ const typedOptions = {
   ],
   typeSpeed: 50,
 };
+
+const isChrome = navigator.userAgent.indexOf("Chrome") > -1;
 
 const Home = () => {
   const leftHalfEl = useRef<HTMLDivElement>(null);
@@ -168,6 +170,17 @@ const Home = () => {
             />
           </span>
         </p>
+        {!isChrome && (
+          <>
+            <div className="leading-tight absolute text-lg bg-white p-4 rounded">
+              You are using a browser other than Chrome (🚩)
+              <br />
+              Some animations are disabled, and some styles may not appear as
+              intended.
+            </div>
+            <div className="mt-8" />
+          </>
+        )}
       </main>
     </>
   );
