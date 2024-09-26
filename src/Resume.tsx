@@ -20,9 +20,9 @@ const experienceItems = [
           "Built FE/BE logging system with Segment",
         ],
       },
-      "Manage build & deploy systems: Architected much of frontend build+deploy systems, across Webpack, Jenkins, Docker, S3, Cloudflare, and Webflow",
+      "Manage build & deploy systems: Architected much of frontend build+deploy systems across Webpack, Jenkins, Docker, S3, Cloudflare, and Webflow",
       "Build & maintain frontend infra: dev server, HMR, logging, sourcemaps, TS/React usage, third-party package usage/maintenance",
-      "TypeScript: enabled TypeScript in repo and led migration of frontend code to 98% coverage",
+      "TypeScript: enabled TypeScript in repo and led migration of frontend code to 99% coverage",
       "Performance: reduced page load times by 50%, primarily via code splitting (70% reduction in core bundle size) and routing optimizations",
     ],
   },
@@ -91,8 +91,8 @@ const Resume = () => {
           About me
         </h1>
         <h4>
-          Hey! I’m a web engineer in San Francisco. I’m currently working a
-          staff engineer at{" "}
+          Hey! I’m a frontend engineer based in San Francisco. I’m currently
+          working as a staff engineer at{" "}
           <a
             target="_blank"
             rel="noreferrer"

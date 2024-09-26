@@ -12,7 +12,7 @@ const typedOptions = {
   strings: [
     "hey there^500,",
     "welcome to my website!",
-    "there’s not much content...^500 but there plenty of (tasteless) css!",
+    "there isn't much content here...^500 but there IS plenty of tasteless CSS!",
     "^500interested in working together?",
     "reach out to andrew^200@hunt.codes^5000",
   ],
@@ -90,16 +90,7 @@ const Home = () => {
       </div>
       <main className={cx("homeInfoContainer", logoOpacity === 1 && "show")}>
         <p className="hoverableHomeItem justify-between">
-          {/* <Link className="flex items-center gap-2" to="/about">
-            <span className="hiddenEmoji">
-              <Info />
-            </span>
-            About me
-          </Link> */}
           <div className="flex items-center gap-2">
-            {/* <span className="hiddenEmoji">
-              <Briefcase className="purp" />
-            </span> */}
             <span>
               Currently @{" "}
               <a
@@ -130,38 +121,7 @@ const Home = () => {
             </a>
           </div>
         </p>
-        {/* <p className="hoverableHomeItem">
-          <span className="hiddenEmoji">
-            <Briefcase className="purp" />
-          </span>
-          <span>
-            Currently @{" "}
-            <a
-              target="_blank"
-              rel="noopener noreferrer"
-              href="https://www.ziphq.com"
-            >
-              Zip
-            </a>
-          </span>
-        </p> */}
-        {/* <p>
-          <a
-            className="hoverableHomeItem"
-            target="_blank"
-            rel="noopener noreferrer"
-            href="https://engineering.ziphq.com/material-ui/"
-          >
-            <span className="hiddenEmoji">
-              <Edit3 />
-            </span>
-            material ui blog post
-          </a>
-        </p> */}
         <p className="h-20 hoverableHomeItem">
-          {/* <span className="hiddenEmoji"> */}
-          {/* <Mail className="purp" /> */}
-          {/* </span> */}
           <span>
             <span
               id="typed-js"
