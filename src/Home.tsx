@@ -3,21 +3,25 @@ import Typed from "typed.js";
 import cx from "classnames";
 
 import Logo from "./Logo";
-import { GitHub, Linkedin, Music } from "react-feather";
+import { GitHub, Linkedin } from "react-feather";
 import useWindowSize from "useWindowSize";
 
 const typedOptions = {
   loop: true,
+  // Disabled until positioning is fixed
+  showCursor: false,
   smartBackspace: true,
   strings: [
     "hey there^500,",
-    "welcome to my website!",
-    "there isn't much content here...^500 but there IS plenty of tasteless CSS!",
+    // "welcome to my website!",
+    // "there isn't much content here...^500 but there IS plenty of tasteless CSS!",
     "^500interested in working together?",
     "reach out to andrew^200@hunt.codes^5000",
   ],
   typeSpeed: 50,
 };
+
+console.log(navigator.userAgent);
 
 const isChrome = navigator.userAgent.indexOf("Chrome") > -1;
 
@@ -86,19 +90,21 @@ const Home = () => {
         className="logoWrapper flex items-center justify-center pointer-events-none"
         style={{ opacity: logoOpacity ? 1 : 0 }}
       >
-        <Logo {...(!isSmall && logoPositioningProps)} />
+        {isSmall ? (
+          <Logo {...(!isSmall ? logoPositioningProps : null)} />
+        ) : null}
       </div>
       <main className={cx("homeInfoContainer", logoOpacity === 1 && "show")}>
         <p className="hoverableHomeItem justify-between">
           <div className="flex items-center gap-2">
             <span>
-              Currently @{" "}
+              Currently building{" "}
               <a
                 target="_blank"
                 rel="noopener noreferrer"
                 href="https://www.ziphq.com"
               >
-                Zip
+                <b>Zip</b>
               </a>
             </span>
           </div>
@@ -121,24 +127,27 @@ const Home = () => {
             </a>
           </div>
         </p>
-        <p className="h-20 hoverableHomeItem">
-          <span>
-            <span
-              id="typed-js"
-              className="typed"
-              aria-label="email address: andrew@hunt.codes"
-            />
-          </span>
-        </p>
-        {!isChrome && (
+        {/* Moved to computer for large screens */}
+        {isMdOrLess && (
+          <p className="h-20 hoverableHomeItem">
+            <span>
+              <span
+                id="typed-js"
+                className="typed"
+                aria-label="email address: andrew@hunt.codes"
+              />
+            </span>
+          </p>
+        )}
+        {!isChrome && !isSmall && (
           <>
-            <div className="leading-tight absolute text-lg bg-white p-4 rounded">
+            <div className="leading-tight absolute text-sm bg-white p-4 rounded">
               You are using a browser other than Chrome (🚩)
               <br />
               Some animations are disabled, and some styles may not appear as
               intended.
             </div>
-            <div className="mt-8" />
+            <div className="mt-12" />
           </>
         )}
       </main>

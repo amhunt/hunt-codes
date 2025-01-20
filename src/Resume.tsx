@@ -3,6 +3,7 @@ import cx from "classnames";
 import { ArrowLeftCircle, Calendar } from "react-feather";
 import { useInView } from "react-intersection-observer";
 import { Link } from "react-router-dom";
+import useWindowSize from "useWindowSize";
 
 const experienceItems = [
   {
@@ -43,7 +44,7 @@ const experienceItems = [
     date: "2017 - 2020",
     description: [
       "Built dozens of pricing and availability features across Experiences host and guest products",
-      "Ran >20 A/B tests, resulting in a compounded bookings lift of >10% for the Experiences product",
+      "Ran >20 A/B tests, resulting in a compound bookings increase of >10% for the Experiences product",
       "Planned and executed on performance initiatives, reducing load times by >30% on 10+ pages",
       "Oversaw conversion of legacy code to TypeScript, evangelized best practices across org",
     ],
@@ -61,12 +62,14 @@ const experienceItems = [
 
 const Resume = () => {
   const [opacity, setOpacity] = useState(false);
-  const { ref, inView, entry } = useInView({
+  const { ref, inView } = useInView({
     /* Optional options */
     rootMargin: "-320px",
     threshold: 0,
   });
 
+  const size = useWindowSize();
+  const isLarge = size === "lg";
   useEffect(() => {
     const timer = setTimeout(() => {
       setOpacity(true);
@@ -80,7 +83,7 @@ const Resume = () => {
         <Link
           className={cx(
             "flex transition-transform items-center gap-4 mb-12 inverse xl:sticky xl:top-[200px] xl:-ml-16",
-            !inView && "-translate-x-32"
+            !inView && isLarge && "-translate-x-32"
           )}
           to="/"
         >
@@ -114,9 +117,9 @@ const Resume = () => {
         <h3>Work I’m passionate about:</h3>
         <ul className="hor-list">
           <li>
-            <div className="card-title">Dev infra</div>I believe a solid
-            foundation and developer experience is the best way to increase
-            velocity, reduce bugs, and improve users’ experience.
+            <div className="card-title">Dev infra</div>Investing in the
+            development process is often undervalued. Great DevX is a
+            prerequisite to quality UX and efficient product development.
           </li>
           <li>
             <div className="card-title">Component systems</div>A well-structured
@@ -131,17 +134,17 @@ const Resume = () => {
           <li>
             <div className="card-title">Performance</div>
             I’m committed to ensuring a speedy and responsive experience for
-            users. Performance can be a complex problem, and I believe it should
-            be approached with a data-driven and user-centric approach.
+            users. Performance can be a complex problem, and often needs to be
+            approached with both a data-driven and user-centric lens.
           </li>
         </ul>
         <div>
           <div className="card-title">
             Tools and frameworks I know fairly well:
           </div>
-          TypeScript / JS, ESLint, Material UI, GitHub Actions, Visx, React,
-          GraphQL, Storybook, D3, Tailwind, Chromatic, Webflow, Cloudflare,
-          Jest, Webpack, S3, Vue, Redux, Vite
+          TypeScript / JavaScript, Material UI, React, Apollo + GraphQL,
+          Storybook, ESLint, GitHub Actions, D3, Tailwind, Chromatic,
+          Cloudflare, Jest, Webpack, Vite, Vue
         </div>
 
         <div className="resume-divider" />

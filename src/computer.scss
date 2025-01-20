@@ -1,0 +1,292 @@
+body {
+  background-color: #eee9e6;
+}
+
+.stage {
+  width: 100%;
+  height: 700px;
+  position: relative;
+  perspective: 1600px;
+  perspective-origin: 50% 100px;
+  font-size: 2vw;
+  pointer-events: none;
+}
+
+.positioning {
+  position: fixed;
+  top: calc(50vh - 200px);
+  left: 15vh;
+
+  @media (min-width: 1280px) {
+    top: calc(50vh - 200px);
+  }
+
+  @media (max-width: 767px) {
+    display: none;
+  }
+  transform-style: preserve-3d;
+
+  &.animated {
+    animation: back-and-forth 14s ease-in-out infinite;
+  }
+
+  &.two {
+    transform: translateX(14em) translateZ(-10em) rotateY(20deg);
+  }
+
+  &.three {
+    transform: translateX(-14em) translateZ(-10em) rotateY(-20deg);
+  }
+}
+
+/* 13.6 x 9.6 x 10.9 */
+.mac {
+  width: 12em;
+  height: 10em;
+  margin: 0 auto;
+  transform-style: preserve-3d;
+}
+.mac span {
+  display: block;
+  position: absolute;
+  backface-visibility: hidden;
+  opacity: 1;
+}
+.mac .front {
+  height: 11.5em;
+  width: 9.6em;
+  background: #e0e0e0;
+  transform: rotateX(5deg) translateZ(5.1em);
+}
+.mac .front .bezel-top {
+  border-top: 0.75em solid #f2f2f2;
+  border-right: 0.5em solid transparent;
+  border-left: 0.5em solid transparent;
+  width: 9.5em;
+}
+.mac .front .bezel-left {
+  border-top: 0.5em solid #d9d9d9;
+  border-right: 0.75em solid transparent;
+  border-left: 0.75em solid transparent;
+  width: 10em;
+  transform: rotateZ(-90deg) translateX(-5.5em) translateY(-4.2em);
+}
+.mac .front .bezel-right {
+  border-top: 0.5em solid #d4d4d4;
+  border-right: 0.75em solid transparent;
+  border-left: 0.75em solid transparent;
+  width: 10em;
+  transform: rotateZ(90deg) translateX(5.5em) translateY(-3.8em);
+}
+.mac .front .bezel-bottom {
+  border-top: 0.75em solid #cccccc;
+  border-right: 0.5em solid transparent;
+  border-left: 0.5em solid transparent;
+  width: 9.5em;
+  transform: rotateZ(180deg) translateY(-10.76em);
+}
+.mac .front .screen-container {
+  width: 6.5em;
+  height: 5em;
+  background: #c2c2c2;
+  background: linear-gradient(
+    to top,
+    #b3b3b3,
+    #cccccc 4%,
+    #cccccc 96%,
+    #a6a6a6
+  );
+  border-radius: 2px;
+  padding: 4px;
+  transform: translate3d(1.5em, 1.75em, 0);
+
+  .screen {
+    display: block;
+    position: absolute;
+    inset: 2px;
+    background: #4e006d;
+    color: white;
+    border: 4px solid #210c0c;
+    border-radius: 4px;
+    padding: 4px;
+    font-family: "Inconsolata", monospace;
+    font-size: 0.65em;
+
+    img {
+      width: 100%;
+      height: 100%;
+      border-radius: 4px;
+    }
+  }
+
+  .sheen {
+    display: block;
+    position: absolute;
+    top: 0;
+    background: linear-gradient(
+      top right,
+      rgba(255, 255, 255, 0.03),
+      rgba(255, 255, 255, 0.06) 50%,
+      transparent 50%,
+      transparent
+    );
+    width: 100%;
+    height: 100%;
+  }
+}
+
+.mac .back {
+  height: 11.5em;
+  width: 9.6em;
+  background: linear-gradient(to top, #f2f2f2, #e6e6e6 0.25em, #c2c2c2);
+  transform: rotateX(5deg) translateZ(-5.45em) rotateY(180deg);
+}
+.mac .top {
+  height: 10.95em;
+  width: 9.6em;
+  background-color: #ebf0dc;
+  background: linear-gradient(to top, #f2f2f2, #d9d9d9 0.25em, #b3b3b3);
+  transform: rotateX(5deg) rotateX(90deg) translateZ(5.45em);
+}
+.mac .left {
+  height: 11.5em;
+  width: 10.9em;
+  background: linear-gradient(to top, #ffffff, #e0e0e0 0.25em, #b3b3b3);
+  transform: rotateX(5deg) rotateY(-90deg) translateZ(5.45em);
+}
+.mac .left:after {
+  content: "";
+  position: absolute;
+  width: 8.9em;
+  height: 1em;
+  top: 11.4em;
+  left: 0.5em;
+  transform: rotateZ(5deg);
+  background: linear-gradient(
+    to top,
+    rgba(100, 100, 100, 0.8),
+    rgba(100, 100, 100, 0.8) 30%,
+    transparent 30%,
+    transparent
+  );
+  background-size: 2em;
+}
+.mac .right {
+  height: 11.5em;
+  width: 10.9em;
+  background: linear-gradient(to top, #ffffff, #e0e0e0 0.25em, #b3b3b3);
+  transform: rotateX(5deg) rotateY(90deg) translateZ(4.14em);
+}
+.mac .right:after {
+  content: "";
+  position: absolute;
+  width: 8.9em;
+  height: 1em;
+  top: 11.4em;
+  right: 0.5em;
+  transform: rotateZ(-5deg);
+  background: -webkit-gradient(
+    linear,
+    50% 0%,
+    50% 100%,
+    color-stop(0%, rgba(100, 100, 100, 0.8)),
+    color-stop(30%, rgba(100, 100, 100, 0.8)),
+    color-stop(30%, transparent),
+    color-stop(100%, transparent)
+  );
+  background: linear-gradient(
+    to top,
+    rgba(100, 100, 100, 0.8),
+    rgba(100, 100, 100, 0.8) 30%,
+    transparent 30%,
+    transparent
+  );
+  background-size: 2em;
+}
+.mac .base-front {
+  height: 2.1em;
+  width: 9.6em;
+  background: #c2c2c2;
+  transform: translateY(10.7em) translateZ(5em);
+}
+.mac .base-front:after {
+  content: "";
+  display: block;
+  width: 0.4em;
+  height: 0.5em;
+  position: absolute;
+  top: 0.9em;
+  right: 1em;
+  background: #555555;
+  border-top: 0.1em solid #b3b3b3;
+  border-right: 0.2em solid #cccccc;
+  border-bottom: 0.1em solid #e6e6e6;
+  border-left: 0.2em solid #cccccc;
+  border-radius: 0.12em;
+}
+.mac .base-back {
+  height: 2.1em;
+  width: 9.6em;
+  background: #b3b3b3;
+  transform: translateY(10.7em) translateZ(-5em) rotateY(180deg);
+}
+.mac .base-left {
+  height: 2.1em;
+  width: 10em;
+  background: #b3b3b3;
+  transform: translateY(10.7em) rotateY(-90deg) translateZ(4.99em);
+}
+.mac .base-right {
+  height: 2.1em;
+  width: 10em;
+  background: #b3b3b3;
+  transform: translateY(10.7em) rotateY(90deg) translateZ(4.58em);
+}
+.mac .logo {
+  transform: translateY(8.75em) translateX(1.25em);
+}
+.mac .logo .image {
+  display: block;
+  width: 1em;
+  height: 1em;
+  left: 0.25em;
+  position: relative;
+}
+.mac .logo span.text {
+  display: block;
+  position: absolute;
+  left: 2.5em;
+  top: 0.6em;
+  width: 10em;
+  font-family: nova, "Garamond", "Times New Roman", Times, serif;
+  font-size: 0.6em;
+  color: #555555;
+  line-height: 0.8em;
+}
+.mac .floppy {
+  height: 8px;
+  width: 3.5em;
+  transform: translate3d(4.5em, 8em, 0);
+  background: #555555;
+  border-top: 3px solid #cccccc;
+  border-right: 6px solid #e6e6e6;
+  border-bottom: 3px solid #f2f2f2;
+  border-left: 6px solid #e6e6e6;
+  border-radius: 6px;
+}
+
+@keyframes back-and-forth {
+  0% {
+    transform: rotateY(15deg);
+  }
+
+  40%,
+  50% {
+    transform: rotateY(-10deg);
+  }
+
+  90%,
+  100% {
+    transform: rotateY(15deg);
+  }
+}

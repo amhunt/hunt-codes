@@ -2,10 +2,13 @@ import React, { useState, useEffect } from "react";
 import { useLocation } from "react-router-dom";
 import cx from "classnames";
 import "./App.scss";
+import "./computer.scss";
 
 import Galaxy from "./Galaxy";
 
 import GoldenGate from "./gg-bridge.png";
+// import FacePic from "./assets/ah-face-2.png";
+import Apple from "./assets/apple-rainbow.svg";
 import useWindowSize from "useWindowSize";
 import { Music } from "react-feather";
 
@@ -126,7 +129,50 @@ const AppBg = ({ showBridge }: { showBridge: boolean }) => {
         ))}
       </div>
       <Galaxy isNightMode={isNightMode} />
-      <div className="h-screen">
+      <div className="z-20 h-screen">
+        <div className="z-20 stage">
+          <div className="positioning animated">
+            <div className="mac">
+              <span className="back"></span>
+              <span className="left"></span>
+              <span className="right"></span>
+              <span className="top"></span>
+              <span className="base-front">
+                <span className="keyboard-port"></span>
+              </span>
+              <span className="base-left"></span>
+              <span className="base-right"></span>
+              <span className="base-back"></span>
+              <span className="front">
+                <span className="bezel-top"></span>
+                <span className="bezel-left"></span>
+                <span className="bezel-right"></span>
+                <span className="bezel-bottom"></span>
+                <span className="screen-container">
+                  <span className="screen">
+                    {/* img of my face */}
+                    {/* <img
+                      alt="Picture of Andrew on 3d legacy mac animation"
+                      src={FacePic}
+                      style={{ aspectRatio: 1 }}
+                    /> */}
+                    <span
+                      id="typed-js"
+                      className="typed"
+                      aria-label="email address: andrew@hunt.codes"
+                    />
+                    <span className="sheen" />
+                  </span>
+                </span>
+                <span className="logo">
+                  <img src={Apple} className="image" />
+                  <span className="text">Andy</span>
+                </span>
+                <span className="floppy" />
+              </span>
+            </div>
+          </div>
+        </div>
         <img
           className={`App-gg-bridge ${
             showBridge && !isNightMode ? "App-gg-bridge-opaque" : ""

@@ -1,10 +1,5 @@
 import React from "react";
 
-const isSafari =
-  navigator.userAgent.indexOf("Safari") > -1 &&
-  // Chrome also has "Safari" in its user-agent string
-  navigator.userAgent.indexOf("Chrome") === -1;
-
 export default function MoonSvg() {
   return (
     <svg
@@ -115,15 +110,8 @@ export default function MoonSvg() {
             transform-origin: center;
 
             /* The transform-origin is wrong on safari */
-            ${
-              isSafari
-                ? ""
-                : `
-              transform: rotate(160deg);
-              animation: moon-rotate 30s linear both infinite;
-              `
-            }
-
+            transform: rotate(160deg);
+            animation: moon-rotate 30s linear both infinite;
             shape-rendering: geometricPrecision;
             filter: hue-rotate(90deg);
           }
