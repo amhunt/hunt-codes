@@ -3,8 +3,15 @@ import Typed from "typed.js";
 import cx from "classnames";
 
 import Logo from "./Logo";
-import { GitHub, Linkedin } from "react-feather";
-import useWindowSize from "useWindowSize";
+import { GitHub, Linkedin, Mail } from "react-feather";
+import useWindowSize from "./useWindowSize";
+
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from "./ui/tooltip";
 
 const typedOptions = {
   loop: true,
@@ -12,10 +19,10 @@ const typedOptions = {
   showCursor: false,
   smartBackspace: true,
   strings: [
-    "hey there^500,",
+    "hey there^500!",
     // "welcome to my website!",
-    // "there isn't much content here...^500 but there IS plenty of tasteless CSS!",
-    "^500interested in working together?",
+    "sorry for the...^300 tasteless UI",
+    "would you be ^500interested in working together?",
     "reach out to andrew^200@hunt.codes^5000",
   ],
   typeSpeed: 50,
@@ -83,6 +90,18 @@ const Home = () => {
     paddingTop2: cursorMultiplier2 * cursorRatioY,
   };
 
+  const [copied, setCopied] = useState(false);
+
+  const handleCopy = async () => {
+    try {
+      await navigator.clipboard.writeText("andrew+in@hunt.codes");
+      setCopied(true);
+      setTimeout(() => setCopied(false), 2000); // Reset after 2 seconds
+    } catch (err) {
+      console.error("Failed to copy email: ", err);
+    }
+  };
+
   return (
     <>
       <div
@@ -125,6 +144,27 @@ const Home = () => {
             >
               <GitHub />
             </a>
+            <TooltipProvider
+              skipDelayDuration={0}
+              delayDuration={0}
+              disableHoverableContent
+            >
+              <Tooltip disableHoverableContent defaultOpen={copied}>
+                <TooltipTrigger onClick={(e) => e.preventDefault()}>
+                  <button
+                    onClick={(e) => handleCopy()}
+                    className="flex transition-colors items-center justify-center w-12 h-12 p-2 rounded-full hover:bg-[#5efffc57]"
+                  >
+                    <Mail />
+                  </button>
+                </TooltipTrigger>
+                <TooltipContent
+                  onPointerDownOutside={(e) => e.preventDefault()}
+                >
+                  <p>andrew+in@hunt.codes ({copied ? "copied" : "copy"})</p>
+                </TooltipContent>
+              </Tooltip>
+            </TooltipProvider>
           </div>
         </p>
         {/* Moved to computer for large screens */}

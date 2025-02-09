@@ -109,8 +109,9 @@ body {
     border: 4px solid #210c0c;
     border-radius: 4px;
     padding: 4px;
-    font-family: "Inconsolata", monospace;
-    font-size: 0.65em;
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto,
+      "Helvetica Neue", Arial, sans-serif;
+    font-size: 0.55em;
 
     img {
       width: 100%;
@@ -258,8 +259,8 @@ body {
   left: 2.5em;
   top: 0.6em;
   width: 10em;
-  font-family: nova, "Garamond", "Times New Roman", Times, serif;
-  font-size: 0.6em;
+  font-family: nova-mono, monospace;
+  font-size: 0.55em;
   color: #555555;
   line-height: 0.8em;
 }

@@ -26,11 +26,13 @@ const stars = Array.from({ length: 200 }, () => ({
   animationDelay: `${Math.random() * 4000}ms`,
 }));
 
-const AppBg = ({ showBridge }: { showBridge: boolean }) => {
+const AppBackground = ({ showBridge }: { showBridge: boolean }) => {
   const size = useWindowSize();
   const location = useLocation();
 
-  const isNightMode = location.pathname.includes("about");
+  const isNightMode = !location.pathname.includes("home");
+  const isHomePage = location.pathname.includes("home");
+  const isLanding = location.pathname === "/" || location.pathname === "";
   const [musicEnabled, setMusicEnabled] = useState(false);
 
   const [highlightedCharIdx, setHighlightedCharIdx] = useState(0);
@@ -128,61 +130,63 @@ const AppBg = ({ showBridge }: { showBridge: boolean }) => {
           />
         ))}
       </div>
-      <Galaxy isNightMode={isNightMode} />
-      <div className="z-20 h-screen">
-        <div className="z-20 stage">
-          <div className="positioning animated">
-            <div className="mac">
-              <span className="back"></span>
-              <span className="left"></span>
-              <span className="right"></span>
-              <span className="top"></span>
-              <span className="base-front">
-                <span className="keyboard-port"></span>
-              </span>
-              <span className="base-left"></span>
-              <span className="base-right"></span>
-              <span className="base-back"></span>
-              <span className="front">
-                <span className="bezel-top"></span>
-                <span className="bezel-left"></span>
-                <span className="bezel-right"></span>
-                <span className="bezel-bottom"></span>
-                <span className="screen-container">
-                  <span className="screen">
-                    {/* img of my face */}
-                    {/* <img
+      {!isLanding && <Galaxy isNightMode={isNightMode} />}
+      {isHomePage && (
+        <div className="z-20 h-screen">
+          <div className="z-20 stage">
+            <div className="positioning animated">
+              <div className="mac">
+                <span className="back"></span>
+                <span className="left"></span>
+                <span className="right"></span>
+                <span className="top"></span>
+                <span className="base-front">
+                  <span className="keyboard-port"></span>
+                </span>
+                <span className="base-left"></span>
+                <span className="base-right"></span>
+                <span className="base-back"></span>
+                <span className="front">
+                  <span className="bezel-top"></span>
+                  <span className="bezel-left"></span>
+                  <span className="bezel-right"></span>
+                  <span className="bezel-bottom"></span>
+                  <span className="screen-container">
+                    <span className="screen">
+                      {/* img of my face */}
+                      {/* <img
                       alt="Picture of Andrew on 3d legacy mac animation"
                       src={FacePic}
                       style={{ aspectRatio: 1 }}
                     /> */}
-                    <span
-                      id="typed-js"
-                      className="typed"
-                      aria-label="email address: andrew@hunt.codes"
-                    />
-                    <span className="sheen" />
+                      <span
+                        id="typed-js"
+                        className="typed"
+                        aria-label="email address: andrew@hunt.codes"
+                      />
+                      <span className="sheen" />
+                    </span>
                   </span>
+                  <span className="logo">
+                    <img src={Apple} alt="apple logo" className="image" />
+                    <span className="text">{/** Could add text here */}</span>
+                  </span>
+                  <span className="floppy" />
                 </span>
-                <span className="logo">
-                  <img src={Apple} className="image" />
-                  <span className="text">Andy</span>
-                </span>
-                <span className="floppy" />
-              </span>
+              </div>
             </div>
           </div>
+          <img
+            className={`App-gg-bridge ${
+              showBridge && !isNightMode ? "App-gg-bridge-opaque" : ""
+            }`}
+            src={GoldenGate}
+            alt="golden gate bridge"
+          />
         </div>
-        <img
-          className={`App-gg-bridge ${
-            showBridge && !isNightMode ? "App-gg-bridge-opaque" : ""
-          }`}
-          src={GoldenGate}
-          alt="golden gate bridge"
-        />
-      </div>
+      )}
     </>
   );
 };
 
-export default AppBg;
+export default AppBackground;

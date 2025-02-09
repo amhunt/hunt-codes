@@ -6,22 +6,16 @@ const isSafari =
   // Chrome also has "Safari" in its user-agent string
   navigator.userAgent.indexOf("Chrome") === -1;
 
-export default function MoonSvg() {
+export function SunInternals() {
   return (
-    <svg
-      width="550"
-      height="550"
-      viewBox="0 0 550 550"
-      xmlns="http://www.w3.org/2000/svg"
-      xmlnsXlink="http://www.w3.org/1999/xlink"
-    >
+    <>
       <path
         id="circle-stroke"
         d="
-    M 75,275
-    a 200,200 0 1,1 400,2
-    a 200,200 0 1,1 -400,2
-  "
+          M 75,275
+          a 200,200 0 1,1 400,2
+          a 200,200 0 1,1 -400,2
+        "
         stroke="url(#sun-rays-gradient)"
         strokeWidth="24px"
         fill="none"
@@ -31,10 +25,10 @@ export default function MoonSvg() {
       <path
         id="circle-bg"
         d="
-      M 75,275
-      a 200,200 0 1,1 400,2
-      a 200,200 0 1,1 -400,2
-    "
+          M 75,275
+          a 200,200 0 1,1 400,2
+          a 200,200 0 1,1 -400,2
+        "
         z={1}
         fill="url(#sun-core-radial-gradient)"
       />
@@ -42,19 +36,19 @@ export default function MoonSvg() {
         id="circle2"
         fill="transparent"
         d="
-      M 50,275
-      a 225,225 0 1,1 450,2
-      a 225,225 0 1,1 -450,2
-    "
+          M 50,275
+          a 225,225 0 1,1 450,2
+          a 225,225 0 1,1 -450,2
+        "
       />
       <path
         id="circle3"
         fill="#ffffff"
         d="
-      M 75,275
-      a 200,200 0 1,1 400,2
-      a 200,200 0 1,1 -400,2
-    "
+          M 75,275
+          a 200,200 0 1,1 400,2
+          a 200,200 0 1,1 -400,2
+        "
         z={5}
         fillOpacity={0.5}
       />
@@ -103,21 +97,10 @@ export default function MoonSvg() {
           >
             <animate
               attributeName="baseFrequency"
-              // from="0.01"
-              // to="0.02"
               values="0.01; 0.02"
               dur="60s"
               repeatCount="indefinite"
             ></animate>
-
-            {/* <animate
-              attributeName="numOctaves"
-              // from="0.01"
-              // to="0.02"
-              values="1; 5; 1"
-              dur="3s"
-              repeatCount="indefinite"
-            ></animate> */}
           </feTurbulence>
           <feColorMatrix
             in="cloudbase"
@@ -158,46 +141,6 @@ export default function MoonSvg() {
           </style>
         </defs>
       </defs>
-      <text fontFamily="'Inconsolata', monospace" id="sunText">
-        <textPath
-          fill="black"
-          pointerEvents="fill"
-          xmlnsXlink="http://www.w3.org/1999/xlink"
-          xlinkHref="#circle2"
-        >
-          <Link to="/about">
-            <tspan
-              dx="25%"
-              className="svg-link-tspan"
-              fontSize="22px"
-              vectorEffect="non-scaling-size"
-            >
-              about me 👋
-            </tspan>
-          </Link>
-          <a
-            target="_blank"
-            rel="noopener noreferrer"
-            href="https://engineering.ziphq.com/material-ui/"
-          >
-            <tspan
-              className="svg-link-tspan"
-              vectorEffect="non-scaling-size"
-              fontSize="12px"
-              dx="8%"
-            >
-              latest blog post
-            </tspan>
-          </a>
-          <tspan fontSize="28px" dx="45%" dy="-24px">
-            🪐
-          </tspan>
-          <tspan fontSize="28px" dx="20%" dy="16px">
-            🌎
-          </tspan>
-        </textPath>
-      </text>
-
       <style>
         {`
           #sunText {
@@ -241,6 +184,63 @@ export default function MoonSvg() {
           }
         `}
       </style>
+    </>
+  );
+}
+
+export default function SunSvg({ isHome }: { isHome?: boolean }) {
+  return (
+    <svg
+      width="550"
+      height="550"
+      viewBox="0 0 550 550"
+      xmlns="http://www.w3.org/2000/svg"
+      xmlnsXlink="http://www.w3.org/1999/xlink"
+    >
+      <SunInternals />
+      <text fontFamily="'Inconsolata', monospace" id="sunText">
+        <textPath
+          fill="black"
+          pointerEvents="fill"
+          xmlnsXlink="http://www.w3.org/1999/xlink"
+          xlinkHref="#circle2"
+        >
+          {isHome && (
+            <>
+              <Link to="/about">
+                <tspan
+                  dx="25%"
+                  className="svg-link-tspan"
+                  fontSize="22px"
+                  vectorEffect="non-scaling-size"
+                >
+                  about me 👋
+                </tspan>
+              </Link>
+              <a
+                target="_blank"
+                rel="noopener noreferrer"
+                href="https://engineering.ziphq.com/material-ui/"
+              >
+                <tspan
+                  className="svg-link-tspan"
+                  vectorEffect="non-scaling-size"
+                  fontSize="12px"
+                  dx="8%"
+                >
+                  latest blog post
+                </tspan>
+              </a>
+              <tspan fontSize="28px" dx="45%" dy="-24px">
+                🪐
+              </tspan>
+              <tspan fontSize="28px" dx="20%" dy="16px">
+                🌎
+              </tspan>
+            </>
+          )}
+        </textPath>
+      </text>
     </svg>
   );
 }

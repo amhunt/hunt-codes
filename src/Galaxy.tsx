@@ -1,7 +1,7 @@
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import cx from "classnames";
-import Moon from "./MoonSvg";
-import Sun from "./SunSvg";
+import MoonSvg from "./MoonSvg";
+import SunSvg from "./SunSvg";
 
 const Galaxy = ({ isNightMode }: { isNightMode: boolean }) => {
   const [hasMounted, setHasMounted] = useState(false);
@@ -11,12 +11,12 @@ const Galaxy = ({ isNightMode }: { isNightMode: boolean }) => {
   // hideMoon hides moon after a second, to allow the animation to finish
   // before the moon stops being rendered. It uses isNightMode to determine
   // whether to hide the moon or not.
-  React.useEffect(() => {
+  useEffect(() => {
     setTimeout(() => setHideMoon(!isNightMode), 1000);
     setTimeout(() => setHideSun(isNightMode), 1000);
   }, [isNightMode]);
 
-  React.useEffect(() => {
+  useEffect(() => {
     setTimeout(() => setHasMounted(true), 1000);
   }, []);
 
@@ -30,7 +30,7 @@ const Galaxy = ({ isNightMode }: { isNightMode: boolean }) => {
             hasMounted && (!isNightMode ? "on" : "off")
           )}
         >
-          <Sun />
+          <SunSvg isHome />
         </div>
       )}
       {!hideMoon && (
@@ -41,7 +41,7 @@ const Galaxy = ({ isNightMode }: { isNightMode: boolean }) => {
             !hasMounted ? "unmounted" : isNightMode ? "on" : "off"
           )}
         >
-          <Moon />
+          <MoonSvg />
         </div>
       )}
     </div>
