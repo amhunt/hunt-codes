@@ -52,7 +52,7 @@ const Logo = ({
   }, []);
 
   useEffect(() => {
-    const interval = setInterval(changeColor, 500);
+    const interval = setInterval(changeColor, 2000);
     return () => clearInterval(interval);
   }, [changeColor]);
 

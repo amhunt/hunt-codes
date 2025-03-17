@@ -3359,6 +3359,13 @@ __metadata:
   languageName: node
   linkType: hard
 
+"@types/canvas-confetti@npm:^1.6.4":
+  version: 1.9.0
+  resolution: "@types/canvas-confetti@npm:1.9.0"
+  checksum: 10c0/ffe2c674d466b8e13472c81ab2a97056f3433fd40a3513dbc1bb76764e4e7c3ff0a2a58d37b16ea6a245c831077c553db321b069dda6572eab59f2be61137b2e
+  languageName: node
+  linkType: hard
+
 "@types/connect-history-api-fallback@npm:^1.5.4":
   version: 1.5.4
   resolution: "@types/connect-history-api-fallback@npm:1.5.4"
@@ -3724,6 +3731,13 @@ __metadata:
   version: 2.0.3
   resolution: "@types/stack-utils@npm:2.0.3"
   checksum: 10c0/1f4658385ae936330581bcb8aa3a066df03867d90281cdf89cc356d404bd6579be0f11902304e1f775d92df22c6dd761d4451c804b0a4fba973e06211e9bd77c
+  languageName: node
+  linkType: hard
+
+"@types/tinycolor2@npm:^1":
+  version: 1.4.6
+  resolution: "@types/tinycolor2@npm:1.4.6"
+  checksum: 10c0/922020c3326460e9d8502c8a98f80db69f06fd14e07fe5a48e8ffe66175762298a9bd51263f2a0c9a40632886a74975a3ff79396defcdbeac0dc176e3e5056e8
   languageName: node
   linkType: hard
 
@@ -4975,6 +4989,13 @@ __metadata:
   version: 1.0.30001695
   resolution: "caniuse-lite@npm:1.0.30001695"
   checksum: 10c0/acf90a767051fdd8083711b3ff9f07a28149c55e394115d8f874f149aa4f130e6bc50cea1dd94fe03035b9ebbe13b64f446518a6d2e19f72650962bdff44b2c5
+  languageName: node
+  linkType: hard
+
+"canvas-confetti@npm:^1.9.2":
+  version: 1.9.3
+  resolution: "canvas-confetti@npm:1.9.3"
+  checksum: 10c0/94c6f16591660d5ed4a48afb8da65902826ce6b38edc7644d62521aa9bf9ef5b950aa4396e980e7fe0a38e5f41a991a6d984721412a54c9fba4de3682c1eead0
   languageName: node
   linkType: hard
 
@@ -7852,6 +7873,7 @@ __metadata:
     "@types/react": "npm:^18.3.18"
     "@types/react-dom": "npm:^18.3.5"
     "@types/react-router-dom": "npm:^5.3.3"
+    "@types/tinycolor2": "npm:^1"
     "@types/typed.js": "npm:^2.0.9"
     babel-jest: "npm:^29.7.0"
     babel-loader: "npm:^9.2.1"
@@ -7892,6 +7914,7 @@ __metadata:
     prompts: "npm:^2.4.2"
     react: "npm:^18.3.1"
     react-app-polyfill: "npm:^3.0.0"
+    react-canvas-confetti: "npm:^2.0.7"
     react-dev-utils: "npm:^12.0.1"
     react-dom: "npm:^18.3.1"
     react-feather: "npm:^2.0.10"
@@ -7909,6 +7932,7 @@ __metadata:
     tailwindcss: "npm:^3.4.17"
     tailwindcss-animate: "npm:^1.0.7"
     terser-webpack-plugin: "npm:^5.3.11"
+    tinycolor2: "npm:^1.6.0"
     typed.js: "npm:^2.1.0"
     typescript: "npm:^5.7.3"
     webpack: "npm:^5.97.1"
@@ -11634,6 +11658,18 @@ __metadata:
   languageName: node
   linkType: hard
 
+"react-canvas-confetti@npm:^2.0.7":
+  version: 2.0.7
+  resolution: "react-canvas-confetti@npm:2.0.7"
+  dependencies:
+    "@types/canvas-confetti": "npm:^1.6.4"
+    canvas-confetti: "npm:^1.9.2"
+  peerDependencies:
+    react: "*"
+  checksum: 10c0/709a0f3c41748018e4c128f2c60db1360b8c5d973d7532d99554adf7bd4b3b377d271b4feab4f7cd9018c9e7baf54138fc324fa1cca2322b89e2d2784f2b06be
+  languageName: node
+  linkType: hard
+
 "react-dev-utils@npm:^12.0.1":
   version: 12.0.1
   resolution: "react-dev-utils@npm:12.0.1"
@@ -13319,6 +13355,13 @@ __metadata:
   version: 1.0.3
   resolution: "tiny-warning@npm:1.0.3"
   checksum: 10c0/ef8531f581b30342f29670cb41ca248001c6fd7975ce22122bd59b8d62b4fc84ad4207ee7faa95cde982fa3357cd8f4be650142abc22805538c3b1392d7084fa
+  languageName: node
+  linkType: hard
+
+"tinycolor2@npm:^1.6.0":
+  version: 1.6.0
+  resolution: "tinycolor2@npm:1.6.0"
+  checksum: 10c0/9aa79a36ba2c2a87cb221453465cabacd04b9e35f9694373e846fdc78b1c768110f81e581ea41440106c0f24d9a023891d0887e8075885e790ac40eb0e74a5c1
   languageName: node
   linkType: hard
 

@@ -10,7 +10,6 @@ import "./App.scss";
 import Home from "./Home";
 import Resume from "./Resume";
 import AppBackground from "AppBackground";
-import { Music } from "react-feather";
 import Landing from "Landing";
 
 // Needed to get hover state on individual chars
@@ -25,17 +24,16 @@ const App = () => {
   const [mode, setMode] = useState<"day" | "night">("night");
 
   useEffect(() => {
-    console.log("setting mode", window.location.pathname);
     if (window.location.pathname.includes("about")) {
       setMode("day");
     } else {
       setMode("night");
     }
   }, [window.location.pathname]);
-  console.log(mode);
 
   // fade home content in once mounted
   useEffect(() => {
+    console.log("bro what r u doing in the console...");
     setTimeout(() => setShowBridge(true), 1500);
   }, []);
 

@@ -6,49 +6,62 @@ const isSafari =
   // Chrome also has "Safari" in its user-agent string
   navigator.userAgent.indexOf("Chrome") === -1;
 
-export function SunInternals() {
+export function SunInternals({
+  size = 1,
+  radiusOffset = 50,
+  strokeWidth = 24,
+}: {
+  size?: number;
+  radiusOffset?: number;
+  strokeWidth?: number;
+}) {
+  // Base radius values that will be scaled
+  const innerRadius = 200 * size;
+  const outerRadius = 225 * size;
+  const center = outerRadius + radiusOffset;
+
   return (
     <>
       <path
         id="circle-stroke"
-        d="
-          M 75,275
-          a 200,200 0 1,1 400,2
-          a 200,200 0 1,1 -400,2
-        "
+        d={`
+          M ${center - innerRadius},${center}
+          a ${innerRadius},${innerRadius} 0 1,1 ${innerRadius * 2},2
+          a ${innerRadius},${innerRadius} 0 1,1 ${-innerRadius * 2},2
+        `}
         stroke="url(#sun-rays-gradient)"
-        strokeWidth="24px"
+        strokeWidth={`${strokeWidth}px`}
         fill="none"
         vectorEffect="non-scaling-stroke"
-        strokeDasharray="4 36"
+        strokeDasharray={`${4 * size} ${36 * size}`}
       />
       <path
         id="circle-bg"
-        d="
-          M 75,275
-          a 200,200 0 1,1 400,2
-          a 200,200 0 1,1 -400,2
-        "
+        d={`
+          M ${center - innerRadius},${center}
+          a ${innerRadius},${innerRadius} 0 1,1 ${innerRadius * 2},2
+          a ${innerRadius},${innerRadius} 0 1,1 ${-innerRadius * 2},2
+        `}
         z={1}
         fill="url(#sun-core-radial-gradient)"
       />
       <path
         id="circle2"
         fill="transparent"
-        d="
-          M 50,275
-          a 225,225 0 1,1 450,2
-          a 225,225 0 1,1 -450,2
-        "
+        d={`
+          M ${center - outerRadius},${center}
+          a ${outerRadius},${outerRadius} 0 1,1 ${outerRadius * 2},2
+          a ${outerRadius},${outerRadius} 0 1,1 ${-outerRadius * 2},2
+        `}
       />
       <path
         id="circle3"
         fill="#ffffff"
-        d="
-          M 75,275
-          a 200,200 0 1,1 400,2
-          a 200,200 0 1,1 -400,2
-        "
+        d={`
+          M ${center - innerRadius},${center}
+          a ${innerRadius},${innerRadius} 0 1,1 ${innerRadius * 2},2
+          a ${innerRadius},${innerRadius} 0 1,1 ${-innerRadius * 2},2
+        `}
         z={5}
         fillOpacity={0.5}
       />
@@ -59,7 +72,7 @@ export function SunInternals() {
           cy="0"
           r="1"
           gradientUnits="userSpaceOnUse"
-          gradientTransform="translate(275 275) scale(200)"
+          gradientTransform={`translate(${center} ${center}) scale(${innerRadius})`}
         >
           {/* Animates the border in and out, giving the sun the appearance of "breathing" */}
           <animate
@@ -154,7 +167,7 @@ export function SunInternals() {
             }
           }
 
-          .svg-link-tspan {x
+          .svg-link-tspan {
             fill: black;
             font-weight: 400;
             transition: fill 0.1s;
@@ -188,16 +201,22 @@ export function SunInternals() {
   );
 }
 
-export default function SunSvg({ isHome }: { isHome?: boolean }) {
+export default function SunSvg({
+  isHome,
+  size = 1,
+}: {
+  isHome?: boolean;
+  size?: number;
+}) {
   return (
     <svg
-      width="550"
-      height="550"
-      viewBox="0 0 550 550"
+      width={550 * size}
+      height={550 * size}
+      viewBox={`0 0 ${550 * size} ${550 * size}`}
       xmlns="http://www.w3.org/2000/svg"
       xmlnsXlink="http://www.w3.org/1999/xlink"
     >
-      <SunInternals />
+      <SunInternals size={size} />
       <text fontFamily="'Inconsolata', monospace" id="sunText">
         <textPath
           fill="black"
@@ -228,7 +247,21 @@ export default function SunSvg({ isHome }: { isHome?: boolean }) {
                   fontSize="12px"
                   dx="8%"
                 >
-                  latest blog post
+                  {"latest blog post"}
+                </tspan>
+              </a>
+              <a
+                target="_blank"
+                rel="noopener noreferrer"
+                href="https://andrew-hunt.medium.com/"
+              >
+                <tspan
+                  className="svg-link-tspan"
+                  vectorEffect="non-scaling-size"
+                  fontSize="12px"
+                  dx="8%"
+                >
+                  {"old personal blog"}
                 </tspan>
               </a>
               <tspan fontSize="28px" dx="45%" dy="-24px">

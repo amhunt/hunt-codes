@@ -95,9 +95,9 @@ export default function MoonSvg() {
             🛸
           </tspan>
           <tspan dx="40%">
-            <tspan id="wave-emoji">👋</tspan> Hi, I’m Andrew
+            <tspan id="wave-emoji">👋</tspan> Hi there
           </tspan>
-          <tspan dx="40%">nice 2 meet u</tspan>
+          <tspan dx="40%">welcome to space</tspan>
         </textPath>
       </text>
 

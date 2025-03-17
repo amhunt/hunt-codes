@@ -5,6 +5,7 @@ import cx from "classnames";
 import Logo from "./Logo";
 import { GitHub, Linkedin, Mail } from "react-feather";
 import useWindowSize from "./useWindowSize";
+import { useCursorPosition } from "./hooks/useCursorPosition";
 
 import {
   Tooltip,
@@ -28,7 +29,7 @@ const typedOptions = {
   typeSpeed: 50,
 };
 
-console.log(navigator.userAgent);
+// console.log(navigator.userAgent);
 
 const isChrome = navigator.userAgent.indexOf("Chrome") > -1;
 
@@ -36,45 +37,28 @@ const Home = () => {
   const leftHalfEl = useRef<HTMLDivElement>(null);
 
   const [logoOpacity, setLogoOpacity] = useState(0);
-  const [cursorPositionX, setCursorPositionX] = useState(0);
-  const [cursorPositionY, setCursorPositionY] = useState(0);
 
   const size = useWindowSize();
   const isSmall = size === "sm";
   const isMdOrLess = size === "sm" || size === "md";
 
-  const getCursorXY = useCallback((e: MouseEvent) => {
-    const cursorPositionX = window.Event
-      ? e.pageX
-      : e.clientX +
-        (document?.documentElement?.scrollLeft || document.body.scrollLeft);
-    const cursorPositionY = window.Event
-      ? e.pageY
-      : e.clientY +
-        (document?.documentElement?.scrollTop || document.body.scrollTop);
-    setCursorPositionX(cursorPositionX);
-    setCursorPositionY(cursorPositionY);
-  }, []);
+  const { cursorX, cursorY } = useCursorPosition();
 
+  const timeout = setTimeout(() => setLogoOpacity(1), 1000);
   useEffect(() => {
-    const typed = new Typed("#typed-js", typedOptions);
-    document.onmousemove = getCursorXY;
-
-    const timeout = setTimeout(() => setLogoOpacity(1), 1000);
-    return () => {
-      clearTimeout(timeout);
-      typed.destroy();
-    };
-  }, [getCursorXY]);
+    if (document.getElementById("typed-js")) {
+      const typed = new Typed("#typed-js", typedOptions);
+      return () => {
+        clearTimeout(timeout);
+        typed.destroy();
+      };
+    }
+  }, []);
 
   const docHeight = window.innerHeight;
   const docWidth = window.innerWidth;
-  const cursorRatioX = cursorPositionX
-    ? (cursorPositionX / docWidth) * 2 - 1
-    : 0;
-  const cursorRatioY = cursorPositionY
-    ? (cursorPositionY / docHeight) * 2 - 1
-    : 0;
+  const cursorRatioX = cursorX ? (cursorX / docWidth) * 2 - 1 : 0;
+  const cursorRatioY = cursorY ? (cursorY / docHeight) * 2 - 1 : 0;
   let cursorMultiplier1 = 30;
   let cursorMultiplier2 = 50;
 
@@ -109,9 +93,7 @@ const Home = () => {
         className="logoWrapper flex items-center justify-center pointer-events-none"
         style={{ opacity: logoOpacity ? 1 : 0 }}
       >
-        {isSmall ? (
-          <Logo {...(!isSmall ? logoPositioningProps : null)} />
-        ) : null}
+        <Logo {...(!isSmall ? logoPositioningProps : null)} />
       </div>
       <main className={cx("homeInfoContainer", logoOpacity === 1 && "show")}>
         <p className="hoverableHomeItem justify-between">
@@ -174,7 +156,7 @@ const Home = () => {
               <span
                 id="typed-js"
                 className="typed"
-                aria-label="email address: andrew@hunt.codes"
+                aria-description="email address: andrew@hunt.codes"
               />
             </span>
           </p>
