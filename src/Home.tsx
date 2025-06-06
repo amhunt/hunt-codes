@@ -1,5 +1,4 @@
 import React, { useEffect, useState, useCallback, useRef } from "react";
-import Typed from "typed.js";
 import cx from "classnames";
 
 import Logo from "./Logo";
@@ -46,13 +45,18 @@ const Home = () => {
 
   const timeout = setTimeout(() => setLogoOpacity(1), 1000);
   useEffect(() => {
+    let typed: any;
     if (document.getElementById("typed-js")) {
-      const typed = new Typed("#typed-js", typedOptions);
-      return () => {
-        clearTimeout(timeout);
-        typed.destroy();
-      };
+      import("typed.js").then(({ default: Typed }) => {
+        typed = new Typed("#typed-js", typedOptions);
+      });
     }
+    return () => {
+      clearTimeout(timeout);
+      if (typed) {
+        typed.destroy();
+      }
+    };
   }, []);
 
   const docHeight = window.innerHeight;

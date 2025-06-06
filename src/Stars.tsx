@@ -66,7 +66,7 @@ const generateStarsForLetter = ({
         imageData.data[index + 3] > 0 &&
         !points.some(
           (star) =>
-            Math.abs(star.canvasX - x) < 2 && Math.abs(star.canvasY - y) < 2
+            Math.abs(star.canvasX - x) < 2 && Math.abs(star.canvasY - y) < 2,
         )
       ) {
         points.push({
@@ -82,7 +82,6 @@ const generateStarsForLetter = ({
             .mix("#3effcc", "#ff2d2d", xRandom * 100)
             .toHexString(),
         });
-        console.log("remaining attempts", remainingAttempts);
         foundPoint = true;
       }
       remainingAttempts--;
@@ -116,7 +115,7 @@ const generateStarsForLetters = (text: string, windowWidth: number) => {
   const totalStarsWidthPx = Math.round(percentageWidthOfText * windowWidth);
   const averageLetterWidth = totalStarsWidthPx / text.length;
   const scaledLetterWidths = letterWidths.map((letterWidth) =>
-    Math.round((letterWidth / totalPrescaledCharWidths) * totalStarsWidthPx)
+    Math.round((letterWidth / totalPrescaledCharWidths) * totalStarsWidthPx),
   );
 
   // Calculate starting X position to center the text
@@ -146,7 +145,7 @@ const useStars = (isLanding: boolean) => {
   }, [cursorX, cursorY]);
   const initialTextStars = useMemo(
     () => [...(isLanding ? generateStarsForLetters("HUNT CODES", width) : [])],
-    [isLanding, width, height]
+    [isLanding, width, height],
   );
   const [initialTextStarsState, setInitialTextStarsState] =
     useState(initialTextStars);
@@ -179,7 +178,8 @@ const useStars = (isLanding: boolean) => {
     // if on a mobile device, don't animate
     if (window.innerWidth < 768) return;
 
-    const interval = setInterval(() => {
+    let frameId: number;
+    const animate = () => {
       setTextStarsState((prevStars) => {
         const startingArr =
           prevStars.length > initialTextStarsState.length
@@ -192,7 +192,7 @@ const useStars = (isLanding: boolean) => {
           const cursorX = cursorPositionRef.current.x;
           const cursorY = cursorPositionRef.current.y;
           const distanceToCursor = Math.sqrt(
-            (star.x - cursorX) ** 2 + (star.y - cursorY) ** 2
+            (star.x - cursorX) ** 2 + (star.y - cursorY) ** 2,
           );
           const isCloseToCursor = distanceToCursor < 100;
           const originalX = initialTextStarsState[starIdx]?.x ?? star.x;
@@ -201,7 +201,7 @@ const useStars = (isLanding: boolean) => {
             (Math.random() + 0.5) *
             Math.max(
               2,
-              Math.min(40, Math.random() * (100 / distanceToCursor / 4))
+              Math.min(40, Math.random() * (100 / distanceToCursor / 4)),
             );
           let newX = star.x;
           let newY = star.y;
@@ -230,9 +230,10 @@ const useStars = (isLanding: boolean) => {
           };
         });
       });
-    }, 30);
-    // console.log("interval set");
-    return () => clearInterval(interval);
+      frameId = requestAnimationFrame(animate);
+    };
+    frameId = requestAnimationFrame(animate);
+    return () => cancelAnimationFrame(frameId);
   }, [cursorPositionRef, initialTextStarsState]);
 
   const allStars = useMemo(() => {
@@ -252,7 +253,7 @@ const Stars = ({ isLanding }: { isLanding: boolean }) => {
           className={cx(
             "star",
             star.isText ? "star_text" : "star_background",
-            !star.isText && star.r < 1.05 && "star_disco"
+            !star.isText && star.r < 1.05 && "star_disco",
           )}
           style={{
             left: star.x,

@@ -33,7 +33,6 @@ const App = () => {
 
   // fade home content in once mounted
   useEffect(() => {
-    console.log("bro what r u doing in the console...");
     setTimeout(() => setShowBridge(true), 1500);
   }, []);
 
