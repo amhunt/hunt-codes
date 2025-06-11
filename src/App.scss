@@ -14,22 +14,35 @@ $green-light-transparent: #84ff5e25;
   margin: auto;
   overflow: hidden;
   position: fixed;
-  inset: 0;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  top: calc(100vh - 50vw - 200px);
   z-index: 1000;
+
+  @media (max-width: 767px) {
+    top: 30%;
+    right: -200px;
+    left: -200px;
+  }
 
   svg {
     > path {
       width: 100px;
       height: 100px;
     }
+    a {
+      &:hover {
+        .svg-link-tspan {
+          fill: $purp-light;
+          text-decoration: underline;
+        }
+      }
+    }
     .svg-link-tspan {
       fill: white;
       font-weight: 400;
       transition: fill 0.1s;
-      &:hover {
-        fill: $purp-light;
-        text-decoration: underline;
-      }
     }
   }
 }
@@ -146,9 +159,9 @@ p {
   font-size: 20px;
   width: calc(22vw + 22vh);
   bottom: 16vh;
-  min-width: 360px;
+  min-width: 380px;
 
-  right: calc(-5vw - 7.5vh + 100px);
+  right: calc(-10vw - 7.5vh + 100px);
   transform: translateX(-50%);
   transition: opacity 400ms ease;
   transition-delay: 1.5s;
@@ -297,8 +310,9 @@ p {
   z-index: 2;
   mix-blend-mode: multiply;
   max-height: 200px;
-  font-family: "nova-mono", "Helvetica Neue", "Segoe UI", "Roboto", "Oxygen",
-    "Ubuntu", "Cantarell", "Fira Sans", "Droid Sans", sans-serif;
+  font-family:
+    "nova-mono", "Helvetica Neue", "Segoe UI", "Roboto", "Oxygen", "Ubuntu",
+    "Cantarell", "Fira Sans", "Droid Sans", sans-serif;
 
   &.night {
     mix-blend-mode: difference;
@@ -319,6 +333,11 @@ p {
   // align-items: center;
   gap: 8px;
   min-height: 16px;
+
+  @media (max-width: 767px) {
+    flex-direction: column;
+    align-items: center;
+  }
 }
 
 li > ul > li {
@@ -450,13 +469,13 @@ li > ul > li {
 
   .homeInfoContainer {
     transition: color 1000ms ease-in-out;
-    left: 40px;
-    right: 40px;
+    left: 20px;
+    right: 20px;
     margin: auto;
     font-size: 18px;
     width: unset;
     max-width: 360px;
-    bottom: 120px;
+    bottom: 80px;
     transform: unset;
   }
 
@@ -541,9 +560,10 @@ button {
 button:hover,
 a:hover {
   text-decoration: underline;
-  cursor:
-    url(./cursor_pointer.png) 16 0,
-    auto;
+  // cursor:
+  //   url(./cursor_pointer.png) 16 0,
+  //   auto;
+  cursor: pointer;
 }
 
 @keyframes spin {
@@ -568,14 +588,17 @@ a:hover {
   }
 }
 
+$STAR_MOVEMENT_INTERVAL_MS: 300;
+
 .star {
   position: absolute;
   background: white;
   box-shadow: 0 0 1px 1px $purp-light-transparent-25;
   border-radius: 50%;
+  // This is too animation intensive for the browser due to # of stars
   transition:
-    60ms linear top,
-    60ms linear left;
+    300ms linear top,
+    300ms linear left;
   animation: 4s ease-in-out infinite alternate star;
 
   &.star_text {
@@ -586,8 +609,8 @@ a:hover {
   }
 
   &.star_background {
-    // background: rgba(255, 255, 255, 0.5); // Very dim for background stars
-    // box-shadow: 0 0 4px 2px rgba(210, 99, 99, 0.3); // Glow effect for text stars
+    background: rgba(255, 255, 255, 0.5); // Very dim for background stars
+    box-shadow: 0 0 4px 2px rgba(210, 99, 99, 0.8); // Glow effect for text stars
     // box-shadow: none;
     // filter: hue-rotate(45deg);
   }

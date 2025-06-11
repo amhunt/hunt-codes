@@ -23,13 +23,11 @@ const typedOptions = {
     "hey there^500!",
     // "welcome to my website!",
     "sorry for the...^300 tasteless UI",
-    "would you be ^500interested in working together?",
+    "interested in working together on a web project?",
     "reach out to andrew^200@hunt.codes^5000",
   ],
   typeSpeed: 50,
 };
-
-// console.log(navigator.userAgent);
 
 const isChrome = navigator.userAgent.indexOf("Chrome") > -1;
 
@@ -47,13 +45,16 @@ const Home = () => {
   const timeout = setTimeout(() => setLogoOpacity(1), 1000);
   useEffect(() => {
     if (document.getElementById("typed-js")) {
+      // if (!isSmall) {
+      //   return;
+      // }
       const typed = new Typed("#typed-js", typedOptions);
       return () => {
         clearTimeout(timeout);
         typed.destroy();
       };
     }
-  }, []);
+  }, [isSmall]);
 
   const docHeight = window.innerHeight;
   const docWidth = window.innerWidth;
@@ -97,7 +98,7 @@ const Home = () => {
       </div>
       <main className={cx("homeInfoContainer", logoOpacity === 1 && "show")}>
         <p className="hoverableHomeItem justify-between">
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-1">
             <span>
               Currently building{" "}
               <a
@@ -114,17 +115,17 @@ const Home = () => {
               target="_blank"
               rel="noopener noreferrer"
               href="https://www.linkedin.com/in/andrewmhunt/"
-              className="flex transition-colors items-center justify-center w-12 h-12 p-2 rounded-full bg-opacity-25 hover:bg-[#5efffc57]"
+              className="flex transition-colors items-center justify-center w-8 h-8 p-1 rounded-full bg-opacity-25 hover:bg-[#5efffc57]"
             >
-              <Linkedin />
+              <Linkedin size={20} />
             </a>
             <a
               target="_blank"
               rel="noopener noreferrer"
               href="https://www.github.com/amhunt"
-              className="flex transition-colors items-center justify-center w-12 h-12 p-2 rounded-full hover:bg-[#5efffc57]"
+              className="flex transition-colors items-center justify-center w-8 h-8 p-1 rounded-full hover:bg-[#5efffc57]"
             >
-              <GitHub />
+              <GitHub size={20} />
             </a>
             <TooltipProvider
               skipDelayDuration={0}
@@ -135,9 +136,9 @@ const Home = () => {
                 <TooltipTrigger onClick={(e) => e.preventDefault()}>
                   <button
                     onClick={(e) => handleCopy()}
-                    className="flex transition-colors items-center justify-center w-12 h-12 p-2 rounded-full hover:bg-[#5efffc57]"
+                    className="flex transition-colors items-center justify-center w-8 h-8 p-1 rounded-full hover:bg-[#5efffc57]"
                   >
-                    <Mail />
+                    <Mail size={20} />
                   </button>
                 </TooltipTrigger>
                 <TooltipContent
@@ -150,17 +151,17 @@ const Home = () => {
           </div>
         </p>
         {/* Moved to computer for large screens */}
-        {isMdOrLess && (
-          <p className="h-20 hoverableHomeItem">
-            <span>
-              <span
-                id="typed-js"
-                className="typed"
-                aria-description="email address: andrew@hunt.codes"
-              />
-            </span>
-          </p>
-        )}
+        {/* {isMdOrLess && ( */}
+        <p className="h-20 hoverableHomeItem">
+          <span>
+            <span
+              id="typed-js"
+              className="typed"
+              aria-description="email address: andrew@hunt.codes"
+            />
+          </span>
+        </p>
+        {/* )} */}
         {!isChrome && !isSmall && (
           <>
             <div className="leading-tight absolute text-sm bg-white p-4 rounded">

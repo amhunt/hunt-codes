@@ -1,5 +1,6 @@
 import React from "react";
 import { Link } from "react-router-dom";
+import useWindowWidth from "useWindowWidth";
 
 const isSafari =
   navigator.userAgent.indexOf("Safari") > -1 &&
@@ -208,6 +209,10 @@ export default function SunSvg({
   isHome?: boolean;
   size?: number;
 }) {
+  const { width } = useWindowWidth();
+
+  const isSmall = width < 768;
+
   return (
     <svg
       width={550 * size}
@@ -228,9 +233,9 @@ export default function SunSvg({
             <>
               <Link to="/about">
                 <tspan
-                  dx="25%"
+                  dx={isSmall ? "35%" : "25%"}
                   className="svg-link-tspan"
-                  fontSize="22px"
+                  fontSize="20px"
                   vectorEffect="non-scaling-size"
                 >
                   about me 👋
@@ -244,10 +249,10 @@ export default function SunSvg({
                 <tspan
                   className="svg-link-tspan"
                   vectorEffect="non-scaling-size"
-                  fontSize="12px"
+                  fontSize="14px"
                   dx="8%"
                 >
-                  {"latest blog post"}
+                  {isSmall ? "Zip blog" : "latest blog post"}
                 </tspan>
               </a>
               <a
@@ -258,10 +263,10 @@ export default function SunSvg({
                 <tspan
                   className="svg-link-tspan"
                   vectorEffect="non-scaling-size"
-                  fontSize="12px"
+                  fontSize="14px"
                   dx="8%"
                 >
-                  {"old personal blog"}
+                  {isSmall ? "old blog" : "old personal blog"}
                 </tspan>
               </a>
               <tspan fontSize="28px" dx="45%" dy="-24px">

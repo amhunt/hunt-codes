@@ -14,7 +14,6 @@ const Landing = () => {
       <svg id="solar-system" viewBox="0 0 600 600" style={{ display: "block" }}>
         <Link to="/home">
           <SunInternals size={0.25} radiusOffset={243} strokeWidth={0} />
-
           <text fontFamily="'Inconsolata', monospace" id="sunEnterText">
             <textPath
               fill="white"
@@ -56,16 +55,6 @@ const Landing = () => {
           cy="100"
           r="6"
           fill="#f7d794" // Saturn-ish
-        />
-        <ellipse
-          id="planet3-ring"
-          cx="300"
-          cy="100"
-          rx="12"
-          ry="4"
-          fill="none"
-          stroke="#ccc"
-          strokeWidth="1"
         />
         <circle
           className="planet"
