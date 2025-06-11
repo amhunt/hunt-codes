@@ -85,7 +85,7 @@ const Resume = () => {
             "flex transition-transform items-center gap-4 mb-12 inverse xl:sticky xl:top-[200px] xl:-ml-16",
             !inView && isLarge && "-translate-x-32"
           )}
-          to="/"
+          to="/home"
         >
           <ArrowLeftCircle size={40} />
           Back to home

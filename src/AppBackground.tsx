@@ -9,7 +9,7 @@ import Galaxy from "./Galaxy";
 import GoldenGate from "./gg-bridge.png";
 import useWindowSize from "useWindowSize";
 import { Music } from "react-feather";
-import RetroMac from "./RetroMac";
+// import RetroMac from "./RetroMac";
 import Stars from "Stars";
 
 // Needed to get hover state on individual chars

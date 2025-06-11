@@ -1,4 +1,11 @@
-import React, { useMemo, memo, useEffect, useState, useRef } from "react";
+import React, {
+  useMemo,
+  memo,
+  useEffect,
+  useState,
+  useRef,
+  useCallback,
+} from "react";
 import cx from "classnames";
 import "./App.scss";
 import "./computer.scss";
@@ -17,35 +24,40 @@ interface Star {
   isText?: boolean;
   transitionDuration?: string;
   color: string;
+  distanceToCursor?: number;
 }
 
 const offsetY = 60;
-const fontFamily = "Arial";
+// const fontFamily = "Arial";
+const fontFamily = "Helvetica Neue";
+
+const MIN_PX_DIFF_BETWEEN_STARS = 3;
 
 const generateStarsForLetter = ({
   letter,
   offsetX,
-  letterWidth,
+  letterWidthPx,
   averageLetterWidth,
 }: {
   letter: string;
   offsetX: number;
-  letterWidth: number;
+  letterWidthPx: number;
   averageLetterWidth: number;
 }) => {
   // Number of stars is proportional to the width of the letter (imperfect approximation)
-  const numStars = letterWidth / 1.5;
+  const numStars = letterWidthPx;
   const canvas = document.createElement("canvas");
   const ctx = canvas.getContext("2d");
   if (!ctx) return [];
 
+  // Approximation of the height of the letter
   const averageLetterHeight = averageLetterWidth * 1.5;
 
-  canvas.width = letterWidth;
+  canvas.width = letterWidthPx;
   canvas.height = averageLetterWidth * 2;
   const fontSize = averageLetterWidth;
-  ctx.font = `100 ${fontSize}px ${fontFamily}`;
-  ctx.fillText(letter, 0, averageLetterWidth, letterWidth);
+  ctx.font = `900 ${fontSize}px ${fontFamily}`;
+  ctx.fillText(letter, 0, averageLetterWidth, letterWidthPx);
   const letterMetricsInCanvas = ctx.measureText(letter);
   const ctxTextWidth = letterMetricsInCanvas.width;
   const ctxTextHeight = letterMetricsInCanvas.fontBoundingBoxAscent;
@@ -66,16 +78,17 @@ const generateStarsForLetter = ({
         imageData.data[index + 3] > 0 &&
         !points.some(
           (star) =>
-            Math.abs(star.canvasX - x) < 2 && Math.abs(star.canvasY - y) < 2
+            Math.abs(star.canvasX - x) < MIN_PX_DIFF_BETWEEN_STARS &&
+            Math.abs(star.canvasY - y) < MIN_PX_DIFF_BETWEEN_STARS
         )
       ) {
         points.push({
-          x: (x * letterWidth) / ctxTextWidth + offsetX,
+          x: (x * letterWidthPx) / ctxTextWidth + offsetX,
           canvasX: x,
           y: (y * averageLetterHeight) / ctxTextHeight + offsetY,
           canvasY: y,
           r: Math.random() + 1.5,
-          animationDelay: `${Math.random() * 4000}ms`,
+          animationDelay: `${Math.random() * 3000}ms`,
           isText: true,
           // Color should be a hex value between blue and red, based on the x and y coordinates. Blue in the top-left, red in the bottom-right.
           color: tinycolor
@@ -114,8 +127,8 @@ const generateStarsForLetters = (text: string, windowWidth: number) => {
 
   const totalStarsWidthPx = Math.round(percentageWidthOfText * windowWidth);
   const averageLetterWidth = totalStarsWidthPx / text.length;
-  const scaledLetterWidths = letterWidths.map((letterWidth) =>
-    Math.round((letterWidth / totalPrescaledCharWidths) * totalStarsWidthPx)
+  const scaledLetterWidths = letterWidths.map((letterWidthPx) =>
+    Math.round((letterWidthPx / totalPrescaledCharWidths) * totalStarsWidthPx)
   );
 
   // Calculate starting X position to center the text
@@ -127,7 +140,7 @@ const generateStarsForLetters = (text: string, windowWidth: number) => {
     const stars = generateStarsForLetter({
       letter,
       offsetX: currentX,
-      letterWidth: scaledLetterWidths[index],
+      letterWidthPx: scaledLetterWidths[index],
       averageLetterWidth,
     });
     // Move currentX by the width of this letter plus spacing
@@ -136,15 +149,14 @@ const generateStarsForLetters = (text: string, windowWidth: number) => {
   });
 };
 
-const textOptions = ["HUNT CODES", "A PERSONAL WEBSITE", "BY ANDREW HUNT"];
-const textOptionsSmall = ["HUNT CODES", "A PROJECT", "BY ANDREW"];
+const starPhrases = ["HUNT CODES ♡", "A PERSONAL WEBSITE", "BY ANDREW HUNT"];
+const starPhrasesSmall = ["ANDREW", "HUNT", "CODES ★"];
 
 const cursorDisabledBufferZonePx = 20;
 
-const STAR_MOVEMENT_INTERVAL_MS = 300;
-const STAR_MOVEMENT_SPEED_MULTIPLIER = 30;
+const STAR_MOVEMENT_SPEED_MULTIPLIER = 1;
 
-const useStars = (isLanding: boolean) => {
+const useStars = (isLanding: boolean): Star[] => {
   const { width, height } = useWindowWidth();
   const { cursorX, cursorY } = useCursorPosition();
   const cursorPositionRef = useRef({ x: cursorX, y: cursorY });
@@ -154,10 +166,9 @@ const useStars = (isLanding: boolean) => {
   const [currTextIndex, setCurrTextIndex] = useState(0);
 
   const isSmall = width < 768;
-  const textOptionsToUse = isSmall ? textOptionsSmall : textOptions;
+  const textOptionsToUse = isSmall ? starPhrasesSmall : starPhrases;
 
   const initialTextStars = useMemo(() => {
-    console.log("generating stars");
     return [
       ...(isLanding
         ? generateStarsForLetters(textOptionsToUse[currTextIndex], width)
@@ -194,14 +205,19 @@ const useStars = (isLanding: boolean) => {
       } else {
         clearInterval(interval);
       }
-    }, 10000);
+    }, TEXT_CHANGE_INTERVAL_MS);
 
     return () => clearInterval(interval);
   }, [isAnimationEnabled, textOptionsToUse.length]);
 
-  const backgroundStars = useMemo<Star[]>(() => {
+  // 1 background star per thousand pixels
+  const numBackgroundStars = Math.round(
+    width * height * (isLanding ? 0.0002 : 0.0001)
+  );
+
+  const generateBackgroundStars = useCallback(() => {
     // Add some random stars in the background
-    return Array.from({ length: isLanding ? 100 : 300 }, () => {
+    return Array.from({ length: numBackgroundStars }, () => {
       const x = Math.random() * width;
       const y = Math.random() * height;
       return {
@@ -212,10 +228,15 @@ const useStars = (isLanding: boolean) => {
         r: Math.random() + 1,
         animationDelay: `${Math.random() * 4000}ms`,
         isText: false,
-        color: tinycolor.random().brighten(50).toHexString(),
+        color: tinycolor.random().brighten(20).toHexString(),
       };
     });
   }, [width, height, isLanding]);
+
+  const backgroundStars = useMemo(
+    () => generateBackgroundStars(),
+    [generateBackgroundStars]
+  );
 
   const numTextStars = textStarsState.length;
 
@@ -223,92 +244,79 @@ const useStars = (isLanding: boolean) => {
     return Array.from({ length: numTextStars }, () => Math.random());
   }, [numTextStars]);
 
-  // Animate text stars, such that they slowly move towards the cursor if they're close to it
+  const ANIMATION_INTERVAL = 40;
+  const TEXT_CHANGE_INTERVAL_MS = 10000;
+
+  const updateStarPositions = useCallback(
+    (prevStars: Star[]) => {
+      const startingArr =
+        prevStars.length > initialTextStarsState.length
+          ? prevStars.slice(0, initialTextStarsState.length)
+          : [...prevStars, ...initialTextStarsState.slice(prevStars.length)];
+
+      // Each star within a 100px radius of the cursor moves towards the cursor
+      // if they are outside a 100px radius of the cursor, they move back towards their original position
+      return startingArr.map((star, starIdx) => {
+        const cursorX = cursorPositionRef.current.x;
+        const cursorY = cursorPositionRef.current.y;
+
+        const distanceToCursor = Math.sqrt(
+          (star.x - cursorX) ** 2 + (star.y - cursorY) ** 2
+        );
+        const isCloseToCursor =
+          distanceToCursor < 100 &&
+          !isSmall &&
+          // ensure cursor is at least 20px from edge of viewport,
+          // to prevent the cursor being logged as on the edge of the screen after leaving the screen
+          cursorX > cursorDisabledBufferZonePx &&
+          cursorX < window.innerWidth - cursorDisabledBufferZonePx &&
+          cursorY > cursorDisabledBufferZonePx &&
+          cursorY < window.innerHeight - cursorDisabledBufferZonePx;
+        const originalX = initialTextStarsState[starIdx]?.x ?? star.x;
+        const originalY = initialTextStarsState[starIdx]?.y ?? star.y;
+
+        const distanceToOriginal = Math.sqrt(
+          (star.x - originalX) ** 2 + (star.y - originalY) ** 2
+        );
+
+        const uncappedRandomChange =
+          randomVelocities[starIdx] *
+          (isCloseToCursor
+            ? // distance to cursor is capped at 100px
+              10000 / Math.pow(Math.max(distanceToCursor, 10), 2)
+            : (distanceToOriginal / 40) * STAR_MOVEMENT_SPEED_MULTIPLIER);
+        const randomChange = Math.max(1, Math.min(50, uncappedRandomChange));
+        let newX = star.x;
+        let newY = star.y;
+        if (isCloseToCursor) {
+          newX = star.x - (star.x - cursorX > 0 ? randomChange : -randomChange);
+          newY = star.y - (star.y - cursorY > 0 ? randomChange : -randomChange);
+        } else {
+          // move back towards their original position
+          if (newX - originalX > 1) {
+            newX = newX - randomChange;
+          } else if (newX - originalX < -1) {
+            newX = newX + randomChange;
+          }
+          if (newY - originalY > 1) {
+            newY = newY - randomChange;
+          } else if (newY - originalY < -1) {
+            newY = newY + randomChange;
+          }
+        }
+        return { ...star, x: newX, y: newY, distanceToCursor } satisfies Star;
+      });
+    },
+    [cursorPositionRef, initialTextStarsState, isSmall, randomVelocities]
+  );
+
   useEffect(() => {
     if (!isAnimationEnabled) return;
     const interval = setInterval(() => {
-      setTextStarsState((prevStars) => {
-        const startingArr =
-          prevStars.length > initialTextStarsState.length
-            ? prevStars.slice(0, initialTextStarsState.length)
-            : [...prevStars, ...initialTextStarsState.slice(prevStars.length)];
-
-        // Each star within a 100px radius of the cursor moves towards the cursor
-        // if they are outside a 100px radius of the cursor, they move back towards their original position
-        return startingArr.map((star, starIdx) => {
-          const cursorX = cursorPositionRef.current.x;
-          const cursorY = cursorPositionRef.current.y;
-
-          const distanceToCursor = Math.sqrt(
-            (star.x - cursorX) ** 2 + (star.y - cursorY) ** 2
-          );
-          const isCloseToCursor =
-            distanceToCursor < 100 &&
-            !isSmall &&
-            // ensure cursor is at least 20px from edge of viewport,
-            // to prevent the cursor being logged as on the edge of the screen after leaving the screen
-            cursorX > cursorDisabledBufferZonePx &&
-            cursorX < window.innerWidth - cursorDisabledBufferZonePx &&
-            cursorY > cursorDisabledBufferZonePx &&
-            cursorY < window.innerHeight - cursorDisabledBufferZonePx;
-          const originalX = initialTextStarsState[starIdx]?.x ?? star.x;
-          const originalY = initialTextStarsState[starIdx]?.y ?? star.y;
-
-          const distanceToOriginal = Math.sqrt(
-            (star.x - originalX) ** 2 + (star.y - originalY) ** 2
-          );
-
-          const uncappedRandomChange =
-            randomVelocities[starIdx] *
-            (isCloseToCursor
-              ? // distance to cursor is capped at 100px
-                10000 / Math.pow(distanceToCursor, 2)
-              : (distanceToOriginal / 40) * STAR_MOVEMENT_SPEED_MULTIPLIER);
-          const randomChange = Math.max(1, Math.min(20, uncappedRandomChange));
-          if (isCloseToCursor) {
-            console.log(
-              "randomChange",
-              randomChange,
-              "uncappedRandomChange",
-              uncappedRandomChange,
-              "distanceToCursor",
-              distanceToCursor,
-              "distanceToOriginal",
-              distanceToOriginal
-            );
-          }
-          let newX = star.x;
-          let newY = star.y;
-          if (isCloseToCursor) {
-            newX =
-              star.x - (star.x - cursorX > 0 ? randomChange : -randomChange);
-            newY =
-              star.y - (star.y - cursorY > 0 ? randomChange : -randomChange);
-          } else {
-            // move back towards their original position
-            if (newX - originalX > 1) {
-              newX = newX - randomChange;
-            } else if (newX - originalX < -1) {
-              newX = newX + randomChange;
-            }
-            if (newY - originalY > 1) {
-              newY = newY - randomChange;
-            } else if (newY - originalY < -1) {
-              newY = newY + randomChange;
-            }
-          }
-          return { ...star, x: newX, y: newY };
-        });
-      });
-    }, STAR_MOVEMENT_INTERVAL_MS);
+      setTextStarsState(updateStarPositions);
+    }, ANIMATION_INTERVAL);
     return () => clearInterval(interval);
-  }, [
-    cursorPositionRef,
-    initialTextStarsState,
-    isSmall,
-    isAnimationEnabled,
-    randomVelocities,
-  ]);
+  }, [isAnimationEnabled, updateStarPositions]);
 
   const allStars = useMemo(() => {
     return [...textStarsState, ...backgroundStars];
@@ -316,32 +324,72 @@ const useStars = (isLanding: boolean) => {
   return allStars;
 };
 
+const STAR_TO_CURSOR_TRIGGER_DISTANCE_PX = 100;
+
 const Stars = ({ isLanding }: { isLanding: boolean }) => {
   const stars = useStars(isLanding);
+  const [hasMounted, setHasMounted] = useState(false);
+  useEffect(() => {
+    const timeout = setTimeout(() => setHasMounted(true), 500);
+    return () => clearTimeout(timeout);
+  }, []);
+
+  const textStars = useMemo(() => stars.filter((s) => s.isText), [stars]);
+
+  const areAllStarsCollectedByCursor =
+    textStars.filter(
+      (star) => !!star.distanceToCursor && star.distanceToCursor < 100
+    ).length > 50;
+
+  // console.log("areAllStarsCollectedByCursor", areAllStarsCollectedByCursor);
 
   return (
-    <>
-      {stars.map((star, i) => (
-        <div
-          key={i}
-          className={cx(
-            "star",
-            star.isText ? "star_text" : "star_background",
-            !star.isText && star.r < 1.05 && "star_disco"
-          )}
-          style={{
-            left: star.x,
-            top: star.y,
-            width: star.r,
-            height: star.r,
-            animationDelay: star.animationDelay,
-            backgroundColor: star.color,
-            boxShadow: `0px 0px 4px ${star.color}`,
-            transitionDuration: star.transitionDuration,
-          }}
-        />
-      ))}
-    </>
+    <div
+      style={{
+        filter: hasMounted ? "blur(0)" : "blur(5px)",
+        transition: "filter 2s ease-in-out",
+      }}
+    >
+      {stars.map((star, i) => {
+        let starWidth = star.r;
+        if (
+          star.distanceToCursor &&
+          star.distanceToCursor < STAR_TO_CURSOR_TRIGGER_DISTANCE_PX
+        ) {
+          starWidth =
+            (Math.sqrt(STAR_TO_CURSOR_TRIGGER_DISTANCE_PX) /
+              Math.sqrt(star.distanceToCursor)) *
+            star.r;
+        }
+        if (starWidth > 8) {
+          starWidth = 8;
+        }
+        return (
+          <div
+            key={i}
+            className={cx(
+              "star",
+              star.isText ? "star_text" : "star_background",
+              !star.isText && star.r < 1.05 && "star_disco"
+            )}
+            style={{
+              left: star.x,
+              top: star.y,
+              width: starWidth,
+              height: starWidth,
+              animationDelay: star.animationDelay,
+              backgroundColor: areAllStarsCollectedByCursor
+                ? "#00ff00 !important"
+                : star.color,
+              // boxShadow:
+              //   !!star.distanceToCursor && star.distanceToCursor < 100
+              //     ? `0px 2px 4px 2px ${star.color}`
+              //     : `0px 2px 4px 0px ${star.color}`,
+            }}
+          />
+        );
+      })}
+    </div>
   );
 };
 

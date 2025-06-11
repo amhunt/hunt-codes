@@ -1,10 +1,5 @@
 import React, { useState, useEffect } from "react";
-import {
-  BrowserRouter as Router,
-  Switch,
-  Route,
-  useLocation,
-} from "react-router-dom";
+import { BrowserRouter as Router, Switch, Route } from "react-router-dom";
 import "./App.scss";
 
 import Home from "./Home";
@@ -21,15 +16,6 @@ for (let c of andrewHunt) {
 
 const App = () => {
   const [showBridge, setShowBridge] = useState(false);
-  const [mode, setMode] = useState<"day" | "night">("night");
-
-  useEffect(() => {
-    if (window.location.pathname.includes("about")) {
-      setMode("day");
-    } else {
-      setMode("night");
-    }
-  }, [window.location.pathname]);
 
   // fade home content in once mounted
   useEffect(() => {

@@ -96,7 +96,7 @@ audio {
   overflow: visible;
   bottom: 0;
   left: 10vh;
-  top: calc(50vh - 200px);
+  top: calc(50vh - 120px);
   position: absolute;
   transition: opacity 5s ease;
   z-index: 2;
@@ -176,6 +176,23 @@ p {
 
   &.show {
     opacity: 1;
+  }
+}
+
+.homePageBackLink {
+  position: absolute;
+  left: 16px;
+  z-index: 5;
+  color: $purp;
+
+  > a {
+    color: $purp;
+
+    &:hover {
+      > .starIcon {
+        fill: $purp;
+      }
+    }
   }
 }
 
@@ -302,7 +319,7 @@ p {
   position: absolute;
   left: 24px;
   right: 24px;
-  top: 24px;
+  top: 40px;
   width: calc(100% - 48px);
   transition:
     fill 3s ease,
@@ -482,7 +499,7 @@ li > ul > li {
   .nameTitle {
     left: 16px;
     right: 16px;
-    top: 16px;
+    top: 40px;
     width: calc(100% - 32px);
   }
 
@@ -592,25 +609,22 @@ $STAR_MOVEMENT_INTERVAL_MS: 300;
 
 .star {
   position: absolute;
-  background: white;
+  background-color: white;
   box-shadow: 0 0 1px 1px $purp-light-transparent-25;
   border-radius: 50%;
-  // This is too animation intensive for the browser due to # of stars
-  transition:
-    300ms linear top,
-    300ms linear left;
   animation: 4s ease-in-out infinite alternate star;
 
   &.star_text {
-    // Cycling / repeating through colors via backgroundAnim
-    // animation: 10s linear backgroundAnim infinite;
-    // background: rgb(247, 236, 143, 0.8); // Full white for text stars
-    // box-shadow: 0 0 4px 2px rgba(243, 243, 243, 0.9); // Glow effect for text stars
   }
 
   &.star_background {
-    background: rgba(255, 255, 255, 0.5); // Very dim for background stars
-    box-shadow: 0 0 4px 2px rgba(210, 99, 99, 0.8); // Glow effect for text stars
+    background-color: rgba(
+      255,
+      255,
+      255,
+      0.5
+    ); // Very dim for background-color stars
+    box-shadow: 0 0 4px 1.5px rgba(210, 99, 99, 0.8); // Glow effect for text stars
     // box-shadow: none;
     // filter: hue-rotate(45deg);
   }

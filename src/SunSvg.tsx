@@ -233,7 +233,7 @@ export default function SunSvg({
             <>
               <Link to="/about">
                 <tspan
-                  dx={isSmall ? "35%" : "25%"}
+                  dx={isSmall ? "35%" : "5%"}
                   className="svg-link-tspan"
                   fontSize="20px"
                   vectorEffect="non-scaling-size"
@@ -250,7 +250,7 @@ export default function SunSvg({
                   className="svg-link-tspan"
                   vectorEffect="non-scaling-size"
                   fontSize="14px"
-                  dx="8%"
+                  dx={isSmall ? "5%" : "8%"}
                 >
                   {isSmall ? "Zip blog" : "latest blog post"}
                 </tspan>
@@ -264,7 +264,7 @@ export default function SunSvg({
                   className="svg-link-tspan"
                   vectorEffect="non-scaling-size"
                   fontSize="14px"
-                  dx="8%"
+                  dx={isSmall ? "5%" : "8%"}
                 >
                   {isSmall ? "old blog" : "old personal blog"}
                 </tspan>

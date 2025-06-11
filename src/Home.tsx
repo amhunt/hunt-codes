@@ -1,9 +1,15 @@
-import React, { useEffect, useState, useCallback, useRef } from "react";
+import React, {
+  useEffect,
+  useState,
+  useRef,
+  useCallback,
+  useMemo,
+} from "react";
 import Typed from "typed.js";
 import cx from "classnames";
 
 import Logo from "./Logo";
-import { GitHub, Linkedin, Mail } from "react-feather";
+import { ChevronLeft, GitHub, Linkedin, Mail, Star } from "react-feather";
 import useWindowSize from "./useWindowSize";
 import { useCursorPosition } from "./hooks/useCursorPosition";
 
@@ -13,6 +19,7 @@ import {
   TooltipProvider,
   TooltipTrigger,
 } from "./ui/tooltip";
+import { Link } from "react-router-dom";
 
 const typedOptions = {
   loop: true,
@@ -23,7 +30,7 @@ const typedOptions = {
     "hey there^500!",
     // "welcome to my website!",
     "sorry for the...^300 tasteless UI",
-    "interested in working together on a web project?",
+    "interested in working together?",
     "reach out to andrew^200@hunt.codes^5000",
   ],
   typeSpeed: 50,
@@ -42,19 +49,20 @@ const Home = () => {
 
   const { cursorX, cursorY } = useCursorPosition();
 
-  const timeout = setTimeout(() => setLogoOpacity(1), 1000);
   useEffect(() => {
     if (document.getElementById("typed-js")) {
-      // if (!isSmall) {
-      //   return;
-      // }
       const typed = new Typed("#typed-js", typedOptions);
       return () => {
-        clearTimeout(timeout);
         typed.destroy();
       };
     }
   }, [isSmall]);
+
+  // use effect on mount
+  useEffect(() => {
+    const timeout = setTimeout(() => setLogoOpacity(1), 1000);
+    return () => clearTimeout(timeout);
+  }, []);
 
   const docHeight = window.innerHeight;
   const docWidth = window.innerWidth;
@@ -68,16 +76,25 @@ const Home = () => {
     cursorMultiplier2 = 25;
   }
 
-  const logoPositioningProps = {
-    paddingLeft1: cursorMultiplier1 * cursorRatioX,
-    paddingTop1: cursorMultiplier1 * cursorRatioY + 40,
-    paddingLeft2: cursorMultiplier2 * cursorRatioX + (isMdOrLess ? 40 : 100),
-    paddingTop2: cursorMultiplier2 * cursorRatioY,
-  };
+  const logoPositioningProps = useMemo(
+    () => ({
+      paddingLeft1: cursorMultiplier1 * cursorRatioX,
+      paddingTop1: cursorMultiplier1 * cursorRatioY + 40,
+      paddingLeft2: cursorMultiplier2 * cursorRatioX + (isMdOrLess ? 40 : 100),
+      paddingTop2: cursorMultiplier2 * cursorRatioY,
+    }),
+    [
+      cursorMultiplier1,
+      cursorRatioY,
+      cursorMultiplier2,
+      cursorRatioX,
+      isMdOrLess,
+    ]
+  );
 
   const [copied, setCopied] = useState(false);
 
-  const handleCopy = async () => {
+  const handleCopy = useCallback(async () => {
     try {
       await navigator.clipboard.writeText("andrew+in@hunt.codes");
       setCopied(true);
@@ -85,7 +102,7 @@ const Home = () => {
     } catch (err) {
       console.error("Failed to copy email: ", err);
     }
-  };
+  }, []);
 
   return (
     <>
@@ -95,6 +112,17 @@ const Home = () => {
         style={{ opacity: logoOpacity ? 1 : 0 }}
       >
         <Logo {...(!isSmall ? logoPositioningProps : null)} />
+      </div>
+
+      <div className="homePageBackLink">
+        <Link
+          className={cx("flex transition-transform items-center gap-1 mt-4")}
+          to="/"
+        >
+          <ChevronLeft size={16} />
+          Back to stars
+          <Star className="starIcon" size={16} />
+        </Link>
       </div>
       <main className={cx("homeInfoContainer", logoOpacity === 1 && "show")}>
         <p className="hoverableHomeItem justify-between">
@@ -135,6 +163,7 @@ const Home = () => {
               <Tooltip disableHoverableContent defaultOpen={copied}>
                 <TooltipTrigger onClick={(e) => e.preventDefault()}>
                   <button
+                    aria-label="Copy email address"
                     onClick={(e) => handleCopy()}
                     className="flex transition-colors items-center justify-center w-8 h-8 p-1 rounded-full hover:bg-[#5efffc57]"
                   >
