@@ -314,30 +314,32 @@ function Stars({ isLanding }: { isLanding: boolean }) {
   }, []);
 
   const textStars = useMemo(() => stars.filter((s) => s.isText), [stars]);
-
-  const areAllStarsCollectedByCursor =
-    textStars.filter(
-      (star) => !!star.distanceToCursor && star.distanceToCursor < 100
-    ).length > 50;
-
-  const containerStyle = useMemo(
-    () => ({
-      filter: hasMounted ? "blur(0)" : "blur(5px)",
-      transition: "filter 2s ease-in-out",
-    }),
-    [hasMounted]
+  const backgroundStars = useMemo(
+    () => stars.filter((s) => !s.isText),
+    [stars]
   );
 
   return (
-    <div style={containerStyle}>
-      {stars.map((star, starIdx) => (
-        <StarDot
-          key={starIdx}
-          star={star}
-          areAllStarsCollected={areAllStarsCollectedByCursor}
-        />
+    <>
+    <div
+      className="stars-container"
+      style={{ filter: hasMounted ? "blur(0)" : "blur(5px)" }}
+    >
+        {backgroundStars.map((star, starIdx) => (
+          <StarDot key={starIdx} star={star} as="div" />
+        ))}
+      </div>
+      <svg
+        className="stars-container"
+        height="100%"
+        width="100%"
+        style={{ filter: hasMounted ? "blur(0)" : "blur(5px)" }}
+      >
+        {textStars.map((star, starIdx) => (
+        <StarDot key={starIdx} star={star} />
       ))}
-    </div>
+      </svg>
+    </>
   );
 }
 

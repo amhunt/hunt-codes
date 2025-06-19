@@ -7,6 +7,10 @@ interface Planet {
   angleKey: string;
 }
 
+// Pre-calculate constants
+const DEG_TO_RAD = Math.PI / 180;
+const FRAME_RATE_NORMALIZER = 1 / 16;
+
 export const useOrbitalAnimation = (centerX: number, centerY: number) => {
   const animationFrameRef = useRef<number>();
   const anglesRef = useRef<{ [key: string]: number }>({});
@@ -34,11 +38,12 @@ export const useOrbitalAnimation = (centerX: number, centerY: number) => {
     const animate = (currentTime: number) => {
       const deltaTime = currentTime - lastTime;
       lastTime = currentTime;
+      const normalizedDelta = deltaTime * FRAME_RATE_NORMALIZER;
 
       planets.forEach((planet) => {
-        anglesRef.current[planet.angleKey] += planet.speed * (deltaTime / 16); // Normalize to 60fps
+        anglesRef.current[planet.angleKey] += planet.speed * normalizedDelta;
+        const rad = anglesRef.current[planet.angleKey] * DEG_TO_RAD;
 
-        const rad = (anglesRef.current[planet.angleKey] * Math.PI) / 180;
         const x = centerX + planet.orbit * Math.cos(rad);
         const y = centerY + planet.orbit * Math.sin(rad);
 

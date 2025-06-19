@@ -389,10 +389,6 @@ li > ul > li {
   }
 }
 
-#circle3 {
-  // mix-blend-mode: difference;
-}
-
 .splitRow {
   display: flex;
   justify-content: space-between;
@@ -612,7 +608,6 @@ $STAR_MOVEMENT_INTERVAL_MS: 300;
   background-color: white;
   box-shadow: 0 0 1px 1px $purp-light-transparent-25;
   border-radius: 50%;
-  animation: 4s ease-in-out infinite alternate star;
 
   &.star_text {
   }
@@ -632,15 +627,6 @@ $STAR_MOVEMENT_INTERVAL_MS: 300;
   &.star_disco {
     box-shadow: 0 0 1px 5px $purp-light-transparent-25 !important;
     animation: 4s ease-in-out infinite alternate star-disco;
-  }
-}
-
-@keyframes star {
-  0% {
-    transform: scale(1);
-  }
-  100% {
-    transform: scale(1.7);
   }
 }
 
@@ -891,4 +877,10 @@ $STAR_MOVEMENT_INTERVAL_MS: 300;
     hsl(0, 0%, 100%) 99%,
     hsl(0, 0%, 100%) 100%
   );
+}
+
+.stars-container {
+  position: fixed;
+  inset: 0;
+  transition: filter 2s ease-in-out;
 }
