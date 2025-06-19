@@ -256,33 +256,48 @@ const useStars = (isLanding: boolean): StarT[] => {
         const originalX = initialTextStarsState[starIdx]?.x ?? star.x;
         const originalY = initialTextStarsState[starIdx]?.y ?? star.y;
 
-        const distanceToOriginal = Math.sqrt(
-          (star.x - originalX) ** 2 + (star.y - originalY) ** 2
-        );
+        const xDistanceToOriginal = (star.x - originalX) ** 2;
+        const yDistanceToOriginal = (star.y - originalY) ** 2;
 
-        const uncappedRandomChange =
+        const uncappedRandomChangeX =
           randomVelocities[starIdx] *
           (isCloseToCursor
             ? // distance to cursor is capped at 100px
               10000 / Math.pow(Math.max(distanceToCursor, 10), 2)
-            : (distanceToOriginal / 40) * STAR_MOVEMENT_SPEED_MULTIPLIER);
-        const randomChange = Math.max(1, Math.min(50, uncappedRandomChange));
+            : (xDistanceToOriginal / 40) * STAR_MOVEMENT_SPEED_MULTIPLIER);
+        const randomChangeX = Math.max(1, Math.min(10, uncappedRandomChangeX));
+        const uncappedRandomChangeY =
+          randomVelocities[starIdx] *
+          (isCloseToCursor
+            ? // distance to cursor is capped at 100px
+              10000 / Math.pow(Math.max(distanceToCursor, 10), 2)
+            : (yDistanceToOriginal / 40) * STAR_MOVEMENT_SPEED_MULTIPLIER);
+        const randomChangeY = Math.max(1, Math.min(10, uncappedRandomChangeY));
+        if (starIdx < 10) {
+          console.log("starIdx", starIdx, randomChangeX, randomChangeY);
+        }
         let newX = star.x;
         let newY = star.y;
         if (isCloseToCursor) {
-          newX = star.x - (star.x - cursorX > 0 ? randomChange : -randomChange);
-          newY = star.y - (star.y - cursorY > 0 ? randomChange : -randomChange);
+          newX =
+            star.x - (star.x - cursorX > 0 ? randomChangeX : -randomChangeX);
+          newY =
+            star.y - (star.y - cursorY > 0 ? randomChangeY : -randomChangeY);
         } else {
-          // move back towards their original position
-          if (newX - originalX > 1) {
-            newX = newX - randomChange;
-          } else if (newX - originalX < -1) {
-            newX = newX + randomChange;
+          // move back towards their original (text) position
+          if (newX - originalX > 0) {
+            const xMovement = Math.min(newX - originalX, randomChangeX);
+            newX = newX - xMovement;
+          } else if (newX - originalX < 0) {
+            const xMovement = Math.min(originalX - newX, randomChangeX);
+            newX = newX + xMovement;
           }
-          if (newY - originalY > 1) {
-            newY = newY - randomChange;
-          } else if (newY - originalY < -1) {
-            newY = newY + randomChange;
+          if (newY - originalY > 0) {
+            const yMovement = Math.min(newY - originalY, randomChangeY);
+            newY = newY - yMovement;
+          } else if (newY - originalY < 0) {
+            const yMovement = Math.min(originalY - newY, randomChangeY);
+            newY = newY + yMovement;
           }
         }
         return { ...star, x: newX, y: newY, distanceToCursor } satisfies StarT;
@@ -321,10 +336,10 @@ function Stars({ isLanding }: { isLanding: boolean }) {
 
   return (
     <>
-    <div
-      className="stars-container"
-      style={{ filter: hasMounted ? "blur(0)" : "blur(5px)" }}
-    >
+      <div
+        className="stars-container"
+        style={{ filter: hasMounted ? "blur(0)" : "blur(5px)" }}
+      >
         {backgroundStars.map((star, starIdx) => (
           <StarDot key={starIdx} star={star} as="div" />
         ))}
@@ -336,8 +351,8 @@ function Stars({ isLanding }: { isLanding: boolean }) {
         style={{ filter: hasMounted ? "blur(0)" : "blur(5px)" }}
       >
         {textStars.map((star, starIdx) => (
-        <StarDot key={starIdx} star={star} />
-      ))}
+          <StarDot key={starIdx} star={star} />
+        ))}
       </svg>
     </>
   );
