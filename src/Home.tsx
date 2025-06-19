@@ -58,7 +58,7 @@ const Home = () => {
     }
   }, [isSmall]);
 
-  // use effect on mount
+  // show spinning logo after mount
   useEffect(() => {
     const timeout = setTimeout(() => setLogoOpacity(1), 1000);
     return () => clearTimeout(timeout);
@@ -164,7 +164,7 @@ const Home = () => {
                 <TooltipTrigger onClick={(e) => e.preventDefault()}>
                   <button
                     aria-label="Copy email address"
-                    onClick={(e) => handleCopy()}
+                    onClick={() => handleCopy()}
                     className="flex transition-colors items-center justify-center w-8 h-8 p-1 rounded-full hover:bg-[#5efffc57]"
                   >
                     <Mail size={20} />

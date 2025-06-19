@@ -1,5 +1,6 @@
 import React from "react";
 import Apple from "./assets/apple-rainbow.svg";
+import "./computer.scss";
 
 const RetroMac = () => {
   return (

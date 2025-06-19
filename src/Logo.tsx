@@ -1,4 +1,4 @@
-import React, { useEffect, useState, useCallback } from "react";
+import React, { useEffect, useState, useCallback, useMemo } from "react";
 import useWindowSize from "useWindowSize";
 
 // Pantone colors of the years 2000 - 2020
@@ -56,6 +56,34 @@ const Logo = ({
     return () => clearInterval(interval);
   }, [changeColor]);
 
+  const svgStyle1 = useMemo(
+    () => ({
+      left: paddingLeft1,
+      top: paddingTop1,
+      WebkitBoxReflect:
+        size === "sm"
+          ? undefined
+          : `below ${
+              MIRROR_OFFSET_PX - (paddingTop1 ?? 0)
+            }px linear-gradient(transparent 0%, transparent 50%, #000d 100%)`,
+    }),
+    [size, paddingLeft1, paddingTop1]
+  );
+
+  const svgStyle2 = useMemo(
+    () => ({
+      left: paddingLeft2,
+      top: paddingTop2,
+      WebkitBoxReflect:
+        size === "sm"
+          ? undefined
+          : `below ${
+              MIRROR_OFFSET_PX - (paddingTop2 ?? 0)
+            }px linear-gradient(transparent 0%, transparent 50%, #000d 100%)`,
+    }),
+    [size, paddingLeft2, paddingTop2]
+  );
+
   return (
     <>
       {/* Square */}
@@ -64,16 +92,7 @@ const Logo = ({
         fill="none"
         xmlns="http://www.w3.org/2000/svg"
         className="logoComponent logo1"
-        style={{
-          left: paddingLeft1,
-          top: paddingTop1,
-          WebkitBoxReflect:
-            size === "sm"
-              ? undefined
-              : `below ${
-                  MIRROR_OFFSET_PX - (paddingTop1 ?? 0)
-                }px linear-gradient(transparent 0%, transparent 50%, #000d 100%)`,
-        }}
+        style={svgStyle1}
       >
         <path
           d="M263 0L26.4015 7.91045L0 256.101L252.846 265L263 0Z"
@@ -99,16 +118,7 @@ const Logo = ({
         fill="none"
         xmlns="http://www.w3.org/2000/svg"
         className="logoComponent logo2"
-        style={{
-          left: paddingLeft2,
-          top: paddingTop2,
-          WebkitBoxReflect:
-            size === "sm"
-              ? undefined
-              : `below ${
-                  MIRROR_OFFSET_PX - (paddingTop2 ?? 0)
-                }px linear-gradient(transparent 0%, transparent 50%, #000d 100%)`,
-        }}
+        style={svgStyle2}
       >
         <path
           d="M0.591187 44L159 327L255 25C119 -24 45.8689 12 0.591187 44Z"

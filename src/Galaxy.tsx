@@ -12,12 +12,17 @@ const Galaxy = ({ isNightMode }: { isNightMode: boolean }) => {
   // before the moon stops being rendered. It uses isNightMode to determine
   // whether to hide the moon or not.
   useEffect(() => {
-    setTimeout(() => setHideMoon(!isNightMode), 1000);
-    setTimeout(() => setHideSun(isNightMode), 1000);
+    const moonTimeout = setTimeout(() => setHideMoon(!isNightMode), 1000);
+    const sunTimeout = setTimeout(() => setHideSun(isNightMode), 1000);
+    return () => {
+      clearTimeout(moonTimeout);
+      clearTimeout(sunTimeout);
+    };
   }, [isNightMode]);
 
   useEffect(() => {
-    setTimeout(() => setHasMounted(true), 1000);
+    const mountTimeout = setTimeout(() => setHasMounted(true), 1000);
+    return () => clearTimeout(mountTimeout);
   }, []);
 
   return (

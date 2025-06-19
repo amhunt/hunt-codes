@@ -35,7 +35,7 @@ export const useOrbitalAnimation = (centerX: number, centerY: number) => {
       const deltaTime = currentTime - lastTime;
       lastTime = currentTime;
 
-      planets.forEach((planet, index) => {
+      planets.forEach((planet) => {
         anglesRef.current[planet.angleKey] += planet.speed * (deltaTime / 16); // Normalize to 60fps
 
         const rad = (anglesRef.current[planet.angleKey] * Math.PI) / 180;

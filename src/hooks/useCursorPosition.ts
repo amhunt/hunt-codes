@@ -1,14 +1,19 @@
 import { useState, useCallback, useEffect } from "react";
-import { useThrottle } from "./useDebounce";
+import { useThrottledCallback } from "use-debounce";
 
+/**
+ * Default throttle to ~60fps
+ * @param throttleMs - The number of milliseconds to throttle the cursor position updates
+ * @returns The cursor position
+ */
 export const useCursorPosition = (throttleMs: number = 16) => {
   const [cursorPositionX, setCursorPositionX] = useState(0);
   const [cursorPositionY, setCursorPositionY] = useState(0);
 
-  const throttledCursorUpdate = useThrottle((x: number, y: number) => {
+  const throttledCursorUpdate = useThrottledCallback((x: number, y: number) => {
     setCursorPositionX(x);
     setCursorPositionY(y);
-  }, throttleMs); // Default throttle to ~60fps
+  }, throttleMs);
 
   const getCursorXY = useCallback(
     (e: MouseEvent) => {

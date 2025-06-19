@@ -10,7 +10,7 @@ import Landing from "Landing";
 // Needed to get hover state on individual chars
 const andrewHunt = "andrewhunt";
 const nameArr: string[] = [];
-for (let c of andrewHunt) {
+for (const c of andrewHunt) {
   nameArr.push(c);
 }
 

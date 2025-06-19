@@ -1,14 +1,17 @@
 import { useEffect, useState } from "react";
-import { useDebounce } from "./hooks/useDebounce";
+import { useDebouncedCallback } from "use-debounce";
 
 export default function useWindowWidth() {
   const [width, setWidth] = useState(window.innerWidth);
   const [height, setHeight] = useState(window.innerHeight);
 
-  const debouncedSetWidth = useDebounce((width: number, height: number) => {
-    setWidth(width);
-    setHeight(height);
-  }, 100); // Debounce window resizing to 100ms
+  const debouncedSetWidth = useDebouncedCallback(
+    (width: number, height: number) => {
+      setWidth(width);
+      setHeight(height);
+    },
+    100
+  ); // Debounce window resizing to 100ms
 
   useEffect(() => {
     const handleResize = () => {

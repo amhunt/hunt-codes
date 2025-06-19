@@ -1,8 +1,6 @@
 import React, { useState, useEffect, memo } from "react";
 import { useLocation } from "react-router-dom";
 import cx from "classnames";
-import "./App.scss";
-import "./computer.scss";
 
 import Galaxy from "./Galaxy";
 
@@ -15,7 +13,7 @@ import Stars from "Stars";
 // Needed to get hover state on individual chars
 const andrewHunt = "andrewhunt";
 const nameArr: string[] = [];
-for (let c of andrewHunt) {
+for (const c of andrewHunt) {
   nameArr.push(c);
 }
 
@@ -31,20 +29,18 @@ const AppBackground = ({ showBridge }: { showBridge: boolean }) => {
   const [highlightedCharIdx, setHighlightedCharIdx] = useState(0);
 
   useEffect(() => {
-    const interval = setInterval(
-      () => setHighlightedCharIdx((highlightedCharIdx + 1) % nameArr.length),
-      200
-    );
-
-    return () => {
-      clearInterval(interval);
-    };
-  }, [highlightedCharIdx]);
+    const interval = setInterval(() => {
+      setHighlightedCharIdx((idx) => (idx + 1) % nameArr.length);
+    }, 200);
+    return () => clearInterval(interval);
+  }, []);
 
   useEffect(() => {
+    let timeout: ReturnType<typeof setTimeout>;
     if (isNightMode) {
-      setTimeout(() => setMusicEnabled(true), 4000);
+      timeout = setTimeout(() => setMusicEnabled(true), 4000);
     }
+    return () => clearTimeout(timeout);
   }, [isNightMode]);
 
   return (
