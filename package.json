@@ -3,21 +3,21 @@
   "version": "0.1.0",
   "private": true,
   "dependencies": {
-    "@babel/core": "^7.26.10",
-    "@pmmmwh/react-refresh-webpack-plugin": "^0.5.15",
+    "@babel/core": "^7.27.4",
+    "@pmmmwh/react-refresh-webpack-plugin": "^0.5.16",
     "@radix-ui/react-slot": "^1.1.2",
     "@radix-ui/react-tooltip": "^1.1.8",
     "@svgr/webpack": "^8.1.0",
     "@types/jest": "^29.5.14",
-    "@types/node": "^22.13.10",
-    "@types/react-dom": "^18.3.5",
+    "@types/node": "^22.15.31",
+    "@types/react-dom": "^18.3.7",
     "@types/typed.js": "^2.0.9",
-    "babel-jest": "^29.7.0",
-    "babel-loader": "^9.2.1",
+    "babel-jest": "^30.0.0",
+    "babel-loader": "^10.0.0",
     "babel-plugin-named-asset-import": "^0.3.8",
     "babel-preset-react-app": "^10.1.0",
     "bfj": "^8.0.0",
-    "browserslist": "^4.24.4",
+    "browserslist": "^4.25.0",
     "camelcase": "^8.0.0",
     "case-sensitive-paths-webpack-plugin": "^2.4.0",
     "class-variance-authority": "^0.7.1",
@@ -25,11 +25,8 @@
     "clsx": "^2.1.1",
     "css-loader": "^6.11.0",
     "css-minimizer-webpack-plugin": "^7.0.2",
-    "dotenv": "^16.4.7",
+    "dotenv": "^16.5.0",
     "dotenv-expand": "^10.0.0",
-    "eslint": "^8.57.1",
-    "eslint-config-react-app": "^7.0.1",
-    "eslint-webpack-plugin": "^4.2.0",
     "file-loader": "^6.2.0",
     "fs-extra": "^11.3.0",
     "html-webpack-plugin": "^5.6.3",
@@ -69,11 +66,15 @@
     "terser-webpack-plugin": "^5.3.14",
     "tinycolor2": "^1.6.0",
     "typed.js": "^2.1.0",
-    "typescript": "^5.8.2",
-    "webpack": "^5.97.1",
-    "webpack-dev-server": "^5.2.0",
+    "typescript": "^5.8.3",
+    "use-debounce": "^10.0.5",
+    "webpack": "^5.99.9",
+    "webpack-dev-server": "^5.2.2",
     "webpack-manifest-plugin": "^5.0.1",
     "workbox-webpack-plugin": "^7.3.0"
+  },
+  "resolutions": {
+    "globals": "^14.0.0"
   },
   "husky": {
     "hooks": {
@@ -88,15 +89,10 @@
   "scripts": {
     "start": "node scripts/start.js",
     "build": "node scripts/build.js",
+    "lint": "eslint src/**/*.{js,jsx,ts,tsx}",
     "serve": "serve -s build/",
     "deploy": "aws s3 sync build/ s3://hunt.codes --acl public-read --delete --profile AdministratorAccess-98532647733",
     "test": "node scripts/test.js"
-  },
-  "eslintConfig": {
-    "extends": [
-      "react-app",
-      "plugin:react/recommended"
-    ]
   },
   "browserslist": [
     ">0.5%",
@@ -105,15 +101,20 @@
     "not op_mini all"
   ],
   "devDependencies": {
-    "@types/react": "^18.3.18",
+    "@types/react": "^18.3.23",
     "@types/react-router-dom": "^5.3.3",
     "@types/tinycolor2": "^1.4.6",
     "@typescript-eslint/eslint-plugin": "^8.34.0",
     "@typescript-eslint/parser": "^8.34.0",
+    "eslint": "^9.28.0",
     "eslint-config-prettier": "^10.1.5",
-    "eslint-plugin-react": "^7.37.4",
+    "eslint-config-react-app": "^7.0.1",
+    "eslint-plugin-react": "^7.37.5",
     "eslint-plugin-unused-imports": "^4.1.4",
-    "tailwindcss": "^3.4.17"
+    "eslint-webpack-plugin": "^5.0.2",
+    "jest-environment-jsdom": "^30.0.1",
+    "tailwindcss": "^3.4.17",
+    "typescript-eslint": "^8.34.0"
   },
   "packageManager": "yarn@4.6.0",
   "jest": {
@@ -135,8 +136,7 @@
     "testEnvironment": "jsdom",
     "transform": {
       "^.+\\.(js|jsx|mjs|cjs|ts|tsx)$": "<rootDir>/config/jest/babelTransform.js",
-      "^.+\\.css$": "<rootDir>/config/jest/cssTransform.js",
-      "^(?!.*\\.(js|jsx|mjs|cjs|ts|tsx|css|json)$)": "<rootDir>/config/jest/fileTransform.js"
+      "^.+\\.(scss|css|png)$": "<rootDir>/config/jest/cssTransform.js"
     },
     "transformIgnorePatterns": [
       "[/\\\\]node_modules[/\\\\].+\\.(js|jsx|mjs|cjs|ts|tsx)$",
