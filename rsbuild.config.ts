@@ -8,6 +8,7 @@ export default defineConfig({
     distPath: {
       root: "build",
     },
+    manifest: true,
   },
   html: {
     template: "public/index.html",

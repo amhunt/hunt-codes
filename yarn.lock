@@ -2315,6 +2315,16 @@ __metadata:
   languageName: node
   linkType: hard
 
+"@happy-dom/global-registrator@npm:^18.0.1":
+  version: 18.0.1
+  resolution: "@happy-dom/global-registrator@npm:18.0.1"
+  dependencies:
+    "@types/node": "npm:^20.0.0"
+    happy-dom: "npm:^18.0.1"
+  checksum: 10c0/db97936215b8148ae966f2619533188fc006a66af7c122664eee9263bd2ffc2172c08de4221ded0f6f3af089d3a727ff98f70e1278395979a3c6e9dd55acf032
+  languageName: node
+  linkType: hard
+
 "@humanfs/core@npm:^0.19.1":
   version: 0.19.1
   resolution: "@humanfs/core@npm:0.19.1"
@@ -3870,6 +3880,15 @@ __metadata:
   languageName: node
   linkType: hard
 
+"@types/bun@npm:^1.2.17":
+  version: 1.2.17
+  resolution: "@types/bun@npm:1.2.17"
+  dependencies:
+    bun-types: "npm:1.2.17"
+  checksum: 10c0/45cd36d7b265a8bef72b9754936ab3761d214d609623b01e956ac6eef65f52d586531c1301ea04115a38d240fbed67e843b6c76c9eb6441a9a314db9a2190cc8
+  languageName: node
+  linkType: hard
+
 "@types/canvas-confetti@npm:^1.6.4":
   version: 1.9.0
   resolution: "@types/canvas-confetti@npm:1.9.0"
@@ -3970,6 +3989,15 @@ __metadata:
   languageName: node
   linkType: hard
 
+"@types/node@npm:^20.0.0":
+  version: 20.19.1
+  resolution: "@types/node@npm:20.19.1"
+  dependencies:
+    undici-types: "npm:~6.21.0"
+  checksum: 10c0/4f1c3c8ec24c79af6802b376fa307904abf19accb9ac291de0bfc02220494c8b027d3ef733dbf64cc09b37594f22f679a15eabb30f3785bcfcc13bd9bbd8c0e2
+  languageName: node
+  linkType: hard
+
 "@types/node@npm:^22.15.32":
   version: 22.15.32
   resolution: "@types/node@npm:22.15.32"
@@ -4067,6 +4095,13 @@ __metadata:
   dependencies:
     typed.js: "npm:*"
   checksum: 10c0/73b883a067ac50867a387f15714fe7ec24bc0fdd7bf553a037fb0082960161f4ce9332a75e542fd60f7e72f6b67ad4900214f129eca3c03957cb60ba059289be
+  languageName: node
+  linkType: hard
+
+"@types/whatwg-mimetype@npm:^3.0.2":
+  version: 3.0.2
+  resolution: "@types/whatwg-mimetype@npm:3.0.2"
+  checksum: 10c0/dad39d1e4abe760a0a963c84bbdbd26b1df0eb68aff83bdf6ecbb50ad781ead777f6906d19a87007790b750f7500a12e5624d31fc6a1529d14bd19b5c3a316d1
   languageName: node
   linkType: hard
 
@@ -5172,6 +5207,15 @@ __metadata:
   version: 1.1.2
   resolution: "buffer-from@npm:1.1.2"
   checksum: 10c0/124fff9d66d691a86d3b062eff4663fe437a9d9ee4b47b1b9e97f5a5d14f6d5399345db80f796827be7c95e70a8e765dd404b7c3ff3b3324f98e9b0c8826cc34
+  languageName: node
+  linkType: hard
+
+"bun-types@npm:1.2.17":
+  version: 1.2.17
+  resolution: "bun-types@npm:1.2.17"
+  dependencies:
+    "@types/node": "npm:*"
+  checksum: 10c0/c7967702b0fc27f0ede71792f7cd93c8993f5ba65df34034afe00f93e9fced99dec031f632d61581522e8378f310524462d2dddef7961200a7a94fadadff7a2c
   languageName: node
   linkType: hard
 
@@ -7327,6 +7371,17 @@ __metadata:
   languageName: node
   linkType: hard
 
+"happy-dom@npm:^18.0.1":
+  version: 18.0.1
+  resolution: "happy-dom@npm:18.0.1"
+  dependencies:
+    "@types/node": "npm:^20.0.0"
+    "@types/whatwg-mimetype": "npm:^3.0.2"
+    whatwg-mimetype: "npm:^3.0.0"
+  checksum: 10c0/10f2115f5001fdaf1aedcbda89c15248a1c2e43a25d7e774cb641a35bf6763cef9097b438ef3c2248ab59a0ef33b3e88cb94da096f2bb0fc109ba3f43f7c66d4
+  languageName: node
+  linkType: hard
+
 "harmony-reflect@npm:^1.4.6":
   version: 1.6.2
   resolution: "harmony-reflect@npm:1.6.2"
@@ -7500,6 +7555,7 @@ __metadata:
   resolution: "hunt-codes@workspace:."
   dependencies:
     "@babel/core": "npm:^7.27.4"
+    "@happy-dom/global-registrator": "npm:^18.0.1"
     "@radix-ui/react-slot": "npm:^1.2.3"
     "@radix-ui/react-tooltip": "npm:^1.2.7"
     "@rsbuild/core": "npm:^1.3.22"
@@ -7507,6 +7563,7 @@ __metadata:
     "@rsbuild/plugin-react": "npm:^1.3.2"
     "@rsbuild/plugin-sass": "npm:^1.3.2"
     "@rsbuild/plugin-svgr": "npm:^1.2.0"
+    "@types/bun": "npm:^1.2.17"
     "@types/jest": "npm:^29.5.14"
     "@types/node": "npm:^22.15.32"
     "@types/react": "npm:^18.3.23"
@@ -12633,6 +12690,13 @@ __metadata:
   version: 3.6.20
   resolution: "whatwg-fetch@npm:3.6.20"
   checksum: 10c0/fa972dd14091321d38f36a4d062298df58c2248393ef9e8b154493c347c62e2756e25be29c16277396046d6eaa4b11bd174f34e6403fff6aaca9fb30fa1ff46d
+  languageName: node
+  linkType: hard
+
+"whatwg-mimetype@npm:^3.0.0":
+  version: 3.0.0
+  resolution: "whatwg-mimetype@npm:3.0.0"
+  checksum: 10c0/323895a1cda29a5fb0b9ca82831d2c316309fede0365047c4c323073e3239067a304a09a1f4b123b9532641ab604203f33a1403b5ca6a62ef405bcd7a204080f
   languageName: node
   linkType: hard
 

@@ -78,7 +78,6 @@ export default function MoonSvg() {
             />
           </stop>
         </linearGradient>
-
         <style>
           {`@import url('https://fonts.googleapis.com/css2?family=Bungee+Spice');`}
         </style>
@@ -103,8 +102,6 @@ export default function MoonSvg() {
 
       <style>
         {`
-          @import url('https://fonts.googleapis.com/css2?family=Bungee+Spice&display=swap');
-
           #moonText {
             font-size: 24px;
             transform-origin: center;

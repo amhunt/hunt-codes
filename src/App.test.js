@@ -1,8 +1,9 @@
 import React from "react";
 import App from "./App";
+import { test } from "bun:test";
 import { createRoot } from "react-dom/client";
 
-it("renders without crashing", () => {
+test("renders without crashing", () => {
   const div = document.createElement("div");
   const root = createRoot(div);
   root.render(<App />);

@@ -140,6 +140,7 @@ const Home = () => {
           </div>
           <div className="flex items-center gap-1">
             <a
+              aria-label="LinkedIn"
               target="_blank"
               rel="noopener noreferrer"
               href="https://www.linkedin.com/in/andrewmhunt/"
@@ -148,6 +149,7 @@ const Home = () => {
               <Linkedin size={20} />
             </a>
             <a
+              aria-label="GitHub"
               target="_blank"
               rel="noopener noreferrer"
               href="https://www.github.com/amhunt"
@@ -164,6 +166,7 @@ const Home = () => {
                 <TooltipTrigger onClick={(e) => e.preventDefault()}>
                   <button
                     aria-label="Copy email address"
+                    aria-description="andrew+in@hunt.codes"
                     onClick={() => handleCopy()}
                     className="flex transition-colors items-center justify-center w-8 h-8 p-1 rounded-full hover:bg-[#5efffc57]"
                   >
