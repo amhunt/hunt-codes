@@ -1,5 +1,7 @@
 import React, { memo } from "react";
 import cx from "classnames";
+import tinycolor from "tinycolor2";
+import { maxStarRadiusPx } from "./starUtils";
 
 export interface StarT {
   x: number;
@@ -20,21 +22,25 @@ const STAR_TO_CURSOR_TRIGGER_DISTANCE_PX_SQ_ROOT = Math.sqrt(
 interface Props {
   star: StarT;
   as?: "circle" | "div";
+  numCloseToCursor?: number;
 }
 
-function StarDot({ star, as = "circle" }: Props) {
+function StarDot({ star, as = "circle", numCloseToCursor }: Props) {
   let starWidth = star.r;
-  if (
-    star.distanceToCursor != null &&
-    star.distanceToCursor < STAR_TO_CURSOR_TRIGGER_DISTANCE_PX
-  ) {
-    starWidth =
-      (STAR_TO_CURSOR_TRIGGER_DISTANCE_PX_SQ_ROOT /
-        Math.sqrt(star.distanceToCursor)) *
-      star.r;
-  }
-  if (starWidth > 6) {
-    starWidth = 6;
+  if (star.distanceToCursor != null) {
+    if (star.distanceToCursor < STAR_TO_CURSOR_TRIGGER_DISTANCE_PX) {
+      starWidth =
+        (STAR_TO_CURSOR_TRIGGER_DISTANCE_PX_SQ_ROOT /
+          Math.sqrt(star.distanceToCursor)) *
+        star.r;
+      // Max of 6px radius, unless right next to cursor
+      starWidth = Math.min(starWidth, maxStarRadiusPx);
+
+      // if right next to cursor, make it as big as the number of stars close to cursor
+      if (numCloseToCursor != null && star.distanceToCursor < 10) {
+        starWidth = Math.max(starWidth, Math.min(numCloseToCursor / 16, 32));
+      }
+    }
   }
 
   const className = cx(
@@ -42,6 +48,14 @@ function StarDot({ star, as = "circle" }: Props) {
     star.isText ? "star_text" : "star_background",
     !star.isText && star.r < 1.05 && "star_disco"
   );
+
+  const color = tinycolor(star.color)
+    .brighten(
+      star.distanceToCursor != null && star.distanceToCursor < 10
+        ? (numCloseToCursor ?? 0)
+        : 0
+    )
+    .toHexString();
   if (as === "circle") {
     return (
       <circle
@@ -49,7 +63,7 @@ function StarDot({ star, as = "circle" }: Props) {
         cx={star.x}
         cy={star.y}
         r={starWidth}
-        fill={star.color}
+        fill={color}
       />
     );
   }
@@ -60,7 +74,7 @@ function StarDot({ star, as = "circle" }: Props) {
         top: star.y,
         width: starWidth,
         height: starWidth,
-        backgroundColor: star.color,
+        backgroundColor: color,
       }}
       className={className}
     />

@@ -20,6 +20,12 @@ $green-light-transparent: #84ff5e25;
   top: calc(100vh - 50vw - 200px);
   z-index: 1000;
 
+  // Allows click through to the stars
+  pointer-events: none;
+  a {
+    pointer-events: auto;
+  }
+
   @media (max-width: 767px) {
     top: 30%;
     right: -200px;
@@ -883,4 +889,80 @@ $STAR_MOVEMENT_INTERVAL_MS: 300;
   position: fixed;
   inset: 0;
   transition: filter 2s ease-in-out;
+  pointer-events: none;
+}
+
+.slider-container {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding: 16px;
+  background: rgba(0, 0, 0, 0.1);
+  border-radius: 8px;
+  backdrop-filter: blur(10px);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.slider-label {
+  font-size: 14px;
+  font-weight: 500;
+  color: #fff;
+  text-shadow: 0 0 10px rgba(255, 255, 255, 0.5);
+}
+
+.slider-input {
+  width: 100%;
+  height: 6px;
+  border-radius: 3px;
+  background: rgba(255, 255, 255, 0.2);
+  outline: none;
+  cursor: pointer;
+
+  /* Webkit browsers (Chrome, Safari) */
+  &::-webkit-slider-thumb {
+    appearance: none;
+    width: 20px;
+    height: 20px;
+    border-radius: 50%;
+    background: linear-gradient(45deg, #3effcc, #ff2d2d);
+    cursor: pointer;
+    box-shadow: 0 0 10px rgba(62, 255, 204, 0.5);
+    transition: all 0.2s ease;
+
+    &:hover {
+      transform: scale(1.1);
+      box-shadow: 0 0 15px rgba(62, 255, 204, 0.8);
+    }
+  }
+
+  /* Firefox */
+  &::-moz-range-thumb {
+    width: 20px;
+    height: 20px;
+    border-radius: 50%;
+    background: linear-gradient(45deg, #3effcc, #ff2d2d);
+    cursor: pointer;
+    border: none;
+    box-shadow: 0 0 10px rgba(62, 255, 204, 0.5);
+    transition: all 0.2s ease;
+
+    &:hover {
+      transform: scale(1.1);
+      box-shadow: 0 0 15px rgba(62, 255, 204, 0.8);
+    }
+  }
+
+  /* Track styling */
+  &::-webkit-slider-track {
+    background: rgba(255, 255, 255, 0.2);
+    border-radius: 3px;
+    height: 6px;
+  }
+
+  &::-moz-range-track {
+    background: rgba(255, 255, 255, 0.2);
+    border-radius: 3px;
+    height: 6px;
+    border: none;
+  }
 }

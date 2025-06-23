@@ -11,6 +11,8 @@ import useWindowWidth from "useWindowWidth";
 import tinycolor from "tinycolor2";
 import { useCursorPosition } from "hooks/useCursorPosition";
 import StarDot, { type StarT } from "stars/StarDot";
+import { DEFAULT_CURSOR_GRAVITY_RADIUS_PX } from "stars/starUtils";
+import { useDebounce } from "use-debounce";
 
 const offsetY = 60;
 // const fontFamily = "Arial";
@@ -93,7 +95,6 @@ const percentageWidthOfSpacing = 0.1;
 const percentageWidthForSidePadding = 0.05;
 
 const generateStarsForLetters = (text: string, windowWidth: number) => {
-  console.log("generateStarsForLetters", text, windowWidth);
   const letterSpacing =
     (windowWidth * percentageWidthOfSpacing) / (text.length - 1);
   const canvas = document.createElement("canvas");
@@ -140,10 +141,13 @@ const starPhrasesSmall = ["ANDREW", "HUNT", "CODES ★"];
 
 const cursorDisabledBufferZonePx = 20;
 
-const STAR_MOVEMENT_SPEED_MULTIPLIER = 1;
+const STAR_MOVEMENT_SPEED_MULTIPLIER = 1 / 100;
 
-const useStars = (isLanding: boolean): StarT[] => {
-  const { width, height } = useWindowWidth();
+const useStars = (
+  isLanding: boolean,
+  cursorGravityRadiusPx: number
+): StarT[] => {
+  const { width, height, isSmall } = useWindowWidth();
   const { cursorX, cursorY } = useCursorPosition(32);
   const cursorPositionRef = useRef({ x: cursorX, y: cursorY });
   useEffect(() => {
@@ -151,7 +155,6 @@ const useStars = (isLanding: boolean): StarT[] => {
   }, [cursorX, cursorY]);
   const [currTextIndex, setCurrTextIndex] = useState(0);
 
-  const isSmall = width < 768;
   const textOptionsToUse = isSmall ? starPhrasesSmall : starPhrases;
 
   const initialTextStars = useMemo(() => {
@@ -222,7 +225,7 @@ const useStars = (isLanding: boolean): StarT[] => {
   const numTextStars = textStarsState.length;
 
   const randomVelocities = useMemo(() => {
-    return Array.from({ length: numTextStars }, () => Math.random());
+    return Array.from({ length: numTextStars }, () => Math.random() + 0.5);
   }, [numTextStars]);
 
   const ANIMATION_INTERVAL = 45;
@@ -245,7 +248,7 @@ const useStars = (isLanding: boolean): StarT[] => {
           (star.x - cursorX) ** 2 + (star.y - cursorY) ** 2
         );
         const isCloseToCursor =
-          distanceToCursor < 100 &&
+          distanceToCursor < cursorGravityRadiusPx &&
           !isSmall &&
           // ensure cursor is at least 20px from edge of viewport,
           // to prevent the cursor being logged as on the edge of the screen after leaving the screen
@@ -259,30 +262,28 @@ const useStars = (isLanding: boolean): StarT[] => {
         const xDistanceToOriginal = (star.x - originalX) ** 2;
         const yDistanceToOriginal = (star.y - originalY) ** 2;
 
+        const closeToCustomUncappedRandomChange = isCloseToCursor
+          ? // distance to cursor is capped at 100px
+            10000 / Math.pow(Math.max(distanceToCursor, 10), 2)
+          : undefined;
+
         const uncappedRandomChangeX =
           randomVelocities[starIdx] *
-          (isCloseToCursor
-            ? // distance to cursor is capped at 100px
-              10000 / Math.pow(Math.max(distanceToCursor, 10), 2)
-            : (xDistanceToOriginal / 40) * STAR_MOVEMENT_SPEED_MULTIPLIER);
+          (closeToCustomUncappedRandomChange ??
+            xDistanceToOriginal * STAR_MOVEMENT_SPEED_MULTIPLIER);
         const randomChangeX = Math.max(1, Math.min(10, uncappedRandomChangeX));
         const uncappedRandomChangeY =
           randomVelocities[starIdx] *
-          (isCloseToCursor
-            ? // distance to cursor is capped at 100px
-              10000 / Math.pow(Math.max(distanceToCursor, 10), 2)
-            : (yDistanceToOriginal / 40) * STAR_MOVEMENT_SPEED_MULTIPLIER);
+          (closeToCustomUncappedRandomChange ??
+            yDistanceToOriginal * STAR_MOVEMENT_SPEED_MULTIPLIER);
         const randomChangeY = Math.max(1, Math.min(10, uncappedRandomChangeY));
-        if (starIdx < 10) {
-          console.log("starIdx", starIdx, randomChangeX, randomChangeY);
-        }
         let newX = star.x;
         let newY = star.y;
         if (isCloseToCursor) {
-          newX =
-            star.x - (star.x - cursorX > 0 ? randomChangeX : -randomChangeX);
-          newY =
-            star.y - (star.y - cursorY > 0 ? randomChangeY : -randomChangeY);
+          const xMovement = Math.min(randomChangeX, Math.abs(star.x - cursorX));
+          const yMovement = Math.min(randomChangeY, Math.abs(star.y - cursorY));
+          newX = star.x - (star.x - cursorX > 0 ? xMovement : -xMovement);
+          newY = star.y - (star.y - cursorY > 0 ? yMovement : -yMovement);
         } else {
           // move back towards their original (text) position
           if (newX - originalX > 0) {
@@ -303,7 +304,13 @@ const useStars = (isLanding: boolean): StarT[] => {
         return { ...star, x: newX, y: newY, distanceToCursor } satisfies StarT;
       });
     },
-    [cursorPositionRef, initialTextStarsState, isSmall, randomVelocities]
+    [
+      cursorPositionRef,
+      initialTextStarsState,
+      isSmall,
+      randomVelocities,
+      cursorGravityRadiusPx,
+    ]
   );
 
   useEffect(() => {
@@ -321,7 +328,14 @@ const useStars = (isLanding: boolean): StarT[] => {
 };
 
 function Stars({ isLanding }: { isLanding: boolean }) {
-  const stars = useStars(isLanding);
+  const [cursorGravityRadiusPx, setCursorGravityRadiusPx] = useState(
+    DEFAULT_CURSOR_GRAVITY_RADIUS_PX
+  );
+  const [debouncedCursorGravityRadiusPx] = useDebounce(
+    cursorGravityRadiusPx,
+    500
+  );
+  const stars = useStars(isLanding, debouncedCursorGravityRadiusPx);
   const [hasMounted, setHasMounted] = useState(false);
   useEffect(() => {
     const timeout = setTimeout(() => setHasMounted(true), 500);
@@ -333,6 +347,13 @@ function Stars({ isLanding }: { isLanding: boolean }) {
     () => stars.filter((s) => !s.isText),
     [stars]
   );
+
+  const numCloseToCursor = useMemo(() => {
+    return textStars.filter(
+      (s) =>
+        s.distanceToCursor != null && s.distanceToCursor < cursorGravityRadiusPx
+    ).length;
+  }, [textStars]);
 
   return (
     <>
@@ -351,9 +372,28 @@ function Stars({ isLanding }: { isLanding: boolean }) {
         style={{ filter: hasMounted ? "blur(0)" : "blur(5px)" }}
       >
         {textStars.map((star, starIdx) => (
-          <StarDot key={starIdx} star={star} />
+          <StarDot
+            key={starIdx}
+            star={star}
+            numCloseToCursor={numCloseToCursor}
+          />
         ))}
       </svg>
+      {/* Slider that controls the cursor gravity radius */}
+      <div className="slider-container">
+        <label htmlFor="cursor-gravity-slider" className="slider-label">
+          Cursor Gravity Radius: {cursorGravityRadiusPx}px
+        </label>
+        <input
+          id="cursor-gravity-slider"
+          type="range"
+          min={100}
+          max={1000}
+          onChange={(e) => setCursorGravityRadiusPx(parseInt(e.target.value))}
+          value={cursorGravityRadiusPx.toString()}
+          className="slider-input"
+        />
+      </div>
     </>
   );
 }

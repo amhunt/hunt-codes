@@ -25,5 +25,5 @@ export default function useWindowWidth() {
     };
   }, [debouncedSetWidth]);
 
-  return { width, height };
+  return { width, height, isSmall: width < 768 };
 }

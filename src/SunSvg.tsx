@@ -209,9 +209,7 @@ export default function SunSvg({
   isHome?: boolean;
   size?: number;
 }) {
-  const { width } = useWindowWidth();
-
-  const isSmall = width < 768;
+  const { isSmall } = useWindowWidth();
 
   return (
     <svg
