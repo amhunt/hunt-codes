@@ -23,17 +23,15 @@ import { Link } from "react-router-dom";
 
 const typedOptions = {
   loop: true,
-  // Disabled until positioning is fixed
-  showCursor: false,
+  // This needs to be disabled if switching back to the Mac view
+  showCursor: true,
   smartBackspace: true,
-  strings: [
-    "hey there^500!",
-    // "welcome to my website!",
-    "sorry for the...^300 tasteless UI",
-    "interested in working together?",
-    "reach out to andrew^200@hunt.codes^5000",
-  ],
+  fadeOut: true,
+  startDelay: 3000,
+  fadeOutDelay: 5000,
+  stringsElement: "#typed-strings",
   typeSpeed: 50,
+  autoInsertCss: false,
 };
 
 const isChrome = navigator.userAgent.indexOf("Chrome") > -1;
@@ -47,15 +45,14 @@ const Home = () => {
   const isSmall = size === "sm";
   const isMdOrLess = size === "sm" || size === "md";
 
-  const { cursorX, cursorY } = useCursorPosition();
+  const cursorPos = useCursorPosition();
+  const typedEl = useRef<HTMLSpanElement>(null);
 
   useEffect(() => {
-    if (document.getElementById("typed-js")) {
-      const typed = new Typed("#typed-js", typedOptions);
-      return () => {
-        typed.destroy();
-      };
-    }
+    const typed = new Typed(typedEl.current, typedOptions);
+    return () => {
+      typed.destroy();
+    };
   }, [isSmall]);
 
   // show spinning logo after mount
@@ -66,8 +63,10 @@ const Home = () => {
 
   const docHeight = window.innerHeight;
   const docWidth = window.innerWidth;
-  const cursorRatioX = cursorX ? (cursorX / docWidth) * 2 - 1 : 0;
-  const cursorRatioY = cursorY ? (cursorY / docHeight) * 2 - 1 : 0;
+  const cursorRatioX =
+    cursorPos?.x != null ? (cursorPos.x / docWidth) * 2 - 1 : 0;
+  const cursorRatioY =
+    cursorPos?.y != null ? (cursorPos.y / docHeight) * 2 - 1 : 0;
   let cursorMultiplier1 = 30;
   let cursorMultiplier2 = 50;
 
@@ -120,12 +119,12 @@ const Home = () => {
           to="/"
         >
           <ChevronLeft size={16} />
-          Back to stars
+          Stars
           <Star className="starIcon" size={16} />
         </Link>
       </div>
       <main className={cx("homeInfoContainer", logoOpacity === 1 && "show")}>
-        <p className="hoverableHomeItem justify-between">
+        <p className="hoverableHomeItem gap-8 justify-between">
           <div className="flex items-center gap-1">
             <span>
               Currently building{" "}
@@ -184,14 +183,21 @@ const Home = () => {
         </p>
         {/* Moved to computer for large screens */}
         {/* {isMdOrLess && ( */}
-        <p className="h-20 hoverableHomeItem">
-          <span>
-            <span
-              id="typed-js"
-              className="typed"
-              aria-description="email address: andrew@hunt.codes"
-            />
-          </span>
+        <p className="h-20 hoverableHomeItem gap-0">
+          <span
+            ref={typedEl}
+            id="typed-js"
+            className="typed font-bold"
+            aria-description="email address: andrew@hunt.codes"
+          />
+          <div id="typed-strings">
+            <p>hey there!</p>
+            <p>interested in working together?</p>
+            <p>
+              reach out to{" "}
+              <a href="mailto:andrew+contact@hunt.codes">andrew@hunt.codes</a>
+            </p>
+          </div>
         </p>
         {/* )} */}
         {!isChrome && !isSmall && (

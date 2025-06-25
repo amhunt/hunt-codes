@@ -4,6 +4,11 @@ $purp-light-transparent: #9674f999;
 $purp-light-transparent-25: #ab8ffd44;
 $green-light-transparent: #84ff5e25;
 
+// Breakpoints
+$breakpoint-sm: 768px;
+$breakpoint-md: 1000px;
+$breakpoint-lg: 1280px;
+
 .App {
   cursor: pointer;
   inset: 0;
@@ -26,7 +31,7 @@ $green-light-transparent: #84ff5e25;
     pointer-events: auto;
   }
 
-  @media (max-width: 767px) {
+  @media (max-width: $breakpoint-sm) {
     top: 30%;
     right: -200px;
     left: -200px;
@@ -107,7 +112,7 @@ audio {
   transition: opacity 5s ease;
   z-index: 2;
 
-  @media (min-width: 1280px) {
+  @media (min-width: $breakpoint-lg) {
     top: calc(50vh - 40px);
   }
 }
@@ -174,7 +179,7 @@ p {
   z-index: 3;
   opacity: 0;
 
-  @media (min-width: 1280px) {
+  @media (min-width: $breakpoint-lg) {
     right: calc(-5vw - 7.5vh + 100px);
     transform: translateX(-50%);
     font-size: 24px;
@@ -215,7 +220,7 @@ p {
   transform: translateY(100vh);
   opacity: 0;
 
-  @media (max-width: 767px) {
+  @media (max-width: $breakpoint-sm) {
     top: unset !important;
     bottom: -50vw !important;
     left: -100px !important;
@@ -353,11 +358,9 @@ p {
 
 .hoverableHomeItem {
   display: flex;
-  // align-items: center;
-  gap: 8px;
   min-height: 16px;
 
-  @media (max-width: 767px) {
+  @media (max-width: $breakpoint-sm) {
     flex-direction: column;
     align-items: center;
   }
@@ -470,13 +473,13 @@ li > ul > li {
   }
 }
 
-@media (max-width: 1279px) {
+@media (max-width: $breakpoint-lg) {
   .App-gg-bridge {
     height: 30vh;
   }
 }
 
-@media (max-width: 767px) {
+@media (max-width: $breakpoint-sm) {
   .resume-container {
     padding-bottom: 240px;
     padding-top: 40px;
@@ -888,7 +891,9 @@ $STAR_MOVEMENT_INTERVAL_MS: 300;
 .stars-container {
   position: fixed;
   inset: 0;
-  transition: filter 2s ease-in-out;
+  transition:
+    filter 2s ease-in-out,
+    opacity 2s ease-in-out;
   pointer-events: none;
 }
 
@@ -965,4 +970,44 @@ $STAR_MOVEMENT_INTERVAL_MS: 300;
     height: 6px;
     border: none;
   }
+}
+
+// Realistic planet styles for Landing.tsx
+
+#planet1 {
+  // Mars - red planet with surface details
+  fill: url(#planet1Gradient);
+}
+
+#planet2 {
+  // Neptune - blue gas giant with atmospheric bands
+  fill: url(#planet2Gradient);
+}
+
+#planet3 {
+  // Saturn - golden planet with ring system effect
+  fill: url(#planet3Gradient);
+}
+
+#planet4 {
+  // Uranus - ice giant with subtle atmospheric layers
+  fill: url(#planet4Gradient);
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+#solar-system,
+.stars-container {
+  animation: fadeIn 1s ease-in-out both;
+}
+
+#solar-system {
+  animation-delay: 4s;
 }

@@ -88,7 +88,7 @@ const Resume = () => {
           to="/home"
         >
           <ArrowLeftCircle size={40} />
-          Back to home
+          Home
         </Link>
         <h1 ref={ref} className="mb-6">
           About me

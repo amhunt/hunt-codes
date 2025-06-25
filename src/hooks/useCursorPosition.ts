@@ -1,5 +1,6 @@
 import { useState, useCallback, useEffect } from "react";
 import { useThrottledCallback } from "use-debounce";
+import usePageVisibilityState from "usePageVisibilityState";
 
 /**
  * Default throttle to ~60fps
@@ -7,12 +8,14 @@ import { useThrottledCallback } from "use-debounce";
  * @returns The cursor position
  */
 export const useCursorPosition = (throttleMs: number = 16) => {
-  const [cursorPositionX, setCursorPositionX] = useState(0);
-  const [cursorPositionY, setCursorPositionY] = useState(0);
+  const visibilityState = usePageVisibilityState();
+  const [cursorPosition, setCursorPosition] = useState<{
+    x: number;
+    y: number;
+  } | null>(null);
 
   const throttledCursorUpdate = useThrottledCallback((x: number, y: number) => {
-    setCursorPositionX(x);
-    setCursorPositionY(y);
+    setCursorPosition({ x, y });
   }, throttleMs);
 
   const getCursorXY = useCallback(
@@ -34,10 +37,11 @@ export const useCursorPosition = (throttleMs: number = 16) => {
   useEffect(() => {
     // Use passive event listener for better performance
     document.addEventListener("mousemove", getCursorXY, { passive: true });
+
     return () => {
       document.removeEventListener("mousemove", getCursorXY);
     };
   }, [getCursorXY]);
 
-  return { cursorX: cursorPositionX, cursorY: cursorPositionY };
+  return visibilityState === "hidden" ? null : cursorPosition;
 };

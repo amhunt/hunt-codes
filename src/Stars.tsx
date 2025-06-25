@@ -13,6 +13,7 @@ import { useCursorPosition } from "hooks/useCursorPosition";
 import StarDot, { type StarT } from "stars/StarDot";
 import { DEFAULT_CURSOR_GRAVITY_RADIUS_PX } from "stars/starUtils";
 import { useDebounce } from "use-debounce";
+import usePageVisibilityState from "usePageVisibilityState";
 
 const offsetY = 60;
 // const fontFamily = "Arial";
@@ -136,7 +137,7 @@ const generateStarsForLetters = (text: string, windowWidth: number) => {
   });
 };
 
-const starPhrases = ["HUNT CODES ♡", "A PERSONAL WEBSITE", "BY ANDREW HUNT"];
+const starPhrases = ["HUNT.CODES", "BUILT WITH ♥", "BY ANDREW HUNT"];
 const starPhrasesSmall = ["ANDREW", "HUNT", "CODES ★"];
 
 const cursorDisabledBufferZonePx = 20;
@@ -147,12 +148,13 @@ const useStars = (
   isLanding: boolean,
   cursorGravityRadiusPx: number
 ): StarT[] => {
+  const pageVisibilityState = usePageVisibilityState();
   const { width, height, isSmall } = useWindowWidth();
-  const { cursorX, cursorY } = useCursorPosition(32);
-  const cursorPositionRef = useRef({ x: cursorX, y: cursorY });
+  const cursorPos = useCursorPosition(32);
+  const cursorPositionRef = useRef(cursorPos);
   useEffect(() => {
-    cursorPositionRef.current = { x: cursorX, y: cursorY };
-  }, [cursorX, cursorY]);
+    cursorPositionRef.current = cursorPos;
+  }, [cursorPos]);
   const [currTextIndex, setCurrTextIndex] = useState(0);
 
   const textOptionsToUse = isSmall ? starPhrasesSmall : starPhrases;
@@ -184,7 +186,7 @@ const useStars = (
   useEffect(() => {
     setTimeout(() => setIsAnimationEnabled(true), 3000);
 
-    if (!isAnimationEnabled) return;
+    if (!isAnimationEnabled || pageVisibilityState === "hidden") return;
 
     let currentIndex = 0;
     const interval = setInterval(() => {
@@ -197,7 +199,7 @@ const useStars = (
     }, TEXT_CHANGE_INTERVAL_MS);
 
     return () => clearInterval(interval);
-  }, [isAnimationEnabled, textOptionsToUse.length]);
+  }, [isAnimationEnabled, textOptionsToUse.length, pageVisibilityState]);
 
   // 1 background star per thousand pixels
   const numBackgroundStars = Math.round(
@@ -228,7 +230,7 @@ const useStars = (
     return Array.from({ length: numTextStars }, () => Math.random() + 0.5);
   }, [numTextStars]);
 
-  const ANIMATION_INTERVAL = 45;
+  const ANIMATION_INTERVAL_MS = 45;
   const TEXT_CHANGE_INTERVAL_MS = 10000;
 
   const updateStarPositions = useCallback(
@@ -241,8 +243,10 @@ const useStars = (
       // Each star within a 100px radius of the cursor moves towards the cursor
       // if they are outside a 100px radius of the cursor, they move back towards their original position
       return startingArr.map((star, starIdx) => {
-        const cursorX = cursorPositionRef.current.x;
-        const cursorY = cursorPositionRef.current.y;
+        const cursorX =
+          cursorPositionRef.current?.x ?? Number.POSITIVE_INFINITY;
+        const cursorY =
+          cursorPositionRef.current?.y ?? Number.POSITIVE_INFINITY;
 
         const distanceToCursor = Math.sqrt(
           (star.x - cursorX) ** 2 + (star.y - cursorY) ** 2
@@ -314,12 +318,12 @@ const useStars = (
   );
 
   useEffect(() => {
-    if (!isAnimationEnabled) return;
+    if (!isAnimationEnabled || pageVisibilityState === "hidden") return;
     const interval = setInterval(() => {
       setTextStarsState(updateStarPositions);
-    }, ANIMATION_INTERVAL);
+    }, ANIMATION_INTERVAL_MS);
     return () => clearInterval(interval);
-  }, [isAnimationEnabled, updateStarPositions]);
+  }, [isAnimationEnabled, updateStarPositions, pageVisibilityState]);
 
   const allStars = useMemo(() => {
     return [...textStarsState, ...backgroundStars];
@@ -380,7 +384,7 @@ function Stars({ isLanding }: { isLanding: boolean }) {
         ))}
       </svg>
       {/* Slider that controls the cursor gravity radius */}
-      <div className="slider-container">
+      {/* <div className="slider-container">
         <label htmlFor="cursor-gravity-slider" className="slider-label">
           Cursor Gravity Radius: {cursorGravityRadiusPx}px
         </label>
@@ -393,7 +397,7 @@ function Stars({ isLanding }: { isLanding: boolean }) {
           value={cursorGravityRadiusPx.toString()}
           className="slider-input"
         />
-      </div>
+      </div> */}
     </>
   );
 }

@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useCallback } from "react";
 import { BrowserRouter as Router, Switch, Route } from "react-router-dom";
 import "./App.scss";
 
@@ -14,8 +14,36 @@ for (const c of andrewHunt) {
   nameArr.push(c);
 }
 
+// Pause audio when page is hidden via visibilitychange event listener
+const usePauseAudioOnHideEventListener = () => {
+  let playingOnHide = false;
+
+  const handleVisibilityChange = useCallback(() => {
+    const audio = document.querySelector("audio");
+    if (!audio) return;
+    if (document.hidden) {
+      playingOnHide = !audio.paused;
+      audio.pause();
+    } else if (playingOnHide) {
+      // Page became visible again - resume playing if audio was "playing on hide"
+      audio.play();
+    }
+  }, []);
+
+  useEffect(() => {
+    document.addEventListener("visibilitychange", handleVisibilityChange, {
+      passive: true,
+    });
+    return () => {
+      document.removeEventListener("visibilitychange", handleVisibilityChange);
+    };
+  }, []);
+};
+
 const App = () => {
   const [showBridge, setShowBridge] = useState(false);
+
+  usePauseAudioOnHideEventListener();
 
   // fade home content in once mounted
   useEffect(() => {

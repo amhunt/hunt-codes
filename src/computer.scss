@@ -17,11 +17,11 @@ body {
   top: calc(50vh - 200px);
   left: 15vh;
 
-  @media (min-width: 1280px) {
+  @media (min-width: $breakpoint-lg) {
     top: calc(50vh - 200px);
   }
 
-  @media (max-width: 767px) {
+  @media (max-width: $breakpoint-sm) {
     display: none;
   }
   transform-style: preserve-3d;
@@ -109,8 +109,9 @@ body {
     border: 4px solid #210c0c;
     border-radius: 4px;
     padding: 4px;
-    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto,
-      "Helvetica Neue", Arial, sans-serif;
+    font-family:
+      -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue",
+      Arial, sans-serif;
     font-size: 0.55em;
 
     img {
