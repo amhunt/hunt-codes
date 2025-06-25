@@ -12,7 +12,37 @@ const Landing = () => {
   return (
     <div className="landing-page">
       <svg id="solar-system" viewBox="0 0 600 600" style={{ display: "block" }}>
-        <Link to="/home">
+        <defs>
+          {/* Mars gradient - red planet with surface variations */}
+          <radialGradient id="planet1Gradient" cx="30%" cy="30%">
+            <stop offset="0%" stopColor="#aa4135" />
+            <stop offset="70%" stopColor="#872c22" />
+            <stop offset="100%" stopColor="#62170f" />
+          </radialGradient>
+
+          {/* Neptune gradient - blue gas giant with atmospheric depth */}
+          <radialGradient id="planet2Gradient" cx="30%" cy="30%">
+            <stop offset="0%" stopColor="#347dae" />
+            <stop offset="70%" stopColor="#195882" />
+            <stop offset="100%" stopColor="#0e476d" />
+          </radialGradient>
+
+          {/* Saturn gradient - golden planet with warm tones */}
+          <radialGradient id="planet3Gradient" cx="35%" cy="35%">
+            <stop offset="0%" stopColor="#e98e3e" />
+            <stop offset="70%" stopColor="#c76714" />
+            <stop offset="100%" stopColor="#8d480c" />
+          </radialGradient>
+
+          {/* Uranus gradient - ice giant with cool tones */}
+          <radialGradient id="planet4Gradient" cx="35%" cy="35%">
+            <stop offset="0%" stopColor="#32ae38" />
+            <stop offset="70%" stopColor="#1a8920" />
+            <stop offset="100%" stopColor="#127117" />
+          </radialGradient>
+        </defs>
+
+        <Link className="sun-link" to="/home">
           <SunInternals size={0.25} radiusOffset={243} strokeWidth={0} />
           <text fontFamily="'Inconsolata', monospace" id="sunEnterText">
             <textPath
@@ -32,38 +62,10 @@ const Landing = () => {
             </textPath>
           </text>
         </Link>
-        <circle
-          className="planet"
-          id="planet1"
-          cx="300"
-          cy="180"
-          r="12"
-          fill="#ff6b6b" // Mars-ish
-        />
-        <circle
-          className="planet"
-          id="planet2"
-          cx="300"
-          cy="140"
-          r="8"
-          fill="#4ecdc4" // Neptune-ish
-        />
-        <circle
-          className="planet"
-          id="planet3"
-          cx="300"
-          cy="100"
-          r="6"
-          fill="#f7d794" // Saturn-ish
-        />
-        <circle
-          className="planet"
-          id="planet4"
-          cx="300"
-          cy="60"
-          r="5"
-          fill="#a8e6cf" // Uranus-;)
-        />
+        <circle className="planet" id="planet1" cx="300" cy="180" r="6" />
+        <circle className="planet" id="planet2" cx="300" cy="140" r="8" />
+        <circle className="planet" id="planet3" cx="300" cy="100" r="6" />
+        <circle className="planet" id="planet4" cx="300" cy="60" r="5" />
       </svg>
     </div>
   );

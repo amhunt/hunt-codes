@@ -184,7 +184,7 @@ const useStars = (
   const [isAnimationEnabled, setIsAnimationEnabled] = useState(false);
 
   useEffect(() => {
-    setTimeout(() => setIsAnimationEnabled(true), 3000);
+    setTimeout(() => setIsAnimationEnabled(true), 2000);
 
     if (!isAnimationEnabled || pageVisibilityState === "hidden") return;
 
@@ -337,12 +337,12 @@ function Stars({ isLanding }: { isLanding: boolean }) {
   );
   const [debouncedCursorGravityRadiusPx] = useDebounce(
     cursorGravityRadiusPx,
-    500
+    300
   );
   const stars = useStars(isLanding, debouncedCursorGravityRadiusPx);
   const [hasMounted, setHasMounted] = useState(false);
   useEffect(() => {
-    const timeout = setTimeout(() => setHasMounted(true), 500);
+    const timeout = setTimeout(() => setHasMounted(true), 300);
     return () => clearTimeout(timeout);
   }, []);
 
@@ -363,7 +363,10 @@ function Stars({ isLanding }: { isLanding: boolean }) {
     <>
       <div
         className="stars-container"
-        style={{ filter: hasMounted ? "blur(0)" : "blur(5px)" }}
+        style={{
+          filter: hasMounted ? "blur(0)" : "blur(5px)",
+          opacity: hasMounted ? 1 : 0,
+        }}
       >
         {backgroundStars.map((star, starIdx) => (
           <StarDot key={starIdx} star={star} as="div" />
@@ -373,7 +376,10 @@ function Stars({ isLanding }: { isLanding: boolean }) {
         className="stars-container"
         height="100%"
         width="100%"
-        style={{ filter: hasMounted ? "blur(0)" : "blur(5px)" }}
+        style={{
+          filter: hasMounted ? "blur(0)" : "blur(5px)",
+          opacity: hasMounted ? 1 : 0,
+        }}
       >
         {textStars.map((star, starIdx) => (
           <StarDot

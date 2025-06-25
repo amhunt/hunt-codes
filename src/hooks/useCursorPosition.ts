@@ -18,6 +18,15 @@ export const useCursorPosition = (throttleMs: number = 16) => {
     setCursorPosition({ x, y });
   }, throttleMs);
 
+  const getDocumentHasFocus = useCallback(() => {
+    return document.hasFocus();
+  }, []);
+
+  const throttledGetDocumentHasFocus = useThrottledCallback(
+    getDocumentHasFocus,
+    200
+  );
+
   const getCursorXY = useCallback(
     (e: MouseEvent) => {
       const cursorPositionX = window.Event
@@ -43,5 +52,7 @@ export const useCursorPosition = (throttleMs: number = 16) => {
     };
   }, [getCursorXY]);
 
-  return visibilityState === "hidden" ? null : cursorPosition;
+  return visibilityState === "hidden" || !throttledGetDocumentHasFocus()
+    ? null
+    : cursorPosition;
 };
