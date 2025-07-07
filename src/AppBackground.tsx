@@ -48,7 +48,7 @@ const AppBackground = ({ showBridge }: { showBridge: boolean }) => {
       {musicEnabled ? (
         <audio
           controlsList="nodownload"
-          autoPlay
+          // autoPlay
           loop
           className={cx(
             "z-[10000] fixed bottom-4 left-4",

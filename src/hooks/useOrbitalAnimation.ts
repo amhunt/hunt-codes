@@ -51,14 +51,7 @@ export const useOrbitalAnimation = (centerX: number, centerY: number) => {
 
         planet.element.setAttribute("cx", x.toString());
         planet.element.setAttribute("cy", y.toString());
-        if (planet.id === "planet1") {
-          console.log(
-            "planet",
-            planet.id,
-            anglesRef.current[planet.angleKey],
-            anglesRef.current[planet.angleKey] / 360
-          );
-        }
+
         const xModAngle = anglesRef.current[planet.angleKey] % 360;
         const xModAnglePercent = xModAngle / 360;
         // The closer to 0 or 360, the further right the cx percent should be
@@ -73,11 +66,6 @@ export const useOrbitalAnimation = (centerX: number, centerY: number) => {
           // This value (w/o the 0.25 addition) ranges from 0 to .5
           (yModAnglePercent > 0.5 ? 1 - yModAnglePercent : yModAnglePercent) +
           0.25;
-        if (planet.id === "planet1") {
-          console.log("cxPercent", cxPercent);
-          console.log("cyPercent", cyPercent);
-        }
-
         // Set each gradient's cx and cy to be based on the planet's position in relation to the sun / centerX and centerY
         const gradient = document.getElementById(
           `${planet.id}Gradient`

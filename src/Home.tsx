@@ -9,7 +9,7 @@ import Typed from "typed.js";
 import cx from "classnames";
 
 import Logo from "./Logo";
-import { ChevronLeft, GitHub, Linkedin, Mail, Star } from "react-feather";
+import { GitHub, Linkedin, Mail, Star } from "react-feather";
 import useWindowSize from "./useWindowSize";
 import { useCursorPosition } from "./hooks/useCursorPosition";
 
@@ -118,8 +118,6 @@ const Home = () => {
           className={cx("flex transition-transform items-center gap-1 mt-4")}
           to="/"
         >
-          <ChevronLeft size={16} />
-          Stars
           <Star className="starIcon" size={16} />
         </Link>
       </div>

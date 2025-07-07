@@ -169,10 +169,10 @@ export function SunInternals({
             fill: black;
             font-weight: 400;
             transition: fill 0.1s;
+            text-decoration: underline;
 
             &:hover {
               fill: #7400b3;
-              text-decoration: underline;
             }
           }
 
@@ -233,7 +233,7 @@ export default function SunSvg({
                   fontSize="20px"
                   vectorEffect="non-scaling-size"
                 >
-                  about me 👋
+                  about me
                 </tspan>
               </Link>
               <a

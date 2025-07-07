@@ -46,7 +46,6 @@ $breakpoint-lg: 1280px;
       &:hover {
         .svg-link-tspan {
           fill: $purp-light;
-          text-decoration: underline;
         }
       }
     }
@@ -54,6 +53,7 @@ $breakpoint-lg: 1280px;
       fill: white;
       font-weight: 400;
       transition: fill 0.1s;
+      text-decoration: underline;
     }
   }
 }
@@ -194,12 +194,14 @@ p {
   position: absolute;
   left: 16px;
   z-index: 5;
-  color: $purp;
 
   > a {
     color: $purp;
+    padding: 4px;
+    border-radius: 50%;
 
     &:hover {
+      background: $purp-light-transparent-25;
       > .starIcon {
         fill: $purp;
       }
@@ -1010,4 +1012,32 @@ $STAR_MOVEMENT_INTERVAL_MS: 300;
 
 #solar-system {
   animation-delay: 4s;
+}
+
+// Planet label styles
+.planet-label {
+  pointer-events: none;
+  user-select: none;
+  opacity: 0.8;
+  text-shadow: 0 0 8px rgba(255, 255, 255, 0.3);
+  font-weight: 600;
+  letter-spacing: 1px;
+
+  // Ensure text is visible against the background
+  mix-blend-mode: normal;
+
+  // Add a subtle glow effect
+  filter: drop-shadow(0 0 4px rgba(255, 255, 255, 0.2));
+
+  > textPath {
+    margin-bottom: -24px;
+  }
+}
+
+.orbit-path {
+  stroke: #aa00dd48;
+  stroke-width: 2;
+  stroke-dasharray: 10;
+  stroke-dashoffset: 10;
+  fill: transparent;
 }
