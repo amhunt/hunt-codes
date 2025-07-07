@@ -1,10 +1,42 @@
 import React from "react";
 import { Link } from "react-router-dom";
 import { SunInternals } from "SunSvg";
-import { useOrbitalAnimation } from "./hooks/useOrbitalAnimation";
+import {
+  PLANET_CONFIGS,
+  useOrbitalAnimation,
+} from "./hooks/useOrbitalAnimation";
 
 const CENTER_X = 300;
 const CENTER_Y = 300;
+
+const PlanetLabel = ({
+  id,
+  href,
+  children,
+}: {
+  id: string;
+  href: string;
+  children: React.ReactNode;
+}) => {
+  return (
+    <text
+      dominantBaseline="middle"
+      textAnchor="middle"
+      fontFamily="'Inconsolata', monospace"
+      className="planet-label"
+    >
+      <textPath
+        id={id}
+        href={href}
+        startOffset="25%"
+        fill="white"
+        fontSize="14px"
+      >
+        {children}
+      </textPath>
+    </text>
+  );
+};
 
 const Landing = () => {
   useOrbitalAnimation(CENTER_X, CENTER_Y);
@@ -42,9 +74,9 @@ const Landing = () => {
           </radialGradient>
         </defs>
 
-        <Link className="sun-link" to="/home">
+        <Link to="/home">
           <SunInternals size={0.25} radiusOffset={243} strokeWidth={0} />
-          <text fontFamily="'Inconsolata', monospace" id="sunEnterText">
+          <text fontFamily="'Inconsolata', monospace">
             <textPath
               fill="white"
               pointerEvents="fill"
@@ -62,10 +94,113 @@ const Landing = () => {
             </textPath>
           </text>
         </Link>
-        <circle className="planet" id="planet1" cx="300" cy="180" r="6" />
-        <circle className="planet" id="planet2" cx="300" cy="140" r="8" />
-        <circle className="planet" id="planet3" cx="300" cy="100" r="6" />
-        <circle className="planet" id="planet4" cx="300" cy="60" r="5" />
+
+        <path
+          id="orbit1"
+          className="orbit-path"
+          fill="transparent"
+          stroke={`#aa00dd48`}
+          strokeWidth={1}
+          d={`
+          M ${CENTER_X - PLANET_CONFIGS[0].orbit},${CENTER_X}
+          a ${PLANET_CONFIGS[0].orbit},${PLANET_CONFIGS[0].orbit} 0 1,1 ${PLANET_CONFIGS[0].orbit * 2},2
+          a ${PLANET_CONFIGS[0].orbit},${PLANET_CONFIGS[0].orbit} 0 1,1 ${-PLANET_CONFIGS[0].orbit * 2},2
+        `}
+        />
+
+        <path
+          id="orbit2"
+          className="orbit-path"
+          fill="transparent"
+          stroke={`#aa00dd48`}
+          strokeWidth={1}
+          d={`
+          M ${CENTER_X - PLANET_CONFIGS[1].orbit},${CENTER_X}
+          a ${PLANET_CONFIGS[1].orbit},${PLANET_CONFIGS[1].orbit} 0 1,1 ${PLANET_CONFIGS[1].orbit * 2},2
+          a ${PLANET_CONFIGS[1].orbit},${PLANET_CONFIGS[1].orbit} 0 1,1 ${-PLANET_CONFIGS[1].orbit * 2},2
+        `}
+        />
+
+        <path
+          id="orbit3"
+          className="orbit-path"
+          fill="transparent"
+          stroke={`#aa00dd48`}
+          strokeWidth={1}
+          d={`
+          M ${CENTER_X - PLANET_CONFIGS[2].orbit},${CENTER_X}
+          a ${PLANET_CONFIGS[2].orbit},${PLANET_CONFIGS[2].orbit} 0 1,1 ${PLANET_CONFIGS[2].orbit * 2},2
+          a ${PLANET_CONFIGS[2].orbit},${PLANET_CONFIGS[2].orbit} 0 1,1 ${-PLANET_CONFIGS[2].orbit * 2},2
+        `}
+        />
+
+        <path
+          id="orbit4"
+          className="orbit-path"
+          fill="transparent"
+          stroke={`#aa00dd48`}
+          strokeWidth={1}
+          d={`
+          M ${CENTER_X - PLANET_CONFIGS[3].orbit},${CENTER_X}
+          a ${PLANET_CONFIGS[3].orbit},${PLANET_CONFIGS[3].orbit} 0 1,1 ${PLANET_CONFIGS[3].orbit * 2},2
+          a ${PLANET_CONFIGS[3].orbit},${PLANET_CONFIGS[3].orbit} 0 1,1 ${-PLANET_CONFIGS[3].orbit * 2},2
+        `}
+        />
+
+        {/* Planets */}
+        <circle
+          className="planet"
+          id="planet1"
+          cx="300"
+          cy={PLANET_CONFIGS[0].orbit}
+          r="4"
+        />
+        <circle
+          className="planet"
+          id="planet2"
+          cx="300"
+          cy={PLANET_CONFIGS[1].orbit}
+          r="8"
+        />
+        <circle
+          className="planet"
+          id="planet3"
+          cx="300"
+          cy={PLANET_CONFIGS[2].orbit}
+          r="6"
+        />
+        <circle
+          className="planet"
+          id="planet4"
+          cx="300"
+          cy={PLANET_CONFIGS[3].orbit}
+          r="5"
+        />
+
+        {/* Curved text labels trailing behind each planet */}
+        {PLANET_CONFIGS.map((planet, index) => (
+          <PlanetLabel
+            key={planet.id}
+            id={`${planet.id}Label`}
+            href={`#orbit${index + 1}`}
+          >
+            {planet.content}
+          </PlanetLabel>
+        ))}
+
+        <style>
+          {`        .planet-label {
+            pointer-events: all;
+            font-size: 20px;
+            transform-origin: center;
+            animation-timing-function: ease-in-out;
+            // animation: sun-rotate 20s linear infinite;
+            &:hover {
+              animation-play-state: paused;
+            }
+          }
+            `}
+        </style>
       </svg>
     </div>
   );

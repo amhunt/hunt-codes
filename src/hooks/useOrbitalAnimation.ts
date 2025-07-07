@@ -8,6 +8,41 @@ interface Planet {
   angleKey: string;
 }
 
+export const PLANET_CONFIGS = [
+  {
+    id: "planet1",
+    orbit: 100,
+    content: " ",
+    speed: 2,
+    angleKey: "angle1",
+    textNameOffset: 30,
+  },
+  {
+    id: "planet2",
+    orbit: 160,
+    content: "WORLD",
+    speed: 1.8,
+    angleKey: "angle2",
+    textNameOffset: 28.5,
+  },
+  {
+    id: "planet3",
+    orbit: 200,
+    content: "HELLO",
+    speed: 1.9,
+    angleKey: "angle3",
+    textNameOffset: 28.25,
+  },
+  {
+    id: "planet4",
+    orbit: 240,
+    content: " ",
+    speed: 1.4,
+    angleKey: "angle4",
+    textNameOffset: 27.4,
+  },
+];
+
 // Pre-calculate constants
 const DEG_TO_RAD = Math.PI / 180;
 const FRAME_RATE_NORMALIZER = 1 / 60;
@@ -29,8 +64,8 @@ export const useOrbitalAnimation = (centerX: number, centerY: number) => {
         planets.push({
           element: planet,
           id: `planet${i}`,
-          orbit: i * 40 + 80, // ORBIT_1: 120, ORBIT_2: 160, ORBIT_3: 200, etc.
-          speed: -i * 0.412 + 2, // Increasing speeds: 0.5, 0.9, 1.3, 1.7
+          orbit: PLANET_CONFIGS[i - 1].orbit,
+          speed: PLANET_CONFIGS[i - 1].speed,
           angleKey: `angle${i}`,
         });
         anglesRef.current[`angle${i}`] = 0;
@@ -42,7 +77,7 @@ export const useOrbitalAnimation = (centerX: number, centerY: number) => {
       lastTime = currentTime;
       const normalizedDelta = deltaTime * FRAME_RATE_NORMALIZER;
 
-      planets.forEach((planet) => {
+      planets.forEach((planet, planetIndex) => {
         anglesRef.current[planet.angleKey] += planet.speed * normalizedDelta;
         const rad = anglesRef.current[planet.angleKey] * DEG_TO_RAD;
 
@@ -74,6 +109,17 @@ export const useOrbitalAnimation = (centerX: number, centerY: number) => {
           // Set the gradient's cx and cy to be a % based on the planet's angle in relation to the sun / centerX and centerY
           gradient.setAttribute("cx", `${cxPercent * 100}%`);
           gradient.setAttribute("cy", `${cyPercent * 100}%`);
+        }
+
+        const label = document.getElementById(
+          `${planet.id}Label`
+        ) as unknown as SVGTextElement;
+        if (label) {
+          // Set offset of label to be right behind the planet
+          label.setAttribute(
+            "startOffset",
+            `${(yModAnglePercent * 100 - PLANET_CONFIGS[planetIndex].textNameOffset) % 100}%`
+          );
         }
       });
 
