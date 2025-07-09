@@ -9,7 +9,7 @@ const isSafari =
 
 export function SunInternals({
   size = 1,
-  radiusOffset = 50,
+  radiusOffset = 75,
   strokeWidth = 24,
 }: {
   size?: number;
@@ -17,8 +17,8 @@ export function SunInternals({
   strokeWidth?: number;
 }) {
   // Base radius values that will be scaled
-  const innerRadius = 200 * size;
-  const outerRadius = 225 * size;
+  const innerRadius = 175 * size;
+  const outerRadius = 200 * size;
   const center = outerRadius + radiusOffset;
 
   return (
@@ -226,7 +226,7 @@ export default function SunSvg({
         >
           {isHome && (
             <>
-              <Link to="/about">
+              <Link className="planet-emoji" to="/about">
                 <tspan
                   dx={isSmall ? "35%" : "5%"}
                   className="svg-link-tspan"
@@ -235,7 +235,16 @@ export default function SunSvg({
                 >
                   about me
                 </tspan>
+                <tspan
+                  className="planet-emoji"
+                  fontSize="28px"
+                  dx="1%"
+                  dy="6px"
+                >
+                  🪐
+                </tspan>
               </Link>
+
               <a
                 target="_blank"
                 rel="noopener noreferrer"
@@ -244,12 +253,16 @@ export default function SunSvg({
                 <tspan
                   className="svg-link-tspan"
                   vectorEffect="non-scaling-size"
-                  fontSize="14px"
-                  dx={isSmall ? "5%" : "8%"}
+                  fontSize="12px"
+                  dx={isSmall ? "-12%" : "8%"}
+                  dy={isSmall ? "-64px" : "-6px"}
                 >
-                  {isSmall ? "Zip blog" : "latest blog post"}
+                  {isSmall ? "Zip blog" : "recent blog post"}
                 </tspan>
               </a>
+              <tspan fontSize="20px" dx="1%" dy="4px">
+                🌎
+              </tspan>
               <a
                 target="_blank"
                 rel="noopener noreferrer"
@@ -258,17 +271,15 @@ export default function SunSvg({
                 <tspan
                   className="svg-link-tspan"
                   vectorEffect="non-scaling-size"
-                  fontSize="14px"
+                  fontSize="12px"
+                  dy={isSmall ? "16px" : "-4px"}
                   dx={isSmall ? "5%" : "8%"}
                 >
                   {isSmall ? "old blog" : "old personal blog"}
                 </tspan>
               </a>
-              <tspan fontSize="28px" dx="45%" dy="-24px">
-                🪐
-              </tspan>
-              <tspan fontSize="28px" dx="20%" dy="16px">
-                🌎
+              <tspan fontSize="20px" dx="1%" dy={isSmall ? "4px" : "4px"}>
+                🌚
               </tspan>
             </>
           )}

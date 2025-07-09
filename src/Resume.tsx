@@ -7,12 +7,12 @@ import useWindowSize from "useWindowSize";
 
 const experienceItems = [
   {
-    title: "Software Engineer, ZipHQ",
+    title: "Software Engineer, Zip",
     location: "San Francisco",
     date: "2021 - Present",
     description: [
-      "Build new features and pages across the product",
-      "Lead efforts to standardize and improve shared components",
+      "Develop, ship, and iterate on new product features",
+      "Lead initiatives to standardize and improve shared components",
       {
         item: "Dev infra – CI/Quality/Dev experience:",
         subbullets: [
@@ -21,10 +21,10 @@ const experienceItems = [
           "Built FE/BE logging system with Segment",
         ],
       },
-      "Manage build & deploy systems: Architected much of frontend build+deploy systems across Webpack, Jenkins, Docker, S3, Cloudflare, and Webflow",
-      "Build & maintain frontend infra: dev server, HMR, logging, sourcemaps, TS/React usage, third-party package usage/maintenance",
+      "Architect and manage build & deploy systems across Webpack, Jenkins, Docker, S3, Cloudflare, and Webflow",
+      "Build & maintain frontend infrastructure: dev server, Storybook, testing, logging, sourcemaps, TS/React usage, third-party package usage/maintenance",
       "TypeScript: enabled TypeScript in repo and led migration of frontend code to 99% coverage",
-      "Performance: reduced page load times by 50%, primarily via code splitting (70% reduction in core bundle size) and routing optimizations",
+      "Performance: Improved page load times by >50%, primarily via code splitting and routing optimizations",
     ],
   },
   {
@@ -32,8 +32,8 @@ const experienceItems = [
     location: "San Francisco",
     date: "2020 - 2021",
     description: [
-      "Built out Recruiter Analytics platform",
-      "Introduced TypeScript to the codebase and evangelized",
+      "Developed and launched Recruiter Analytics platform",
+      "Introduced and evangelized TypeScript",
       "Led frontend platform group, overseeing all quality and performance initiatives",
       "Improved core app performance by 40%",
     ],
@@ -44,9 +44,9 @@ const experienceItems = [
     date: "2017 - 2020",
     description: [
       "Built dozens of pricing and availability features across Experiences host and guest products",
-      "Ran >20 A/B tests, resulting in a compound bookings increase of >10% for the Experiences product",
-      "Planned and executed on performance initiatives, reducing load times by >30% on 10+ pages",
-      "Oversaw conversion of legacy code to TypeScript, evangelized best practices across org",
+      "Executed 20+ A/B tests, resulting in a compound bookings increase of >10% for the Experiences product",
+      "Led and executed performance initiatives, reducing load times by >30% on 10+ pages",
+      "Led migration to TypeScript, evangelized best practices across org",
     ],
   },
   {
@@ -82,7 +82,7 @@ const Resume = () => {
       <div className="resume-inner-container">
         <Link
           className={cx(
-            "flex transition-transform items-center gap-4 mb-12 inverse xl:sticky xl:top-[200px] xl:-ml-16",
+            "back-to-home-link flex transition-transform items-center gap-4 mb-12 inverse xl:sticky xl:top-[200px] xl:-ml-16",
             !inView && isLarge && "-translate-x-32"
           )}
           to="/home"
@@ -91,7 +91,7 @@ const Resume = () => {
           Home
         </Link>
         <h1 ref={ref} className="mb-6">
-          About me
+          About Andrew
         </h1>
         <h4>
           Hey! I’m a frontend engineer based in San Francisco. I’m currently
@@ -114,28 +114,32 @@ const Resume = () => {
           .
         </h4>
         <div className="resume-divider" />
-        <h3>Work I’m passionate about:</h3>
+        <h3>A few things I care about:</h3>
         <ul className="hor-list">
           <li>
-            <div className="card-title">Dev infra</div>Investing in the
-            development process is often undervalued. Great DevX is a
-            prerequisite to quality UX and efficient product development.
+            <div className="card-title">Dev infrastructure</div>I believe it’s
+            difficult to overstate the importance of investing in the
+            development process. Great DevX is a prerequisite to quality UX and
+            efficient product development — this includes strong linters, fast
+            and thorough CI checks, and investment in AI tools to take the
+            burden of repetitive work off of engineers.
           </li>
           <li>
-            <div className="card-title">Component systems</div>A well-structured
-            and robust component system should accelerate design and engineering
-            work, reduce bugs, and create a consistent user experience.
+            <div className="card-title">Component systems</div>Investing in a
+            well-structured and robust component system will accelerate design
+            and engineering work, reduce bugs, and create a more consistent user
+            experience.
           </li>
           <li>
-            <div className="card-title">Product collaboration</div>I thrive when
-            working closely with designers + researchers to build delightful,
-            engaging web products.
+            <div className="card-title">Product collaboration</div>I excel when
+            collaborating closely with designers + researchers to build
+            delightful, engaging web products.
           </li>
           <li>
             <div className="card-title">Performance</div>
-            I’m committed to ensuring a speedy and responsive experience for
-            users. Performance can be a complex problem, and often needs to be
-            approached with both a data-driven and user-centric lens.
+            I’m passionate about delivering a lightning-fast, responsive user
+            experience. Performance can be a complex problem, and often needs to
+            be approached with both a data-driven and user-centric lens.
           </li>
         </ul>
         <div>
@@ -170,7 +174,11 @@ const Resume = () => {
                   ) : (
                     <>
                       {d.item}
-                      <ul>{d.subbullets?.map((s) => <li key={s}>{s}</li>)}</ul>
+                      <ul>
+                        {d.subbullets?.map((s) => (
+                          <li key={s}>{s}</li>
+                        ))}
+                      </ul>
                     </>
                   )}
                 </li>

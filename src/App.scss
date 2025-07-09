@@ -2,7 +2,7 @@ $purp: #412596;
 $purp-light: #9e80f9;
 $purp-light-transparent: #9674f999;
 $purp-light-transparent-25: #ab8ffd44;
-$green-light-transparent: #84ff5e25;
+$green-light-transparent: #20880035;
 
 // Breakpoints
 $breakpoint-sm: 768px;
@@ -99,6 +99,19 @@ audio {
     background: $green-light-transparent;
     padding: 16px;
     border-radius: 8px;
+    position: relative;
+
+    // Provides a slight glow to the text in the cards
+    ::before {
+      backdrop-filter: blur(2px);
+      border-radius: 8px;
+      opacity: 0.5;
+      padding: 16px;
+      box-shadow: 0 0 8px 0 rgba(0, 0, 0, 0.5);
+      content: " ";
+      position: absolute;
+      inset: 0;
+    }
   }
 }
 
@@ -180,7 +193,7 @@ p {
   opacity: 0;
 
   @media (min-width: $breakpoint-lg) {
-    right: calc(-5vw - 7.5vh + 100px);
+    right: calc(-7.5vw - 7.5vh + 100px);
     transform: translateX(-50%);
     font-size: 24px;
   }
@@ -275,6 +288,10 @@ p {
 
   &.on {
     opacity: 1;
+
+    @media (max-width: $breakpoint-sm) {
+      opacity: 0.75;
+    }
     animation: 1.25s ease-in 0.25s both nightfall;
   }
 
@@ -524,14 +541,34 @@ li > ul > li {
 
   .logoComponent {
     &.logo1 {
-      width: 200px;
-      padding-top: 32px;
+      width: 140px;
+      padding-top: 48px;
       padding-right: 32px;
     }
 
     &.logo2 {
-      width: 140px;
+      width: 100px;
     }
+  }
+
+  #rainbow-text {
+    opacity: 0.5;
+  }
+
+  .back-to-home-link {
+    // This is all for a slight background behind the link so that it's always legible
+    backdrop-filter: blur(10px);
+    border-radius: 16px;
+    padding: 8px;
+    margin: -8px;
+    width: min-content;
+    background: linear-gradient(
+      to bottom,
+      transparent,
+      #002d1965 30%,
+      #002d1965 70%,
+      transparent
+    );
   }
 }
 
@@ -1040,4 +1077,8 @@ $STAR_MOVEMENT_INTERVAL_MS: 300;
   stroke-dasharray: 10;
   stroke-dashoffset: 10;
   fill: transparent;
+}
+
+.planet-emoji {
+  text-decoration: none !important;
 }

@@ -105,13 +105,15 @@ const Home = () => {
 
   return (
     <>
-      <div
-        ref={leftHalfEl}
-        className="logoWrapper flex items-center justify-center pointer-events-none"
-        style={{ opacity: logoOpacity ? 1 : 0 }}
-      >
-        <Logo {...(!isSmall ? logoPositioningProps : null)} />
-      </div>
+      {!isSmall && (
+        <div
+          ref={leftHalfEl}
+          className="logoWrapper flex items-center justify-center pointer-events-none"
+          style={{ opacity: logoOpacity ? 1 : 0 }}
+        >
+          <Logo {...(!isSmall ? logoPositioningProps : null)} />
+        </div>
+      )}
 
       <div className="homePageBackLink">
         <Link
@@ -125,7 +127,7 @@ const Home = () => {
         <p className="hoverableHomeItem gap-8 justify-between">
           <div className="flex items-center gap-1">
             <span>
-              Currently building{" "}
+              Most recently at{" "}
               <a
                 target="_blank"
                 rel="noopener noreferrer"
@@ -182,12 +184,14 @@ const Home = () => {
         {/* Moved to computer for large screens */}
         {/* {isMdOrLess && ( */}
         <p className="h-20 hoverableHomeItem gap-0">
-          <span
-            ref={typedEl}
-            id="typed-js"
-            className="typed font-bold"
-            aria-description="email address: andrew@hunt.codes"
-          />
+          <div>
+            <span
+              ref={typedEl}
+              id="typed-js"
+              className="typed font-bold"
+              aria-description="email address: andrew@hunt.codes"
+            />
+          </div>
           <div id="typed-strings">
             <p>hey there!</p>
             <p>interested in working together?</p>
