@@ -241,7 +241,7 @@ export default function SunSvg({
                   dx="1%"
                   dy="6px"
                 >
-                  🪐
+                  🌎
                 </tspan>
               </Link>
 
@@ -261,7 +261,7 @@ export default function SunSvg({
                 </tspan>
               </a>
               <tspan fontSize="20px" dx="1%" dy="4px">
-                🌎
+                🪐
               </tspan>
               <a
                 target="_blank"
