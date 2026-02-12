@@ -2,36 +2,106 @@
 <html lang="en">
   <head>
     <meta charset="utf-8" />
+
+    <!-- Primary Meta Tags -->
+    <title>Andrew Hunt - Frontend Engineer | San Francisco</title>
     <meta
-      name="Description"
-      content="Andrew Hunt, Software Developer. Andrew Hunt is a Software Engineer based in San Francisco"
+      name="description"
+      content="Andrew Hunt is a frontend engineer based in San Francisco, specializing in web development."
     />
+    <meta
+      name="keywords"
+      content="Andrew Hunt, Frontend Engineer, Software Engineer, San Francisco, Web Development, JavaScript, React, Contractor, Freelancer"
+    />
+    <meta name="author" content="Andrew Hunt" />
+    <meta name="robots" content="index, follow" />
+    <meta name="googlebot" content="index, follow" />
+
+    <!-- Canonical URL -->
+    <link rel="canonical" href="https://hunt.codes" />
+
+    <!-- Open Graph / Facebook -->
+    <meta property="og:type" content="website" />
+    <meta property="og:url" content="https://hunt.codes" />
+    <meta
+      property="og:title"
+      content="Andrew Hunt - Frontend Engineer | San Francisco"
+    />
+    <meta
+      property="og:description"
+      content="Andrew Hunt is a Frontend Engineer based in San Francisco, specializing in web development and modern JavaScript frameworks."
+    />
+    <meta property="og:image" content="https://hunt.codes/og-image.png" />
+    <meta property="og:image:width" content="1200" />
+    <meta property="og:image:height" content="630" />
+    <meta property="og:site_name" content="Andrew Hunt" />
+    <meta property="og:locale" content="en_US" />
+
+    <!-- Twitter -->
+    <meta property="twitter:card" content="summary_large_image" />
+    <meta property="twitter:url" content="https://hunt.codes" />
+    <meta
+      property="twitter:title"
+      content="Andrew Hunt - Frontend Engineer | San Francisco"
+    />
+    <meta
+      property="twitter:description"
+      content="Andrew Hunt is a software engineer based in San Francisco, specializing in web development."
+    />
+    <meta property="twitter:image" content="https://hunt.codes/og-image.png" />
+    <meta property="twitter:creator" content="@andrew_hunt" />
+
+    <!-- Favicon and Icons -->
     <link rel="shortcut icon" href="/favicon.ico" />
+    <link rel="icon" type="image/png" sizes="32x32" href="/favicon-32x32.png" />
+    <link rel="icon" type="image/png" sizes="16x16" href="/favicon-16x16.png" />
+    <link rel="apple-touch-icon" href="/apple-touch-icon.png" />
+
+    <!-- Preconnect for Performance -->
     <link rel="preconnect" href="https://s3-us-west-2.amazonaws.com" />
     <link rel="preconnect" href="https://www.google-analytics.com" />
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+
+    <!-- Viewport and Theme -->
     <meta
       name="viewport"
       content="width=device-width, initial-scale=1, shrink-to-fit=no"
     />
     <meta name="theme-color" content="#000000" />
-    <!--
-      manifest.json provides metadata used when your web app is installed on a
-      user's mobile device or desktop. See https://developers.google.com/web/fundamentals/web-app-manifest/
-    -->
-    <link rel="manifest" href="/manifest.json" />
-    <!--
-      Notice the use of %PUBLIC_URL% in the tags above.
-      It will be replaced with the URL of the `public` folder during the build.
-      Only files inside the `public` folder can be referenced from the HTML.
+    <meta name="msapplication-TileColor" content="#000000" />
 
-      Unlike "/favicon.ico" or "favicon.ico", "%PUBLIC_URL%/favicon.ico" will
-      work correctly both with client-side routing and a non-root public URL.
-      Learn how to configure a non-root public URL by running `npm run build`.
-    -->
-    <title>Andrew Hunt</title>
-    <!-- Global site tag (gtag.js) - Google Analytics -->
+    <!-- Manifest -->
+    <link rel="manifest" href="/manifest.json" />
+
+    <!-- Structured Data -->
+    <script type="application/ld+json">
+      {
+        "@context": "https://schema.org",
+        "@type": "Person",
+        "name": "Andrew Hunt",
+        "jobTitle": "Frontend Engineer",
+        "description": "Software Engineer based in San Francisco, currently focused on web development",
+        "url": "https://hunt.codes",
+        "image": "https://hunt.codes/og-image.png",
+        "sameAs": [
+          "https://github.com/andrew-hunt",
+          "https://linkedin.com/in/andrew-hunt"
+        ],
+        "address": {
+          "@type": "PostalAddress",
+          "addressLocality": "San Francisco",
+          "addressRegion": "CA",
+          "addressCountry": "US"
+        },
+        "worksFor": {
+          "@type": "Organization",
+          "name": "Self-employed"
+        }
+      }
+    </script>
+
+    <!-- Google Analytics -->
     <script
       async
       src="https://www.googletagmanager.com/gtag/js?id=UA-163185291-1"
@@ -46,7 +116,10 @@
     </script>
   </head>
   <body>
-    <noscript>this isn't 1987: u need javascript to run this app.</noscript>
+    <noscript
+      >This website requires JavaScript to function properly. Please enable
+      JavaScript to continue.</noscript
+    >
     <div id="root"></div>
     <!--
       This HTML file is a template.

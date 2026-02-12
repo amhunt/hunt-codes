@@ -57,7 +57,7 @@ const Home = () => {
 
   // show spinning logo after mount
   useEffect(() => {
-    const timeout = setTimeout(() => setLogoOpacity(1), 1000);
+    const timeout = setTimeout(() => setLogoOpacity(1), 3000);
     return () => clearTimeout(timeout);
   }, []);
 
@@ -124,19 +124,17 @@ const Home = () => {
         </Link>
       </div>
       <main className={cx("homeInfoContainer", logoOpacity === 1 && "show")}>
-        <p className="hoverableHomeItem gap-8 justify-between">
-          <div className="flex items-center gap-1">
-            <span>
-              Most recently at{" "}
-              <a
-                target="_blank"
-                rel="noopener noreferrer"
-                href="https://www.ziphq.com"
-              >
-                <b>Zip</b>
-              </a>
-            </span>
+        {isSmall && (
+          <div className="sm-screen-summary-line text-center max-w-[200px]">
+            Web development in San Francisco
           </div>
+        )}
+        <p className="hoverableHomeItem gap-6 justify-between">
+          {!isSmall && (
+            <div className="text-left bold text-lg max-w-[300px]">
+              Web development in San Francisco
+            </div>
+          )}
           <div className="flex items-center gap-1">
             <a
               aria-label="LinkedIn"

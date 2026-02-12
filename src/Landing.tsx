@@ -84,7 +84,7 @@ const Landing = () => {
               xlinkHref="#circle2"
             >
               <tspan
-                dx="10%"
+                dx="50px"
                 className="svg-link-tspan"
                 fontSize="22px"
                 vectorEffect="non-scaling-size"
