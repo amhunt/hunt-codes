@@ -10,6 +10,7 @@ import cx from "classnames";
 
 import Logo from "./Logo";
 import { GitHub, Linkedin, Mail, Star } from "react-feather";
+import { Wand2 } from "lucide-react";
 import useWindowSize from "./useWindowSize";
 import { useCursorPosition } from "./hooks/useCursorPosition";
 
@@ -88,7 +89,7 @@ const Home = () => {
       cursorMultiplier2,
       cursorRatioX,
       isMdOrLess,
-    ]
+    ],
   );
 
   const [copied, setCopied] = useState(false);
@@ -154,6 +155,22 @@ const Home = () => {
             >
               <GitHub size={20} />
             </a>
+            <TooltipProvider>
+              <Tooltip disableHoverableContent>
+                <TooltipTrigger>
+                  <Link
+                    aria-label="SVG Studio"
+                    to="/draw"
+                    className="flex transition-colors items-center justify-center w-8 h-8 p-1 rounded-full hover:bg-[#5efffc57]"
+                  >
+                    <Wand2 size={20} />
+                  </Link>
+                </TooltipTrigger>
+                <TooltipContent>
+                  <p>SVG Studio</p>
+                </TooltipContent>
+              </Tooltip>
+            </TooltipProvider>
             <TooltipProvider
               skipDelayDuration={0}
               delayDuration={0}

@@ -1092,3 +1092,330 @@ $STAR_MOVEMENT_INTERVAL_MS: 300;
 .planet-emoji {
   text-decoration: none !important;
 }
+
+// ─── SVG Generator Page ────────────────────────────────────
+
+.svg-generator-page {
+  position: fixed;
+  inset: 0;
+  z-index: 10;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow-y: auto;
+  padding: 24px;
+}
+
+.svg-generator-back-link {
+  position: fixed;
+  left: 16px;
+  top: 0;
+  z-index: 15;
+
+  > a {
+    color: $purp-light;
+    padding: 4px;
+    border-radius: 50%;
+
+    &:hover {
+      background: $purp-light-transparent-25;
+      > .starIcon {
+        fill: $purp-light;
+      }
+    }
+  }
+}
+
+.svg-generator-container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  width: 100%;
+  max-width: 720px;
+  animation: svgGenFadeIn 0.8s ease both;
+}
+
+@keyframes svgGenFadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(12px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.svg-generator-title {
+  font-family: "Inconsolata", monospace;
+  font-size: 32px;
+  font-weight: 700;
+  color: #fff;
+  margin: 0 0 4px;
+  letter-spacing: 2px;
+  text-shadow: 0 0 24px $purp-light-transparent;
+}
+
+.svg-generator-subtitle {
+  font-family: "Inconsolata", monospace;
+  font-size: 14px;
+  color: rgba(255, 255, 255, 0.8);
+  margin: 0 0 28px;
+  letter-spacing: 0.5px;
+}
+
+// API key section
+.svg-generator-api-key-section {
+  width: 100%;
+  margin-bottom: 12px;
+}
+
+.svg-generator-api-key-toggle {
+  font-family: "Inconsolata", monospace;
+  font-size: 12px;
+  color: rgba(255, 255, 255, 0.6) !important;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  padding: 4px 0;
+  text-decoration: none !important;
+  transition: color 0.2s ease;
+
+  &:hover {
+    color: rgba(200, 180, 255, 0.8) !important;
+    text-decoration: none !important;
+  }
+}
+
+.svg-generator-chevron {
+  display: inline-block;
+  transition: transform 0.2s ease;
+  font-size: 10px;
+}
+
+.svg-generator-api-key-input {
+  width: 100%;
+  margin-top: 6px;
+  padding: 10px 14px;
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 8px;
+  color: rgba(255, 255, 255, 0.6);
+  font-family: "Inconsolata", monospace;
+  font-size: 13px;
+  outline: none;
+  transition: border-color 0.2s;
+  box-sizing: border-box;
+
+  &:focus {
+    border-color: $purp-light-transparent;
+  }
+}
+
+// Prompt input row
+.svg-generator-input-row {
+  display: flex;
+  width: 100%;
+  gap: 8px;
+}
+
+.svg-generator-input {
+  flex: 1;
+  padding: 14px 18px;
+  background: rgba(255, 255, 255, 0.06);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  border-radius: 12px;
+  color: #fff;
+  font-family: "Inconsolata", monospace;
+  font-size: 16px;
+  outline: none;
+  transition:
+    border-color 0.2s,
+    box-shadow 0.2s;
+  box-sizing: border-box;
+
+  &::placeholder {
+    color: rgba(255, 255, 255, 0.3);
+  }
+
+  &:focus {
+    border-color: $purp-light-transparent;
+    box-shadow: 0 0 20px rgba(150, 116, 249, 0.15);
+  }
+
+  &:disabled {
+    opacity: 0.5;
+  }
+}
+
+.svg-generator-button {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 52px;
+  height: 52px;
+  border-radius: 12px;
+  background: linear-gradient(135deg, $purp, $purp-light);
+  border: none;
+  color: #fff !important;
+  cursor: pointer;
+  transition:
+    transform 0.15s,
+    box-shadow 0.2s,
+    opacity 0.2s;
+  flex-shrink: 0;
+
+  &:hover:not(:disabled) {
+    transform: scale(1.05);
+    box-shadow: 0 0 24px rgba(150, 116, 249, 0.4);
+    text-decoration: none !important;
+    color: #fff !important;
+  }
+
+  &:active:not(:disabled) {
+    transform: scale(0.97);
+  }
+
+  &:disabled {
+    opacity: 0.4;
+    cursor: not-allowed;
+  }
+}
+
+// Spinner
+.svg-generator-spinner {
+  width: 20px;
+  height: 20px;
+  border: 2px solid rgba(255, 255, 255, 0.3);
+  border-top-color: #fff;
+  border-radius: 50%;
+  animation: svgGenSpin 0.6s linear infinite;
+}
+
+@keyframes svgGenSpin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+// Error
+.svg-generator-error {
+  color: #ff6b6b;
+  font-family: "Inconsolata", monospace;
+  font-size: 13px;
+  margin-top: 12px;
+  text-align: center;
+}
+
+// Result area
+.svg-generator-result {
+  width: 100%;
+  margin-top: 32px;
+  min-height: 0;
+  transition: min-height 0.3s ease;
+
+  &.has-content,
+  &.is-loading {
+    min-height: 300px;
+  }
+}
+
+.svg-generator-loading {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 16px;
+  padding: 48px 0;
+
+  p {
+    font-family: "Inconsolata", monospace;
+    font-size: 14px;
+    color: rgba(255, 255, 255, 0.5);
+  }
+}
+
+.svg-generator-loading-dots {
+  display: flex;
+  gap: 8px;
+
+  span {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    background: $purp-light;
+    animation: svgGenDotPulse 1.4s ease-in-out infinite both;
+
+    &:nth-child(1) {
+      animation-delay: 0s;
+    }
+    &:nth-child(2) {
+      animation-delay: 0.16s;
+    }
+    &:nth-child(3) {
+      animation-delay: 0.32s;
+    }
+  }
+}
+
+@keyframes svgGenDotPulse {
+  0%,
+  80%,
+  100% {
+    transform: scale(0.6);
+    opacity: 0.4;
+  }
+  40% {
+    transform: scale(1);
+    opacity: 1;
+  }
+}
+
+// SVG display
+.svg-generator-svg-wrapper {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 24px;
+  background: rgba(0, 0, 0, 0.3);
+  border: 1px solid rgba(255, 255, 255, 0.06);
+  border-radius: 16px;
+  backdrop-filter: blur(8px);
+  animation: svgGenResultIn 0.5s ease both;
+
+  svg {
+    max-width: 100%;
+    max-height: 400px;
+    // Slow color cycling — hue rotates through the full spectrum
+    animation: svgGenColorCycle 18s linear infinite;
+  }
+}
+
+@keyframes svgGenResultIn {
+  from {
+    opacity: 0;
+    transform: scale(0.95);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+// Smooth hue + brightness + saturation cycling for the SVG
+@keyframes svgGenColorCycle {
+  0% {
+    filter: hue-rotate(0deg) brightness(1) saturate(1);
+  }
+  25% {
+    filter: hue-rotate(90deg) brightness(1.08) saturate(1.1);
+  }
+  50% {
+    filter: hue-rotate(180deg) brightness(1) saturate(0.95);
+  }
+  75% {
+    filter: hue-rotate(270deg) brightness(1.06) saturate(1.05);
+  }
+  100% {
+    filter: hue-rotate(360deg) brightness(1) saturate(1);
+  }
+}

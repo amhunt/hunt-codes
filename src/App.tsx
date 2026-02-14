@@ -4,6 +4,7 @@ import "./App.scss";
 
 import Home from "./Home";
 import Resume from "./Resume";
+import SvgGenerator from "./SvgGenerator";
 import AppBackground from "AppBackground";
 import Landing from "Landing";
 
@@ -64,6 +65,9 @@ const App = () => {
           </Route>
           <Route path="/about">
             <Resume />
+          </Route>
+          <Route path="/draw">
+            <SvgGenerator />
           </Route>
         </Switch>
       </Router>
