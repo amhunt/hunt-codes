@@ -47,11 +47,20 @@ export const PLANET_CONFIGS = [
 const DEG_TO_RAD = Math.PI / 180;
 const FRAME_RATE_NORMALIZER = 1 / 60;
 
-export const useOrbitalAnimation = (centerX: number, centerY: number) => {
+/**
+ * Legacy SVG planet animation. Only used as the no-WebGL fallback; the
+ * WebGL path animates planets (and the trailing labels) in SolarSystem3D.
+ */
+export const useOrbitalAnimation = (
+  centerX: number,
+  centerY: number,
+  enabled: boolean = true
+) => {
   const animationFrameRef = useRef<number | undefined>(undefined);
   const anglesRef = useRef<{ [key: string]: number }>({});
 
   useEffect(() => {
+    if (!enabled) return;
     const planets: Planet[] = [];
     let lastTime = performance.now();
 
@@ -133,5 +142,5 @@ export const useOrbitalAnimation = (centerX: number, centerY: number) => {
         cancelAnimationFrame(animationFrameRef.current);
       }
     };
-  }, [centerX, centerY]);
+  }, [centerX, centerY, enabled]);
 };

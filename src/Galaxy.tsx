@@ -2,6 +2,7 @@ import React, { useEffect, useState } from "react";
 import cx from "classnames";
 import MoonSvg from "./MoonSvg";
 import SunSvg from "./SunSvg";
+import supportsWebGL from "./three/webglSupport";
 
 const Galaxy = ({ isNightMode }: { isNightMode: boolean }) => {
   const [hasMounted, setHasMounted] = useState(false);
@@ -46,7 +47,7 @@ const Galaxy = ({ isNightMode }: { isNightMode: boolean }) => {
             !hasMounted ? "unmounted" : isNightMode ? "on" : "off"
           )}
         >
-          <MoonSvg />
+          <MoonSvg bodyRendered3D={supportsWebGL()} />
         </div>
       )}
     </div>

@@ -1,8 +1,18 @@
 import React from "react";
 
-export default function MoonSvg() {
+/**
+ * When bodyRendered3D is set, the disc fill goes transparent and the moon
+ * body is drawn as a 3D sphere in the background canvas (Moon3D tracks
+ * this SVG by id); the animated ring, text and eclipse overlay stay here.
+ */
+export default function MoonSvg({
+  bodyRendered3D = false,
+}: {
+  bodyRendered3D?: boolean;
+}) {
   return (
     <svg
+      id="moon-svg"
       width="550"
       height="550"
       viewBox="0 0 550 550"
@@ -18,7 +28,7 @@ export default function MoonSvg() {
     "
         strokeWidth={2}
         stroke="url(#paint0_linear_moon)"
-        fill="url(#paint0_radial_moon)"
+        fill={bodyRendered3D ? "transparent" : "url(#paint0_radial_moon)"}
       />
 
       <path

@@ -29,6 +29,14 @@ export default defineConfig([
     settings: { react: { version: "detect" } },
   },
   {
+    // react-three-fiber JSX elements take three.js properties (args,
+    // intensity, decay, ...) that the DOM-oriented rule doesn't know
+    files: ["src/three/**/*.{ts,tsx}"],
+    rules: {
+      "react/no-unknown-property": "off",
+    },
+  },
+  {
     files: ["**/*.{js,jsx,ts,tsx}"],
     plugins: {
       "unused-imports": pluginUnusedImports,

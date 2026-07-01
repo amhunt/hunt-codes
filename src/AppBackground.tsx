@@ -1,4 +1,4 @@
-import React, { useState, useEffect, memo } from "react";
+import React, { useState, useEffect, memo, lazy, Suspense } from "react";
 import { useLocation } from "react-router-dom";
 import cx from "classnames";
 
@@ -9,6 +9,10 @@ import useWindowSize from "useWindowSize";
 import { Music } from "react-feather";
 // import RetroMac from "./RetroMac";
 import Stars from "Stars";
+import supportsWebGL from "./three/webglSupport";
+
+// Loaded on demand so three.js ships as its own chunk
+const Space3DBackground = lazy(() => import("./three/Space3DBackground"));
 
 // Needed to get hover state on individual chars
 const andrewHunt = "andrewhunt";
@@ -24,6 +28,8 @@ const AppBackground = ({ showBridge }: { showBridge: boolean }) => {
   const isNightMode = !location.pathname.includes("home");
   const isHomePage = location.pathname.includes("home");
   const isLanding = location.pathname === "/" || location.pathname === "";
+  // WebGL background (stars + 3D planets); legacy DOM stars are the fallback
+  const webglEnabled = supportsWebGL();
   const [musicEnabled, setMusicEnabled] = useState(false);
 
   const [highlightedCharIdx, setHighlightedCharIdx] = useState(0);
@@ -107,11 +113,17 @@ const AppBackground = ({ showBridge }: { showBridge: boolean }) => {
         className={cx(
           "App-background",
           "App-background_night",
+          webglEnabled && "webgl",
           isNightMode ? "on" : "off"
         )}
       >
-        {isNightMode && <Stars isLanding={isLanding} />}
+        {!webglEnabled && isNightMode && <Stars isLanding={isLanding} />}
       </div>
+      {webglEnabled && (
+        <Suspense fallback={null}>
+          <Space3DBackground isNightMode={isNightMode} isLanding={isLanding} />
+        </Suspense>
+      )}
       {!isLanding && <Galaxy isNightMode={isNightMode} />}
       {isHomePage && (
         <>
