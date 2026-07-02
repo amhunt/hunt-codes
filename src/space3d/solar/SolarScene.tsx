@@ -3,6 +3,7 @@ import { Canvas } from "@react-three/fiber";
 
 import CameraRig, { type SolarView } from "./CameraRig";
 import Planet from "./Planet";
+import Moon from "./Moon";
 import Sun from "./Sun";
 import SunSvgAnchor from "./SunSvgAnchor";
 import { PLANETS } from "./constants";
@@ -48,6 +49,10 @@ const SolarScene = ({
           orbitOpacity={isNightMode ? 0.08 : 0.2}
         />
       ))}
+      <Moon
+        orbitColor={isNightMode ? "#ffffff" : "#141428"}
+        orbitOpacity={isNightMode ? 0.08 : 0.2}
+      />
       <CameraRig view={view} />
       <SunSvgAnchor />
     </Canvas>
