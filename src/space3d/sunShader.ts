@@ -3,9 +3,9 @@ import * as THREE from "three";
 /**
  * GLSL sun for the landing solar system. The SVG keeps the "enter" link
  * ring; this replaces the flat radial-gradient disc with an animated
- * plasma surface (value-noise fbm + limb darkening + granulation) and a
- * soft additive corona. Both materials take a single uTime uniform, ticked
- * from the render loop in SolarSystem3D.
+ * plasma surface (value-noise fbm + limb darkening + granulation) and an
+ * additive corona of uneven, animated flares. Both materials take a
+ * single uTime uniform, ticked from the render loop in Sun3D.
  *
  * Geometry convention: rendered on a unit circle whose uv is centered at
  * (0.5, 0.5), so the fragment shader works in p = (uv - 0.5) * 2, i.e.
@@ -25,6 +25,8 @@ const OMEGA = ((Math.PI * 2) / SUN_TIME_PERIOD).toFixed(8);
 
 /** Corona quad radius as a multiple of the sun surface radius. */
 export const SUN_CORONA_RATIO = 1.55;
+// Disc edge in the corona quad's normalized radius (baked into the shader)
+const CORONA_CORE = (1 / SUN_CORONA_RATIO).toFixed(5);
 /** Depth-occluder radius (hides GPU stars behind the disc + ring). */
 export const SUN_OCCLUDER_RATIO = 1.07;
 
@@ -120,7 +122,13 @@ const SURFACE_FRAGMENT = /* glsl */ `
 `;
 
 // The corona covers the largest screen area of the scene, so it gets a
-// cheaper 3-octave fbm — soft glow doesn't need the fine octaves.
+// cheaper 3-octave fbm — flares don't need the fine octaves.
+//
+// Not a halo: each direction around the limb gets its own flare length
+// from a noise field sampled on the direction circle (Cartesian dir, so no
+// atan wrap seam), and a second, faster field churns brightness through
+// the flares. Both fields drift on noise-space orbits, so the flares crawl
+// around the limb and flicker instead of sitting as a static ring.
 const CORONA_FRAGMENT = /* glsl */ `
   precision highp float;
   #define FBM_OCTAVES 3
@@ -135,20 +143,23 @@ const CORONA_FRAGMENT = /* glsl */ `
     float r = length(p);
     if (r > 1.0) discard;
 
-    // Radial falloff from the disc edge (r ~ 1/SUN_CORONA_RATIO) outward —
-    // deliberately tight and faint: a haze hugging the limb, not big flares
-    float glow = smoothstep(1.0, 0.52, r);
-    glow = pow(glow, 2.2);
+    // 0 at the disc edge -> 1 at the quad rim
+    float d = clamp((r - ${CORONA_CORE}) / (1.0 - ${CORONA_CORE}), 0.0, 1.0);
 
-    // Flickering licks of flame around the limb. Sampled in Cartesian
-    // space — an angular coordinate (atan) would put a seam where the
-    // angle wraps, since the value noise isn't periodic.
-    float flames = fbm(p * 3.2 + orbit(uTime, 4.8, 0.7));
-    glow *= 0.65 + 0.5 * flames;
+    // Per-direction flare length: constant along each radius (true spikes)
+    vec2 dir = p / max(r, 0.001);
+    float spikes = fbm(dir * 2.4 + orbit(uTime, 6.0, 0.7));
+    float reach = 0.3 + 0.7 * spikes;
+
+    float glow = pow(clamp(1.0 - d / reach, 0.0, 1.0), 2.1);
+
+    // Churn moving through the flares — squared for hot/dark contrast
+    float churn = fbm(p * 4.5 - orbit(uTime, 9.0, 2.9));
+    glow *= 0.3 + 1.2 * churn * churn;
 
     vec3 coronaColor = vec3(1.0, 0.55, 0.12);
     // Additive material: alpha scales the contribution
-    gl_FragColor = vec4(coronaColor, glow * 0.45 * uOpacity);
+    gl_FragColor = vec4(coronaColor, glow * 0.55 * uOpacity);
   }
 `;
 

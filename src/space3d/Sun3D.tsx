@@ -38,7 +38,7 @@ import { liveElementById, trackSvgById } from "./svgTracking";
  * precisely so this object never remounts mid-flight.
  *
  * Like Moon3D, the SVGs keep their decorative shells (the landing "enter"
- * ring, the home rays + orbiting links); only the disc fill is blanked
+ * ring, the home orbiting links); only the disc fill is blanked
  * while this scene renders, and restored whenever it goes away, so a slow
  * or failed three.js chunk never leaves a hollow sun.
  *
@@ -92,7 +92,7 @@ const Sun3D = ({ isNightMode }: { isNightMode: boolean }) => {
   const coronaMaterial = useMemo(() => createSunCoronaMaterial(), []);
 
   const helpers = useMemo(() => {
-    /** Fade the SVG trim (rays + orbiting links) with the flight/dive. */
+    /** Fade the SVG trim (the orbiting links) with the flight/dive. */
     const setTrimOpacity = (value: number | null) => {
       trimElsRef.current.forEach((el) => {
         el.style.opacity = value == null ? "" : String(value);
@@ -119,7 +119,7 @@ const Sun3D = ({ isNightMode }: { isNightMode: boolean }) => {
       adoptedRef.current = root;
       adoptedIsHomeRef.current = isHome;
       // On home the flag (+ the .planet1_day:has rule) pins the container
-      // at rest so the CSS rise/set can't double-move the rays layer. On
+      // at rest so the CSS rise/set can't double-move the links layer. On
       // the landing svg the flag belongs to SolarSystem3D (planets/labels)
       // — leave it alone there.
       if (isHome) root.setAttribute(RENDERED_3D_FLAG, "1");
@@ -128,7 +128,7 @@ const Sun3D = ({ isNightMode }: { isNightMode: boolean }) => {
         if (el) el.style.fill = "transparent";
       });
       trimElsRef.current = isHome
-        ? (["#circle-stroke", "#sunText"]
+        ? (["#sunText"]
             .map((sel) => root.querySelector<SVGElement>(sel))
             .filter(Boolean) as SVGElement[])
         : [];
@@ -266,7 +266,7 @@ const Sun3D = ({ isNightMode }: { isNightMode: boolean }) => {
         tRef.current = Math.min(1, tRef.current + delta / FLY_S);
         const e = easeInOutCubic(tRef.current);
         spot = lerpSpot(flyFromRef.current, target.spot, e);
-        // Rays + links fade in with the arriving sun
+        // The orbiting links fade in with the arriving sun
         if (adoptedIsHomeRef.current) helpers.setTrimOpacity(e);
         if (tRef.current >= 1) {
           modeRef.current = "glue";

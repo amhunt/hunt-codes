@@ -421,7 +421,7 @@ p {
 // While the WebGL sun owns the disc (space3d/Sun3D flags the svg), the 3D
 // scene drives all sun motion — the flight from the landing page, the rise
 // from below, the dive at nightfall — so pin the container at rest; the
-// CSS rise/set above would double-move the rays/links layer the shader sun
+// CSS rise/set above would double-move the links layer the shader sun
 // is glued to. Without WebGL the flag is never set and the CSS runs.
 .planet1_day:has(> svg[data-rendered-3d]) {
   opacity: 1;

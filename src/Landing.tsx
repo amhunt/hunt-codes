@@ -80,11 +80,7 @@ const Landing = () => {
         </defs>
 
         <Link to="/home">
-          <SunInternals
-            size={SUN_SIZE}
-            radiusOffset={SUN_RADIUS_OFFSET}
-            strokeWidth={0}
-          />
+          <SunInternals size={SUN_SIZE} radiusOffset={SUN_RADIUS_OFFSET} />
           <text fontFamily="'Inconsolata', monospace">
             <textPath
               fill="white"

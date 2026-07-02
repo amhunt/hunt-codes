@@ -21,11 +21,9 @@ const isSafari =
 export function SunInternals({
   size = 1,
   radiusOffset = 75,
-  strokeWidth = 24,
 }: {
   size?: number;
   radiusOffset?: number;
-  strokeWidth?: number;
 }) {
   // Base radius values that will be scaled
   const innerRadius = 175 * size;
@@ -34,19 +32,6 @@ export function SunInternals({
 
   return (
     <>
-      <path
-        id="circle-stroke"
-        d={`
-          M ${center - innerRadius},${center}
-          a ${innerRadius},${innerRadius} 0 1,1 ${innerRadius * 2},2
-          a ${innerRadius},${innerRadius} 0 1,1 ${-innerRadius * 2},2
-        `}
-        stroke="url(#sun-rays-gradient)"
-        strokeWidth={`${strokeWidth}px`}
-        fill="none"
-        vectorEffect="non-scaling-stroke"
-        strokeDasharray={`${4 * size} ${36 * size}`}
-      />
       <path
         id="circle-bg"
         d={`
@@ -97,14 +82,6 @@ export function SunInternals({
           <stop offset="0.75" stopColor="#ffd900"></stop>
           <stop offset="1" stopColor="#ff7b15" />
         </radialGradient>
-        <linearGradient
-          id="sun-rays-gradient"
-          gradientUnits="userSpaceOnUse"
-          gradientTransform="skewX(20) translate(-35, 0)"
-        >
-          <stop stopColor="#ebb000" />
-          <stop offset="1" stopColor="#d26003" />
-        </linearGradient>
         <filter
           id="heavycloud"
           colorInterpolationFilters="sRGB"
