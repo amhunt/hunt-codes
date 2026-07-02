@@ -23,6 +23,11 @@ import * as THREE from "three";
 export const SUN_TIME_PERIOD = 120;
 const OMEGA = ((Math.PI * 2) / SUN_TIME_PERIOD).toFixed(8);
 
+/** Corona quad radius as a multiple of the sun surface radius. */
+export const SUN_CORONA_RATIO = 1.55;
+/** Depth-occluder radius (hides GPU stars behind the disc + ring). */
+export const SUN_OCCLUDER_RATIO = 1.07;
+
 // Hash-based 2D value noise + fbm. Cheap, tileable enough for a churning
 // surface, and no texture lookups. FBM_OCTAVES is #defined per shader
 // (WebGL1 needs constant loop bounds).
@@ -91,17 +96,19 @@ const SURFACE_FRAGMENT = /* glsl */ `
     float n2 = fbm(p * 6.0 - orbit(uTime, 1.4, 2.1));
     float turb = mix(n1, n2, 0.5);
 
-    // Warm ramp from deep orange (edge) through gold to a near-white core
+    // Warm ramp from deep orange (edge) through gold to a warm-cream core.
+    // The core stops well short of white so the surface reads matte rather
+    // than shiny.
     vec3 deep = vec3(0.82, 0.28, 0.02);
     vec3 gold = vec3(1.0, 0.72, 0.06);
-    vec3 hot = vec3(1.0, 0.95, 0.72);
-    float heat = clamp(turb * 0.85 + (1.0 - r) * 0.7, 0.0, 1.0);
+    vec3 hot = vec3(1.0, 0.86, 0.5);
+    float heat = clamp(turb * 0.8 + (1.0 - r) * 0.55, 0.0, 1.0);
     vec3 color = mix(deep, gold, smoothstep(0.15, 0.6, heat));
-    color = mix(color, hot, smoothstep(0.62, 1.0, heat));
+    color = mix(color, hot, smoothstep(0.7, 1.05, heat));
 
     // Darker granulation cells + a couple of drifting sunspots
     float cells = fbm(p * 10.0 + orbit(uTime, 1.2, 4.2));
-    color *= 0.82 + 0.18 * cells;
+    color *= 0.78 + 0.22 * cells;
 
     // Limb darkening toward the rim
     color *= 0.55 + 0.45 * pow(1.0 - r * r, 0.6);
@@ -128,19 +135,20 @@ const CORONA_FRAGMENT = /* glsl */ `
     float r = length(p);
     if (r > 1.0) discard;
 
-    // Radial falloff from the disc edge (r ~ CORE/CORONA) outward
-    float glow = smoothstep(1.0, 0.42, r);
-    glow = pow(glow, 1.6);
+    // Radial falloff from the disc edge (r ~ 1/SUN_CORONA_RATIO) outward —
+    // deliberately tight and faint: a haze hugging the limb, not big flares
+    float glow = smoothstep(1.0, 0.52, r);
+    glow = pow(glow, 2.2);
 
     // Flickering licks of flame around the limb. Sampled in Cartesian
     // space — an angular coordinate (atan) would put a seam where the
     // angle wraps, since the value noise isn't periodic.
     float flames = fbm(p * 3.2 + orbit(uTime, 4.8, 0.7));
-    glow *= 0.6 + 0.7 * flames;
+    glow *= 0.65 + 0.5 * flames;
 
     vec3 coronaColor = vec3(1.0, 0.55, 0.12);
     // Additive material: alpha scales the contribution
-    gl_FragColor = vec4(coronaColor, glow * 0.85 * uOpacity);
+    gl_FragColor = vec4(coronaColor, glow * 0.45 * uOpacity);
   }
 `;
 

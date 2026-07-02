@@ -94,15 +94,13 @@ export const RENDERED_3D_FLAG = "data-rendered-3d";
 export const SUN_SIZE = 0.25;
 export const SUN_RADIUS_OFFSET = 243;
 export const SUN_CENTER = 200 * SUN_SIZE + SUN_RADIUS_OFFSET;
-// Covers the sun disc (inner radius ~44) so GPU stars don't draw over it
-export const SUN_OCCLUDER_RADIUS = 47;
 
-// Element ids inside the landing sun (SunInternals, rendered in Landing.tsx).
-// The WebGL shader sun (space3d/sunShader) blanks these fills while it
-// renders and restores them if it goes away — the same swap Moon3D does for
-// the moon disc. Keep in sync with the ids in SunSvg.tsx.
+// Element ids inside SunInternals (rendered by both the landing SVG and the
+// home SunSvg — never simultaneously). The WebGL sun (space3d/Sun3D) blanks
+// these fills, scoped to whichever sun svg it is glued to, and restores
+// them if it goes away. Keep in sync with the ids in SunSvg.tsx.
 export const SUN_CORE_ID = "circle-bg";
 export const SUN_CLOUD_ID = "circle3";
-// Shader-sun geometry, in viewBox units (~the SVG core inner radius)
+// Landing sun disc radius in viewBox units (~the SVG core inner radius,
+// 175 * SUN_SIZE)
 export const SUN_SURFACE_RADIUS = 44;
-export const SUN_CORONA_RADIUS = 110;

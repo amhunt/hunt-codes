@@ -2,6 +2,17 @@ import React from "react";
 import { Link } from "react-router-dom";
 import useWindowWidth from "useWindowWidth";
 
+// Geometry of the home sun disc, exported for the WebGL sun (space3d/Sun3D)
+// that tracks this SVG and replaces the disc fill with a shader while it is
+// rendering — the same hand-off MoonSvg does for the moon. Values assume the
+// default size=1 (Galaxy renders it that way). Keep in sync with
+// SunInternals' innerRadius/center math below.
+export const HOME_SUN_SVG_ID = "home-sun-svg";
+export const HOME_SUN_VIEWBOX = 550;
+export const HOME_SUN_CX = 275;
+export const HOME_SUN_CY = 276;
+export const HOME_SUN_RADIUS = 175;
+
 const isSafari =
   navigator.userAgent.indexOf("Safari") > -1 &&
   // Chrome also has "Safari" in its user-agent string
@@ -210,6 +221,7 @@ export default function SunSvg({
 
   return (
     <svg
+      id={isHome ? HOME_SUN_SVG_ID : undefined}
       width={550 * size}
       height={550 * size}
       viewBox={`0 0 ${550 * size} ${550 * size}`}
