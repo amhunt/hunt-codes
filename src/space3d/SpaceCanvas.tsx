@@ -20,7 +20,6 @@ export const domToWorldY = (y: number, viewportHeight: number) =>
 // Scene depth layout (world z). Stars sit at the back; occluders and
 // opaque bodies in front of them cull stars via the depth buffer.
 export const Z_STARS = 0;
-export const Z_OCCLUDER = 40;
 export const Z_BODIES = 60;
 
 const SpaceCanvas = ({ children }: { children: React.ReactNode }) => {

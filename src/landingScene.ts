@@ -80,7 +80,6 @@ export const PLANET_CONFIGS: LandingPlanetConfig[] = [
 ];
 
 export const SOLAR_SYSTEM_SVG_ID = "solar-system";
-export const SOLAR_SYSTEM_VIEWBOX = 600;
 export const SOLAR_SYSTEM_CENTER = 300;
 
 /**
