@@ -36,19 +36,29 @@ export default function Sun({
   const mesh = useRef<THREE.Mesh>(null);
   const glow = useRef<THREE.Sprite>(null);
   const materialRef = useRef<THREE.MeshBasicMaterial>(null);
+  const spotsMaterialRef = useRef<THREE.MeshBasicMaterial>(null);
   const texture = useMemo(() => createSunTexture(), []);
+  // A second, independently-random blotch layer: crossfading it in and
+  // out over the base makes the surface spots slowly shift
+  const spotsTexture = useMemo(() => createSunTexture(), []);
   const glowTexture = useMemo(() => createSunGlowTexture(), []);
 
   useEffect(
     () => () => {
       texture.dispose();
+      spotsTexture.dispose();
       glowTexture.dispose();
     },
-    [texture, glowTexture],
+    [texture, spotsTexture, glowTexture],
   );
 
-  useFrame((_, delta) => {
+  useFrame(({ clock }, delta) => {
     if (mesh.current) mesh.current.rotation.y += delta * 0.04;
+    if (spotsMaterialRef.current) {
+      // Slow morph between the two blotch patterns (~30s round trip)
+      spotsMaterialRef.current.opacity =
+        0.5 + 0.5 * Math.sin((clock.elapsedTime * Math.PI * 2) / 30);
+    }
     const ease = Math.min(1, delta * 2.5);
     if (group.current) {
       const current = group.current.scale.x;
@@ -63,11 +73,15 @@ export default function Sun({
       glow.current.scale.set(next, next, 1);
     }
     if (materialRef.current) {
-      // Ease the brightness so the mode toggle doesn't pop
+      // Ease the brightness so the mode toggle doesn't pop; the spot
+      // layer follows the same tint or the crossfade would pulse dark
       materialRef.current.color.lerp(
         isNightMode ? NIGHT_TINT : DAY_TINT,
         ease,
       );
+      if (spotsMaterialRef.current) {
+        spotsMaterialRef.current.color.copy(materialRef.current.color);
+      }
     }
   });
 
@@ -76,6 +90,18 @@ export default function Sun({
       <mesh ref={mesh}>
         <sphereGeometry args={[SUN_RADIUS, 64, 64]} />
         <meshBasicMaterial ref={materialRef} map={texture} toneMapped={false} />
+        {/* Crossfading spot layer, drawn just over the base surface */}
+        <mesh scale={1.001} renderOrder={1}>
+          <sphereGeometry args={[SUN_RADIUS, 64, 64]} />
+          <meshBasicMaterial
+            ref={spotsMaterialRef}
+            map={spotsTexture}
+            toneMapped={false}
+            transparent
+            opacity={0}
+            depthWrite={false}
+          />
+        </mesh>
       </mesh>
       {/* soft corona billboard */}
       <sprite ref={glow} scale={[SUN_RADIUS * 6, SUN_RADIUS * 6, 1]}>
