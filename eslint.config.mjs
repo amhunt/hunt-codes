@@ -29,6 +29,13 @@ export default defineConfig([
     settings: { react: { version: "detect" } },
   },
   {
+    // Ambient declaration files legitimately use triple-slash directives
+    files: ["**/*.d.ts"],
+    rules: {
+      "@typescript-eslint/triple-slash-reference": "off",
+    },
+  },
+  {
     // react-three-fiber JSX elements take three.js properties (args,
     // intensity, decay, ...) that the DOM-oriented rule doesn't know
     files: ["src/space3d/**/*.{ts,tsx}"],

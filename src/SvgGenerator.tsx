@@ -198,8 +198,8 @@ const SvgGenerator = () => {
       }
 
       setSvgContent(svg);
-    } catch (err: any) {
-      setError(err.message || "Failed to generate SVG");
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Failed to generate SVG");
     } finally {
       setLoading(false);
     }
