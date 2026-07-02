@@ -2,7 +2,7 @@ import React, { useEffect, useMemo, useRef } from "react";
 import { useFrame } from "@react-three/fiber";
 import * as THREE from "three";
 
-import { planetPosition, SolarPlanetConfig } from "./constants";
+import { planetPosition, type SolarPlanetConfig } from "./constants";
 import { createPlanetTexture } from "../textures";
 
 /**

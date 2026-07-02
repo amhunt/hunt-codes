@@ -1,7 +1,7 @@
 import React from "react";
 import { Canvas } from "@react-three/fiber";
 
-import CameraRig, { SolarView } from "./CameraRig";
+import CameraRig, { type SolarView } from "./CameraRig";
 import Planet from "./Planet";
 import Sun from "./Sun";
 import SunSvgAnchor from "./SunSvgAnchor";

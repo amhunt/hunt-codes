@@ -1,15 +1,7 @@
-import tailwindcss from "tailwindcss";
-import postcssPresetEnv from "postcss-preset-env";
+import tailwindcss from "@tailwindcss/postcss";
 
+// Tailwind v4 handles nesting and vendor prefixing itself via Lightning CSS,
+// so its PostCSS plugin is the only entry the pipeline needs.
 export default {
-  ident: "postcss",
-  plugins: [
-    tailwindcss,
-    postcssPresetEnv({
-      autoprefixer: {
-        flexbox: "no-2009",
-      },
-      stage: 3,
-    }),
-  ],
+  plugins: [tailwindcss],
 };

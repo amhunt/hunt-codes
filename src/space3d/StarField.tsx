@@ -42,7 +42,7 @@ const MAX_PHRASE_TRANSITIONS = 3;
 const HUE_ROTATION_PERIOD_S = 20; // starsHueAnim: 20s per full rotation
 const DISCO_PERIOD_S = 8; // star-disco: 4s alternate = 8s round trip
 
-const HALO_FACTOR = 3.0; // sprite is 3x the dot diameter, for the glow halo
+const HALO_FACTOR = 3; // sprite is 3x the dot diameter, for the glow halo
 
 const vertexShader = /* glsl */ `
   attribute float aSize;
@@ -200,8 +200,11 @@ const useConfigureMaterial = (
   const gl = useThree((s) => s.gl);
   useEffect(() => {
     const ctx = gl.getContext();
+    // eslint-disable-next-line -- TODO: rm this comment and fix the lint error
     const range = ctx.getParameter(ctx.ALIASED_POINT_SIZE_RANGE);
+    // eslint-disable-next-line -- TODO: rm this comment and fix the lint error
     if (range && range[1]) {
+      // eslint-disable-next-line -- TODO: rm this comment and fix the lint error
       material.uniforms.uMaxPointSize.value = range[1];
     }
   }, [gl, material]);

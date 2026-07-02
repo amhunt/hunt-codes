@@ -26,7 +26,7 @@ const TRANSITION_SECONDS = 3.2;
 // wide), drifted slightly left; the sun is pinned a fixed fraction of
 // the viewport right of center.
 const HOME_CAM_BEHIND = 1.1; // from Earth's center, away from the sun
-const HOME_CAM_ABOVE = 2.0;
+const HOME_CAM_ABOVE = 2;
 const HOME_CAM_SIDE = 0.4; // camera right => Earth drifts screen-left
 const HOME_LOOK_HEIGHT = 2.1;
 /** Sun's horizontal screen position: +0.4 of the half-width = ~20vw right */

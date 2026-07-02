@@ -29,8 +29,7 @@ interface Props {
 
 function StarDot({ star, as = "circle", numCloseToCursor }: Props) {
   let starWidth = star.r;
-  if (star.distanceToCursor != null) {
-    if (star.distanceToCursor < STAR_TO_CURSOR_TRIGGER_DISTANCE_PX) {
+  if (star.distanceToCursor != null && star.distanceToCursor < STAR_TO_CURSOR_TRIGGER_DISTANCE_PX) {
       starWidth =
         (STAR_TO_CURSOR_TRIGGER_DISTANCE_PX_SQ_ROOT /
           Math.sqrt(star.distanceToCursor)) *
@@ -43,7 +42,6 @@ function StarDot({ star, as = "circle", numCloseToCursor }: Props) {
         starWidth = Math.max(starWidth, Math.min(numCloseToCursor / 16, 32));
       }
     }
-  }
 
   const className = cx(
     "star",

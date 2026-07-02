@@ -1,3 +1,23 @@
+/* CSS requires every @import to lead the file, so the webfont, Tailwind, and
+   the animation utilities are grouped here ahead of everything else. */
+@import url('https://fonts.googleapis.com/css2?family=Inconsolata:wght@300;400;500;600;700;900&display=swap');
+@import "tailwindcss";
+@import "tw-animate-css";
+
+/* Keep driving the theme, dark-mode strategy, and plugins from the existing
+   JS config rather than porting them into @theme. */
+@config "../tailwind.config.js";
+
+@font-face {
+  font-family: "infini";
+  src: url("./infini-regular.woff");
+}
+
+@font-face {
+  font-family: "nova-mono";
+  src: url("./NovaMono-Regular.ttf");
+}
+
 body {
   margin: 0;
   padding: 0;
@@ -17,22 +37,6 @@ code {
   font-family: source-code-pro, Menlo, Monaco, Consolas, "Courier New",
     monospace;
 }
-
-@font-face {
-  font-family: "infini";
-  src: url("./infini-regular.woff");
-}
-
-@font-face {
-  font-family: "nova-mono";
-  src: url("./NovaMono-Regular.ttf");
-}
-
-@import url('https://fonts.googleapis.com/css2?family=Inconsolata:wght@300;400;500;600;700;900&display=swap');
-
-@tailwind base;
-@tailwind components;
-@tailwind utilities;
 
 @layer base {
   ul, ol, li {

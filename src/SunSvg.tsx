@@ -13,9 +13,9 @@ export const HOME_SUN_CY = 276;
 export const HOME_SUN_RADIUS = 175;
 
 const isSafari =
-  navigator.userAgent.indexOf("Safari") > -1 &&
+  navigator.userAgent.includes("Safari") &&
   // Chrome also has "Safari" in its user-agent string
-  navigator.userAgent.indexOf("Chrome") === -1;
+  !navigator.userAgent.includes("Chrome");
 
 export function SunInternals({
   size = 1,
