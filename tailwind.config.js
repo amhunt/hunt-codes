@@ -49,8 +49,7 @@ module.exports = {
     },
   },
   plugins: [
-    require("tailwindcss-animate"),
-
+    // Animation utilities now come from tw-animate-css, imported in index.css.
     plugin(function ({ addBase, theme }) {
       addBase({
         h1: { fontSize: theme("fontSize.3xl") },

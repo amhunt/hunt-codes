@@ -29,6 +29,7 @@ const usePauseAudioOnHideEventListener = () => {
       audio.pause();
     } else if (playingOnHide) {
       // Page became visible again - resume playing if audio was "playing on hide"
+      // eslint-disable-next-line -- TODO: rm this comment and fix the lint error
       audio.play();
     }
   }, []);
@@ -52,6 +53,7 @@ const App = () => {
 
   // fade home content in once mounted
   useEffect(() => {
+    // eslint-disable-next-line -- TODO: rm this comment and fix the lint error
     console.log("bro what r u doing in the console...");
     setTimeout(() => setShowBridge(true), 1500);
   }, []);

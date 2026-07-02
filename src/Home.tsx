@@ -27,7 +27,7 @@ const typedOptions = {
   autoInsertCss: false,
 };
 
-const isChrome = navigator.userAgent.indexOf("Chrome") > -1;
+const isChrome = navigator.userAgent.includes("Chrome");
 
 const Home = () => {
   const [logoOpacity, setLogoOpacity] = useState(0);
@@ -130,6 +130,7 @@ const Home = () => {
                   <button
                     aria-label="Copy email address"
                     aria-description="andrew+in@hunt.codes"
+                    // eslint-disable-next-line -- TODO: rm this comment and fix the lint error
                     onClick={() => handleCopy()}
                     className="flex size-8 items-center justify-center rounded-full p-1 transition-colors hover:bg-[#5efffc57]"
                   >
