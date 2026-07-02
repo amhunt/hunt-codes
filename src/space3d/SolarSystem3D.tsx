@@ -8,17 +8,31 @@ import {
   SOLAR_SYSTEM_SVG_ID,
   SOLAR_SYSTEM_VIEWBOX,
   SUN_CENTER,
+  SUN_CLOUD_ID,
+  SUN_CORE_ID,
+  SUN_CORONA_RADIUS,
   SUN_OCCLUDER_RADIUS,
+  SUN_SURFACE_RADIUS,
 } from "../landingScene";
 import { createPlanetTexture, createRingTexture } from "./textures";
+import {
+  createSunCoronaMaterial,
+  createSunSurfaceMaterial,
+  SUN_TIME_PERIOD,
+} from "./sunShader";
 import { domToWorldX, domToWorldY, Z_BODIES, Z_OCCLUDER } from "./SpaceCanvas";
 import { liveElementById, trackSvgById } from "./svgTracking";
 
 /**
- * 3D planets for the landing solar system. The sun, orbit paths and the
- * trailing text labels stay in the Landing SVG (the sun holds the "enter"
- * link); this scene tracks the SVG's on-screen box every frame and renders
- * the planets in the same coordinate space, so the two layers stay glued.
+ * 3D planets for the landing solar system. The orbit paths, trailing text
+ * labels and the sun's "enter" link ring stay in the Landing SVG; this
+ * scene tracks the SVG's on-screen box every frame and renders the planets
+ * in the same coordinate space, so the two layers stay glued.
+ *
+ * The sun's flat radial-gradient disc is swapped for a GLSL shader sun
+ * (animated plasma surface + additive corona, see ./sunShader): its fill
+ * is blanked imperatively on the first live frame and restored if the
+ * scene goes away, the same disc hand-off Moon3D does for the moon.
  *
  * The SVG's own flat planets are the always-on fallback: while this scene
  * is live it hides them (and flags the SVG so useOrbitalAnimation yields
@@ -35,15 +49,27 @@ export const RENDERED_3D_FLAG = "data-rendered-3d";
 
 const DEG_TO_RAD = Math.PI / 180;
 
+/** Restore the flat SVG sun fills the shader sun borrowed. */
+const restoreSunDisc = () => {
+  [SUN_CORE_ID, SUN_CLOUD_ID].forEach((id) => {
+    const el = document.getElementById(id) as SVGElement | null;
+    if (el) el.style.fill = "";
+  });
+};
+
 const SolarSystem3D = () => {
   const size = useThree((s) => s.size);
+  const gl = useThree((s) => s.gl);
   const groupRef = useRef<THREE.Group>(null);
   const planetRefs = useRef<(THREE.Group | null)[]>([]);
   const spinRefs = useRef<(THREE.Mesh | null)[]>([]);
   const lightRef = useRef<THREE.PointLight>(null);
   const occluderRef = useRef<THREE.Mesh>(null);
+  const sunSurfaceRef = useRef<THREE.Mesh>(null);
+  const sunCoronaRef = useRef<THREE.Mesh>(null);
   const anglesRef = useRef<number[] | null>(null);
   const takenOverRef = useRef(false);
+  const sunDiscTakenRef = useRef(false);
 
   const textures = useMemo(
     () => PLANET_CONFIGS.map((p) => createPlanetTexture(p.kind)),
@@ -75,6 +101,8 @@ const SolarSystem3D = () => {
       }),
     [ringTexture],
   );
+  const sunSurfaceMaterial = useMemo(() => createSunSurfaceMaterial(), []);
+  const sunCoronaMaterial = useMemo(() => createSunCoronaMaterial(), []);
 
   useEffect(
     () => () => {
@@ -82,8 +110,17 @@ const SolarSystem3D = () => {
       ringTexture.dispose();
       materials.forEach((m) => m.dispose());
       ringMaterial.dispose();
+      sunSurfaceMaterial.dispose();
+      sunCoronaMaterial.dispose();
     },
-    [textures, ringTexture, materials, ringMaterial],
+    [
+      textures,
+      ringTexture,
+      materials,
+      ringMaterial,
+      sunSurfaceMaterial,
+      sunCoronaMaterial,
+    ],
   );
 
   // Hand the planets/labels back to the SVG fallback on unmount
@@ -100,6 +137,22 @@ const SolarSystem3D = () => {
     [],
   );
 
+  // Give the sun disc's flat fill back to the SVG when the scene unmounts
+  useEffect(() => restoreSunDisc, []);
+
+  // If the WebGL context is lost the canvas stops drawing but this
+  // component stays mounted — hand the disc back so the sun isn't hollow.
+  // Resetting the flag re-blanks it once the context is restored.
+  useEffect(() => {
+    const canvas = gl.domElement;
+    const onLost = () => {
+      sunDiscTakenRef.current = false;
+      restoreSunDisc();
+    };
+    canvas.addEventListener("webglcontextlost", onLost);
+    return () => canvas.removeEventListener("webglcontextlost", onLost);
+  }, [gl]);
+
   useFrame((_, delta) => {
     const group = groupRef.current;
     if (!group) return;
@@ -108,6 +161,12 @@ const SolarSystem3D = () => {
     if (!tracked || !svg) {
       group.visible = false;
       takenOverRef.current = false;
+      if (sunDiscTakenRef.current) {
+        // A fresh sun SVG mount re-renders its gradient fill anyway; drop
+        // the flag so we re-blank it when the scene comes back
+        sunDiscTakenRef.current = false;
+        restoreSunDisc();
+      }
       return;
     }
     group.visible = true;
@@ -165,6 +224,37 @@ const SolarSystem3D = () => {
       occluderRef.current.visible = svgOpacity > 0.5;
     }
 
+    // Shader sun: sits just in front of the occluder so it draws over the
+    // (now-blanked) SVG disc. First live frame blanks the flat SVG fills.
+    if (svgOpacity > 0.01 && !sunDiscTakenRef.current) {
+      const core = document.getElementById(SUN_CORE_ID) as SVGElement | null;
+      const cloud = document.getElementById(SUN_CLOUD_ID) as SVGElement | null;
+      if (core) core.style.fill = "transparent";
+      if (cloud) cloud.style.fill = "transparent";
+      sunDiscTakenRef.current = true;
+    }
+    // Wrapped to the shader's noise-orbit period: keeps the uniform small
+    // enough for fp32 on a long-lived tab, and the wrap is seamless
+    const sunTime =
+      (sunSurfaceMaterial.uniforms.uTime.value + delta) % SUN_TIME_PERIOD;
+    sunSurfaceMaterial.uniforms.uTime.value = sunTime;
+    sunCoronaMaterial.uniforms.uTime.value = sunTime;
+    sunSurfaceMaterial.uniforms.uOpacity.value = svgOpacity;
+    sunCoronaMaterial.uniforms.uOpacity.value = svgOpacity;
+    // Don't cull stars behind the disc until it's mostly opaque (matches the
+    // occluder gating), else stars vanish behind an invisible sun
+    sunSurfaceMaterial.depthWrite = svgOpacity > 0.5;
+    if (sunSurfaceRef.current) {
+      sunSurfaceRef.current.position.set(sunX, sunY, Z_OCCLUDER + 1);
+      sunSurfaceRef.current.scale.setScalar(SUN_SURFACE_RADIUS * tracked.scale);
+      sunSurfaceRef.current.visible = svgOpacity > 0.01;
+    }
+    if (sunCoronaRef.current) {
+      sunCoronaRef.current.position.set(sunX, sunY, Z_OCCLUDER + 0.5);
+      sunCoronaRef.current.scale.setScalar(SUN_CORONA_RADIUS * tracked.scale);
+      sunCoronaRef.current.visible = svgOpacity > 0.01;
+    }
+
     const deltaMs = Math.min(delta * 1000, 100);
     PLANET_CONFIGS.forEach((planet, i) => {
       // Legacy loop: angle += speed * deltaMs / 60 (degrees)
@@ -206,6 +296,15 @@ const SolarSystem3D = () => {
       <mesh ref={occluderRef} renderOrder={-1}>
         <circleGeometry args={[1, 32]} />
         <meshBasicMaterial colorWrite={false} />
+      </mesh>
+      {/* Additive corona ring, behind the surface so the opaque disc masks
+          its center; depthTest keeps it from bleeding over the disc */}
+      <mesh ref={sunCoronaRef} material={sunCoronaMaterial} renderOrder={1}>
+        <circleGeometry args={[1, 64]} />
+      </mesh>
+      {/* GLSL sun surface, replacing the blanked SVG disc */}
+      <mesh ref={sunSurfaceRef} material={sunSurfaceMaterial} renderOrder={2}>
+        <circleGeometry args={[1, 64]} />
       </mesh>
       {PLANET_CONFIGS.map((planet, i) => (
         <group

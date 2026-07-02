@@ -96,3 +96,13 @@ export const SUN_RADIUS_OFFSET = 243;
 export const SUN_CENTER = 200 * SUN_SIZE + SUN_RADIUS_OFFSET;
 // Covers the sun disc (inner radius ~44) so GPU stars don't draw over it
 export const SUN_OCCLUDER_RADIUS = 47;
+
+// Element ids inside the landing sun (SunInternals, rendered in Landing.tsx).
+// The WebGL shader sun (space3d/sunShader) blanks these fills while it
+// renders and restores them if it goes away — the same swap Moon3D does for
+// the moon disc. Keep in sync with the ids in SunSvg.tsx.
+export const SUN_CORE_ID = "circle-bg";
+export const SUN_CLOUD_ID = "circle3";
+// Shader-sun geometry, in viewBox units (~the SVG core inner radius)
+export const SUN_SURFACE_RADIUS = 44;
+export const SUN_CORONA_RADIUS = 110;
