@@ -179,6 +179,150 @@ p {
   opacity: 1;
 }
 
+// Karl the Fog (GoldenGateFog.tsx). Two right-anchored banks around the
+// bridge: .gg-fog-back behind it (z 3), .gg-fog-front in front (z 5).
+// The inner .gg-fog-drift strip is 200% wide with a tile exactly the
+// layer's width (background-size 50%), so translating -50% of the strip
+// = one tile and the infinite drift loops seamlessly.
+.gg-fog-layer {
+  position: fixed;
+  right: 0;
+  bottom: -10px;
+  pointer-events: none;
+  overflow: hidden;
+  opacity: 0;
+  transition: opacity 1.5s ease;
+  // Fade the bank into the sky at its top and left edges
+  mask-image: linear-gradient(to top, black 45%, transparent 96%),
+    linear-gradient(to left, black 78%, transparent 99%);
+  mask-composite: intersect;
+  -webkit-mask-image: linear-gradient(to top, black 45%, transparent 96%),
+    linear-gradient(to left, black 78%, transparent 99%);
+  -webkit-mask-composite: destination-in;
+
+  &.on {
+    opacity: 1;
+  }
+}
+
+.gg-fog-back {
+  width: min(72vw, 1000px);
+  height: min(38vh, 270px);
+  z-index: 3;
+}
+
+.gg-fog-front {
+  width: min(60vw, 820px);
+  height: min(24vh, 170px);
+  z-index: 5;
+}
+
+.gg-fog-drift {
+  position: absolute;
+  inset: 0;
+  width: 200%;
+  background-repeat: repeat-x;
+  background-size: 50% 100%;
+  animation: gg-fog-drift linear infinite;
+}
+
+// Blobs are white-cored with gray-blue bodies: the day background fades
+// to pure white at the bottom, so pure-white fog would vanish — the cool
+// gray rim is what makes the puffs read against it (and stays neutral
+// under the background's starsHueAnim hue rotation).
+//
+// Periodicity: gradients clip at the tile boundary rather than wrapping,
+// so any blob whose reach (0.7 x its x-radius) crosses an edge gets a
+// duplicate shifted +/-100% — otherwise a hard vertical seam sweeps
+// across the bank once per drift loop.
+.gg-fog-back > .gg-fog-drift {
+  animation-duration: 90s;
+  background-image: radial-gradient(
+      ellipse 52% 48% at 18% 82%,
+      rgba(255, 255, 255, 0.95),
+      rgba(202, 214, 226, 0.85) 45%,
+      rgba(202, 214, 226, 0) 70%
+    ),
+    radial-gradient(
+      ellipse 52% 48% at 118% 82%,
+      rgba(255, 255, 255, 0.95),
+      rgba(202, 214, 226, 0.85) 45%,
+      rgba(202, 214, 226, 0) 70%
+    ),
+    radial-gradient(
+      ellipse 44% 42% at 52% 96%,
+      rgba(250, 252, 255, 0.9),
+      rgba(190, 204, 218, 0.8) 48%,
+      rgba(190, 204, 218, 0) 70%
+    ),
+    radial-gradient(
+      ellipse 58% 38% at 84% 78%,
+      rgba(255, 255, 255, 0.9),
+      rgba(206, 218, 229, 0.75) 46%,
+      rgba(206, 218, 229, 0) 70%
+    ),
+    radial-gradient(
+      ellipse 58% 38% at -16% 78%,
+      rgba(255, 255, 255, 0.9),
+      rgba(206, 218, 229, 0.75) 46%,
+      rgba(206, 218, 229, 0) 70%
+    ),
+    radial-gradient(
+      ellipse 38% 30% at 38% 58%,
+      rgba(222, 231, 240, 0.55),
+      rgba(222, 231, 240, 0) 70%
+    );
+}
+
+.gg-fog-front > .gg-fog-drift {
+  animation-duration: 48s;
+  background-image: radial-gradient(
+      ellipse 34% 55% at 14% 100%,
+      rgba(248, 251, 254, 0.7),
+      rgba(199, 212, 224, 0.55) 50%,
+      rgba(199, 212, 224, 0) 70%
+    ),
+    radial-gradient(
+      ellipse 34% 55% at 114% 100%,
+      rgba(248, 251, 254, 0.7),
+      rgba(199, 212, 224, 0.55) 50%,
+      rgba(199, 212, 224, 0) 70%
+    ),
+    radial-gradient(
+      ellipse 48% 45% at 58% 100%,
+      rgba(252, 254, 255, 0.65),
+      rgba(206, 218, 229, 0.5) 50%,
+      rgba(206, 218, 229, 0) 70%
+    ),
+    radial-gradient(
+      ellipse 28% 40% at 88% 92%,
+      rgba(246, 249, 253, 0.6),
+      rgba(196, 209, 222, 0.5) 50%,
+      rgba(196, 209, 222, 0) 70%
+    ),
+    radial-gradient(
+      ellipse 28% 40% at -12% 92%,
+      rgba(246, 249, 253, 0.6),
+      rgba(196, 209, 222, 0.5) 50%,
+      rgba(196, 209, 222, 0) 70%
+    );
+}
+
+@keyframes gg-fog-drift {
+  from {
+    transform: translateX(0);
+  }
+  to {
+    transform: translateX(-50%);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .gg-fog-drift {
+    animation: none;
+  }
+}
+
 .homeInfoContainer {
   position: fixed;
   color: #111;

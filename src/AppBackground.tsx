@@ -5,6 +5,7 @@ import cx from "classnames";
 import Galaxy from "./Galaxy";
 
 import GoldenGate from "./gg-bridge.png";
+import GoldenGateFog from "./GoldenGateFog";
 import useWindowSize from "useWindowSize";
 import { Music } from "react-feather";
 // import RetroMac from "./RetroMac";
@@ -175,6 +176,7 @@ const AppBackground = ({ showBridge }: { showBridge: boolean }) => {
             src={GoldenGate}
             alt="golden gate bridge"
           />
+          <GoldenGateFog visible={showBridge && !isNightMode} />
         </>
       )}
     </>
