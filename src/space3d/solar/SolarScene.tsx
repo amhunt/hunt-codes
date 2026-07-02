@@ -38,8 +38,9 @@ const SolarScene = ({
       gl={{ alpha: true, antialias: true }}
     >
       <ambientLight intensity={0.14} />
-      {/* The sun reads a bit larger on the home page */}
-      <Sun targetScale={view === "home" ? 1.4 : 1} />
+      {/* From the home sun-perch the full glow would fill the frame and
+          wash out the stars — shrink it to hug the limb there */}
+      <Sun targetGlowScale={view === "home" ? 2.5 : 6} />
       {PLANETS.map((planet) => (
         <Planet
           key={planet.name}
