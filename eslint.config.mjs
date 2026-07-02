@@ -31,7 +31,7 @@ export default defineConfig([
   {
     // react-three-fiber JSX elements take three.js properties (args,
     // intensity, decay, ...) that the DOM-oriented rule doesn't know
-    files: ["src/three/**/*.{ts,tsx}"],
+    files: ["src/space3d/**/*.{ts,tsx}"],
     rules: {
       "react/no-unknown-property": "off",
     },

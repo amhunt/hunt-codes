@@ -9,10 +9,10 @@ import useWindowSize from "useWindowSize";
 import { Music } from "react-feather";
 // import RetroMac from "./RetroMac";
 import Stars from "Stars";
-import supportsWebGL from "./three/webglSupport";
+import supportsWebGL from "./space3d/webglSupport";
 
 // Loaded on demand so three.js ships as its own chunk
-const Space3DBackground = lazy(() => import("./three/Space3DBackground"));
+const Space3DBackground = lazy(() => import("./space3d/Space3DBackground"));
 
 // Needed to get hover state on individual chars
 const andrewHunt = "andrewhunt";

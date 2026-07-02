@@ -2,7 +2,7 @@ import React, { useEffect, useState } from "react";
 import cx from "classnames";
 import MoonSvg from "./MoonSvg";
 import SunSvg from "./SunSvg";
-import supportsWebGL from "./three/webglSupport";
+import supportsWebGL from "./space3d/webglSupport";
 
 const Galaxy = ({ isNightMode }: { isNightMode: boolean }) => {
   const [hasMounted, setHasMounted] = useState(false);

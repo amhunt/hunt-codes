@@ -21,7 +21,7 @@ import {
   generateStarsForLetters as sampleStarsForLetters,
   starPhrases,
   starPhrasesSmall,
-} from "./three/starSampling";
+} from "./space3d/starSampling";
 
 const generateStarsForLetters = (text: string, windowWidth: number): StarT[] =>
   sampleStarsForLetters(text, windowWidth).map((star) => ({

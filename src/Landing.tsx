@@ -5,7 +5,7 @@ import {
   PLANET_CONFIGS,
   useOrbitalAnimation,
 } from "./hooks/useOrbitalAnimation";
-import supportsWebGL from "./three/webglSupport";
+import supportsWebGL from "./space3d/webglSupport";
 
 const CENTER_X = 300;
 const CENTER_Y = 300;
