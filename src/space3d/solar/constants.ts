@@ -58,7 +58,7 @@ export const PLANETS: SolarPlanetConfig[] = [
     orbitRadius: 17.5,
     orbitSpeed: 0.09,
     orbitPhase: 4.2,
-    spinSpeed: 0.35,
+    spinSpeed: 0.15,
   },
   {
     name: "Mars",
@@ -102,7 +102,10 @@ const moonEarthScratch = new THREE.Vector3();
 
 /** World position of the moon at elapsed time t = Earth's position + its
  *  own orbit around Earth. */
-export function moonPosition(t: number, out = new THREE.Vector3()): THREE.Vector3 {
+export function moonPosition(
+  t: number,
+  out = new THREE.Vector3(),
+): THREE.Vector3 {
   planetPosition(EARTH, t, moonEarthScratch);
   const a = MOON.orbitPhase + t * MOON.orbitSpeed;
   return out.set(
