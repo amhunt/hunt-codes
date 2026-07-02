@@ -47,11 +47,17 @@ for (const c of andrewHunt) {
   nameArr.push(c);
 }
 
-const AppBackground = ({ showBridge }: { showBridge: boolean }) => {
+const AppBackground = ({
+  showBridge,
+  isNightMode,
+}: {
+  showBridge: boolean;
+  /** User-toggled (App.tsx's moon/sun switch); night is the default */
+  isNightMode: boolean;
+}) => {
   const size = useWindowSize();
   const location = useLocation();
 
-  const isNightMode = !location.pathname.includes("home");
   const isHomePage = location.pathname.includes("home");
   const isLanding = location.pathname === "/" || location.pathname === "";
   // WebGL background (stars + 3D planets); legacy DOM stars are the fallback

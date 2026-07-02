@@ -15,6 +15,54 @@ $breakpoint-lg: 1280px;
   position: fixed;
 }
 
+// Day/night is a user toggle (App.tsx) rather than a per-route fact, so
+// every page can now render in either palette. These overrides keep text
+// readable in the combinations the original per-route styling never had
+// to handle: home content on a black night sky, and the night-designed
+// pages (landing, about, draw) on the light day gradient.
+.App.night {
+  .homeInfoContainer,
+  .sm-screen-summary-line {
+    color: #e8e6f5;
+  }
+
+  .homeInfoContainer a {
+    color: $purp-light;
+  }
+
+  .homePageBackLink > a {
+    color: $purp-light;
+  }
+}
+
+.App.day {
+  .resume-container {
+    color: #222;
+  }
+
+  .svg-generator-title,
+  .svg-generator-input {
+    color: #222;
+  }
+
+  .svg-generator-subtitle {
+    color: rgba(20, 20, 40, 0.7);
+  }
+
+  .svg-generator-input {
+    background: rgba(0, 0, 0, 0.05);
+    border-color: rgba(0, 0, 0, 0.15);
+  }
+
+  .landing-page svg .svg-link-tspan {
+    fill: $purp;
+  }
+
+  .planet-label textPath {
+    fill: $purp;
+  }
+}
+
 .landing-page {
   margin: auto;
   overflow: hidden;
