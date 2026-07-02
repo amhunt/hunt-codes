@@ -999,6 +999,37 @@ a:hover {
   box-shadow: 0 0 0 2px rgba(65, 37, 150, 0.45);
 }
 
+// Earth's /about ring: "About Andrew" curved over the projected Earth,
+// styled after the landing "enter" arc. The whole circle is the link.
+.earth-about-ring {
+  position: fixed;
+  visibility: hidden;
+  z-index: 3;
+  border-radius: 50%;
+  pointer-events: auto;
+  cursor: pointer;
+
+  .svg-link-tspan {
+    fill: #fff;
+  }
+
+  &:hover .svg-link-tspan,
+  &:focus-visible .svg-link-tspan {
+    fill: $purp-light;
+  }
+}
+
+.App.day .earth-about-ring {
+  .svg-link-tspan {
+    fill: $purp;
+  }
+
+  &:hover .svg-link-tspan,
+  &:focus-visible .svg-link-tspan {
+    fill: $purp-light;
+  }
+}
+
 .App-background_day {
   background: linear-gradient(
     168deg,
