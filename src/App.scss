@@ -26,6 +26,19 @@ $breakpoint-lg: 1280px;
     color: #e8e6f5;
   }
 
+  // The home sun's orbiting links now ring the distant 3D sun over dark
+  // space (they used to sit on the bright corner disc, hence the black)
+  #home-sun-svg .svg-link-tspan {
+    fill: #e8e6f5;
+
+    &:hover {
+      fill: #9e80f9;
+    }
+  }
+  #home-sun-svg #sunText textPath {
+    fill: #e8e6f5;
+  }
+
   .homeInfoContainer a {
     color: $purp-light;
   }
@@ -956,6 +969,16 @@ $STAR_MOVEMENT_INTERVAL_MS: 300;
   pointer-events: none;
 }
 
+// The perspective solar-system canvas; same stacking contract as
+// .space-canvas but later in the DOM, so the sun/planets draw over the
+// stars while page content (z 3+) stays on top
+.solar-canvas {
+  position: fixed;
+  inset: 0;
+  z-index: 2;
+  pointer-events: none;
+}
+
 .App-background_day {
   background: linear-gradient(
     168deg,
@@ -1313,7 +1336,8 @@ $STAR_MOVEMENT_INTERVAL_MS: 300;
   }
 }
 
-// Thin, solid, faint rings (hunt-codes-3 style)
+// Thin, solid, faint rings (hunt-codes-3 style) — the no-WebGL fallback;
+// the live 3D scene draws its own rings
 .orbit-path {
   stroke: rgba(255, 255, 255, 0.14);
   stroke-width: 1;
@@ -1322,6 +1346,18 @@ $STAR_MOVEMENT_INTERVAL_MS: 300;
 
 .App.day .orbit-path {
   stroke: rgba(20, 20, 40, 0.16);
+}
+
+// While the 3D solar scene owns the landing (SunSvgAnchor flags the svg
+// and glues it to the projected sun), the SVG keeps only the sun ring +
+// "enter" link; its fallback orbits, flat planets and labels would
+// double-render under the 3D ones
+#solar-system[data-rendered-3d] {
+  .orbit-path,
+  .planet,
+  .planet-label {
+    display: none;
+  }
 }
 
 .planet-emoji {

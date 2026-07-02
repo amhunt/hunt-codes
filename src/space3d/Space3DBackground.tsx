@@ -3,39 +3,48 @@ import React, { memo } from "react";
 import SpaceCanvas from "./SpaceCanvas";
 import StarField from "./StarField";
 import Moon3D from "./Moon3D";
-import Sun3D from "./Sun3D";
-import SolarSystem3D from "./SolarSystem3D";
+import SolarScene from "./solar/SolarScene";
 
 /**
  * Entry point for the WebGL background (lazy-loaded so three.js ships as
- * its own chunk). The shared canvas stays mounted across every route —
- * Sun3D is one persistent object that flies between the landing and home
- * suns, so unmounting the canvas mid-route-change would break the flight
- * (and the home page needs it for the day sun anyway). Scenes hide
- * themselves when their DOM anchor is absent, and StarField gates its
- * layers invisible once fully faded, so a day-mode canvas draws almost
- * nothing. New render-heavy scenes plug in here as children of
- * SpaceCanvas.
+ * its own chunk). Two canvases:
+ *
+ * - SpaceCanvas: the orthographic pixel-space layer (GPU stars, the moon
+ *   glued to its SVG). Mounted on every route.
+ * - SolarScene: the perspective solar system (hunt-codes-3's scene — sun,
+ *   orbiting planets, camera rig). Mounted on the landing + home routes;
+ *   the camera swoops between the top-down landing view and the
+ *   Earth-perch home view, and the sun's DOM rings follow the projection.
+ *
+ * Scenes hide themselves when their DOM anchor is absent, and StarField
+ * gates its layers invisible once fully faded, so a day-mode canvas
+ * draws almost nothing.
  */
 
 const Space3DBackground = ({
   isNightMode,
   isLanding,
+  isHomePage,
 }: {
   isNightMode: boolean;
   isLanding: boolean;
+  isHomePage: boolean;
 }) => {
   return (
-    <SpaceCanvas>
-      <StarField isLanding={isLanding} opacityTarget={isNightMode ? 1 : 0} />
-      {/* Moon3D tracks the #moon-svg element and hides itself while the
-          element is absent (landing page, day mode) */}
-      <Moon3D />
-      {/* THE sun — glued to whichever sun svg is on screen, flying to the
-          new spot when the page changes */}
-      <Sun3D />
-      {isLanding && <SolarSystem3D />}
-    </SpaceCanvas>
+    <>
+      <SpaceCanvas>
+        <StarField isLanding={isLanding} opacityTarget={isNightMode ? 1 : 0} />
+        {/* Moon3D tracks the #moon-svg element and hides itself while the
+            element is absent (landing/home pages, day mode) */}
+        <Moon3D />
+      </SpaceCanvas>
+      {(isLanding || isHomePage) && (
+        <SolarScene
+          view={isLanding ? "landing" : "home"}
+          isNightMode={isNightMode}
+        />
+      )}
+    </>
   );
 };
 

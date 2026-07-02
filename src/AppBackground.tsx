@@ -167,6 +167,7 @@ const AppBackground = ({
             <Space3DBackground
               isNightMode={isNightMode}
               isLanding={isLanding}
+              isHomePage={isHomePage}
             />
           </Suspense>
         </BackgroundErrorBoundary>
