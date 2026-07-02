@@ -58,7 +58,7 @@ export const PLANETS: SolarPlanetConfig[] = [
     orbitRadius: 17.5,
     orbitSpeed: 0.09,
     orbitPhase: 4.2,
-    spinSpeed: 0.35,
+    spinSpeed: 0.15,
   },
   {
     name: "Mars",
@@ -73,6 +73,17 @@ export const PLANETS: SolarPlanetConfig[] = [
 
 export const EARTH = PLANETS.find((p) => p.name === "Earth")!;
 
+/** Earth's moon — orbits Earth (not the sun), in the same XZ plane. */
+export const MOON = {
+  radius: 0.42,
+  /** orbit radius around Earth's center */
+  orbitRadius: 4,
+  /** radians per second — slow, so the /about camera drifts gently */
+  orbitSpeed: 0.18,
+  orbitPhase: 1.1,
+  spinSpeed: 0.05,
+};
+
 /** Position of a planet at elapsed time t (seconds). */
 export function planetPosition(
   p: SolarPlanetConfig,
@@ -84,5 +95,22 @@ export function planetPosition(
     Math.cos(angle) * p.orbitRadius,
     0,
     Math.sin(angle) * p.orbitRadius,
+  );
+}
+
+const moonEarthScratch = new THREE.Vector3();
+
+/** World position of the moon at elapsed time t = Earth's position + its
+ *  own orbit around Earth. */
+export function moonPosition(
+  t: number,
+  out = new THREE.Vector3(),
+): THREE.Vector3 {
+  planetPosition(EARTH, t, moonEarthScratch);
+  const a = MOON.orbitPhase + t * MOON.orbitSpeed;
+  return out.set(
+    moonEarthScratch.x + Math.cos(a) * MOON.orbitRadius,
+    0,
+    moonEarthScratch.z + Math.sin(a) * MOON.orbitRadius,
   );
 }
