@@ -86,10 +86,11 @@ const drawEarth = (ctx: CanvasRenderingContext2D, w: number, h: number) => {
   // Continents
   drawBlotches(ctx, w, h, 26, w * 0.04, w * 0.13, ["#3d7a3a", "#4c8a40", "#7a6a3d"], 0.85);
   drawBlotches(ctx, w, h, 60, w * 0.01, w * 0.04, ["#2f6631", "#8a7a4a"], 0.5);
-  // Polar caps
+  // Polar caps — thin: the home camera hovers right over the north pole,
+  // and a fat white cap there makes the night side read gray, not Earth
   ctx.fillStyle = "rgba(240, 248, 255, 0.9)";
-  ctx.fillRect(0, 0, w, h * 0.05);
-  ctx.fillRect(0, h * 0.94, w, h * 0.06);
+  ctx.fillRect(0, 0, w, h * 0.025);
+  ctx.fillRect(0, h * 0.97, w, h * 0.03);
   // Clouds
   drawBlotches(ctx, w, h, 90, w * 0.015, w * 0.07, ["rgba(255,255,255,0.9)"], 0.22);
 };

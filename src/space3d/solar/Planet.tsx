@@ -63,7 +63,25 @@ export default function Planet({
       <group ref={group}>
         <mesh ref={mesh}>
           <sphereGeometry args={[config.radius, 48, 48]} />
-          <meshStandardMaterial map={texture} roughness={0.95} metalness={0} />
+          {config.kind === "earth" ? (
+            // Earth self-illuminates faintly (its own texture as the
+            // emissive map): the home view faces its night side, which
+            // would otherwise be a black silhouette
+            <meshStandardMaterial
+              map={texture}
+              roughness={0.95}
+              metalness={0}
+              emissive="#8fb4ff"
+              emissiveMap={texture}
+              emissiveIntensity={0.16}
+            />
+          ) : (
+            <meshStandardMaterial
+              map={texture}
+              roughness={0.95}
+              metalness={0}
+            />
+          )}
         </mesh>
         {config.kind === "earth" && (
           // faint atmosphere shell
