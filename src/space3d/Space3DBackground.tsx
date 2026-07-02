@@ -33,7 +33,7 @@ const Space3DBackground = ({
       <Moon3D />
       {/* THE sun — glued to whichever sun svg is on screen, flying to the
           new spot when the page changes */}
-      <Sun3D isNightMode={isNightMode} />
+      <Sun3D />
       {isLanding && <SolarSystem3D />}
     </SpaceCanvas>
   );

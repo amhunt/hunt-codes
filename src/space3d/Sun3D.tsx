@@ -45,9 +45,9 @@ import { liveElementById, trackSvgById } from "./svgTracking";
  * On home the SVG's own CSS rise/set choreography is suppressed (the
  * RENDERED_3D_FLAG attribute + an App.scss :has rule pin the container at
  * rest) and this component drives the motion itself: flight from the
- * landing sun, sunrise from below the viewport, and a dive below the
- * horizon when night falls. Without WebGL the flag is never set and the
- * CSS choreography runs as before.
+ * landing sun and sunrise from below the viewport. The home sun stays up
+ * in both day and night mode (Galaxy forces it), so it never dives.
+ * Without WebGL the flag is never set and the CSS choreography runs.
  */
 
 interface SunSpot {
@@ -57,10 +57,9 @@ interface SunSpot {
   o: number;
 }
 
-type Mode = "hidden" | "glue" | "fly" | "set";
+type Mode = "hidden" | "glue" | "fly";
 
 const FLY_S = 1.2; // landing -> home flight / sunrise duration
-const SET_S = 1.0; // dive below the horizon when night falls
 
 const easeInOutCubic = (t: number) =>
   t < 0.5 ? 4 * t * t * t : 1 - Math.pow(-2 * t + 2, 3) / 2;
@@ -72,7 +71,7 @@ const lerpSpot = (a: SunSpot, b: SunSpot, t: number): SunSpot => ({
   o: a.o + (b.o - a.o) * t,
 });
 
-const Sun3D = ({ isNightMode }: { isNightMode: boolean }) => {
+const Sun3D = () => {
   const size = useThree((s) => s.size);
   const gl = useThree((s) => s.gl);
   const surfaceRef = useRef<THREE.Mesh>(null);
@@ -82,7 +81,6 @@ const Sun3D = ({ isNightMode }: { isNightMode: boolean }) => {
   const modeRef = useRef<Mode>("hidden");
   const tRef = useRef(0);
   const flyFromRef = useRef<SunSpot | null>(null);
-  const setFromRef = useRef<SunSpot | null>(null);
   const renderedRef = useRef<SunSpot>({ x: 0, y: 0, r: 1, o: 0 });
   const adoptedRef = useRef<Element | null>(null);
   const adoptedIsHomeRef = useRef(false);
@@ -232,26 +230,9 @@ const Sun3D = ({ isNightMode }: { isNightMode: boolean }) => {
         modeRef.current = "glue";
       }
     } else if (!target && adoptedRef.current) {
-      // Sun svg gone. Mid-dive that's expected (Galaxy unmounts it while
-      // we finish setting); anywhere else, just drop out.
+      // Sun svg gone (route left the sun behind): drop out.
       helpers.release();
-      if (modeRef.current !== "set") modeRef.current = "hidden";
-    }
-
-    // Night fell while we own the home sun: dive below the horizon
-    // (replaces the suppressed CSS sunset). Day back mid-dive: fly home.
-    if (
-      isNightMode &&
-      home &&
-      (modeRef.current === "glue" || modeRef.current === "fly")
-    ) {
-      setFromRef.current = { ...renderedRef.current };
-      tRef.current = 0;
-      modeRef.current = "set";
-    } else if (!isNightMode && home && modeRef.current === "set") {
-      flyFromRef.current = { ...renderedRef.current };
-      tRef.current = 0;
-      modeRef.current = "fly";
+      modeRef.current = "hidden";
     }
 
     // Advance the rendered spot
@@ -271,25 +252,6 @@ const Sun3D = ({ isNightMode }: { isNightMode: boolean }) => {
         if (tRef.current >= 1) {
           modeRef.current = "glue";
           helpers.setTrimOpacity(null);
-        }
-      }
-    } else if (modeRef.current === "set") {
-      const from = setFromRef.current;
-      if (!from) {
-        modeRef.current = "hidden";
-      } else {
-        tRef.current = Math.min(1, tRef.current + delta / SET_S);
-        const e = tRef.current * tRef.current; // accelerate into the dive
-        spot = lerpSpot(
-          from,
-          { x: from.x, y: -size.height / 2 - from.r * 1.5, r: from.r, o: from.o },
-          e,
-        );
-        helpers.setTrimOpacity(1 - e);
-        if (tRef.current >= 1) {
-          helpers.release();
-          modeRef.current = "hidden";
-          spot = null;
         }
       }
     }

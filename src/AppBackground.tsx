@@ -171,7 +171,9 @@ const AppBackground = ({
           </Suspense>
         </BackgroundErrorBoundary>
       )}
-      {!isLanding && <Galaxy isNightMode={isNightMode} />}
+      {!isLanding && (
+        <Galaxy isNightMode={isNightMode} forceSun={isHomePage} />
+      )}
       {isHomePage && (
         <>
           {/* <RetroMac /> */}
