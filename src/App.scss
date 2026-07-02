@@ -627,14 +627,24 @@ li > ul > li {
   margin: auto;
   margin-top: 80px;
   max-width: 800px;
-  padding-left: 32px;
-  padding-right: 32px;
-  padding-bottom: 160px;
+  padding: 32px 32px 64px;
+  margin-bottom: 96px;
+
+  // Translucent, blurred panel so the text stays legible over whatever
+  // the 3D scene puts behind it (Earth's bright limb, the drifting moon)
+  background: rgba(8, 6, 28, 0.55);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  border-radius: 16px;
 
   @media (min-width: 1280px) {
     max-width: 980px;
     margin-top: 200px;
   }
+}
+
+.App.day .resume-inner-container {
+  background: rgba(255, 255, 255, 0.55);
 }
 
 .splitRow {
