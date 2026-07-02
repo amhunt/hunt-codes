@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useEffect } from "react";
 import { Link } from "react-router-dom";
 import { SunInternals } from "SunSvg";
 import { useOrbitalAnimation } from "./hooks/useOrbitalAnimation";
@@ -11,6 +11,12 @@ import {
 
 const CENTER_X = SOLAR_SYSTEM_CENTER;
 const CENTER_Y = SOLAR_SYSTEM_CENTER;
+
+// The solar system's 4s-delayed fadeIn is first-visit choreography (the
+// stars assemble first). Landing remounts on every visit, and replaying
+// that delay when returning from /home would hide the whole system — and
+// the sun flying back into it — for 5 seconds.
+let hasPlayedIntro = false;
 
 const PlanetLabel = ({
   id,
@@ -46,9 +52,19 @@ const Landing = () => {
   // loads and takes over; the SVG keeps the sun, orbits and labels.
   useOrbitalAnimation(CENTER_X, CENTER_Y);
 
+  const skipIntroDelay = hasPlayedIntro;
+  useEffect(() => {
+    hasPlayedIntro = true;
+  }, []);
+
   return (
     <div className="landing-page">
-      <svg id="solar-system" viewBox="0 0 600 600" style={{ display: "block" }}>
+      <svg
+        id="solar-system"
+        className={skipIntroDelay ? "no-intro-delay" : undefined}
+        viewBox="0 0 600 600"
+        style={{ display: "block" }}
+      >
         <defs>
           {/* Mars gradient - red planet with surface variations */}
           <radialGradient id="planet1Gradient" cx="30%" cy="30%">

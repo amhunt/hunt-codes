@@ -1236,6 +1236,13 @@ $STAR_MOVEMENT_INTERVAL_MS: 300;
 
 #solar-system {
   animation-delay: 4s;
+
+  // Returning from another page (Landing sets this after the first
+  // visit): skip the intro delay so the solar system — and the sun
+  // flying back into it — isn't invisible for 4 extra seconds
+  &.no-intro-delay {
+    animation-delay: 0s;
+  }
 }
 
 // Planet label styles
