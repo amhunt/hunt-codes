@@ -40,7 +40,10 @@ const SolarScene = ({
       <ambientLight intensity={0.14} />
       {/* From the home sun-perch the full glow would fill the frame and
           wash out the stars — shrink it to hug the limb there */}
-      <Sun targetGlowScale={view === "home" ? 2.5 : 6} />
+      <Sun
+        targetGlowScale={view === "home" ? 2.5 : 6}
+        isNightMode={isNightMode}
+      />
       {PLANETS.map((planet) => (
         <Planet
           key={planet.name}
