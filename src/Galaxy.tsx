@@ -32,7 +32,7 @@ const Galaxy = ({ isNightMode }: { isNightMode: boolean }) => {
           className={cx(
             "planet1",
             "planet1_day",
-            hasMounted && (!isNightMode ? "on" : "off")
+            hasMounted && (!isNightMode ? "on" : "off"),
           )}
         >
           <SunSvg isHome />
@@ -43,7 +43,7 @@ const Galaxy = ({ isNightMode }: { isNightMode: boolean }) => {
           className={cx(
             "planet1",
             "planet1_night",
-            !hasMounted ? "unmounted" : isNightMode ? "on" : "off"
+            !hasMounted ? "unmounted" : isNightMode ? "on" : "off",
           )}
         >
           <MoonSvg />

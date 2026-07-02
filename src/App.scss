@@ -23,7 +23,9 @@ $breakpoint-lg: 1280px;
   left: 0;
   right: 0;
   top: calc(100vh - 50vw - 200px);
-  z-index: 1000;
+  // Below .space-canvas (z 2) so the 3D planets pass over the orbit lines;
+  // clicks still land here because the canvas is pointer-events: none.
+  z-index: 1;
 
   // Allows click through to the stars
   pointer-events: none;
@@ -729,6 +731,25 @@ $STAR_MOVEMENT_INTERVAL_MS: 300;
 
 .App-background_night {
   background-color: black;
+
+  // With the WebGL star field the night layer is a bare black backdrop;
+  // the stars' hue rotation happens in the shader instead, so skip the
+  // (GPU-filter) animation here.
+  &.webgl {
+    animation: none;
+  }
+}
+
+// Shared fullscreen WebGL canvas for the background scenes (stars, 3D
+// planets, moon). Sits above the flat backgrounds and the landing SVG,
+// below page content and the Galaxy moon/sun (same z, later in DOM);
+// never intercepts pointer events. Also used by the DOM-stars fallback
+// wrapper when the 3D chunk fails, so it stays above the night backdrop.
+.space-canvas {
+  position: fixed;
+  inset: 0;
+  z-index: 2;
+  pointer-events: none;
 }
 
 .App-background_day {

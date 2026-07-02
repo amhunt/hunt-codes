@@ -1,8 +1,19 @@
 import React from "react";
 
+// Geometry of the moon disc, exported for the WebGL scene (space3d/Moon3D)
+// that tracks this SVG and replaces the disc fill with a 3D sphere while
+// it is rendering. Keep these in sync with the path + viewBox below.
+export const MOON_SVG_ID = "moon-svg";
+export const MOON_DISC_ID = "moon-disc";
+export const MOON_VIEWBOX = 550;
+export const MOON_CX = 275;
+export const MOON_CY = 276;
+export const MOON_R = 200;
+
 export default function MoonSvg() {
   return (
     <svg
+      id={MOON_SVG_ID}
       width="550"
       height="550"
       viewBox="0 0 550 550"
@@ -10,7 +21,7 @@ export default function MoonSvg() {
       xmlnsXlink="http://www.w3.org/1999/xlink"
     >
       <path
-        id="circle"
+        id={MOON_DISC_ID}
         d="
       M 75,275
       a 200,200 0 1,1 400,2

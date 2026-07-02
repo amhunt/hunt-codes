@@ -1,5 +1,13 @@
 import { useEffect, useRef } from "react";
 
+import {
+  PLANET_CONFIGS,
+  RENDERED_3D_FLAG,
+  SOLAR_SYSTEM_SVG_ID,
+} from "../landingScene";
+
+export { PLANET_CONFIGS };
+
 interface Planet {
   element: SVGCircleElement | SVGEllipseElement;
   orbit: number;
@@ -8,45 +16,16 @@ interface Planet {
   angleKey: string;
 }
 
-export const PLANET_CONFIGS = [
-  {
-    id: "planet1",
-    orbit: 100,
-    content: " ",
-    speed: 2,
-    angleKey: "angle1",
-    textNameOffset: 30,
-  },
-  {
-    id: "planet2",
-    orbit: 160,
-    content: "WORLD",
-    speed: 1.8,
-    angleKey: "angle2",
-    textNameOffset: 28.5,
-  },
-  {
-    id: "planet3",
-    orbit: 200,
-    content: "HELLO",
-    speed: 1.9,
-    angleKey: "angle3",
-    textNameOffset: 28.25,
-  },
-  {
-    id: "planet4",
-    orbit: 240,
-    content: " ",
-    speed: 1.4,
-    angleKey: "angle4",
-    textNameOffset: 27.4,
-  },
-];
-
 // Pre-calculate constants
 const DEG_TO_RAD = Math.PI / 180;
 const FRAME_RATE_NORMALIZER = 1 / 60;
 
+/**
+ * SVG planet animation. This is the always-on fallback: it drives the
+ * flat SVG planets (and trailing labels) until the WebGL scene flags the
+ * SVG with RENDERED_3D_FLAG and takes over, and resumes if that flag goes
+ * away (chunk failed to load, canvas torn down).
+ */
 export const useOrbitalAnimation = (centerX: number, centerY: number) => {
   const animationFrameRef = useRef<number | undefined>(undefined);
   const anglesRef = useRef<{ [key: string]: number }>({});
@@ -58,7 +37,7 @@ export const useOrbitalAnimation = (centerX: number, centerY: number) => {
     // Get all elements once at initialization
     for (let i = 1; i <= 4; i++) {
       const planet = document.getElementById(
-        `planet${i}`
+        `planet${i}`,
       ) as unknown as SVGCircleElement;
       if (planet) {
         planets.push({
@@ -72,9 +51,18 @@ export const useOrbitalAnimation = (centerX: number, centerY: number) => {
       }
     }
 
+    const svg = document.getElementById(SOLAR_SYSTEM_SVG_ID);
+
     const animate = (currentTime: number) => {
       const deltaTime = currentTime - lastTime;
       lastTime = currentTime;
+
+      // The WebGL scene currently owns the planets and labels
+      if (svg?.hasAttribute(RENDERED_3D_FLAG)) {
+        animationFrameRef.current = requestAnimationFrame(animate);
+        return;
+      }
+
       const normalizedDelta = deltaTime * FRAME_RATE_NORMALIZER;
 
       planets.forEach((planet, planetIndex) => {
@@ -103,7 +91,7 @@ export const useOrbitalAnimation = (centerX: number, centerY: number) => {
           0.25;
         // Set each gradient's cx and cy to be based on the planet's position in relation to the sun / centerX and centerY
         const gradient = document.getElementById(
-          `${planet.id}Gradient`
+          `${planet.id}Gradient`,
         ) as unknown as SVGRadialGradientElement;
         if (gradient) {
           // Set the gradient's cx and cy to be a % based on the planet's angle in relation to the sun / centerX and centerY
@@ -112,13 +100,13 @@ export const useOrbitalAnimation = (centerX: number, centerY: number) => {
         }
 
         const label = document.getElementById(
-          `${planet.id}Label`
+          `${planet.id}Label`,
         ) as unknown as SVGTextElement;
         if (label) {
           // Set offset of label to be right behind the planet
           label.setAttribute(
             "startOffset",
-            `${(yModAnglePercent * 100 - PLANET_CONFIGS[planetIndex].textNameOffset) % 100}%`
+            `${(yModAnglePercent * 100 - PLANET_CONFIGS[planetIndex].textNameOffset) % 100}%`,
           );
         }
       });

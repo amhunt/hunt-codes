@@ -1,7 +1,10 @@
 import React, { memo } from "react";
 import cx from "classnames";
 import tinycolor from "tinycolor2";
-import { maxStarRadiusPx } from "./starUtils";
+import {
+  maxStarRadiusPx,
+  STAR_TO_CURSOR_TRIGGER_DISTANCE_PX,
+} from "./starUtils";
 
 export interface StarT {
   x: number;
@@ -14,9 +17,8 @@ export interface StarT {
   distanceToCursor?: number;
 }
 
-const STAR_TO_CURSOR_TRIGGER_DISTANCE_PX = 100;
 const STAR_TO_CURSOR_TRIGGER_DISTANCE_PX_SQ_ROOT = Math.sqrt(
-  STAR_TO_CURSOR_TRIGGER_DISTANCE_PX
+  STAR_TO_CURSOR_TRIGGER_DISTANCE_PX,
 );
 
 interface Props {
@@ -46,14 +48,14 @@ function StarDot({ star, as = "circle", numCloseToCursor }: Props) {
   const className = cx(
     "star",
     star.isText ? "star_text" : "star_background",
-    !star.isText && star.r < 1.05 && "star_disco"
+    !star.isText && star.r < 1.05 && "star_disco",
   );
 
   const color = tinycolor(star.color)
     .brighten(
       star.distanceToCursor != null && star.distanceToCursor < 10
         ? (numCloseToCursor ?? 0)
-        : 0
+        : 0,
     )
     .toHexString();
   if (as === "circle") {

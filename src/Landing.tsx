@@ -1,13 +1,16 @@
 import React from "react";
 import { Link } from "react-router-dom";
 import { SunInternals } from "SunSvg";
+import { useOrbitalAnimation } from "./hooks/useOrbitalAnimation";
 import {
   PLANET_CONFIGS,
-  useOrbitalAnimation,
-} from "./hooks/useOrbitalAnimation";
+  SOLAR_SYSTEM_CENTER,
+  SUN_RADIUS_OFFSET,
+  SUN_SIZE,
+} from "./landingScene";
 
-const CENTER_X = 300;
-const CENTER_Y = 300;
+const CENTER_X = SOLAR_SYSTEM_CENTER;
+const CENTER_Y = SOLAR_SYSTEM_CENTER;
 
 const PlanetLabel = ({
   id,
@@ -39,6 +42,8 @@ const PlanetLabel = ({
 };
 
 const Landing = () => {
+  // Drives the flat SVG planets until the WebGL scene (SolarSystem3D)
+  // loads and takes over; the SVG keeps the sun, orbits and labels.
   useOrbitalAnimation(CENTER_X, CENTER_Y);
 
   return (
@@ -75,7 +80,11 @@ const Landing = () => {
         </defs>
 
         <Link to="/home">
-          <SunInternals size={0.25} radiusOffset={243} strokeWidth={0} />
+          <SunInternals
+            size={SUN_SIZE}
+            radiusOffset={SUN_RADIUS_OFFSET}
+            strokeWidth={0}
+          />
           <text fontFamily="'Inconsolata', monospace">
             <textPath
               fill="white"
@@ -147,35 +156,19 @@ const Landing = () => {
         `}
         />
 
-        {/* Planets */}
-        <circle
-          className="planet"
-          id="planet1"
-          cx="300"
-          cy={PLANET_CONFIGS[0].orbit}
-          r="4"
-        />
-        <circle
-          className="planet"
-          id="planet2"
-          cx="300"
-          cy={PLANET_CONFIGS[1].orbit}
-          r="8"
-        />
-        <circle
-          className="planet"
-          id="planet3"
-          cx="300"
-          cy={PLANET_CONFIGS[2].orbit}
-          r="6"
-        />
-        <circle
-          className="planet"
-          id="planet4"
-          cx="300"
-          cy={PLANET_CONFIGS[3].orbit}
-          r="5"
-        />
+        {/* Flat SVG planets: the always-on fallback. They render and
+            animate until the WebGL scene loads and hides them (and come
+            back if it goes away). */}
+        {PLANET_CONFIGS.map((planet) => (
+          <circle
+            key={planet.id}
+            className="planet"
+            id={planet.id}
+            cx="300"
+            cy={planet.orbit}
+            r={planet.radius}
+          />
+        ))}
 
         {/* Curved text labels trailing behind each planet */}
         {PLANET_CONFIGS.map((planet, index) => (
