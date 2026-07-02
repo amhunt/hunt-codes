@@ -6,8 +6,6 @@ import {
   SOLAR_SYSTEM_SVG_ID,
 } from "../landingScene";
 
-export { PLANET_CONFIGS };
-
 interface Planet {
   element: SVGCircleElement | SVGEllipseElement;
   orbit: number;

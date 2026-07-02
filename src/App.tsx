@@ -1,13 +1,13 @@
 import React, { useState, useEffect, useCallback } from "react";
 import { BrowserRouter as Router, Switch, Route } from "react-router-dom";
 import cx from "classnames";
-import { Moon, Sun } from "react-feather";
 import "./App.scss";
 
 import Home from "./Home";
 import Resume from "./Resume";
 import SvgGenerator from "./SvgGenerator";
 import AppBackground from "AppBackground";
+import DayNightSwitch from "DayNightSwitch";
 import Landing from "Landing";
 
 // Needed to get hover state on individual chars
@@ -60,18 +60,10 @@ const App = () => {
     <div className={cx("App", isNightMode ? "night" : "day")}>
       <Router>
         <AppBackground showBridge={showBridge} isNightMode={isNightMode} />
-        <button
-          aria-label={
-            isNightMode ? "Switch to day mode" : "Switch to night mode"
-          }
-          onClick={() => setIsNightMode((mode) => !mode)}
-          className={cx(
-            "fixed z-[5000] top-4 right-4 flex items-center justify-center w-12 h-12 p-2 rounded-full transition-colors hover:bg-[#5efffc57]",
-            isNightMode ? "text-[#9e80f9]" : "text-[#412596]",
-          )}
-        >
-          {isNightMode ? <Moon /> : <Sun />}
-        </button>
+        <DayNightSwitch
+          isNightMode={isNightMode}
+          onCheckedChange={setIsNightMode}
+        />
         <Switch>
           <Route exact path="/">
             <Landing />

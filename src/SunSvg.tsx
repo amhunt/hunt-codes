@@ -8,7 +8,6 @@ import useWindowWidth from "useWindowWidth";
 // default size=1 (Galaxy renders it that way). Keep in sync with
 // SunInternals' innerRadius/center math below.
 export const HOME_SUN_SVG_ID = "home-sun-svg";
-export const HOME_SUN_VIEWBOX = 550;
 export const HOME_SUN_CX = 275;
 export const HOME_SUN_CY = 276;
 export const HOME_SUN_RADIUS = 175;
