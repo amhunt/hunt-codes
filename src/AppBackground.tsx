@@ -59,6 +59,7 @@ const AppBackground = ({
   const location = useLocation();
 
   const isHomePage = location.pathname.includes("home");
+  const isAboutPage = location.pathname.includes("about");
   const isLanding = location.pathname === "/" || location.pathname === "";
   // WebGL background (stars + 3D planets); legacy DOM stars are the fallback
   const webglEnabled = supportsWebGL();
@@ -168,11 +169,14 @@ const AppBackground = ({
               isNightMode={isNightMode}
               isLanding={isLanding}
               isHomePage={isHomePage}
+              isAboutPage={isAboutPage}
             />
           </Suspense>
         </BackgroundErrorBoundary>
       )}
-      {!isLanding && (
+      {/* The about page uses the 3D solar scene (Earth + orbiting moon)
+          instead of the flat SVG sun/moon, so Galaxy is suppressed there */}
+      {!isLanding && !isAboutPage && (
         <Galaxy isNightMode={isNightMode} forceSun={isHomePage} />
       )}
       {isHomePage && (

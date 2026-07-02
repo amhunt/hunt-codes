@@ -2,19 +2,21 @@ import { useRef } from "react";
 import { useFrame } from "@react-three/fiber";
 import * as THREE from "three";
 
-import { EARTH, planetPosition } from "./constants";
+import { EARTH, moonPosition, planetPosition } from "./constants";
 
 /**
  * Camera choreography, ported from hunt-codes-3. Landing hovers straight
  * above the sun (the system reads as a flat orbital diagram); home
  * perches just behind/above Earth on the far side from the sun, so
  * Earth's limb fills the bottom of the frame with the sun hanging above
- * the horizon while the other planets keep orbiting it. View changes
- * swoop between the two over a few seconds, and once arrived the camera
- * keeps riding Earth around its orbit.
+ * the horizon while the other planets keep orbiting it. About perches
+ * over the moon's far side looking back at Earth, so the moon's top curve
+ * fills the foreground and Earth hangs in the background as the moon
+ * orbits — carrying the camera with it. View changes swoop between the
+ * views over a few seconds; once arrived the camera rides the moving goal.
  */
 
-export type SolarView = "landing" | "home";
+export type SolarView = "landing" | "home" | "about";
 
 const LANDING_POS = new THREE.Vector3(0, 58, 0.01);
 const ORIGIN = new THREE.Vector3(0, 0, 0);
@@ -32,11 +34,24 @@ const HOME_LOOK_HEIGHT = 2.1;
 /** Sun's horizontal screen position: +0.4 of the half-width = ~20vw right */
 const HOME_SUN_SCREEN_X = 0.4;
 
+// About-view framing: hug the moon (offsets from its center, not its
+// surface) on the side facing away from Earth, so the moon's top curve
+// fills the foreground and Earth hangs beyond it. Camera ends up ~1.5
+// moon-radii out — clear of the 0.1 near-plane, tight enough that the
+// moon over-fills the frame like Earth does on home.
+const ABOUT_CAM_BEHIND = 0.38; // away from Earth
+const ABOUT_CAM_ABOVE = 0.46;
+const ABOUT_CAM_SIDE = 0.2;
+const ABOUT_LOOK_HEIGHT = 0.35; // aim a touch above Earth's center
+
 // scratch vectors, reused every frame
 const goalPos = new THREE.Vector3();
 const goalLook = new THREE.Vector3();
 const planetPos = new THREE.Vector3();
+const moonPos = new THREE.Vector3();
+const earthPos = new THREE.Vector3();
 const toSun = new THREE.Vector3();
+const toEarth = new THREE.Vector3();
 const side = new THREE.Vector3();
 
 const easeInOutCubic = (x: number) =>
@@ -47,6 +62,21 @@ function computeGoal(view: SolarView, t: number, camera: THREE.Camera) {
   if (view === "landing") {
     goalPos.copy(LANDING_POS);
     goalLook.copy(ORIGIN);
+  } else if (view === "about") {
+    // Perch over the moon's limb on the far side from Earth, looking back
+    // at Earth: the moon's top curve fills the foreground, Earth sits in
+    // the background, and both drift as the moon orbits.
+    moonPosition(t, moonPos);
+    planetPosition(EARTH, t, earthPos);
+    toEarth.copy(earthPos).sub(moonPos).normalize();
+    side.crossVectors(toEarth, UP).normalize();
+    goalPos
+      .copy(moonPos)
+      .addScaledVector(toEarth, -ABOUT_CAM_BEHIND)
+      .addScaledVector(side, ABOUT_CAM_SIDE);
+    goalPos.y += ABOUT_CAM_ABOVE;
+    goalLook.copy(earthPos);
+    goalLook.y += ABOUT_LOOK_HEIGHT;
   } else {
     // Perch just over Earth's limb on the far side from the sun, looking
     // sunward: Earth's top curve fills the bottom of the frame.
