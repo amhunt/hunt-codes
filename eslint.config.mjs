@@ -26,6 +26,9 @@ export default defineConfig([
   tseslint.configs.recommended,
   pluginReact.configs.flat.recommended,
   {
+    settings: { react: { version: "detect" } },
+  },
+  {
     files: ["**/*.{js,jsx,ts,tsx}"],
     plugins: {
       "unused-imports": pluginUnusedImports,

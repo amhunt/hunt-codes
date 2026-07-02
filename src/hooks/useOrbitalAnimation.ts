@@ -48,7 +48,7 @@ const DEG_TO_RAD = Math.PI / 180;
 const FRAME_RATE_NORMALIZER = 1 / 60;
 
 export const useOrbitalAnimation = (centerX: number, centerY: number) => {
-  const animationFrameRef = useRef<number>();
+  const animationFrameRef = useRef<number | undefined>(undefined);
   const anglesRef = useRef<{ [key: string]: number }>({});
 
   useEffect(() => {
