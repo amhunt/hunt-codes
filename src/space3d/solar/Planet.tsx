@@ -4,6 +4,7 @@ import * as THREE from "three";
 
 import { planetPosition, type SolarPlanetConfig } from "./constants";
 import { createPlanetTexture } from "../textures";
+import earthMapUrl from "../../assets/earth.jpg";
 
 /**
  * One orbiting planet + its orbit ring, ported from hunt-codes-3.
@@ -23,7 +24,20 @@ export default function Planet({
   const group = useRef<THREE.Group>(null);
   const mesh = useRef<THREE.Mesh>(null);
 
-  const texture = useMemo(() => createPlanetTexture(config.kind), [config]);
+  const texture = useMemo(() => {
+    if (config.kind === "earth") {
+      // Real NASA Blue Marble (public domain), bundled locally so there's
+      // no runtime CORS dependency. The equirectangular map puts the
+      // Arctic at the north pole — exactly what the home camera looks down
+      // on — so the visible curve reads as the green, ice-capped northern
+      // hemisphere rather than a stylized blob.
+      const tex = new THREE.TextureLoader().load(earthMapUrl);
+      tex.colorSpace = THREE.SRGBColorSpace;
+      tex.anisotropy = 4;
+      return tex;
+    }
+    return createPlanetTexture(config.kind);
+  }, [config]);
   useEffect(() => () => texture.dispose(), [texture]);
 
   const orbitLine = useMemo(() => {
@@ -64,16 +78,17 @@ export default function Planet({
         <mesh ref={mesh}>
           <sphereGeometry args={[config.radius, 48, 48]} />
           {config.kind === "earth" ? (
-            // Earth self-illuminates faintly (its own texture as the
-            // emissive map): the home view faces its night side, which
-            // would otherwise be a black silhouette
+            // Earth self-illuminates faintly (its own map as the emissive
+            // map): the home view faces its night side, which would
+            // otherwise be a near-black silhouette. The cool tint reads as
+            // earthshine so oceans/land stay recognizable in the dark.
             <meshStandardMaterial
               map={texture}
               roughness={0.95}
               metalness={0}
-              emissive="#8fb4ff"
+              emissive="#a7bad4"
               emissiveMap={texture}
-              emissiveIntensity={0.16}
+              emissiveIntensity={0.38}
             />
           ) : (
             <meshStandardMaterial

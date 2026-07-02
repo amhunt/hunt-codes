@@ -254,10 +254,12 @@ p {
   opacity: 0;
   transition: opacity 1.5s ease;
   // Fade the bank into the sky at its top and left edges
-  mask-image: linear-gradient(to top, black 45%, transparent 96%),
+  mask-image:
+    linear-gradient(to top, black 45%, transparent 96%),
     linear-gradient(to left, black 78%, transparent 99%);
   mask-composite: intersect;
-  -webkit-mask-image: linear-gradient(to top, black 45%, transparent 96%),
+  -webkit-mask-image:
+    linear-gradient(to top, black 45%, transparent 96%),
     linear-gradient(to left, black 78%, transparent 99%);
   -webkit-mask-composite: destination-in;
 
@@ -298,7 +300,8 @@ p {
 // across the bank once per drift loop.
 .gg-fog-back > .gg-fog-drift {
   animation-duration: 90s;
-  background-image: radial-gradient(
+  background-image:
+    radial-gradient(
       ellipse 52% 48% at 18% 82%,
       rgba(255, 255, 255, 0.95),
       rgba(202, 214, 226, 0.85) 45%,
@@ -337,7 +340,8 @@ p {
 
 .gg-fog-front > .gg-fog-drift {
   animation-duration: 48s;
-  background-image: radial-gradient(
+  background-image:
+    radial-gradient(
       ellipse 34% 55% at 14% 100%,
       rgba(248, 251, 254, 0.7),
       rgba(199, 212, 224, 0.55) 50%,
@@ -384,23 +388,22 @@ p {
   }
 }
 
+// Middle of the left side, clear of the sun (right) and Earth (bottom)
 .homeInfoContainer {
   position: fixed;
   color: #111;
   font-size: 20px;
   width: calc(22vw + 22vh);
-  bottom: 16vh;
   min-width: 380px;
 
-  right: calc(-10vw - 7.5vh + 100px);
-  transform: translateX(-50%);
+  left: 5vw;
+  top: 45%;
+  transform: translateY(-50%);
   transition: opacity 1000ms ease;
   z-index: 3;
   opacity: 0;
 
   @media (min-width: $breakpoint-lg) {
-    right: calc(-7.5vw - 7.5vh + 100px);
-    transform: translateX(-50%);
     font-size: 24px;
   }
 
@@ -420,7 +423,6 @@ p {
     border-radius: 50%;
 
     &:hover {
-      background: $purp-light-transparent-25;
       > .starIcon {
         fill: $purp;
       }
@@ -734,6 +736,7 @@ li > ul > li {
     font-size: 18px;
     width: unset;
     max-width: min(360px, calc(100vw - 40px));
+    top: unset;
     bottom: 64px;
     min-width: 300px;
     transform: unset;

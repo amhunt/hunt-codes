@@ -25,9 +25,9 @@ const TRANSITION_SECONDS = 3.2;
 // spans the whole bottom of the frame (Earth reads ~2x the viewport
 // wide), drifted slightly left; the sun is pinned a fixed fraction of
 // the viewport right of center.
-const HOME_CAM_BEHIND = 1.1; // from Earth's center, away from the sun
-const HOME_CAM_ABOVE = 2;
-const HOME_CAM_SIDE = 0.4; // camera right => Earth drifts screen-left
+const HOME_CAM_BEHIND = 0.85; // from Earth's center, away from the sun
+const HOME_CAM_ABOVE = 1.8;
+const HOME_CAM_SIDE = 0.55; // camera right => Earth drifts screen-left
 const HOME_LOOK_HEIGHT = 2.1;
 /** Sun's horizontal screen position: +0.4 of the half-width = ~20vw right */
 const HOME_SUN_SCREEN_X = 0.4;
@@ -65,9 +65,7 @@ function computeGoal(view: SolarView, t: number, camera: THREE.Camera) {
     const halfFovH =
       Math.tan((persp.fov * Math.PI) / 360) * (persp.aspect || 1);
     const lateral = goalPos.length() * HOME_SUN_SCREEN_X * halfFovH;
-    goalLook
-      .set(0, HOME_LOOK_HEIGHT, 0)
-      .addScaledVector(side, -lateral);
+    goalLook.set(0, HOME_LOOK_HEIGHT, 0).addScaledVector(side, -lateral);
   }
 }
 

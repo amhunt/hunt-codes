@@ -1,18 +1,10 @@
-import React, {
-  useEffect,
-  useState,
-  useRef,
-  useCallback,
-  useMemo,
-} from "react";
+import React, { useEffect, useState, useRef, useCallback } from "react";
 import Typed from "typed.js";
 import cx from "classnames";
 
-import Logo from "./Logo";
-import { GitHub, Linkedin, Mail, Star } from "react-feather";
-import { Wand2 } from "lucide-react";
+import { GitHub, Linkedin, Mail } from "react-feather";
+import { ArrowLeftIcon, Wand2 } from "lucide-react";
 import useWindowSize from "./useWindowSize";
-import { useCursorPosition } from "./hooks/useCursorPosition";
 
 import {
   Tooltip,
@@ -38,15 +30,11 @@ const typedOptions = {
 const isChrome = navigator.userAgent.includes("Chrome");
 
 const Home = () => {
-  const leftHalfEl = useRef<HTMLDivElement>(null);
-
   const [logoOpacity, setLogoOpacity] = useState(0);
 
   const size = useWindowSize();
   const isSmall = size === "sm";
-  const isMdOrLess = size === "sm" || size === "md";
 
-  const cursorPos = useCursorPosition();
   const typedEl = useRef<HTMLSpanElement>(null);
 
   useEffect(() => {
@@ -62,36 +50,6 @@ const Home = () => {
     return () => clearTimeout(timeout);
   }, []);
 
-  const docHeight = window.innerHeight;
-  const docWidth = window.innerWidth;
-  const cursorRatioX =
-    cursorPos?.x != null ? (cursorPos.x / docWidth) * 2 - 1 : 0;
-  const cursorRatioY =
-    cursorPos?.y != null ? (cursorPos.y / docHeight) * 2 - 1 : 0;
-  let cursorMultiplier1 = 30;
-  let cursorMultiplier2 = 50;
-
-  if (isMdOrLess) {
-    cursorMultiplier1 = 15;
-    cursorMultiplier2 = 25;
-  }
-
-  const logoPositioningProps = useMemo(
-    () => ({
-      paddingLeft1: cursorMultiplier1 * cursorRatioX,
-      paddingTop1: cursorMultiplier1 * cursorRatioY + 40,
-      paddingLeft2: cursorMultiplier2 * cursorRatioX + (isMdOrLess ? 40 : 100),
-      paddingTop2: cursorMultiplier2 * cursorRatioY,
-    }),
-    [
-      cursorMultiplier1,
-      cursorRatioY,
-      cursorMultiplier2,
-      cursorRatioX,
-      isMdOrLess,
-    ],
-  );
-
   const [copied, setCopied] = useState(false);
 
   const handleCopy = useCallback(async () => {
@@ -106,34 +64,25 @@ const Home = () => {
 
   return (
     <>
-      {!isSmall && (
-        <div
-          ref={leftHalfEl}
-          className="logoWrapper pointer-events-none flex items-center justify-center"
-          style={{ opacity: logoOpacity ? 1 : 0 }}
-        >
-          <Logo {...(!isSmall ? logoPositioningProps : null)} />
-        </div>
-      )}
-
       <div className="homePageBackLink">
         <Link
-          className={cx("flex transition-transform items-center gap-1 mt-4")}
+          className={cx("mt-4 flex items-center gap-1 transition-transform")}
           to="/"
         >
-          <Star className="starIcon" size={16} />
+          <ArrowLeftIcon className="starIcon" size={16} />
+          <span>Back to space</span>
         </Link>
       </div>
       <main className={cx("homeInfoContainer", logoOpacity === 1 && "show")}>
         {isSmall && (
           <div className="sm-screen-summary-line max-w-[200px] text-center">
-            Web development in San Francisco
+            Frontend Engineer
           </div>
         )}
         <p className="hoverableHomeItem justify-between gap-6">
           {!isSmall && (
             <div className="max-w-[300px] text-left text-lg font-bold">
-              Web development in San Francisco
+              Frontend Engineer based in <s>SF</s> NYC
             </div>
           )}
           <div className="flex items-center gap-1">

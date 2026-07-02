@@ -16,7 +16,7 @@ import {
   HOME_SUN_RADIUS,
   HOME_SUN_SVG_ID,
 } from "../../SunSvg";
-import { SUN_RADIUS } from "./constants";
+import { SUN_RADIUS, sunState } from "./constants";
 import { liveElementById } from "../svgTracking";
 
 /**
@@ -130,7 +130,9 @@ const SunSvgAnchor = () => {
     const persp = camera as THREE.PerspectiveCamera;
     const distance = persp.position.length();
     const projR =
-      (SUN_RADIUS / distance / Math.tan((persp.fov * Math.PI) / 360)) *
+      ((SUN_RADIUS * sunState.scale) /
+        distance /
+        Math.tan((persp.fov * Math.PI) / 360)) *
       (size.height / 2);
 
     const scale = (projR / config.discR) * config.ringScale;
