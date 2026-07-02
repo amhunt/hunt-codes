@@ -212,6 +212,9 @@ const useStars = (
 };
 
 function Stars({ isLanding }: { isLanding: boolean }) {
+  // setCursorGravityRadiusPx drives the (currently commented-out) dev slider
+  // below; kept so the control can be re-enabled without rewiring state.
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars, unused-imports/no-unused-vars
   const [cursorGravityRadiusPx, setCursorGravityRadiusPx] = useState(
     DEFAULT_CURSOR_GRAVITY_RADIUS_PX,
   );
