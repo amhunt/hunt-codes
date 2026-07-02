@@ -2,8 +2,17 @@ import React, { useEffect, useMemo, useRef } from "react";
 import * as THREE from "three";
 import { useFrame, useThree } from "@react-three/fiber";
 
-import { createPlanetTexture, createRingTexture, type PlanetKind } from "./textures";
+import {
+  PLANET_CONFIGS,
+  SOLAR_SYSTEM_CENTER,
+  SOLAR_SYSTEM_SVG_ID,
+  SOLAR_SYSTEM_VIEWBOX,
+  SUN_CENTER,
+  SUN_OCCLUDER_RADIUS,
+} from "../landingScene";
+import { createPlanetTexture, createRingTexture } from "./textures";
 import { domToWorldX, domToWorldY, Z_BODIES, Z_OCCLUDER } from "./SpaceCanvas";
+import { liveElementById, trackSvgById } from "./svgTracking";
 
 /**
  * 3D planets for the landing solar system. The sun, orbit paths and the
@@ -11,36 +20,18 @@ import { domToWorldX, domToWorldY, Z_BODIES, Z_OCCLUDER } from "./SpaceCanvas";
  * link); this scene tracks the SVG's on-screen box every frame and renders
  * the planets in the same coordinate space, so the two layers stay glued.
  *
+ * The SVG's own flat planets are the always-on fallback: while this scene
+ * is live it hides them (and flags the SVG so useOrbitalAnimation yields
+ * the label animation), restoring everything when it unmounts. That keeps
+ * the page correct while the three.js chunk is still loading and if it
+ * never arrives.
+ *
  * Lighting comes from a real point light at the sun's position — the SVG
  * version faked this by animating each radial gradient's center.
  */
 
-const SVG_ID = "solar-system";
-const VIEWBOX_SIZE = 600;
-const CENTER = 300;
-// SunInternals(size=0.25, radiusOffset=243): disc center ~(293, 294), r ~44
-const SUN_CENTER_X = 293;
-const SUN_CENTER_Y = 294;
-const SUN_RADIUS = 47;
-
-// Same orbits/speeds as the legacy PLANET_CONFIGS in useOrbitalAnimation
-interface PlanetConfig {
-  id: string;
-  orbit: number;
-  speed: number;
-  radius: number;
-  kind: PlanetKind;
-  textNameOffset: number;
-  spinSpeed: number;
-  axialTilt: number;
-}
-
-const PLANETS: PlanetConfig[] = [
-  { id: "planet1", orbit: 100, speed: 2, radius: 4, kind: "mars", textNameOffset: 30, spinSpeed: 0.5, axialTilt: 0.1 },
-  { id: "planet2", orbit: 160, speed: 1.8, radius: 8, kind: "neptune", textNameOffset: 28.5, spinSpeed: 0.35, axialTilt: 0.25 },
-  { id: "planet3", orbit: 200, speed: 1.9, radius: 6, kind: "saturn", textNameOffset: 28.25, spinSpeed: 0.45, axialTilt: 0.45 },
-  { id: "planet4", orbit: 240, speed: 1.4, radius: 5, kind: "ice", textNameOffset: 27.4, spinSpeed: 0.3, axialTilt: 0.2 },
-];
+/** Set on the SVG while the 3D scene owns planets + labels. */
+export const RENDERED_3D_FLAG = "data-rendered-3d";
 
 const DEG_TO_RAD = Math.PI / 180;
 
@@ -51,11 +42,12 @@ const SolarSystem3D = () => {
   const spinRefs = useRef<(THREE.Mesh | null)[]>([]);
   const lightRef = useRef<THREE.PointLight>(null);
   const occluderRef = useRef<THREE.Mesh>(null);
-  const anglesRef = useRef<number[]>(PLANETS.map(() => 0));
+  const anglesRef = useRef<number[] | null>(null);
+  const takenOverRef = useRef(false);
 
   const textures = useMemo(
-    () => PLANETS.map((p) => createPlanetTexture(p.kind)),
-    []
+    () => PLANET_CONFIGS.map((p) => createPlanetTexture(p.kind)),
+    [],
   );
   const ringTexture = useMemo(() => createRingTexture(), []);
   const materials = useMemo(
@@ -68,9 +60,9 @@ const SolarSystem3D = () => {
             metalness: 0,
             transparent: true,
             opacity: 0,
-          })
+          }),
       ),
-    [textures]
+    [textures],
   );
   const ringMaterial = useMemo(
     () =>
@@ -81,7 +73,7 @@ const SolarSystem3D = () => {
         side: THREE.DoubleSide,
         depthWrite: false,
       }),
-    [ringTexture]
+    [ringTexture],
   );
 
   useEffect(
@@ -91,35 +83,68 @@ const SolarSystem3D = () => {
       materials.forEach((m) => m.dispose());
       ringMaterial.dispose();
     },
-    [textures, ringTexture, materials, ringMaterial]
+    [textures, ringTexture, materials, ringMaterial],
+  );
+
+  // Hand the planets/labels back to the SVG fallback on unmount
+  useEffect(
+    () => () => {
+      const svg = document.getElementById(SOLAR_SYSTEM_SVG_ID);
+      if (!svg) return;
+      svg.removeAttribute(RENDERED_3D_FLAG);
+      PLANET_CONFIGS.forEach((planet) => {
+        const circle = document.getElementById(planet.id);
+        if (circle) circle.style.display = "";
+      });
+    },
+    [],
   );
 
   useFrame((_, delta) => {
     const group = groupRef.current;
     if (!group) return;
-    const svg = document.getElementById(SVG_ID);
-    if (!svg) {
+    const tracked = trackSvgById(SOLAR_SYSTEM_SVG_ID, SOLAR_SYSTEM_VIEWBOX);
+    const svg = liveElementById(SOLAR_SYSTEM_SVG_ID);
+    if (!tracked || !svg) {
       group.visible = false;
-      return;
-    }
-    const rect = svg.getBoundingClientRect();
-    if (rect.width === 0 || rect.height === 0) {
-      group.visible = false;
+      takenOverRef.current = false;
       return;
     }
     group.visible = true;
 
-    // viewBox -> CSS px (preserveAspectRatio="xMidYMid meet")
-    const scale = Math.min(rect.width, rect.height) / VIEWBOX_SIZE;
-    const offsetX = rect.left + (rect.width - VIEWBOX_SIZE * scale) / 2;
-    const offsetY = rect.top + (rect.height - VIEWBOX_SIZE * scale) / 2;
+    // First live frame: adopt the SVG fallback's current planet angles so
+    // the swap to 3D is continuous, then take over planets + labels.
+    if (!takenOverRef.current) {
+      takenOverRef.current = true;
+      svg.setAttribute(RENDERED_3D_FLAG, "1");
+      anglesRef.current ??= PLANET_CONFIGS.map((planet) => {
+        const circle = document.getElementById(
+          planet.id,
+        ) as SVGCircleElement | null;
+        if (!circle) return 0;
+        const cx = parseFloat(circle.getAttribute("cx") ?? "");
+        const cy = parseFloat(circle.getAttribute("cy") ?? "");
+        if (Number.isNaN(cx) || Number.isNaN(cy)) return 0;
+        return (
+          Math.atan2(cy - SOLAR_SYSTEM_CENTER, cx - SOLAR_SYSTEM_CENTER) /
+          DEG_TO_RAD
+        );
+      });
+      PLANET_CONFIGS.forEach((planet) => {
+        const circle = document.getElementById(planet.id);
+        if (circle) circle.style.display = "none";
+      });
+    }
+    const angles = anglesRef.current;
+    if (!angles) return;
+
     const toWorld = (vx: number, vy: number): [number, number] => [
-      domToWorldX(offsetX + vx * scale, size.width),
-      domToWorldY(offsetY + vy * scale, size.height),
+      domToWorldX(tracked.offsetX + vx * tracked.scale, size.width),
+      domToWorldY(tracked.offsetY + vy * tracked.scale, size.height),
     ];
 
     // Follow the SVG's fade-in (#solar-system has a 4s-delayed CSS fadeIn)
-    const svgOpacity = parseFloat(getComputedStyle(svg).opacity) || 0;
+    const svgOpacity = tracked.opacity;
     const opaque = svgOpacity > 0.99;
     materials.forEach((m) => {
       m.opacity = svgOpacity;
@@ -127,30 +152,33 @@ const SolarSystem3D = () => {
     });
     ringMaterial.opacity = svgOpacity;
 
-    const [sunX, sunY] = toWorld(SUN_CENTER_X, SUN_CENTER_Y);
+    const [sunX, sunY] = toWorld(SUN_CENTER, SUN_CENTER);
     if (lightRef.current) {
       // Slightly toward the camera so orbit-facing halves aren't pitch black
       lightRef.current.position.set(sunX, sunY, Z_BODIES + 220);
     }
     if (occluderRef.current) {
       occluderRef.current.position.set(sunX, sunY, Z_OCCLUDER);
-      occluderRef.current.scale.setScalar(SUN_RADIUS * scale);
+      occluderRef.current.scale.setScalar(SUN_OCCLUDER_RADIUS * tracked.scale);
+      // While the sun is still fading in, stars may shine through it —
+      // culling them then would punch a star-free hole into empty black
+      occluderRef.current.visible = svgOpacity > 0.5;
     }
 
     const deltaMs = Math.min(delta * 1000, 100);
-    PLANETS.forEach((planet, i) => {
+    PLANET_CONFIGS.forEach((planet, i) => {
       // Legacy loop: angle += speed * deltaMs / 60 (degrees)
-      anglesRef.current[i] += (planet.speed * deltaMs) / 60;
-      const angle = anglesRef.current[i];
+      angles[i] += (planet.speed * deltaMs) / 60;
+      const angle = angles[i];
       const rad = angle * DEG_TO_RAD;
       const holder = planetRefs.current[i];
       if (holder) {
         const [x, y] = toWorld(
-          CENTER + planet.orbit * Math.cos(rad),
-          CENTER + planet.orbit * Math.sin(rad)
+          SOLAR_SYSTEM_CENTER + planet.orbit * Math.cos(rad),
+          SOLAR_SYSTEM_CENTER + planet.orbit * Math.sin(rad),
         );
         holder.position.set(x, y, Z_BODIES);
-        holder.scale.setScalar(planet.radius * scale);
+        holder.scale.setScalar(planet.radius * tracked.scale);
       }
       const spin = spinRefs.current[i];
       if (spin) {
@@ -158,12 +186,12 @@ const SolarSystem3D = () => {
       }
 
       // Trailing label offset along the orbit path (legacy formula)
-      const label = document.getElementById(`${planet.id}Label`);
+      const label = liveElementById(`${planet.id}Label`);
       if (label) {
         const yModAnglePercent = ((angle + 270) % 360) / 360;
         label.setAttribute(
           "startOffset",
-          `${(yModAnglePercent * 100 - planet.textNameOffset) % 100}%`
+          `${(yModAnglePercent * 100 - planet.textNameOffset) % 100}%`,
         );
       }
     });
@@ -179,7 +207,7 @@ const SolarSystem3D = () => {
         <circleGeometry args={[1, 32]} />
         <meshBasicMaterial colorWrite={false} />
       </mesh>
-      {PLANETS.map((planet, i) => (
+      {PLANET_CONFIGS.map((planet, i) => (
         <group
           key={planet.id}
           ref={(el) => {

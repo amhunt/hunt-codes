@@ -27,13 +27,10 @@ const SpaceCanvas = ({ children }: { children: React.ReactNode }) => {
   return (
     <Canvas
       className="space-canvas"
-      // R3F merges this over its wrapper div's inline defaults
-      style={{
-        position: "fixed",
-        inset: 0,
-        zIndex: 2,
-        pointerEvents: "none",
-      }}
+      // Merged over R3F's inline wrapper defaults (position: relative);
+      // z-index and pointer-events live in the .space-canvas SCSS rule so
+      // the stacking contract stays in one place (App.scss)
+      style={{ position: "fixed", inset: 0 }}
       orthographic
       flat
       camera={{ position: [0, 0, 1000], near: 0.1, far: 4000, zoom: 1 }}

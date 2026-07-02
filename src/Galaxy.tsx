@@ -2,7 +2,6 @@ import React, { useEffect, useState } from "react";
 import cx from "classnames";
 import MoonSvg from "./MoonSvg";
 import SunSvg from "./SunSvg";
-import supportsWebGL from "./space3d/webglSupport";
 
 const Galaxy = ({ isNightMode }: { isNightMode: boolean }) => {
   const [hasMounted, setHasMounted] = useState(false);
@@ -33,7 +32,7 @@ const Galaxy = ({ isNightMode }: { isNightMode: boolean }) => {
           className={cx(
             "planet1",
             "planet1_day",
-            hasMounted && (!isNightMode ? "on" : "off")
+            hasMounted && (!isNightMode ? "on" : "off"),
           )}
         >
           <SunSvg isHome />
@@ -44,10 +43,10 @@ const Galaxy = ({ isNightMode }: { isNightMode: boolean }) => {
           className={cx(
             "planet1",
             "planet1_night",
-            !hasMounted ? "unmounted" : isNightMode ? "on" : "off"
+            !hasMounted ? "unmounted" : isNightMode ? "on" : "off",
           )}
         >
-          <MoonSvg bodyRendered3D={supportsWebGL()} />
+          <MoonSvg />
         </div>
       )}
     </div>

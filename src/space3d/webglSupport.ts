@@ -13,7 +13,14 @@ export default function supportsWebGL(): boolean {
       canvas.getContext("webgl2") ||
       canvas.getContext("webgl") ||
       canvas.getContext("experimental-webgl");
-    cachedSupport = gl != null && typeof (gl as WebGLRenderingContext).getParameter === "function";
+    cachedSupport =
+      gl != null &&
+      typeof (gl as WebGLRenderingContext).getParameter === "function";
+    // Release the probe context right away — contexts are a capped
+    // browser resource and this one is never used again
+    (gl as WebGLRenderingContext | null)
+      ?.getExtension?.("WEBGL_lose_context")
+      ?.loseContext();
   } catch {
     cachedSupport = false;
   }

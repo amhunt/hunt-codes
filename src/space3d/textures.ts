@@ -1,12 +1,14 @@
 import * as THREE from "three";
 
+import type { PlanetKind } from "../landingScene";
+
 /**
  * Procedural equirectangular textures for the planets and moon, generated
  * on a 2D canvas at runtime (no image assets). Palettes match the radial
- * gradients previously defined in Landing.tsx / MoonSvg.tsx.
+ * gradients in Landing.tsx's fallback defs / MoonSvg.tsx.
  */
 
-export type PlanetKind = "mars" | "neptune" | "saturn" | "ice";
+export type { PlanetKind };
 
 const TEX_W = 256;
 const TEX_H = 128;
@@ -29,7 +31,7 @@ const asTexture = (canvas: HTMLCanvasElement) => {
 const drawBands = (
   ctx: CanvasRenderingContext2D,
   palette: string[],
-  wobble: number
+  wobble: number,
 ) => {
   ctx.fillStyle = palette[0];
   ctx.fillRect(0, 0, TEX_W, TEX_H);
@@ -57,7 +59,7 @@ const drawBlotches = (
   count: number,
   minR: number,
   maxR: number,
-  alpha: number
+  alpha: number,
 ) => {
   for (let i = 0; i < count; i++) {
     ctx.fillStyle = colors[Math.floor(Math.random() * colors.length)];
@@ -66,7 +68,15 @@ const drawBlotches = (
     const x = Math.random() * TEX_W;
     const y = Math.random() * TEX_H;
     ctx.beginPath();
-    ctx.ellipse(x, y, r * (1 + Math.random()), r, Math.random() * Math.PI, 0, Math.PI * 2);
+    ctx.ellipse(
+      x,
+      y,
+      r * (1 + Math.random()),
+      r,
+      Math.random() * Math.PI,
+      0,
+      Math.PI * 2,
+    );
     ctx.fill();
   }
   ctx.globalAlpha = 1;
@@ -96,7 +106,11 @@ export function createPlanetTexture(kind: PlanetKind): THREE.CanvasTexture {
       drawBlotches(ctx, ["#4a90c0"], 10, 4, 12, 0.25);
       break;
     case "saturn":
-      drawBands(ctx, ["#c76714", "#e98e3e", "#8d480c", "#d8791f", "#b05a10"], 1.5);
+      drawBands(
+        ctx,
+        ["#c76714", "#e98e3e", "#8d480c", "#d8791f", "#b05a10"],
+        1.5,
+      );
       break;
     case "ice":
       // Green ice giant (palette from the old planet4Gradient)

@@ -1,14 +1,16 @@
 import React from "react";
 import { Link } from "react-router-dom";
 import { SunInternals } from "SunSvg";
+import { useOrbitalAnimation } from "./hooks/useOrbitalAnimation";
 import {
   PLANET_CONFIGS,
-  useOrbitalAnimation,
-} from "./hooks/useOrbitalAnimation";
-import supportsWebGL from "./space3d/webglSupport";
+  SOLAR_SYSTEM_CENTER,
+  SUN_RADIUS_OFFSET,
+  SUN_SIZE,
+} from "./landingScene";
 
-const CENTER_X = 300;
-const CENTER_Y = 300;
+const CENTER_X = SOLAR_SYSTEM_CENTER;
+const CENTER_Y = SOLAR_SYSTEM_CENTER;
 
 const PlanetLabel = ({
   id,
@@ -40,48 +42,49 @@ const PlanetLabel = ({
 };
 
 const Landing = () => {
-  // With WebGL, planets render as 3D spheres in the shared background
-  // canvas (SolarSystem3D); the SVG keeps the sun, orbits and labels.
-  const webglEnabled = supportsWebGL();
-  useOrbitalAnimation(CENTER_X, CENTER_Y, !webglEnabled);
+  // Drives the flat SVG planets until the WebGL scene (SolarSystem3D)
+  // loads and takes over; the SVG keeps the sun, orbits and labels.
+  useOrbitalAnimation(CENTER_X, CENTER_Y);
 
   return (
     <div className="landing-page">
       <svg id="solar-system" viewBox="0 0 600 600" style={{ display: "block" }}>
-        {!webglEnabled && (
-          <defs>
-            {/* Mars gradient - red planet with surface variations */}
-            <radialGradient id="planet1Gradient" cx="30%" cy="30%">
-              <stop offset="0%" stopColor="#aa4135" />
-              <stop offset="70%" stopColor="#872c22" />
-              <stop offset="100%" stopColor="#62170f" />
-            </radialGradient>
+        <defs>
+          {/* Mars gradient - red planet with surface variations */}
+          <radialGradient id="planet1Gradient" cx="30%" cy="30%">
+            <stop offset="0%" stopColor="#aa4135" />
+            <stop offset="70%" stopColor="#872c22" />
+            <stop offset="100%" stopColor="#62170f" />
+          </radialGradient>
 
-            {/* Neptune gradient - blue gas giant with atmospheric depth */}
-            <radialGradient id="planet2Gradient" cx="30%" cy="30%">
-              <stop offset="0%" stopColor="#347dae" />
-              <stop offset="70%" stopColor="#195882" />
-              <stop offset="100%" stopColor="#0e476d" />
-            </radialGradient>
+          {/* Neptune gradient - blue gas giant with atmospheric depth */}
+          <radialGradient id="planet2Gradient" cx="30%" cy="30%">
+            <stop offset="0%" stopColor="#347dae" />
+            <stop offset="70%" stopColor="#195882" />
+            <stop offset="100%" stopColor="#0e476d" />
+          </radialGradient>
 
-            {/* Saturn gradient - golden planet with warm tones */}
-            <radialGradient id="planet3Gradient" cx="35%" cy="35%">
-              <stop offset="0%" stopColor="#e98e3e" />
-              <stop offset="70%" stopColor="#c76714" />
-              <stop offset="100%" stopColor="#8d480c" />
-            </radialGradient>
+          {/* Saturn gradient - golden planet with warm tones */}
+          <radialGradient id="planet3Gradient" cx="35%" cy="35%">
+            <stop offset="0%" stopColor="#e98e3e" />
+            <stop offset="70%" stopColor="#c76714" />
+            <stop offset="100%" stopColor="#8d480c" />
+          </radialGradient>
 
-            {/* Uranus gradient - ice giant with cool tones */}
-            <radialGradient id="planet4Gradient" cx="35%" cy="35%">
-              <stop offset="0%" stopColor="#32ae38" />
-              <stop offset="70%" stopColor="#1a8920" />
-              <stop offset="100%" stopColor="#127117" />
-            </radialGradient>
-          </defs>
-        )}
+          {/* Uranus gradient - ice giant with cool tones */}
+          <radialGradient id="planet4Gradient" cx="35%" cy="35%">
+            <stop offset="0%" stopColor="#32ae38" />
+            <stop offset="70%" stopColor="#1a8920" />
+            <stop offset="100%" stopColor="#127117" />
+          </radialGradient>
+        </defs>
 
         <Link to="/home">
-          <SunInternals size={0.25} radiusOffset={243} strokeWidth={0} />
+          <SunInternals
+            size={SUN_SIZE}
+            radiusOffset={SUN_RADIUS_OFFSET}
+            strokeWidth={0}
+          />
           <text fontFamily="'Inconsolata', monospace">
             <textPath
               fill="white"
@@ -153,39 +156,19 @@ const Landing = () => {
         `}
         />
 
-        {/* Planets (flat SVG fallback; the WebGL path draws 3D spheres) */}
-        {!webglEnabled && (
-          <>
-            <circle
-              className="planet"
-              id="planet1"
-              cx="300"
-              cy={PLANET_CONFIGS[0].orbit}
-              r="4"
-            />
-            <circle
-              className="planet"
-              id="planet2"
-              cx="300"
-              cy={PLANET_CONFIGS[1].orbit}
-              r="8"
-            />
-            <circle
-              className="planet"
-              id="planet3"
-              cx="300"
-              cy={PLANET_CONFIGS[2].orbit}
-              r="6"
-            />
-            <circle
-              className="planet"
-              id="planet4"
-              cx="300"
-              cy={PLANET_CONFIGS[3].orbit}
-              r="5"
-            />
-          </>
-        )}
+        {/* Flat SVG planets: the always-on fallback. They render and
+            animate until the WebGL scene loads and hides them (and come
+            back if it goes away). */}
+        {PLANET_CONFIGS.map((planet) => (
+          <circle
+            key={planet.id}
+            className="planet"
+            id={planet.id}
+            cx="300"
+            cy={planet.orbit}
+            r={planet.radius}
+          />
+        ))}
 
         {/* Curved text labels trailing behind each planet */}
         {PLANET_CONFIGS.map((planet, index) => (

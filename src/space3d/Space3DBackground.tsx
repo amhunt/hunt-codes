@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React, { memo, useEffect, useState } from "react";
 
 import SpaceCanvas from "./SpaceCanvas";
 import StarField from "./StarField";
@@ -47,4 +47,6 @@ const Space3DBackground = ({
   );
 };
 
-export default Space3DBackground;
+// memo matters here: AppBackground re-renders every 200ms for the title
+// ticker, and this keeps the whole R3F tree out of that loop
+export default memo(Space3DBackground);

@@ -355,9 +355,7 @@ p {
   transition:
     fill 3s ease,
     opacity 1s ease;
-  // Above .space-canvas (z 2) so the title blends over the stars, as it
-  // did when the stars lived inside the background layer.
-  z-index: 3;
+  z-index: 2;
   mix-blend-mode: multiply;
   max-height: 200px;
   font-family:
@@ -744,9 +742,12 @@ $STAR_MOVEMENT_INTERVAL_MS: 300;
 
 // Shared fullscreen WebGL canvas for the background scenes (stars, 3D
 // planets, moon). Sits above the flat backgrounds and the landing SVG,
-// below page content; never intercepts pointer events. The positioning
-// itself is set inline by SpaceCanvas (R3F's wrapper uses inline styles).
+// below page content and the Galaxy moon/sun (same z, later in DOM);
+// never intercepts pointer events. Also used by the DOM-stars fallback
+// wrapper when the 3D chunk fails, so it stays above the night backdrop.
 .space-canvas {
+  position: fixed;
+  inset: 0;
   z-index: 2;
   pointer-events: none;
 }

@@ -4,9 +4,21 @@ import { useFrame, useThree } from "@react-three/fiber";
 import tinycolor from "tinycolor2";
 
 import useWindowWidth from "../useWindowWidth";
-import { DEFAULT_CURSOR_GRAVITY_RADIUS_PX, maxStarRadiusPx } from "../stars/starUtils";
+import { useCursorPositionRef } from "../hooks/useCursorPosition";
 import {
+  CURSOR_DISABLED_BUFFER_ZONE_PX,
+  DEFAULT_CURSOR_GRAVITY_RADIUS_PX,
+  maxStarRadiusPx,
+  STAR_INTRO_DELAY_MS,
+  STAR_MOVEMENT_SPEED_MULTIPLIER,
+  STAR_TICK_MS,
+  STAR_TO_CURSOR_TRIGGER_DISTANCE_PX,
+  TEXT_CHANGE_INTERVAL_MS,
+} from "../stars/starUtils";
+import {
+  generateBackgroundStars,
   generateStarsForLetters,
+  INTRO_SCATTER_PX,
   starPhrases,
   starPhrasesSmall,
   type SampledStar,
@@ -23,13 +35,6 @@ import { domToWorldX, domToWorldY, Z_STARS } from "./SpaceCanvas";
  *   but simulated into a Float32Array each frame with zero React work.
  */
 
-// --- Legacy behavior constants (from Stars.tsx / StarDot.tsx) ---
-const LEGACY_TICK_MS = 45;
-const STAR_MOVEMENT_SPEED_MULTIPLIER = 1 / 100;
-const CURSOR_DISABLED_BUFFER_ZONE_PX = 20;
-const STAR_TO_CURSOR_TRIGGER_DISTANCE_PX = 100;
-const TEXT_CHANGE_INTERVAL_MS = 10000;
-const SIM_ENABLE_DELAY_MS = 2000;
 // The legacy interval advanced the phrase 3 times, then stopped (ending
 // back on the first phrase).
 const MAX_PHRASE_TRANSITIONS = 3;
@@ -106,8 +111,18 @@ const fragmentShader = /* glsl */ `
   }
 `;
 
-const createStarMaterial = (glowColor: string, glowStrength: number) =>
-  new THREE.ShaderMaterial({
+/** Write a CSS color into a Float32Array as 0..1 RGB at the given offset. */
+const writeColor = (array: Float32Array, offset: number, color: string) => {
+  const { r, g, b } = tinycolor(color).toRgb();
+  array[offset] = r / 255;
+  array[offset + 1] = g / 255;
+  array[offset + 2] = b / 255;
+};
+
+const createStarMaterial = (glowColor: string, glowStrength: number) => {
+  const glow = new Float32Array(3);
+  writeColor(glow, 0, glowColor);
+  return new THREE.ShaderMaterial({
     vertexShader,
     fragmentShader,
     transparent: true,
@@ -120,40 +135,67 @@ const createStarMaterial = (glowColor: string, glowStrength: number) =>
       uHue: { value: 0 },
       uPixelRatio: { value: 1 },
       uMaxPointSize: { value: 256 },
-      uGlowColor: { value: hexToVec3(glowColor) },
+      uGlowColor: { value: new THREE.Vector3(glow[0], glow[1], glow[2]) },
       uGlowStrength: { value: glowStrength },
     },
   });
-
-function hexToVec3(hex: string): THREE.Vector3 {
-  const { r, g, b } = tinycolor(hex).toRgb();
-  return new THREE.Vector3(r / 255, g / 255, b / 255);
-}
-
-/** Cursor position in DOM px, kept in a ref so no React work per move. */
-const useCursorRef = () => {
-  const cursorRef = useRef<{ x: number; y: number } | null>(null);
-  useEffect(() => {
-    const onMove = (e: MouseEvent) => {
-      cursorRef.current = { x: e.pageX, y: e.pageY };
-    };
-    const onLeave = () => {
-      cursorRef.current = null;
-    };
-    document.addEventListener("mousemove", onMove, { passive: true });
-    window.addEventListener("blur", onLeave, { passive: true });
-    return () => {
-      document.removeEventListener("mousemove", onMove);
-      window.removeEventListener("blur", onLeave);
-    };
-  }, []);
-  return cursorRef;
 };
 
-/** Query the GPU's max point sprite size once and cap sizes to it. */
+interface StarBuffers {
+  geometry: THREE.BufferGeometry;
+  positions: Float32Array;
+  colors: Float32Array;
+  sizes: Float32Array;
+  phases: Float32Array;
+  discos: Float32Array;
+  brightens: Float32Array;
+  positionsAttr: THREE.BufferAttribute;
+  sizesAttr: THREE.BufferAttribute;
+  brightensAttr: THREE.BufferAttribute;
+}
+
+/** The one place that knows the star shader's per-vertex attribute layout. */
+const createStarGeometry = (
+  count: number,
+  extent: number,
+  dynamic: boolean,
+): StarBuffers => {
+  const geometry = new THREE.BufferGeometry();
+  const make = (itemSize: number, name: string) => {
+    const attr = new THREE.BufferAttribute(
+      new Float32Array(count * itemSize),
+      itemSize,
+    );
+    if (dynamic) attr.setUsage(THREE.DynamicDrawUsage);
+    geometry.setAttribute(name, attr);
+    return attr;
+  };
+  const positionsAttr = make(3, "position");
+  const colorsAttr = make(3, "aColor");
+  const sizesAttr = make(1, "aSize");
+  const phasesAttr = make(1, "aPhase");
+  const discosAttr = make(1, "aDisco");
+  const brightensAttr = make(1, "aBrighten");
+  // Points are spread across the whole screen; skip per-frame culling math
+  geometry.boundingSphere = new THREE.Sphere(new THREE.Vector3(), extent);
+  return {
+    geometry,
+    positions: positionsAttr.array as Float32Array,
+    colors: colorsAttr.array as Float32Array,
+    sizes: sizesAttr.array as Float32Array,
+    phases: phasesAttr.array as Float32Array,
+    discos: discosAttr.array as Float32Array,
+    brightens: brightensAttr.array as Float32Array,
+    positionsAttr,
+    sizesAttr,
+    brightensAttr,
+  };
+};
+
+/** Per-frame uniform updates + the GPU's max point-sprite size cap. */
 const useConfigureMaterial = (
   material: THREE.ShaderMaterial,
-  opacityRef: React.MutableRefObject<number>
+  opacityRef: React.MutableRefObject<number>,
 ) => {
   const gl = useThree((s) => s.gl);
   useEffect(() => {
@@ -188,166 +230,128 @@ const BackgroundStars = ({
 }) => {
   const { width, height } = useWindowWidth();
 
-  const geometry = useMemo(() => {
-    // 1-2 background stars per ten thousand pixels (legacy densities)
-    const count = Math.round(width * height * (isLanding ? 0.0002 : 0.0001));
-    const positions = new Float32Array(count * 3);
-    const colors = new Float32Array(count * 3);
-    const sizes = new Float32Array(count);
-    const phases = new Float32Array(count);
-    const discos = new Float32Array(count);
-    const brightens = new Float32Array(count); // always 0; shared shader
-
-    for (let i = 0; i < count; i++) {
-      const x = Math.random() * width;
-      const y = Math.random() * height;
-      positions[i * 3] = domToWorldX(x, width);
-      positions[i * 3 + 1] = domToWorldY(y, height);
-      positions[i * 3 + 2] = Z_STARS;
-      const { r, g, b } = tinycolor.random().brighten(20).toRgb();
-      colors[i * 3] = r / 255;
-      colors[i * 3 + 1] = g / 255;
-      colors[i * 3 + 2] = b / 255;
-      // Legacy background stars were divs whose *width* was this value,
-      // so the visual radius is half of it (text stars use SVG circle r)
-      const legacyWidth = Math.random() + 1;
-      sizes[i] = legacyWidth / 2;
-      phases[i] = Math.random();
+  const buffers = useMemo(() => {
+    const stars = generateBackgroundStars(width, height, isLanding);
+    const b = createStarGeometry(stars.length, width + height, false);
+    stars.forEach((star, i) => {
+      b.positions[i * 3] = domToWorldX(star.x, width);
+      b.positions[i * 3 + 1] = domToWorldY(star.y, height);
+      b.positions[i * 3 + 2] = Z_STARS;
+      writeColor(b.colors, i * 3, star.color);
+      // The legacy stars were divs whose *width* was this value, so the
+      // visual radius is half of it (text stars use SVG circle r)
+      b.sizes[i] = star.widthPx / 2;
+      b.phases[i] = Math.random();
       // Legacy: the smallest stars get the "disco" pulse animation
-      discos[i] = legacyWidth < 1.05 ? 1 : 0;
-    }
-
-    const geo = new THREE.BufferGeometry();
-    geo.setAttribute("position", new THREE.BufferAttribute(positions, 3));
-    geo.setAttribute("aColor", new THREE.BufferAttribute(colors, 3));
-    geo.setAttribute("aSize", new THREE.BufferAttribute(sizes, 1));
-    geo.setAttribute("aPhase", new THREE.BufferAttribute(phases, 1));
-    geo.setAttribute("aDisco", new THREE.BufferAttribute(discos, 1));
-    geo.setAttribute("aBrighten", new THREE.BufferAttribute(brightens, 1));
-    // Points are spread across the whole screen; skip per-frame culling math
-    geo.boundingSphere = new THREE.Sphere(new THREE.Vector3(), width + height);
-    return geo;
+      b.discos[i] = star.widthPx < 1.05 ? 1 : 0;
+    });
+    return b;
   }, [width, height, isLanding]);
 
   const material = useMemo(
     // Reddish halo, like the legacy .star_background box-shadow
     () => createStarMaterial("rgb(210, 99, 99)", 0.4),
-    []
+    [],
   );
 
   useConfigureMaterial(material, opacityRef);
 
-  useEffect(() => () => geometry.dispose(), [geometry]);
+  useEffect(() => () => buffers.geometry.dispose(), [buffers]);
   useEffect(() => () => material.dispose(), [material]);
 
-  return <points geometry={geometry} material={material} />;
+  return <points geometry={buffers.geometry} material={material} />;
 };
 
 const TextStars = ({
+  isLanding,
   opacityRef,
 }: {
+  isLanding: boolean;
   opacityRef: React.MutableRefObject<number>;
 }) => {
   const { width, height, isSmall } = useWindowWidth();
-  const cursorRef = useCursorRef();
+  const cursorRef = useCursorPositionRef();
 
   const [phraseIdx, setPhraseIdx] = useState(0);
   const phrases = isSmall ? starPhrasesSmall : starPhrases;
   const phrase = phrases[phraseIdx % phrases.length];
 
+  // Off the landing page there are no text stars, but the component stays
+  // mounted so the intro/phrase choreography doesn't replay on every
+  // route return (matching the legacy always-mounted Stars component).
   const targets: SampledStar[] = useMemo(
-    () => generateStarsForLetters(phrase, width),
-    [phrase, width]
+    () => (isLanding ? generateStarsForLetters(phrase, width) : []),
+    [isLanding, phrase, width],
   );
 
-  // Sim state lives in refs/typed arrays; React only re-renders on phrase
-  // or resize changes (every 10s at most).
-  const simRef = useRef<{
-    positions: Float32Array; // DOM px, xy pairs
-    velocities: Float32Array;
-    hasEverHadStars: boolean;
-    numCloseToCursor: number;
-    elapsedMs: number;
-    transitions: number;
-  }>({
-    positions: new Float32Array(0),
-    velocities: new Float32Array(0),
+  // Choreography state persists across phrase changes and route hops
+  const simRef = useRef({
     hasEverHadStars: false,
     numCloseToCursor: 0,
     elapsedMs: 0,
     transitions: 0,
   });
+  // Live star positions (DOM px, xy pairs); written every frame, read by
+  // the next phrase's useMemo for carry-over. The memo itself stays pure —
+  // the commit happens in the effect below.
+  const livePositionsRef = useRef(new Float32Array(0));
 
-  const { geometry, positionsAttr, sizeAttr, brightenAttr } = useMemo(() => {
+  const data = useMemo(() => {
     const count = targets.length;
     const sim = simRef.current;
-    const prev = sim.positions;
-    const next = new Float32Array(count * 2);
+    const prev = livePositionsRef.current;
+    const positions = new Float32Array(count * 2);
+    const velocities = new Float32Array(count);
     for (let i = 0; i < count; i++) {
+      velocities[i] = Math.random() + 0.5;
       if (i * 2 + 1 < prev.length && sim.hasEverHadStars) {
         // Carry over live positions; stars glide to the new phrase's glyphs
-        next[i * 2] = prev[i * 2];
-        next[i * 2 + 1] = prev[i * 2 + 1];
+        positions[i * 2] = prev[i * 2];
+        positions[i * 2 + 1] = prev[i * 2 + 1];
       } else if (sim.hasEverHadStars) {
         // Extra stars for a longer phrase start on their target (legacy)
-        next[i * 2] = targets[i].x;
-        next[i * 2 + 1] = targets[i].y;
+        positions[i * 2] = targets[i].x;
+        positions[i * 2 + 1] = targets[i].y;
       } else {
         // Landing intro: scatter around the glyphs, then assemble
-        next[i * 2] = targets[i].x + Math.random() * 400 - 200;
-        next[i * 2 + 1] = targets[i].y + Math.random() * 400 - 200;
+        positions[i * 2] =
+          targets[i].x +
+          Math.random() * INTRO_SCATTER_PX * 2 -
+          INTRO_SCATTER_PX;
+        positions[i * 2 + 1] =
+          targets[i].y +
+          Math.random() * INTRO_SCATTER_PX * 2 -
+          INTRO_SCATTER_PX;
       }
     }
-    sim.positions = next;
-    sim.hasEverHadStars = sim.hasEverHadStars || count > 0;
-    const velocities = new Float32Array(count);
-    for (let i = 0; i < count; i++) velocities[i] = Math.random() + 0.5;
-    sim.velocities = velocities;
 
-    const positions = new Float32Array(count * 3);
-    const colors = new Float32Array(count * 3);
-    const sizes = new Float32Array(count);
-    const phases = new Float32Array(count);
-    const discos = new Float32Array(count);
-    const brightens = new Float32Array(count);
+    const buffers = createStarGeometry(count, width + height, true);
     for (let i = 0; i < count; i++) {
-      positions[i * 3] = domToWorldX(next[i * 2], width);
-      positions[i * 3 + 1] = domToWorldY(next[i * 2 + 1], height);
-      positions[i * 3 + 2] = Z_STARS;
-      const { r, g, b } = tinycolor(targets[i].color).toRgb();
-      colors[i * 3] = r / 255;
-      colors[i * 3 + 1] = g / 255;
-      colors[i * 3 + 2] = b / 255;
-      sizes[i] = targets[i].r;
-      phases[i] = Math.random();
+      buffers.positions[i * 3] = domToWorldX(positions[i * 2], width);
+      buffers.positions[i * 3 + 1] = domToWorldY(positions[i * 2 + 1], height);
+      buffers.positions[i * 3 + 2] = Z_STARS;
+      writeColor(buffers.colors, i * 3, targets[i].color);
+      buffers.sizes[i] = targets[i].r;
+      buffers.phases[i] = Math.random();
     }
-
-    const geo = new THREE.BufferGeometry();
-    const positionsAttr = new THREE.BufferAttribute(positions, 3);
-    positionsAttr.setUsage(THREE.DynamicDrawUsage);
-    const sizeAttr = new THREE.BufferAttribute(sizes, 1);
-    sizeAttr.setUsage(THREE.DynamicDrawUsage);
-    const brightenAttr = new THREE.BufferAttribute(brightens, 1);
-    brightenAttr.setUsage(THREE.DynamicDrawUsage);
-    geo.setAttribute("position", positionsAttr);
-    geo.setAttribute("aColor", new THREE.BufferAttribute(colors, 3));
-    geo.setAttribute("aSize", sizeAttr);
-    geo.setAttribute("aPhase", new THREE.BufferAttribute(phases, 1));
-    geo.setAttribute("aDisco", new THREE.BufferAttribute(discos, 1));
-    geo.setAttribute("aBrighten", brightenAttr);
-    geo.boundingSphere = new THREE.Sphere(new THREE.Vector3(), width + height);
-    return { geometry: geo, positionsAttr, sizeAttr, brightenAttr };
+    return { buffers, positions, velocities };
   }, [targets, width, height]);
+
+  // Commit the new sim arrays outside of render
+  useEffect(() => {
+    livePositionsRef.current = data.positions;
+    if (data.positions.length > 0) simRef.current.hasEverHadStars = true;
+  }, [data]);
 
   const material = useMemo(
     // Faint purple halo, like the legacy .star box-shadow
     () => createStarMaterial("#ab8ffd", 0.25),
-    []
+    [],
   );
 
   useConfigureMaterial(material, opacityRef);
 
-  useEffect(() => () => geometry.dispose(), [geometry]);
+  useEffect(() => () => data.buffers.geometry.dispose(), [data]);
   useEffect(() => () => material.dispose(), [material]);
 
   useFrame((_, delta) => {
@@ -355,23 +359,25 @@ const TextStars = ({
     const deltaMs = Math.min(delta * 1000, 100);
     sim.elapsedMs += deltaMs;
     // Legacy choreography: stars sit scattered for 2s before assembling
-    if (sim.elapsedMs < SIM_ENABLE_DELAY_MS) return;
+    if (sim.elapsedMs < STAR_INTRO_DELAY_MS) return;
 
     // Phrase cycle: advance every 10s, 3 times total, ending on phrase 0
     if (
       sim.transitions < MAX_PHRASE_TRANSITIONS &&
-      sim.elapsedMs - SIM_ENABLE_DELAY_MS >
+      sim.elapsedMs - STAR_INTRO_DELAY_MS >
         (sim.transitions + 1) * TEXT_CHANGE_INTERVAL_MS
     ) {
       sim.transitions++;
       setPhraseIdx((idx) => (idx + 1) % phrases.length);
     }
 
+    const count = targets.length;
+    const positions = data.positions;
+    if (count === 0 || positions.length < count * 2) return;
+
     // The legacy sim stepped once per 45ms; scale movement to keep the
     // same speed at any frame rate (just smoother).
-    const factor = deltaMs / LEGACY_TICK_MS;
-    const count = targets.length;
-    const positions = sim.positions;
+    const factor = deltaMs / STAR_TICK_MS;
 
     const cursor = cursorRef.current;
     const cursorUsable =
@@ -390,8 +396,11 @@ const TextStars = ({
     for (let i = 0; i < count; i++) {
       let x = positions[i * 2];
       let y = positions[i * 2 + 1];
-      const distanceToCursor = Math.sqrt((x - cursorX) ** 2 + (y - cursorY) ** 2);
-      const isCloseToCursor = distanceToCursor < DEFAULT_CURSOR_GRAVITY_RADIUS_PX;
+      const distanceToCursor = Math.sqrt(
+        (x - cursorX) ** 2 + (y - cursorY) ** 2,
+      );
+      const isCloseToCursor =
+        distanceToCursor < DEFAULT_CURSOR_GRAVITY_RADIUS_PX;
       if (isCloseToCursor) numClose++;
 
       const originalX = targets[i].x;
@@ -402,12 +411,12 @@ const TextStars = ({
         : null;
 
       const uncappedChangeX =
-        sim.velocities[i] *
+        data.velocities[i] *
         (closeToCursorPull ??
           (x - originalX) ** 2 * STAR_MOVEMENT_SPEED_MULTIPLIER);
       const changeX = Math.max(1, Math.min(10, uncappedChangeX)) * factor;
       const uncappedChangeY =
-        sim.velocities[i] *
+        data.velocities[i] *
         (closeToCursorPull ??
           (y - originalY) ** 2 * STAR_MOVEMENT_SPEED_MULTIPLIER);
       const changeY = Math.max(1, Math.min(10, uncappedChangeY)) * factor;
@@ -439,7 +448,7 @@ const TextStars = ({
           (Math.sqrt(STAR_TO_CURSOR_TRIGGER_DISTANCE_PX) /
             Math.sqrt(Math.max(distanceToCursor, 0.01))) *
             targets[i].r,
-          maxStarRadiusPx
+          maxStarRadiusPx,
         );
         if (distanceToCursor < 10) {
           size = Math.max(size, Math.min(prevNumClose / 16, 32));
@@ -447,19 +456,19 @@ const TextStars = ({
         }
       }
 
-      positionsAttr.array[i * 3] = domToWorldX(x, width);
-      positionsAttr.array[i * 3 + 1] = domToWorldY(y, height);
-      sizeAttr.array[i] = size;
-      brightenAttr.array[i] = brighten;
+      data.buffers.positions[i * 3] = domToWorldX(x, width);
+      data.buffers.positions[i * 3 + 1] = domToWorldY(y, height);
+      data.buffers.sizes[i] = size;
+      data.buffers.brightens[i] = brighten;
     }
 
     sim.numCloseToCursor = numClose;
-    positionsAttr.needsUpdate = true;
-    sizeAttr.needsUpdate = true;
-    brightenAttr.needsUpdate = true;
+    data.buffers.positionsAttr.needsUpdate = true;
+    data.buffers.sizesAttr.needsUpdate = true;
+    data.buffers.brightensAttr.needsUpdate = true;
   });
 
-  return <points geometry={geometry} material={material} />;
+  return <points geometry={data.buffers.geometry} material={material} />;
 };
 
 const StarField = ({ isLanding, opacityTarget }: StarFieldProps) => {
@@ -482,7 +491,7 @@ const StarField = ({ isLanding, opacityTarget }: StarFieldProps) => {
   return (
     <>
       <BackgroundStars isLanding={isLanding} opacityRef={opacityRef} />
-      {isLanding && <TextStars opacityRef={opacityRef} />}
+      <TextStars isLanding={isLanding} opacityRef={opacityRef} />
     </>
   );
 };

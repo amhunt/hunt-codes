@@ -11,6 +11,11 @@ export interface SampledStar {
   y: number;
   r: number;
   color: string;
+}
+
+// Sampling-internal: glyph-canvas coordinates used only for the
+// min-distance dedup between candidate points
+interface PlacedStar extends SampledStar {
   canvasX: number;
   canvasY: number;
 }
@@ -48,7 +53,7 @@ const generateStarsForLetter = ({
   const letterMetricsInCanvas = ctx.measureText(letter);
   const ctxTextWidth = letterMetricsInCanvas.width;
   const ctxTextHeight = letterMetricsInCanvas.fontBoundingBoxAscent;
-  const points: SampledStar[] = [];
+  const points: PlacedStar[] = [];
   const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
 
   for (let i = 0; i < numStars; i++) {
@@ -66,7 +71,7 @@ const generateStarsForLetter = ({
         !points.some(
           (star) =>
             Math.abs(star.canvasX - x) < MIN_PX_DIFF_BETWEEN_STARS &&
-            Math.abs(star.canvasY - y) < MIN_PX_DIFF_BETWEEN_STARS
+            Math.abs(star.canvasY - y) < MIN_PX_DIFF_BETWEEN_STARS,
         )
       ) {
         points.push({
@@ -94,7 +99,7 @@ const percentageWidthForSidePadding = 0.05;
 
 export const generateStarsForLetters = (
   text: string,
-  windowWidth: number
+  windowWidth: number,
 ): SampledStar[] => {
   const letterSpacing =
     (windowWidth * percentageWidthOfSpacing) / (text.length - 1);
@@ -116,7 +121,7 @@ export const generateStarsForLetters = (
   const totalStarsWidthPx = Math.round(percentageWidthOfText * windowWidth);
   const averageLetterWidth = totalStarsWidthPx / text.length;
   const scaledLetterWidths = letterWidths.map((letterWidthPx) =>
-    Math.round((letterWidthPx / totalPrescaledCharWidths) * totalStarsWidthPx)
+    Math.round((letterWidthPx / totalPrescaledCharWidths) * totalStarsWidthPx),
   );
 
   // Calculate starting X position to center the text
@@ -139,3 +144,40 @@ export const generateStarsForLetters = (
 
 export const starPhrases = ["HUNT.CODES", "BUILT WITH ♥", "BY ANDREW HUNT"];
 export const starPhrasesSmall = ["ANDREW", "HUNT", "CODES ★"];
+
+/** Landing text stars start scattered up to this far from their glyph */
+export const INTRO_SCATTER_PX = 200;
+
+// Background star densities: ~1-2 stars per ten thousand pixels
+const BACKGROUND_DENSITY_LANDING = 0.0002;
+const BACKGROUND_DENSITY_DEFAULT = 0.0001;
+
+export interface BackgroundStar {
+  x: number;
+  y: number;
+  /** Legacy DOM size: the star div's width in px (visual radius is half) */
+  widthPx: number;
+  color: string;
+}
+
+/**
+ * Random background sky, shared by both renderers so density and palette
+ * stay identical between the WebGL and DOM paths.
+ */
+export const generateBackgroundStars = (
+  width: number,
+  height: number,
+  isLanding: boolean,
+): BackgroundStar[] => {
+  const count = Math.round(
+    width *
+      height *
+      (isLanding ? BACKGROUND_DENSITY_LANDING : BACKGROUND_DENSITY_DEFAULT),
+  );
+  return Array.from({ length: count }, () => ({
+    x: Math.random() * width,
+    y: Math.random() * height,
+    widthPx: Math.random() + 1,
+    color: tinycolor.random().brighten(20).toHexString(),
+  }));
+};

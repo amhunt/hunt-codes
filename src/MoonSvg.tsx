@@ -1,18 +1,19 @@
 import React from "react";
 
-/**
- * When bodyRendered3D is set, the disc fill goes transparent and the moon
- * body is drawn as a 3D sphere in the background canvas (Moon3D tracks
- * this SVG by id); the animated ring, text and eclipse overlay stay here.
- */
-export default function MoonSvg({
-  bodyRendered3D = false,
-}: {
-  bodyRendered3D?: boolean;
-}) {
+// Geometry of the moon disc, exported for the WebGL scene (space3d/Moon3D)
+// that tracks this SVG and replaces the disc fill with a 3D sphere while
+// it is rendering. Keep these in sync with the path + viewBox below.
+export const MOON_SVG_ID = "moon-svg";
+export const MOON_DISC_ID = "moon-disc";
+export const MOON_VIEWBOX = 550;
+export const MOON_CX = 275;
+export const MOON_CY = 276;
+export const MOON_R = 200;
+
+export default function MoonSvg() {
   return (
     <svg
-      id="moon-svg"
+      id={MOON_SVG_ID}
       width="550"
       height="550"
       viewBox="0 0 550 550"
@@ -20,7 +21,7 @@ export default function MoonSvg({
       xmlnsXlink="http://www.w3.org/1999/xlink"
     >
       <path
-        id="circle"
+        id={MOON_DISC_ID}
         d="
       M 75,275
       a 200,200 0 1,1 400,2
@@ -28,7 +29,7 @@ export default function MoonSvg({
     "
         strokeWidth={2}
         stroke="url(#paint0_linear_moon)"
-        fill={bodyRendered3D ? "transparent" : "url(#paint0_radial_moon)"}
+        fill="url(#paint0_radial_moon)"
       />
 
       <path

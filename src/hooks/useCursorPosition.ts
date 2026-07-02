@@ -1,6 +1,29 @@
-import { useState, useCallback, useEffect } from "react";
+import { useState, useCallback, useEffect, useRef } from "react";
 import { useThrottledCallback } from "use-debounce";
 import usePageVisibilityState from "usePageVisibilityState";
+
+/**
+ * Ref-based variant for per-frame consumers (the WebGL star field): the
+ * position updates without any React re-renders. Cleared on window blur.
+ */
+export const useCursorPositionRef = () => {
+  const cursorRef = useRef<{ x: number; y: number } | null>(null);
+  useEffect(() => {
+    const onMove = (e: MouseEvent) => {
+      cursorRef.current = { x: e.pageX, y: e.pageY };
+    };
+    const onLeave = () => {
+      cursorRef.current = null;
+    };
+    document.addEventListener("mousemove", onMove, { passive: true });
+    window.addEventListener("blur", onLeave, { passive: true });
+    return () => {
+      document.removeEventListener("mousemove", onMove);
+      window.removeEventListener("blur", onLeave);
+    };
+  }, []);
+  return cursorRef;
+};
 
 /**
  * Default throttle to ~60fps
@@ -24,7 +47,7 @@ export const useCursorPosition = (throttleMs: number = 16) => {
 
   const throttledGetDocumentHasFocus = useThrottledCallback(
     getDocumentHasFocus,
-    200
+    200,
   );
 
   const getCursorXY = useCallback(
@@ -40,7 +63,7 @@ export const useCursorPosition = (throttleMs: number = 16) => {
 
       throttledCursorUpdate(cursorPositionX, cursorPositionY);
     },
-    [throttledCursorUpdate]
+    [throttledCursorUpdate],
   );
 
   useEffect(() => {

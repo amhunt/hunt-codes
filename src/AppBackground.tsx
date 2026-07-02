@@ -14,6 +14,31 @@ import supportsWebGL from "./space3d/webglSupport";
 // Loaded on demand so three.js ships as its own chunk
 const Space3DBackground = lazy(() => import("./space3d/Space3DBackground"));
 
+/**
+ * The background must never take the app down: if the three.js chunk
+ * fails to load (stale deploy, flaky network) or the canvas throws,
+ * fall back to the legacy DOM star field instead of letting the error
+ * propagate past Suspense and unmount the root.
+ */
+class BackgroundErrorBoundary extends React.Component<
+  { fallback: React.ReactNode; children: React.ReactNode },
+  { failed: boolean }
+> {
+  state = { failed: false };
+
+  static getDerivedStateFromError() {
+    return { failed: true };
+  }
+
+  componentDidCatch(error: unknown) {
+    console.error("3D background failed; using DOM fallback", error);
+  }
+
+  render() {
+    return this.state.failed ? this.props.fallback : this.props.children;
+  }
+}
+
 // Needed to get hover state on individual chars
 const andrewHunt = "andrewhunt";
 const nameArr: string[] = [];
@@ -58,7 +83,7 @@ const AppBackground = ({ showBridge }: { showBridge: boolean }) => {
           loop
           className={cx(
             "z-[10000] fixed bottom-4 left-4",
-            isNightMode && "nightmode"
+            isNightMode && "nightmode",
           )}
           controls
         >
@@ -78,7 +103,7 @@ const AppBackground = ({ showBridge }: { showBridge: boolean }) => {
             "nameTitle",
             isNightMode
               ? "opacity-30 pointer-events-none fill-white night"
-              : "fill-[#004225] opacity-75"
+              : "fill-[#004225] opacity-75",
           )}
           viewBox={size === "lg" ? "0 0 200 20" : "0 0 100 20"}
           xmlns="http://www.w3.org/2000/svg"
@@ -92,7 +117,7 @@ const AppBackground = ({ showBridge }: { showBridge: boolean }) => {
                     (isNightMode
                       ? "highlightedChar_night"
                       : "highlightedChar_day"),
-                  c === "h" ? "z-10" : "z-0"
+                  c === "h" ? "z-10" : "z-0",
                 )}
                 alignmentBaseline="hanging"
               >
@@ -106,7 +131,7 @@ const AppBackground = ({ showBridge }: { showBridge: boolean }) => {
         className={cx(
           "App-background",
           "App-background_day",
-          isNightMode ? "off" : "on"
+          isNightMode ? "off" : "on",
         )}
       />
       <div
@@ -114,15 +139,30 @@ const AppBackground = ({ showBridge }: { showBridge: boolean }) => {
           "App-background",
           "App-background_night",
           webglEnabled && "webgl",
-          isNightMode ? "on" : "off"
+          isNightMode ? "on" : "off",
         )}
       >
         {!webglEnabled && isNightMode && <Stars isLanding={isLanding} />}
       </div>
       {webglEnabled && (
-        <Suspense fallback={null}>
-          <Space3DBackground isNightMode={isNightMode} isLanding={isLanding} />
-        </Suspense>
+        <BackgroundErrorBoundary
+          fallback={
+            isNightMode ? (
+              // .space-canvas keeps the fallback stars above the night
+              // backdrop, where the canvas would have been
+              <div className="space-canvas">
+                <Stars isLanding={isLanding} />
+              </div>
+            ) : null
+          }
+        >
+          <Suspense fallback={null}>
+            <Space3DBackground
+              isNightMode={isNightMode}
+              isLanding={isLanding}
+            />
+          </Suspense>
+        </BackgroundErrorBoundary>
       )}
       {!isLanding && <Galaxy isNightMode={isNightMode} />}
       {isHomePage && (
