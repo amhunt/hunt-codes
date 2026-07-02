@@ -5,16 +5,14 @@ import "./computer.scss";
 const RetroMac = () => {
   return (
     <div className="z-20 h-screen">
-      <div className="z-20 stage">
+      <div className="stage z-20">
         <div className="positioning animated">
           <div className="mac">
             <span className="back"></span>
             <span className="left"></span>
             <span className="right"></span>
             <span className="top"></span>
-            <span className="base-front">
-              <span className="keyboard-port"></span>
-            </span>
+            <span className="base-front"></span>
             <span className="base-left"></span>
             <span className="base-right"></span>
             <span className="base-back"></span>
@@ -27,7 +25,6 @@ const RetroMac = () => {
                 <span className="screen">
                   <span
                     id="typed-js"
-                    className="typed"
                     aria-description="email address: andrew@hunt.codes"
                   />
                   <span className="sheen" />

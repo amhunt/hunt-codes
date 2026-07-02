@@ -109,7 +109,7 @@ const Home = () => {
       {!isSmall && (
         <div
           ref={leftHalfEl}
-          className="logoWrapper flex items-center justify-center pointer-events-none"
+          className="logoWrapper pointer-events-none flex items-center justify-center"
           style={{ opacity: logoOpacity ? 1 : 0 }}
         >
           <Logo {...(!isSmall ? logoPositioningProps : null)} />
@@ -126,13 +126,13 @@ const Home = () => {
       </div>
       <main className={cx("homeInfoContainer", logoOpacity === 1 && "show")}>
         {isSmall && (
-          <div className="sm-screen-summary-line text-center max-w-[200px]">
+          <div className="sm-screen-summary-line max-w-[200px] text-center">
             Web development in San Francisco
           </div>
         )}
-        <p className="hoverableHomeItem gap-6 justify-between">
+        <p className="hoverableHomeItem justify-between gap-6">
           {!isSmall && (
-            <div className="text-left bold text-lg max-w-[300px]">
+            <div className="max-w-[300px] text-left text-lg font-bold">
               Web development in San Francisco
             </div>
           )}
@@ -142,7 +142,7 @@ const Home = () => {
               target="_blank"
               rel="noopener noreferrer"
               href="https://www.linkedin.com/in/andrewmhunt/"
-              className="flex transition-colors items-center justify-center w-8 h-8 p-1 rounded-full bg-opacity-25 hover:bg-[#5efffc57]"
+              className="flex size-8 items-center justify-center rounded-full p-1 transition-colors hover:bg-[#5efffc57]"
             >
               <Linkedin size={20} />
             </a>
@@ -151,7 +151,7 @@ const Home = () => {
               target="_blank"
               rel="noopener noreferrer"
               href="https://www.github.com/amhunt"
-              className="flex transition-colors items-center justify-center w-8 h-8 p-1 rounded-full hover:bg-[#5efffc57]"
+              className="flex size-8 items-center justify-center rounded-full p-1 transition-colors hover:bg-[#5efffc57]"
             >
               <GitHub size={20} />
             </a>
@@ -161,7 +161,7 @@ const Home = () => {
                   <Link
                     aria-label="SVG Studio"
                     to="/draw"
-                    className="flex transition-colors items-center justify-center w-8 h-8 p-1 rounded-full hover:bg-[#5efffc57]"
+                    className="flex size-8 items-center justify-center rounded-full p-1 transition-colors hover:bg-[#5efffc57]"
                   >
                     <Wand2 size={20} />
                   </Link>
@@ -182,7 +182,7 @@ const Home = () => {
                     aria-label="Copy email address"
                     aria-description="andrew+in@hunt.codes"
                     onClick={() => handleCopy()}
-                    className="flex transition-colors items-center justify-center w-8 h-8 p-1 rounded-full hover:bg-[#5efffc57]"
+                    className="flex size-8 items-center justify-center rounded-full p-1 transition-colors hover:bg-[#5efffc57]"
                   >
                     <Mail size={20} />
                   </button>
@@ -198,12 +198,12 @@ const Home = () => {
         </p>
         {/* Moved to computer for large screens */}
         {/* {isMdOrLess && ( */}
-        <p className="h-20 hoverableHomeItem gap-0">
+        <p className="hoverableHomeItem h-20 gap-0">
           <div>
             <span
               ref={typedEl}
               id="typed-js"
-              className="typed font-bold"
+              className="font-bold"
               aria-description="email address: andrew@hunt.codes"
             />
           </div>
@@ -219,7 +219,7 @@ const Home = () => {
         {/* )} */}
         {!isChrome && !isSmall && (
           <>
-            <div className="leading-tight absolute text-sm bg-white p-4 rounded">
+            <div className="absolute rounded bg-white p-4 text-sm leading-tight">
               You are using a browser other than Chrome (🚩)
               <br />
               Some animations are disabled, and some styles may not appear as
