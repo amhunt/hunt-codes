@@ -242,7 +242,7 @@ export default function SunSvg({
                 <tspan
                   className="svg-link-tspan"
                   vectorEffect="non-scaling-size"
-                  fontSize="12px"
+                  fontSize="16px"
                   dx={isSmall ? "-12%" : "8%"}
                   dy={isSmall ? "-64px" : "-6px"}
                 >
@@ -260,7 +260,7 @@ export default function SunSvg({
                 <tspan
                   className="svg-link-tspan"
                   vectorEffect="non-scaling-size"
-                  fontSize="12px"
+                  fontSize="16px"
                   dy={isSmall ? "16px" : "-4px"}
                   dx={isSmall ? "5%" : "8%"}
                 >
