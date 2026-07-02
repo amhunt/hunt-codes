@@ -1313,12 +1313,15 @@ $STAR_MOVEMENT_INTERVAL_MS: 300;
   }
 }
 
+// Thin, solid, faint rings (hunt-codes-3 style)
 .orbit-path {
-  stroke: #aa00dd48;
-  stroke-width: 2;
-  stroke-dasharray: 10;
-  stroke-dashoffset: 10;
+  stroke: rgba(255, 255, 255, 0.14);
+  stroke-width: 1;
   fill: transparent;
+}
+
+.App.day .orbit-path {
+  stroke: rgba(20, 20, 40, 0.16);
 }
 
 .planet-emoji {

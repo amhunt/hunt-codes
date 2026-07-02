@@ -78,9 +78,9 @@ export function SunInternals({
             repeatCount="indefinite"
             values=".95; 1.05; .95"
           />
-          <stop stopColor="#ffc800" />
-          <stop offset="0.75" stopColor="#ffd900"></stop>
-          <stop offset="1" stopColor="#ff7b15" />
+          <stop stopColor="#ffd75e" />
+          <stop offset="0.75" stopColor="#ffb824"></stop>
+          <stop offset="1" stopColor="#ff6a00" />
         </radialGradient>
         <filter
           id="heavycloud"

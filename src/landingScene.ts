@@ -7,7 +7,7 @@
  * the main chunk).
  */
 
-export type PlanetKind = "mars" | "neptune" | "saturn" | "ice";
+export type PlanetKind = "mercury" | "venus" | "earth" | "mars";
 
 export interface LandingPlanetConfig {
   id: string;
@@ -26,6 +26,8 @@ export interface LandingPlanetConfig {
   axialTilt: number;
 }
 
+// Inner solar system, inner -> outer (radii keep the hunt-codes-3
+// proportions: Mercury .55 : Venus 1.05 : Earth 1.6 : Mars .85)
 export const PLANET_CONFIGS: LandingPlanetConfig[] = [
   {
     id: "planet1",
@@ -34,8 +36,8 @@ export const PLANET_CONFIGS: LandingPlanetConfig[] = [
     speed: 2,
     angleKey: "angle1",
     textNameOffset: 30,
-    radius: 4,
-    kind: "mars",
+    radius: 3,
+    kind: "mercury",
     spinSpeed: 0.5,
     axialTilt: 0.1,
   },
@@ -46,8 +48,8 @@ export const PLANET_CONFIGS: LandingPlanetConfig[] = [
     speed: 1.8,
     angleKey: "angle2",
     textNameOffset: 28.5,
-    radius: 8,
-    kind: "neptune",
+    radius: 5.5,
+    kind: "venus",
     spinSpeed: 0.35,
     axialTilt: 0.25,
   },
@@ -58,8 +60,8 @@ export const PLANET_CONFIGS: LandingPlanetConfig[] = [
     speed: 1.9,
     angleKey: "angle3",
     textNameOffset: 28.25,
-    radius: 6,
-    kind: "saturn",
+    radius: 8,
+    kind: "earth",
     spinSpeed: 0.45,
     axialTilt: 0.45,
   },
@@ -70,8 +72,8 @@ export const PLANET_CONFIGS: LandingPlanetConfig[] = [
     speed: 1.4,
     angleKey: "angle4",
     textNameOffset: 27.4,
-    radius: 5,
-    kind: "ice",
+    radius: 4.5,
+    kind: "mars",
     spinSpeed: 0.3,
     axialTilt: 0.2,
   },

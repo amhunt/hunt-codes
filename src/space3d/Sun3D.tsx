@@ -18,19 +18,15 @@ import {
   HOME_SUN_SVG_ID,
   HOME_SUN_VIEWBOX,
 } from "../SunSvg";
-import {
-  createSunCoronaMaterial,
-  createSunSurfaceMaterial,
-  SUN_CORONA_RATIO,
-  SUN_OCCLUDER_RATIO,
-  SUN_TIME_PERIOD,
-} from "./sunShader";
+import { createSunGlowTexture, createSunTexture } from "./textures";
 import { domToWorldX, domToWorldY, Z_OCCLUDER } from "./SpaceCanvas";
 import { liveElementById, trackSvgById } from "./svgTracking";
 
 /**
- * THE sun. One shader-sun object (plasma surface + corona, ./sunShader)
- * shared by every page: it glues itself to whichever sun SVG is on screen
+ * THE sun. One sun object shared by every page, styled like the
+ * hunt-codes-3 prototype: a slowly rotating sphere with a mottled golden
+ * canvas texture plus a soft additive glow billboard (./textures). It
+ * glues itself to whichever sun SVG is on screen
  * — the small landing sun or the big home sun — and when the target
  * changes it FLIES to the new position and size instead of snapping, so
  * clicking "enter" on the landing page sends the same sun gliding to its
@@ -60,6 +56,12 @@ interface SunSpot {
 type Mode = "hidden" | "glue" | "fly";
 
 const FLY_S = 1.2; // landing -> home flight / sunrise duration
+// Glow billboard size as a multiple of the sun's diameter (hunt-codes-3
+// uses a sprite at 6x the radius => the glow reaches 3 radii out)
+const GLOW_SCALE = 6;
+// Depth-occluder radius (hides GPU stars behind the disc + its rim)
+const SUN_OCCLUDER_RATIO = 1.07;
+const SUN_SPIN_SPEED = 0.04; // radians per second
 
 const easeInOutCubic = (t: number) =>
   t < 0.5 ? 4 * t * t * t : 1 - Math.pow(-2 * t + 2, 3) / 2;
@@ -75,7 +77,7 @@ const Sun3D = () => {
   const size = useThree((s) => s.size);
   const gl = useThree((s) => s.gl);
   const surfaceRef = useRef<THREE.Mesh>(null);
-  const coronaRef = useRef<THREE.Mesh>(null);
+  const glowRef = useRef<THREE.Mesh>(null);
   const occluderRef = useRef<THREE.Mesh>(null);
 
   const modeRef = useRef<Mode>("hidden");
@@ -86,8 +88,30 @@ const Sun3D = () => {
   const adoptedIsHomeRef = useRef(false);
   const trimElsRef = useRef<SVGElement[]>([]);
 
-  const surfaceMaterial = useMemo(() => createSunSurfaceMaterial(), []);
-  const coronaMaterial = useMemo(() => createSunCoronaMaterial(), []);
+  const surfaceTexture = useMemo(() => createSunTexture(), []);
+  const glowTexture = useMemo(() => createSunGlowTexture(), []);
+  const surfaceMaterial = useMemo(
+    () =>
+      new THREE.MeshBasicMaterial({
+        map: surfaceTexture,
+        transparent: true,
+        opacity: 0,
+        toneMapped: false,
+      }),
+    [surfaceTexture],
+  );
+  const glowMaterial = useMemo(
+    () =>
+      new THREE.MeshBasicMaterial({
+        map: glowTexture,
+        transparent: true,
+        opacity: 0,
+        depthWrite: false,
+        blending: THREE.AdditiveBlending,
+        toneMapped: false,
+      }),
+    [glowTexture],
+  );
 
   const helpers = useMemo(() => {
     /** Fade the SVG trim (the orbiting links) with the flight/dive. */
@@ -137,10 +161,12 @@ const Sun3D = () => {
 
   useEffect(
     () => () => {
+      surfaceTexture.dispose();
+      glowTexture.dispose();
       surfaceMaterial.dispose();
-      coronaMaterial.dispose();
+      glowMaterial.dispose();
     },
-    [surfaceMaterial, coronaMaterial],
+    [surfaceTexture, glowTexture, surfaceMaterial, glowMaterial],
   );
 
   // Restore the SVG disc on unmount, and on WebGL context loss (the canvas
@@ -159,11 +185,6 @@ const Sun3D = () => {
     // after a backgrounded tab or GC pause, a huge delta would otherwise
     // teleport the flight/dive to its end instead of animating
     const delta = Math.min(rawDelta, 0.1);
-    // Wrapped to the shader's noise-orbit period (fp32 safety, seamless)
-    const time =
-      (surfaceMaterial.uniforms.uTime.value + delta) % SUN_TIME_PERIOD;
-    surfaceMaterial.uniforms.uTime.value = time;
-    coronaMaterial.uniforms.uTime.value = time;
 
     const track = (
       id: string,
@@ -259,27 +280,28 @@ const Sun3D = () => {
     if (spot) renderedRef.current = spot;
     const visible = !!spot && spot.o > 0.01;
     const surface = surfaceRef.current;
-    const corona = coronaRef.current;
+    const glow = glowRef.current;
     const occluder = occluderRef.current;
     if (surface) surface.visible = visible;
-    if (corona) corona.visible = visible;
+    if (glow) glow.visible = visible;
     if (!spot) {
       if (occluder) occluder.visible = false;
       return;
     }
 
-    surfaceMaterial.uniforms.uOpacity.value = spot.o;
-    coronaMaterial.uniforms.uOpacity.value = spot.o;
+    surfaceMaterial.opacity = spot.o;
+    glowMaterial.opacity = spot.o;
     // Don't cull stars behind the disc until it's mostly opaque, else they
     // vanish behind an invisible sun (matches the occluder gating)
     surfaceMaterial.depthWrite = spot.o > 0.5;
     if (surface) {
       surface.position.set(spot.x, spot.y, Z_OCCLUDER + 1);
       surface.scale.setScalar(spot.r);
+      surface.rotation.y += delta * SUN_SPIN_SPEED;
     }
-    if (corona) {
-      corona.position.set(spot.x, spot.y, Z_OCCLUDER + 0.5);
-      corona.scale.setScalar(spot.r * SUN_CORONA_RATIO);
+    if (glow) {
+      glow.position.set(spot.x, spot.y, Z_OCCLUDER + 0.5);
+      glow.scale.setScalar(spot.r * GLOW_SCALE);
     }
     if (occluder) {
       occluder.position.set(spot.x, spot.y, Z_OCCLUDER);
@@ -296,24 +318,24 @@ const Sun3D = () => {
         <circleGeometry args={[1, 32]} />
         <meshBasicMaterial colorWrite={false} />
       </mesh>
-      {/* Additive corona haze, behind the surface so the opaque disc masks
+      {/* Soft additive glow, behind the sphere so the opaque disc masks
           its center; depthTest keeps it from bleeding over the disc */}
       <mesh
-        ref={coronaRef}
-        material={coronaMaterial}
+        ref={glowRef}
+        material={glowMaterial}
         renderOrder={1}
         visible={false}
       >
-        <circleGeometry args={[1, 64]} />
+        <planeGeometry args={[1, 1]} />
       </mesh>
-      {/* GLSL sun surface, replacing the blanked SVG disc */}
+      {/* Textured sun sphere, replacing the blanked SVG disc */}
       <mesh
         ref={surfaceRef}
         material={surfaceMaterial}
         renderOrder={2}
         visible={false}
       >
-        <circleGeometry args={[1, 64]} />
+        <sphereGeometry args={[1, 64, 48]} />
       </mesh>
     </>
   );

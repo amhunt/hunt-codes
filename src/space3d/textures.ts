@@ -3,9 +3,12 @@ import * as THREE from "three";
 import type { PlanetKind } from "../landingScene";
 
 /**
- * Procedural equirectangular textures for the planets and moon, generated
- * on a 2D canvas at runtime (no image assets). Palettes match the radial
- * gradients in Landing.tsx's fallback defs / MoonSvg.tsx.
+ * Procedural equirectangular textures for the sun, planets and moon,
+ * generated on a 2D canvas at runtime (no image assets). The sun/planet
+ * style is ported from the hunt-codes-3 prototype: soft radial-gradient
+ * blotches over a base color, wrapped horizontally so the sphere seam is
+ * less obvious. Palettes match the fallback radialGradient defs in
+ * Landing.tsx / MoonSvg.tsx.
  */
 
 export type { PlanetKind };
@@ -27,105 +30,111 @@ const asTexture = (canvas: HTMLCanvasElement) => {
   return texture;
 };
 
-/** Horizontal gas-giant style bands with slight per-row wobble. */
-const drawBands = (
-  ctx: CanvasRenderingContext2D,
-  palette: string[],
-  wobble: number,
-) => {
-  ctx.fillStyle = palette[0];
-  ctx.fillRect(0, 0, TEX_W, TEX_H);
-  let y = 0;
-  let i = 0;
-  while (y < TEX_H) {
-    const bandHeight = 4 + Math.random() * 14;
-    ctx.fillStyle = palette[i % palette.length];
-    ctx.globalAlpha = 0.75 + Math.random() * 0.25;
-    // Slight sinusoidal offset to avoid perfectly straight band edges
-    for (let x = 0; x < TEX_W; x += 4) {
-      const offset = Math.sin((x / TEX_W) * Math.PI * 4 + i) * wobble;
-      ctx.fillRect(x, y + offset, 4, bandHeight);
-    }
-    y += bandHeight * 0.85;
-    i++;
-  }
-  ctx.globalAlpha = 1;
-};
-
-/** Random soft blotches, for rocky surfaces and band turbulence. */
+/**
+ * Soft circular radial-gradient blotches, repeated at x±w so the pattern
+ * tiles across the sphere's horizontal seam.
+ */
 const drawBlotches = (
   ctx: CanvasRenderingContext2D,
-  colors: string[],
+  w: number,
+  h: number,
   count: number,
   minR: number,
   maxR: number,
+  colors: string[],
   alpha: number,
 ) => {
   for (let i = 0; i < count; i++) {
-    ctx.fillStyle = colors[Math.floor(Math.random() * colors.length)];
-    ctx.globalAlpha = alpha * (0.5 + Math.random() * 0.5);
+    const x = Math.random() * w;
+    const y = Math.random() * h;
     const r = minR + Math.random() * (maxR - minR);
-    const x = Math.random() * TEX_W;
-    const y = Math.random() * TEX_H;
-    ctx.beginPath();
-    ctx.ellipse(
-      x,
-      y,
-      r * (1 + Math.random()),
-      r,
-      Math.random() * Math.PI,
-      0,
-      Math.PI * 2,
-    );
-    ctx.fill();
+    const gradient = ctx.createRadialGradient(x, y, 0, x, y, r);
+    const color = colors[Math.floor(Math.random() * colors.length)];
+    gradient.addColorStop(0, color);
+    gradient.addColorStop(1, "rgba(0,0,0,0)");
+    ctx.globalAlpha = alpha;
+    ctx.fillStyle = gradient;
+    ctx.fillRect(x - r, y - r, r * 2, r * 2);
+    ctx.fillRect(x - r - w, y - r, r * 2, r * 2);
+    ctx.fillRect(x - r + w, y - r, r * 2, r * 2);
   }
   ctx.globalAlpha = 1;
 };
 
+/** Cratered/mottled surface: base fill + large soft spots + fine grain. */
+const drawRocky = (
+  ctx: CanvasRenderingContext2D,
+  w: number,
+  h: number,
+  base: string,
+  spot: string,
+  spot2: string,
+) => {
+  ctx.fillStyle = base;
+  ctx.fillRect(0, 0, w, h);
+  drawBlotches(ctx, w, h, 220, 4, 30, [spot, spot2], 0.25);
+  drawBlotches(ctx, w, h, 400, 1, 6, [spot2, "#000000"], 0.2);
+};
+
+const drawEarth = (ctx: CanvasRenderingContext2D, w: number, h: number) => {
+  const ocean = ctx.createLinearGradient(0, 0, 0, h);
+  ocean.addColorStop(0, "#1c3f7a");
+  ocean.addColorStop(0.5, "#20549c");
+  ocean.addColorStop(1, "#1c3f7a");
+  ctx.fillStyle = ocean;
+  ctx.fillRect(0, 0, w, h);
+  // Continents
+  drawBlotches(ctx, w, h, 26, w * 0.04, w * 0.13, ["#3d7a3a", "#4c8a40", "#7a6a3d"], 0.85);
+  drawBlotches(ctx, w, h, 60, w * 0.01, w * 0.04, ["#2f6631", "#8a7a4a"], 0.5);
+  // Polar caps
+  ctx.fillStyle = "rgba(240, 248, 255, 0.9)";
+  ctx.fillRect(0, 0, w, h * 0.05);
+  ctx.fillRect(0, h * 0.94, w, h * 0.06);
+  // Clouds
+  drawBlotches(ctx, w, h, 90, w * 0.015, w * 0.07, ["rgba(255,255,255,0.9)"], 0.22);
+};
+
 export function createPlanetTexture(kind: PlanetKind): THREE.CanvasTexture {
-  const canvas = createCanvas(TEX_W, TEX_H);
+  const w = kind === "earth" ? 512 : TEX_W;
+  const h = kind === "earth" ? 256 : TEX_H;
+  const canvas = createCanvas(w, h);
   const ctx = canvas.getContext("2d");
   if (!ctx) return asTexture(canvas);
 
   switch (kind) {
+    case "mercury":
+      drawRocky(ctx, w, h, "#9d938a", "#6e655d", "#c4bab0");
+      break;
+    case "venus":
+      drawRocky(ctx, w, h, "#d9b26a", "#b58a3e", "#f0d9a0");
+      break;
+    case "earth":
+      drawEarth(ctx, w, h);
+      break;
     case "mars":
-      // Red rocky surface (palette from the old planet1Gradient)
-      ctx.fillStyle = "#872c22";
-      ctx.fillRect(0, 0, TEX_W, TEX_H);
-      drawBlotches(ctx, ["#aa4135", "#93362a", "#7a251c"], 90, 3, 14, 0.4);
-      drawBlotches(ctx, ["#62170f", "#511009"], 60, 2, 10, 0.45);
-      // Polar caps
-      ctx.fillStyle = "#d8b49f";
-      ctx.globalAlpha = 0.5;
-      ctx.fillRect(0, 0, TEX_W, 5);
-      ctx.fillRect(0, TEX_H - 5, TEX_W, 5);
-      ctx.globalAlpha = 1;
-      break;
-    case "neptune":
-      drawBands(ctx, ["#195882", "#347dae", "#0e476d", "#2a6f9e"], 2);
-      drawBlotches(ctx, ["#4a90c0"], 10, 4, 12, 0.25);
-      break;
-    case "saturn":
-      drawBands(
-        ctx,
-        ["#c76714", "#e98e3e", "#8d480c", "#d8791f", "#b05a10"],
-        1.5,
-      );
-      break;
-    case "ice":
-      // Green ice giant (palette from the old planet4Gradient)
-      drawBands(ctx, ["#1a8920", "#32ae38", "#127117", "#26982c"], 2.5);
-      drawBlotches(ctx, ["#3fbf46"], 8, 3, 10, 0.2);
+      drawRocky(ctx, w, h, "#c1583b", "#8a3b24", "#e0855e");
       break;
   }
   return asTexture(canvas);
 }
 
-/**
- * Annulus texture for Saturn's ring, mapped onto a flat plane:
- * transparent outside/inside, concentric bands with a Cassini-style gap.
- */
-export function createRingTexture(): THREE.CanvasTexture {
+/** Mottled golden sun surface (unlit; pair with the glow billboard). */
+export function createSunTexture(): THREE.CanvasTexture {
+  const w = 512;
+  const h = 256;
+  const canvas = createCanvas(w, h);
+  const ctx = canvas.getContext("2d");
+  if (!ctx) return asTexture(canvas);
+
+  ctx.fillStyle = "#ffb824";
+  ctx.fillRect(0, 0, w, h);
+  drawBlotches(ctx, w, h, 240, 6, 40, ["#ff8c00", "#ffd75e", "#ff6a00"], 0.35);
+  drawBlotches(ctx, w, h, 300, 2, 10, ["#fff3c4"], 0.3);
+  return asTexture(canvas);
+}
+
+/** Soft warm radial glow for the sun's corona billboard. */
+export function createSunGlowTexture(): THREE.CanvasTexture {
   const size = 256;
   const canvas = createCanvas(size, size);
   const ctx = canvas.getContext("2d");
@@ -133,14 +142,9 @@ export function createRingTexture(): THREE.CanvasTexture {
 
   const c = size / 2;
   const gradient = ctx.createRadialGradient(c, c, 0, c, c, c);
-  gradient.addColorStop(0, "rgba(0,0,0,0)");
-  gradient.addColorStop(0.52, "rgba(0,0,0,0)");
-  gradient.addColorStop(0.56, "rgba(233,142,62,0.75)");
-  gradient.addColorStop(0.68, "rgba(199,103,20,0.8)");
-  gradient.addColorStop(0.72, "rgba(141,72,12,0.15)"); // Cassini gap
-  gradient.addColorStop(0.76, "rgba(233,142,62,0.7)");
-  gradient.addColorStop(0.9, "rgba(199,103,20,0.55)");
-  gradient.addColorStop(1, "rgba(141,72,12,0)");
+  gradient.addColorStop(0, "rgba(255, 210, 120, 0.55)");
+  gradient.addColorStop(0.35, "rgba(255, 160, 60, 0.22)");
+  gradient.addColorStop(1, "rgba(255, 120, 20, 0)");
   ctx.fillStyle = gradient;
   ctx.fillRect(0, 0, size, size);
   return asTexture(canvas);

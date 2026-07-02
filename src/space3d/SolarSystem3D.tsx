@@ -9,7 +9,7 @@ import {
   SOLAR_SYSTEM_VIEWBOX,
   SUN_CENTER,
 } from "../landingScene";
-import { createPlanetTexture, createRingTexture } from "./textures";
+import { createPlanetTexture } from "./textures";
 import { domToWorldX, domToWorldY, Z_BODIES } from "./SpaceCanvas";
 import { liveElementById, trackSvgById } from "./svgTracking";
 
@@ -48,14 +48,13 @@ const SolarSystem3D = () => {
     () => PLANET_CONFIGS.map((p) => createPlanetTexture(p.kind)),
     [],
   );
-  const ringTexture = useMemo(() => createRingTexture(), []);
   const materials = useMemo(
     () =>
       textures.map(
         (map) =>
           new THREE.MeshStandardMaterial({
             map,
-            roughness: 0.85,
+            roughness: 0.95,
             metalness: 0,
             transparent: true,
             opacity: 0,
@@ -63,25 +62,26 @@ const SolarSystem3D = () => {
       ),
     [textures],
   );
-  const ringMaterial = useMemo(
+  // Earth's faint atmosphere shell (hunt-codes-3 style): a slightly
+  // larger back-side sphere tinted sky blue
+  const atmosphereMaterial = useMemo(
     () =>
       new THREE.MeshBasicMaterial({
-        map: ringTexture,
+        color: "#6ab0ff",
         transparent: true,
         opacity: 0,
-        side: THREE.DoubleSide,
+        side: THREE.BackSide,
         depthWrite: false,
       }),
-    [ringTexture],
+    [],
   );
   useEffect(
     () => () => {
       textures.forEach((t) => t.dispose());
-      ringTexture.dispose();
       materials.forEach((m) => m.dispose());
-      ringMaterial.dispose();
+      atmosphereMaterial.dispose();
     },
-    [textures, ringTexture, materials, ringMaterial],
+    [textures, materials, atmosphereMaterial],
   );
 
   // Hand the planets/labels back to the SVG fallback on unmount
@@ -149,7 +149,7 @@ const SolarSystem3D = () => {
       m.opacity = svgOpacity;
       m.depthWrite = opaque; // let stars show through while fading in
     });
-    ringMaterial.opacity = svgOpacity;
+    atmosphereMaterial.opacity = 0.16 * svgOpacity;
 
     const [sunX, sunY] = toWorld(SUN_CENTER, SUN_CENTER);
     if (lightRef.current) {
@@ -209,10 +209,9 @@ const SolarSystem3D = () => {
             >
               <sphereGeometry args={[1, 32, 24]} />
             </mesh>
-            {planet.kind === "saturn" && (
-              // Flat annulus with the ring texture, tilted out of plane
-              <mesh rotation={[1.15, 0.2, 0]} material={ringMaterial}>
-                <planeGeometry args={[4.4, 4.4]} />
+            {planet.kind === "earth" && (
+              <mesh scale={1.04} material={atmosphereMaterial}>
+                <sphereGeometry args={[1, 32, 24]} />
               </mesh>
             )}
           </group>
