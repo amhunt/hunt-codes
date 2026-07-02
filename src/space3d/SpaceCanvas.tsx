@@ -27,10 +27,18 @@ const SpaceCanvas = ({ children }: { children: React.ReactNode }) => {
   return (
     <Canvas
       className="space-canvas"
-      // Merged over R3F's inline wrapper defaults (position: relative);
-      // z-index and pointer-events live in the .space-canvas SCSS rule so
-      // the stacking contract stays in one place (App.scss)
-      style={{ position: "fixed", inset: 0 }}
+      // Merged over R3F's inline wrapper defaults. pointerEvents MUST be
+      // inline: fiber v9's event system writes an inline pointer-events
+      // on its wrapper, which would override the .space-canvas SCSS rule
+      // and swallow clicks meant for links underneath (e.g. the landing
+      // sun's "enter"). z-index stays in the SCSS rule with the rest of
+      // the stacking contract (App.scss).
+      style={{ position: "fixed", inset: 0, pointerEvents: "none" }}
+      // Background scenes never take pointer input; keep the canvas
+      // element itself click-through as well
+      onCreated={({ gl }) => {
+        gl.domElement.style.pointerEvents = "none";
+      }}
       orthographic
       flat
       camera={{ position: [0, 0, 1000], near: 0.1, far: 4000, zoom: 1 }}
