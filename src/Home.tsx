@@ -5,6 +5,7 @@ import cx from "classnames";
 import { GitHub, Linkedin, Mail } from "react-feather";
 import { ArrowLeftIcon, Wand2 } from "lucide-react";
 import useWindowSize from "./useWindowSize";
+import SolarOverlays from "./SolarOverlays";
 
 import {
   Tooltip,
@@ -64,6 +65,7 @@ const Home = () => {
 
   return (
     <>
+      <SolarOverlays />
       <div className="homePageBackLink">
         <Link
           className={cx("mt-4 flex items-center gap-1 transition-transform")}

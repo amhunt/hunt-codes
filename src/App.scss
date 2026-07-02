@@ -977,6 +977,28 @@ a:hover {
   pointer-events: none;
 }
 
+// Clickable overlays glued to projected 3D bodies (BodyAnchors positions
+// them each frame). Hidden until the first frame places them.
+.asteroid-link {
+  position: fixed;
+  visibility: hidden;
+  z-index: 3;
+  border-radius: 50%;
+  pointer-events: auto;
+  cursor: pointer;
+  transition: box-shadow 0.15s ease;
+
+  &:hover,
+  &:focus-visible {
+    box-shadow: 0 0 0 2px rgba(255, 255, 255, 0.45);
+  }
+}
+
+.App.day .asteroid-link:hover,
+.App.day .asteroid-link:focus-visible {
+  box-shadow: 0 0 0 2px rgba(65, 37, 150, 0.45);
+}
+
 .App-background_day {
   background: linear-gradient(
     168deg,

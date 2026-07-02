@@ -5,8 +5,10 @@ import CameraRig, { type SolarView } from "./CameraRig";
 import Planet from "./Planet";
 import Moon from "./Moon";
 import Sun from "./Sun";
+import Asteroid from "./Asteroid";
 import SunSvgAnchor from "./SunSvgAnchor";
-import { PLANETS } from "./constants";
+import BodyAnchors from "./BodyAnchors";
+import { ASTEROIDS, PLANETS } from "./constants";
 
 /**
  * The perspective solar-system canvas (hunt-codes-3's scene), layered
@@ -57,8 +59,12 @@ const SolarScene = ({
         orbitColor={isNightMode ? "#ffffff" : "#141428"}
         orbitOpacity={isNightMode ? 0.08 : 0.2}
       />
+      {ASTEROIDS.map((asteroid) => (
+        <Asteroid key={asteroid.name} config={asteroid} />
+      ))}
       <CameraRig view={view} />
       <SunSvgAnchor />
+      <BodyAnchors />
     </Canvas>
   );
 };

@@ -12,6 +12,11 @@ export const HOME_SUN_CX = 275;
 export const HOME_SUN_CY = 276;
 export const HOME_SUN_RADIUS = 175;
 
+// The orbiting text links are retired for now (replaced by the asteroid
+// links + the Earth "About Andrew" ring in the 3D scene) but kept
+// compiled behind this flag in case they come back.
+const SHOW_ORBITING_LINKS = false;
+
 const isSafari =
   navigator.userAgent.includes("Safari") &&
   // Chrome also has "Safari" in its user-agent string
@@ -212,7 +217,7 @@ export default function SunSvg({
           xmlnsXlink="http://www.w3.org/1999/xlink"
           xlinkHref="#circle2"
         >
-          {isHome && (
+          {SHOW_ORBITING_LINKS && isHome && (
             <>
               <Link className="planet-emoji" to="/about">
                 <tspan

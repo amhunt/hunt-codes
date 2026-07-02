@@ -73,6 +73,34 @@ export const PLANETS: SolarPlanetConfig[] = [
 
 export const EARTH = PLANETS.find((p) => p.name === "Earth")!;
 
+/**
+ * Link asteroids: small rocks that float near the sun in the home view.
+ * They're near-co-orbital with Earth on purpose — the home camera's look
+ * direction sweeps around with Earth, so a truly slow asteroid would be
+ * out of frame most of the time. With orbit speeds close to Earth's,
+ * they drift across the view VERY slowly (relative ~0.01 rad/s).
+ */
+export const ASTEROIDS: SolarPlanetConfig[] = [
+  {
+    name: "recent",
+    kind: "mercury",
+    radius: 0.28,
+    orbitRadius: 5.2,
+    orbitSpeed: 0.082,
+    orbitPhase: EARTH.orbitPhase + 0.35,
+    spinSpeed: 0.6,
+  },
+  {
+    name: "old",
+    kind: "mercury",
+    radius: 0.22,
+    orbitRadius: 9.8,
+    orbitSpeed: 0.098,
+    orbitPhase: EARTH.orbitPhase - 0.3,
+    spinSpeed: -0.45,
+  },
+];
+
 /** Earth's moon — orbits Earth (not the sun), in the same XZ plane. */
 export const MOON = {
   radius: 0.42,
