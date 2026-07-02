@@ -18,7 +18,10 @@ import { EARTH, moonPosition, planetPosition } from "./constants";
 
 export type SolarView = "landing" | "home" | "about";
 
-const LANDING_POS = new THREE.Vector3(0, 58, 0.01);
+// Height tuned so Earth's orbit (r 17.5) nearly reaches the bottom edge
+// (~16px margin on a laptop): visible half-height = tan(fov/2)·y ≈ .52·35.
+// Mars' orbit clips top/bottom at this zoom — intentional.
+const LANDING_POS = new THREE.Vector3(0, 35, 0.01);
 const ORIGIN = new THREE.Vector3(0, 0, 0);
 const UP = new THREE.Vector3(0, 1, 0);
 const TRANSITION_SECONDS = 3.2;
