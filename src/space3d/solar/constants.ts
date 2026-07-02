@@ -25,6 +25,13 @@ export interface SolarPlanetConfig {
 
 export const SUN_RADIUS = 3;
 
+/**
+ * The sun's current rendered scale multiplier (it grows a bit for the
+ * home view). Written by Sun each frame; read by SunSvgAnchor so the DOM
+ * rings track the rendered size, not just the base radius.
+ */
+export const sunState = { scale: 1 };
+
 export const PLANETS: SolarPlanetConfig[] = [
   {
     name: "Mercury",
