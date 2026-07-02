@@ -99,7 +99,7 @@ const AppBackground = ({
       ) : (
         <button
           aria-label="Play music"
-          className="fixed z-[5000] bottom-4 left-4 flex transition-colors items-center justify-center w-12 h-12 p-2 rounded-full hover:bg-[#5efffc57]"
+          className="fixed bottom-4 left-4 z-[5000] flex size-12 items-center justify-center rounded-full p-2 transition-colors hover:bg-[#5efffc57]"
         >
           <Music onClick={() => setMusicEnabled(true)} />
         </button>

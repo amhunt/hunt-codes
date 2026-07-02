@@ -99,14 +99,14 @@ const Resume = () => {
           <a
             target="_blank"
             rel="noreferrer"
-            className="link inverse"
+            className="inverse"
             href="https://ziphq.com"
           >
             Zip
           </a>
           . For consulting inquiries, reach out to{" "}
           <a
-            className="link inverse"
+            className="inverse"
             href="mailto:andrew@hunt.codes?Subject=Hey%20Andrew"
           >
             andrew@hunt.codes

@@ -225,7 +225,7 @@ const SvgGenerator = () => {
     <div className="svg-generator-page">
       <div className="svg-generator-back-link">
         <Link
-          className="flex transition-transform items-center gap-1 mt-4"
+          className="mt-4 flex items-center gap-1 transition-transform"
           to="/"
         >
           <Star className="starIcon" size={16} />
