@@ -2,6 +2,17 @@ import React from "react";
 import { Link } from "react-router-dom";
 import useWindowWidth from "useWindowWidth";
 
+// Geometry of the home sun disc, exported for the WebGL sun (space3d/Sun3D)
+// that tracks this SVG and replaces the disc fill with a shader while it is
+// rendering — the same hand-off MoonSvg does for the moon. Values assume the
+// default size=1 (Galaxy renders it that way). Keep in sync with
+// SunInternals' innerRadius/center math below.
+export const HOME_SUN_SVG_ID = "home-sun-svg";
+export const HOME_SUN_VIEWBOX = 550;
+export const HOME_SUN_CX = 275;
+export const HOME_SUN_CY = 276;
+export const HOME_SUN_RADIUS = 175;
+
 const isSafari =
   navigator.userAgent.indexOf("Safari") > -1 &&
   // Chrome also has "Safari" in its user-agent string
@@ -10,11 +21,9 @@ const isSafari =
 export function SunInternals({
   size = 1,
   radiusOffset = 75,
-  strokeWidth = 24,
 }: {
   size?: number;
   radiusOffset?: number;
-  strokeWidth?: number;
 }) {
   // Base radius values that will be scaled
   const innerRadius = 175 * size;
@@ -23,19 +32,6 @@ export function SunInternals({
 
   return (
     <>
-      <path
-        id="circle-stroke"
-        d={`
-          M ${center - innerRadius},${center}
-          a ${innerRadius},${innerRadius} 0 1,1 ${innerRadius * 2},2
-          a ${innerRadius},${innerRadius} 0 1,1 ${-innerRadius * 2},2
-        `}
-        stroke="url(#sun-rays-gradient)"
-        strokeWidth={`${strokeWidth}px`}
-        fill="none"
-        vectorEffect="non-scaling-stroke"
-        strokeDasharray={`${4 * size} ${36 * size}`}
-      />
       <path
         id="circle-bg"
         d={`
@@ -82,18 +78,10 @@ export function SunInternals({
             repeatCount="indefinite"
             values=".95; 1.05; .95"
           />
-          <stop stopColor="#ffc800" />
-          <stop offset="0.75" stopColor="#ffd900"></stop>
-          <stop offset="1" stopColor="#ff7b15" />
+          <stop stopColor="#ffd75e" />
+          <stop offset="0.75" stopColor="#ffb824"></stop>
+          <stop offset="1" stopColor="#ff6a00" />
         </radialGradient>
-        <linearGradient
-          id="sun-rays-gradient"
-          gradientUnits="userSpaceOnUse"
-          gradientTransform="skewX(20) translate(-35, 0)"
-        >
-          <stop stopColor="#ebb000" />
-          <stop offset="1" stopColor="#d26003" />
-        </linearGradient>
         <filter
           id="heavycloud"
           colorInterpolationFilters="sRGB"
@@ -210,6 +198,7 @@ export default function SunSvg({
 
   return (
     <svg
+      id={isHome ? HOME_SUN_SVG_ID : undefined}
       width={550 * size}
       height={550 * size}
       viewBox={`0 0 ${550 * size} ${550 * size}`}

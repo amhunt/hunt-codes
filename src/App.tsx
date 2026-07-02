@@ -1,5 +1,7 @@
 import React, { useState, useEffect, useCallback } from "react";
 import { BrowserRouter as Router, Switch, Route } from "react-router-dom";
+import cx from "classnames";
+import { Moon, Sun } from "react-feather";
 import "./App.scss";
 
 import Home from "./Home";
@@ -43,6 +45,8 @@ const usePauseAudioOnHideEventListener = () => {
 
 const App = () => {
   const [showBridge, setShowBridge] = useState(false);
+  // The whole app is night until the visitor flips the moon/sun switch
+  const [isNightMode, setIsNightMode] = useState(true);
 
   usePauseAudioOnHideEventListener();
 
@@ -53,9 +57,21 @@ const App = () => {
   }, []);
 
   return (
-    <div className="App">
+    <div className={cx("App", isNightMode ? "night" : "day")}>
       <Router>
-        <AppBackground showBridge={showBridge} />
+        <AppBackground showBridge={showBridge} isNightMode={isNightMode} />
+        <button
+          aria-label={
+            isNightMode ? "Switch to day mode" : "Switch to night mode"
+          }
+          onClick={() => setIsNightMode((mode) => !mode)}
+          className={cx(
+            "fixed z-[5000] top-4 right-4 flex items-center justify-center w-12 h-12 p-2 rounded-full transition-colors hover:bg-[#5efffc57]",
+            isNightMode ? "text-[#9e80f9]" : "text-[#412596]",
+          )}
+        >
+          {isNightMode ? <Moon /> : <Sun />}
+        </button>
         <Switch>
           <Route exact path="/">
             <Landing />

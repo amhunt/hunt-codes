@@ -7,7 +7,7 @@
  * the main chunk).
  */
 
-export type PlanetKind = "mars" | "neptune" | "saturn" | "ice";
+export type PlanetKind = "mercury" | "venus" | "earth" | "mars";
 
 export interface LandingPlanetConfig {
   id: string;
@@ -26,6 +26,8 @@ export interface LandingPlanetConfig {
   axialTilt: number;
 }
 
+// Inner solar system, inner -> outer (radii keep the hunt-codes-3
+// proportions: Mercury .55 : Venus 1.05 : Earth 1.6 : Mars .85)
 export const PLANET_CONFIGS: LandingPlanetConfig[] = [
   {
     id: "planet1",
@@ -34,8 +36,8 @@ export const PLANET_CONFIGS: LandingPlanetConfig[] = [
     speed: 2,
     angleKey: "angle1",
     textNameOffset: 30,
-    radius: 4,
-    kind: "mars",
+    radius: 3,
+    kind: "mercury",
     spinSpeed: 0.5,
     axialTilt: 0.1,
   },
@@ -46,8 +48,8 @@ export const PLANET_CONFIGS: LandingPlanetConfig[] = [
     speed: 1.8,
     angleKey: "angle2",
     textNameOffset: 28.5,
-    radius: 8,
-    kind: "neptune",
+    radius: 5.5,
+    kind: "venus",
     spinSpeed: 0.35,
     axialTilt: 0.25,
   },
@@ -58,8 +60,8 @@ export const PLANET_CONFIGS: LandingPlanetConfig[] = [
     speed: 1.9,
     angleKey: "angle3",
     textNameOffset: 28.25,
-    radius: 6,
-    kind: "saturn",
+    radius: 8,
+    kind: "earth",
     spinSpeed: 0.45,
     axialTilt: 0.45,
   },
@@ -70,8 +72,8 @@ export const PLANET_CONFIGS: LandingPlanetConfig[] = [
     speed: 1.4,
     angleKey: "angle4",
     textNameOffset: 27.4,
-    radius: 5,
-    kind: "ice",
+    radius: 4.5,
+    kind: "mars",
     spinSpeed: 0.3,
     axialTilt: 0.2,
   },
@@ -94,5 +96,13 @@ export const RENDERED_3D_FLAG = "data-rendered-3d";
 export const SUN_SIZE = 0.25;
 export const SUN_RADIUS_OFFSET = 243;
 export const SUN_CENTER = 200 * SUN_SIZE + SUN_RADIUS_OFFSET;
-// Covers the sun disc (inner radius ~44) so GPU stars don't draw over it
-export const SUN_OCCLUDER_RADIUS = 47;
+
+// Element ids inside SunInternals (rendered by both the landing SVG and the
+// home SunSvg — never simultaneously). The WebGL sun (space3d/Sun3D) blanks
+// these fills, scoped to whichever sun svg it is glued to, and restores
+// them if it goes away. Keep in sync with the ids in SunSvg.tsx.
+export const SUN_CORE_ID = "circle-bg";
+export const SUN_CLOUD_ID = "circle3";
+// Landing sun disc radius in viewBox units (~the SVG core inner radius,
+// 175 * SUN_SIZE)
+export const SUN_SURFACE_RADIUS = 44;

@@ -5,6 +5,7 @@ import cx from "classnames";
 import Galaxy from "./Galaxy";
 
 import GoldenGate from "./gg-bridge.png";
+import GoldenGateFog from "./GoldenGateFog";
 import useWindowSize from "useWindowSize";
 import { Music } from "react-feather";
 // import RetroMac from "./RetroMac";
@@ -46,11 +47,17 @@ for (const c of andrewHunt) {
   nameArr.push(c);
 }
 
-const AppBackground = ({ showBridge }: { showBridge: boolean }) => {
+const AppBackground = ({
+  showBridge,
+  isNightMode,
+}: {
+  showBridge: boolean;
+  /** User-toggled (App.tsx's moon/sun switch); night is the default */
+  isNightMode: boolean;
+}) => {
   const size = useWindowSize();
   const location = useLocation();
 
-  const isNightMode = !location.pathname.includes("home");
   const isHomePage = location.pathname.includes("home");
   const isLanding = location.pathname === "/" || location.pathname === "";
   // WebGL background (stars + 3D planets); legacy DOM stars are the fallback
@@ -160,11 +167,14 @@ const AppBackground = ({ showBridge }: { showBridge: boolean }) => {
             <Space3DBackground
               isNightMode={isNightMode}
               isLanding={isLanding}
+              isHomePage={isHomePage}
             />
           </Suspense>
         </BackgroundErrorBoundary>
       )}
-      {!isLanding && <Galaxy isNightMode={isNightMode} />}
+      {!isLanding && (
+        <Galaxy isNightMode={isNightMode} forceSun={isHomePage} />
+      )}
       {isHomePage && (
         <>
           {/* <RetroMac /> */}
@@ -175,6 +185,7 @@ const AppBackground = ({ showBridge }: { showBridge: boolean }) => {
             src={GoldenGate}
             alt="golden gate bridge"
           />
+          <GoldenGateFog visible={showBridge && !isNightMode} />
         </>
       )}
     </>

@@ -355,6 +355,9 @@ const TextStars = ({
   useEffect(() => () => material.dispose(), [material]);
 
   useFrame((_, delta) => {
+    // Fully faded out (day mode, canvas persists for the sun): the whole
+    // group is hidden, so don't burn CPU on the gravity sim either
+    if (opacityRef.current <= 0.001) return;
     const sim = simRef.current;
     const deltaMs = Math.min(delta * 1000, 100);
     sim.elapsedMs += deltaMs;
@@ -476,6 +479,7 @@ const StarField = ({ isLanding, opacityTarget }: StarFieldProps) => {
   // day/night switch fade-out ~0.6s to match the legacy CSS transitions).
   const opacityRef = useRef(0);
   const targetRef = useRef(opacityTarget);
+  const groupRef = useRef<THREE.Group>(null);
   targetRef.current = opacityTarget;
 
   useFrame((_, delta) => {
@@ -486,13 +490,18 @@ const StarField = ({ isLanding, opacityTarget }: StarFieldProps) => {
       target > opacityRef.current
         ? Math.min(target, opacityRef.current + step)
         : Math.max(target, opacityRef.current - step);
+    // The canvas persists through day mode (for the sun) — skip drawing
+    // the fully-faded stars instead of rasterizing invisible points
+    if (groupRef.current) {
+      groupRef.current.visible = opacityRef.current > 0.001;
+    }
   });
 
   return (
-    <>
+    <group ref={groupRef}>
       <BackgroundStars isLanding={isLanding} opacityRef={opacityRef} />
       <TextStars isLanding={isLanding} opacityRef={opacityRef} />
-    </>
+    </group>
   );
 };
 

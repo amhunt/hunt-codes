@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useEffect } from "react";
 import { Link } from "react-router-dom";
 import { SunInternals } from "SunSvg";
 import { useOrbitalAnimation } from "./hooks/useOrbitalAnimation";
@@ -11,6 +11,12 @@ import {
 
 const CENTER_X = SOLAR_SYSTEM_CENTER;
 const CENTER_Y = SOLAR_SYSTEM_CENTER;
+
+// The solar system's 4s-delayed fadeIn is first-visit choreography (the
+// stars assemble first). Landing remounts on every visit, and replaying
+// that delay when returning from /home would hide the whole system — and
+// the sun flying back into it — for 5 seconds.
+let hasPlayedIntro = false;
 
 const PlanetLabel = ({
   id,
@@ -46,45 +52,51 @@ const Landing = () => {
   // loads and takes over; the SVG keeps the sun, orbits and labels.
   useOrbitalAnimation(CENTER_X, CENTER_Y);
 
+  const skipIntroDelay = hasPlayedIntro;
+  useEffect(() => {
+    hasPlayedIntro = true;
+  }, []);
+
   return (
     <div className="landing-page">
-      <svg id="solar-system" viewBox="0 0 600 600" style={{ display: "block" }}>
+      <svg
+        id="solar-system"
+        className={skipIntroDelay ? "no-intro-delay" : undefined}
+        viewBox="0 0 600 600"
+        style={{ display: "block" }}
+      >
         <defs>
-          {/* Mars gradient - red planet with surface variations */}
+          {/* Mercury gradient - gray cratered rock */}
           <radialGradient id="planet1Gradient" cx="30%" cy="30%">
-            <stop offset="0%" stopColor="#aa4135" />
-            <stop offset="70%" stopColor="#872c22" />
-            <stop offset="100%" stopColor="#62170f" />
+            <stop offset="0%" stopColor="#c4bab0" />
+            <stop offset="70%" stopColor="#9d938a" />
+            <stop offset="100%" stopColor="#6e655d" />
           </radialGradient>
 
-          {/* Neptune gradient - blue gas giant with atmospheric depth */}
+          {/* Venus gradient - thick tan cloud deck */}
           <radialGradient id="planet2Gradient" cx="30%" cy="30%">
-            <stop offset="0%" stopColor="#347dae" />
-            <stop offset="70%" stopColor="#195882" />
-            <stop offset="100%" stopColor="#0e476d" />
+            <stop offset="0%" stopColor="#f0d9a0" />
+            <stop offset="70%" stopColor="#d9b26a" />
+            <stop offset="100%" stopColor="#b58a3e" />
           </radialGradient>
 
-          {/* Saturn gradient - golden planet with warm tones */}
+          {/* Earth gradient - blue oceans */}
           <radialGradient id="planet3Gradient" cx="35%" cy="35%">
-            <stop offset="0%" stopColor="#e98e3e" />
-            <stop offset="70%" stopColor="#c76714" />
-            <stop offset="100%" stopColor="#8d480c" />
+            <stop offset="0%" stopColor="#6ab0ff" />
+            <stop offset="70%" stopColor="#20549c" />
+            <stop offset="100%" stopColor="#1c3f7a" />
           </radialGradient>
 
-          {/* Uranus gradient - ice giant with cool tones */}
+          {/* Mars gradient - rust-red deserts */}
           <radialGradient id="planet4Gradient" cx="35%" cy="35%">
-            <stop offset="0%" stopColor="#32ae38" />
-            <stop offset="70%" stopColor="#1a8920" />
-            <stop offset="100%" stopColor="#127117" />
+            <stop offset="0%" stopColor="#e0855e" />
+            <stop offset="70%" stopColor="#c1583b" />
+            <stop offset="100%" stopColor="#8a3b24" />
           </radialGradient>
         </defs>
 
         <Link to="/home">
-          <SunInternals
-            size={SUN_SIZE}
-            radiusOffset={SUN_RADIUS_OFFSET}
-            strokeWidth={0}
-          />
+          <SunInternals size={SUN_SIZE} radiusOffset={SUN_RADIUS_OFFSET} />
           <text fontFamily="'Inconsolata', monospace">
             <textPath
               fill="white"
@@ -107,9 +119,6 @@ const Landing = () => {
         <path
           id="orbit1"
           className="orbit-path"
-          fill="transparent"
-          stroke={`#aa00dd48`}
-          strokeWidth={1}
           d={`
           M ${CENTER_X - PLANET_CONFIGS[0].orbit},${CENTER_X}
           a ${PLANET_CONFIGS[0].orbit},${PLANET_CONFIGS[0].orbit} 0 1,1 ${PLANET_CONFIGS[0].orbit * 2},2
@@ -120,9 +129,6 @@ const Landing = () => {
         <path
           id="orbit2"
           className="orbit-path"
-          fill="transparent"
-          stroke={`#aa00dd48`}
-          strokeWidth={1}
           d={`
           M ${CENTER_X - PLANET_CONFIGS[1].orbit},${CENTER_X}
           a ${PLANET_CONFIGS[1].orbit},${PLANET_CONFIGS[1].orbit} 0 1,1 ${PLANET_CONFIGS[1].orbit * 2},2
@@ -133,9 +139,6 @@ const Landing = () => {
         <path
           id="orbit3"
           className="orbit-path"
-          fill="transparent"
-          stroke={`#aa00dd48`}
-          strokeWidth={1}
           d={`
           M ${CENTER_X - PLANET_CONFIGS[2].orbit},${CENTER_X}
           a ${PLANET_CONFIGS[2].orbit},${PLANET_CONFIGS[2].orbit} 0 1,1 ${PLANET_CONFIGS[2].orbit * 2},2
@@ -146,9 +149,6 @@ const Landing = () => {
         <path
           id="orbit4"
           className="orbit-path"
-          fill="transparent"
-          stroke={`#aa00dd48`}
-          strokeWidth={1}
           d={`
           M ${CENTER_X - PLANET_CONFIGS[3].orbit},${CENTER_X}
           a ${PLANET_CONFIGS[3].orbit},${PLANET_CONFIGS[3].orbit} 0 1,1 ${PLANET_CONFIGS[3].orbit * 2},2
