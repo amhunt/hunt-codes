@@ -71,7 +71,7 @@ const vertexShader = /* glsl */ `
     vColor = clamp(aColor + vec3(aBrighten * 0.01), 0.0, 1.0);
     gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0);
     gl_PointSize = min(
-      aSize * 2.0 * ${HALO_FACTOR.toFixed(1)} * scale * uPixelRatio,
+      aSize * 2.5 * ${HALO_FACTOR.toFixed(1)} * scale * uPixelRatio,
       uMaxPointSize
     );
   }
@@ -100,8 +100,9 @@ const fragmentShader = /* glsl */ `
   void main() {
     vec2 p = gl_PointCoord - 0.5;
     float d = length(p) * 2.0; // 0 at center, 1 at sprite edge
-    // The dot core fills 1/HALO_FACTOR of the sprite; the rest is glow
-    float core = 1.0 - smoothstep(0.30, 0.36, d);
+    // The dot core fills 1/HALO_FACTOR of the sprite; the rest is glow.
+    // A slightly larger, softer-edged core makes the stars read bigger.
+    float core = 1.0 - smoothstep(0.34, 0.42, d);
     float halo = exp(-d * 5.0) * uGlowStrength * (1.0 - core);
     float hue = uHue + vExtraHue;
     vec3 color = hueRotate(vColor, hue) * core + hueRotate(uGlowColor, hue) * halo;
