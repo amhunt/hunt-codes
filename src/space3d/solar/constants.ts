@@ -32,6 +32,13 @@ export const SUN_RADIUS = 3;
  */
 export const sunState = { scale: 1 };
 
+/**
+ * Whether the camera has finished its swoop to the current view. Written
+ * by CameraRig each frame; overlays that should only appear once the
+ * camera settles (the Earth "About Andrew" ring) read it.
+ */
+export const rigState = { settled: true };
+
 export const PLANETS: SolarPlanetConfig[] = [
   {
     name: "Mercury",
@@ -58,7 +65,7 @@ export const PLANETS: SolarPlanetConfig[] = [
     orbitRadius: 17.5,
     orbitSpeed: 0.09,
     orbitPhase: 4.2,
-    spinSpeed: 0.15,
+    spinSpeed: 0.03,
   },
   {
     name: "Mars",
