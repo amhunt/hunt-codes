@@ -80,9 +80,15 @@ const SunSvgAnchor = () => {
         const el = svg.querySelector<SVGElement>(`#${id}`);
         if (el) el.style.fill = "";
       });
-      ["position", "left", "top", "width", "height", "margin"].forEach(
-        (prop) => svg.style.removeProperty(prop),
-      );
+      [
+        "position",
+        "left",
+        "top",
+        "width",
+        "height",
+        "margin",
+        "visibility",
+      ].forEach((prop) => svg.style.removeProperty(prop));
     };
 
     const adopt = (svg: SVGSVGElement) => {
@@ -120,6 +126,16 @@ const SunSvgAnchor = () => {
       return;
     }
     if (el !== adoptedRef.current) helpers.adopt(el);
+
+    // The home view now perches ON the sun, so gluing the home links svg
+    // to the projected disc would create a viewport-dwarfing element.
+    // Adopt it (blank the disc, keep the no-WebGL fallback hand-off) but
+    // hide it instead of sizing it; its links live elsewhere now.
+    if (!landing) {
+      el.style.visibility = "hidden";
+      return;
+    }
+    el.style.visibility = "";
 
     // Project the sun's center (world origin) to CSS pixels
     projected.set(0, 0, 0).project(camera);

@@ -13,7 +13,7 @@ const DayNightSwitch = ({
   onCheckedChange: (isNight: boolean) => void;
 }) => (
   <Switch.Root
-    className="day-night-switch fixed right-4 top-4 z-[5000]"
+    className="day-night-switch fixed right-12 top-4 z-[5000]"
     checked={isNightMode}
     onCheckedChange={onCheckedChange}
     aria-label={isNightMode ? "Switch to day mode" : "Switch to night mode"}
