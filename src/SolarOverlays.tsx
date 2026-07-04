@@ -54,14 +54,14 @@ const SolarOverlays = () => (
             a 41,41 0 1,1 -82,0
           "
         />
-        <text fontFamily="'Inconsolata', monospace" textAnchor="middle">
+        <text fontFamily="'Retro Floral', 'Inconsolata', monospace" textAnchor="middle">
           <textPath
             href="#earth-about-ring-path"
             startOffset="25%"
             className="svg-link-tspan"
             fontSize="13px"
           >
-            About Andrew
+            ABOUT ANDREW
           </textPath>
         </text>
       </svg>
