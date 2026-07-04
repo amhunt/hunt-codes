@@ -3,7 +3,7 @@ import Typed from "typed.js";
 import cx from "classnames";
 
 import { GitHub, Linkedin, Mail } from "react-feather";
-import { ArrowLeftIcon, Wand2 } from "lucide-react";
+import { ArrowLeftIcon } from "lucide-react";
 import useWindowSize from "./useWindowSize";
 import SolarOverlays from "./SolarOverlays";
 
@@ -52,16 +52,36 @@ const Home = () => {
   }, []);
 
   const [copied, setCopied] = useState(false);
+  const [copyTooltipOpen, setCopyTooltipOpen] = useState(false);
+  const copyTriggerRef = useRef<HTMLAnchorElement>(null);
+  const pinCopyTooltipOpen = useRef(false);
+
+  const pinCopyTooltip = useCallback(() => {
+    pinCopyTooltipOpen.current = true;
+    setCopyTooltipOpen(true);
+  }, []);
+
+  const handleCopyTooltipOpenChange = useCallback((open: boolean) => {
+    if (!open && pinCopyTooltipOpen.current) return;
+    setCopyTooltipOpen(open);
+  }, []);
 
   const handleCopy = useCallback(async () => {
+    pinCopyTooltip();
     try {
       await navigator.clipboard.writeText("andrew+in@hunt.codes");
       setCopied(true);
-      setTimeout(() => setCopied(false), 2000); // Reset after 2 seconds
+      setTimeout(() => {
+        setCopied(false);
+        pinCopyTooltipOpen.current = false;
+        const isHovering = copyTriggerRef.current?.matches(":hover") ?? false;
+        setCopyTooltipOpen(isHovering);
+      }, 2000);
     } catch (err) {
+      pinCopyTooltipOpen.current = false;
       console.error("Failed to copy email: ", err);
     }
-  }, []);
+  }, [pinCopyTooltip]);
 
   return (
     <>
@@ -81,7 +101,7 @@ const Home = () => {
             Frontend Engineer
           </div>
         )}
-        <p className="hoverableHomeItem justify-between gap-6">
+        <div className="hoverableHomeItem justify-between gap-6">
           {!isSmall && (
             <div className="max-w-[300px] text-left text-lg font-bold">
               Frontend Engineer based in <s>SF</s> NYC
@@ -106,9 +126,9 @@ const Home = () => {
             >
               <GitHub size={20} />
             </a>
-            <TooltipProvider>
+            {/* <TooltipProvider>
               <Tooltip disableHoverableContent>
-                <TooltipTrigger>
+                <TooltipTrigger asChild>
                   <Link
                     aria-label="SVG Studio"
                     to="/draw"
@@ -121,36 +141,52 @@ const Home = () => {
                   <p>SVG Studio</p>
                 </TooltipContent>
               </Tooltip>
-            </TooltipProvider>
+            </TooltipProvider> */}
             <TooltipProvider
               skipDelayDuration={0}
               delayDuration={0}
               disableHoverableContent
             >
-              <Tooltip disableHoverableContent defaultOpen={copied}>
-                <TooltipTrigger onClick={(e) => e.preventDefault()}>
-                  <button
+              <Tooltip
+                disableHoverableContent
+                open={copyTooltipOpen}
+                onOpenChange={handleCopyTooltipOpenChange}
+              >
+                <TooltipTrigger asChild>
+                  <a
+                    ref={copyTriggerRef}
                     aria-label="Copy email address"
                     aria-description="andrew+in@hunt.codes"
-                    // eslint-disable-next-line -- TODO: rm this comment and fix the lint error
-                    onClick={() => handleCopy()}
+                    href="#"
+                    onPointerDown={(e) => {
+                      e.preventDefault();
+                      pinCopyTooltip();
+                    }}
+                    onClick={(e) => {
+                      e.preventDefault();
+                      void handleCopy();
+                    }}
                     className="flex size-8 items-center justify-center rounded-full p-1 transition-colors hover:bg-[#5efffc57]"
                   >
                     <Mail size={20} />
-                  </button>
+                  </a>
                 </TooltipTrigger>
                 <TooltipContent
                   onPointerDownOutside={(e) => e.preventDefault()}
                 >
-                  <p>andrew+in@hunt.codes ({copied ? "copied" : "copy"})</p>
+                  <p>
+                    {copied
+                      ? "Email copied!"
+                      : "andrew+in@hunt.codes — click to copy"}
+                  </p>
                 </TooltipContent>
               </Tooltip>
             </TooltipProvider>
           </div>
-        </p>
+        </div>
         {/* Moved to computer for large screens */}
         {/* {isMdOrLess && ( */}
-        <p className="hoverableHomeItem h-20 gap-0">
+        <div className="hoverableHomeItem h-20 gap-0">
           <div>
             <span
               ref={typedEl}
@@ -167,7 +203,7 @@ const Home = () => {
               <a href="mailto:andrew+contact@hunt.codes">andrew@hunt.codes</a>
             </p>
           </div>
-        </p>
+        </div>
         {/* )} */}
         {!isChrome && !isSmall && (
           <>
