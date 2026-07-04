@@ -3,6 +3,7 @@ import { useFrame } from "@react-three/fiber";
 import * as THREE from "three";
 
 import { SUN_RADIUS, sunState } from "./constants";
+import { hoverState } from "../../solarHover";
 import { createSunGlowTexture, createSunTexture } from "../textures";
 
 /**
@@ -67,7 +68,8 @@ export default function Sun({
       sunState.scale = next;
     }
     if (glow.current) {
-      const target = SUN_RADIUS * targetGlowScale;
+      // Hovering the ENTER link (or the sun itself) swells the glow
+      const target = SUN_RADIUS * targetGlowScale * (hoverState.sun ? 1.35 : 1);
       const current = glow.current.scale.x;
       const next = current + (target - current) * ease;
       glow.current.scale.set(next, next, 1);
@@ -75,10 +77,7 @@ export default function Sun({
     if (materialRef.current) {
       // Ease the brightness so the mode toggle doesn't pop; the spot
       // layer follows the same tint or the crossfade would pulse dark
-      materialRef.current.color.lerp(
-        isNightMode ? NIGHT_TINT : DAY_TINT,
-        ease,
-      );
+      materialRef.current.color.lerp(isNightMode ? NIGHT_TINT : DAY_TINT, ease);
       if (spotsMaterialRef.current) {
         spotsMaterialRef.current.color.copy(materialRef.current.color);
       }
