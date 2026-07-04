@@ -1,6 +1,7 @@
 import React, { useEffect } from "react";
 import { Link } from "react-router-dom";
 import { SunInternals } from "SunSvg";
+import { hoverState } from "./solarHover";
 import { useOrbitalAnimation } from "./hooks/useOrbitalAnimation";
 import {
   PLANET_CONFIGS,
@@ -57,6 +58,15 @@ const Landing = () => {
     hasPlayedIntro = true;
   }, []);
 
+  // Clicking ENTER navigates away without a pointerleave — don't leave
+  // the sun's hover glow stuck on
+  useEffect(
+    () => () => {
+      hoverState.sun = false;
+    },
+    [],
+  );
+
   return (
     <div className="landing-page">
       <svg
@@ -95,7 +105,15 @@ const Landing = () => {
           </radialGradient>
         </defs>
 
-        <Link to="/home">
+        <Link
+          to="/home"
+          onPointerEnter={() => {
+            hoverState.sun = true;
+          }}
+          onPointerLeave={() => {
+            hoverState.sun = false;
+          }}
+        >
           <SunInternals size={SUN_SIZE} radiusOffset={SUN_RADIUS_OFFSET} />
           <text fontFamily="'Retro Floral', 'Inconsolata', monospace">
             <textPath
