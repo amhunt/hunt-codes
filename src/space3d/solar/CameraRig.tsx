@@ -56,6 +56,10 @@ const ABOUT_LOOK_HEIGHT = 0.45; // aim slightly above the moon's plane
  *  offset instead, putting itself on the Earth-moon line so the moon
  *  reads dead-center, directly above Earth. */
 const ABOUT_MOON_NDC_X = -0.5;
+/** Extra downward aim, as an NDC fraction at the moon's distance: rotating
+ *  the view down lifts the whole scene — the moon rides ~20vh higher and
+ *  more of Earth's limb clears the bottom edge. */
+const ABOUT_MOON_NDC_Y_LIFT = 0.4;
 const LG_BREAKPOINT_PX = 1280;
 
 // scratch vectors, reused every frame
@@ -97,14 +101,17 @@ function computeGoal(
       // reads directly above Earth
       .addScaledVector(side, centered ? 0 : ABOUT_CAM_SIDE);
     goalPos.y += ABOUT_CAM_ABOVE;
+    const persp = camera as THREE.PerspectiveCamera;
+    const tanHalfV = Math.tan((persp.fov * Math.PI) / 360);
     goalLook.copy(moonPos);
-    goalLook.y = moonPos.y + ABOUT_LOOK_HEIGHT;
+    goalLook.y =
+      moonPos.y +
+      ABOUT_LOOK_HEIGHT -
+      goalPos.distanceTo(moonPos) * ABOUT_MOON_NDC_Y_LIFT * tanHalfV;
     if (!centered) {
       // Aim sideways of the moon by the angle that lands it at
       // ABOUT_MOON_NDC_X for the current aspect (~25vw from the left)
-      const persp = camera as THREE.PerspectiveCamera;
-      const tanHalfH =
-        Math.tan((persp.fov * Math.PI) / 360) * (persp.aspect || 1);
+      const tanHalfH = tanHalfV * (persp.aspect || 1);
       const lateral = goalPos.distanceTo(moonPos) * ABOUT_MOON_NDC_X * tanHalfH;
       goalLook.addScaledVector(side, -lateral);
     }
