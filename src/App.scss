@@ -26,19 +26,6 @@ $breakpoint-lg: 1280px;
     color: #e8e6f5;
   }
 
-  // The home sun's orbiting links now ring the distant 3D sun over dark
-  // space (they used to sit on the bright corner disc, hence the black)
-  #home-sun-svg .svg-link-tspan {
-    fill: #e8e6f5;
-
-    &:hover {
-      fill: #9e80f9;
-    }
-  }
-  #home-sun-svg #sunText textPath {
-    fill: #e8e6f5;
-  }
-
   .homeInfoContainer a {
     color: $purp-light;
   }
@@ -65,14 +52,6 @@ $breakpoint-lg: 1280px;
   .svg-generator-input {
     background: rgba(0, 0, 0, 0.05);
     border-color: rgba(0, 0, 0, 0.15);
-  }
-
-  .landing-page svg .svg-link-tspan {
-    fill: $purp;
-  }
-
-  .planet-label textPath {
-    fill: $purp;
   }
 }
 
@@ -104,18 +83,6 @@ $breakpoint-lg: 1280px;
     > path {
       width: 100px;
       height: 100px;
-    }
-    a {
-      &:hover {
-        .svg-link-tspan {
-          fill: $purp-light;
-        }
-      }
-    }
-    .svg-link-tspan {
-      fill: white;
-      font-weight: 400;
-      transition: fill 0.1s;
     }
   }
 }
@@ -478,18 +445,6 @@ p {
     opacity: 1;
     animation: 1s ease-in both sunset;
   }
-}
-
-// While the WebGL sun owns the disc (space3d/Sun3D flags the svg), the 3D
-// scene drives all sun motion — the flight from the landing page, the rise
-// from below, the dive at nightfall — so pin the container at rest; the
-// CSS rise/set above would double-move the links layer the shader sun
-// is glued to. Without WebGL the flag is never set and the CSS runs.
-.planet1_day:has(> svg[data-rendered-3d]) {
-  opacity: 1;
-  transform: none;
-  animation: none;
-  transition: none;
 }
 
 .planet1_night {
@@ -1086,26 +1041,6 @@ a:hover {
   border-radius: 50%;
   pointer-events: auto;
   cursor: pointer;
-
-  .svg-link-tspan {
-    fill: #fff;
-  }
-
-  &:hover .svg-link-tspan,
-  &:focus-visible .svg-link-tspan {
-    fill: $purp-light;
-  }
-}
-
-.App.day .earth-about-ring {
-  .svg-link-tspan {
-    fill: $purp;
-  }
-
-  &:hover .svg-link-tspan,
-  &:focus-visible .svg-link-tspan {
-    fill: $purp-light;
-  }
 }
 
 .App-background_day {
@@ -1314,37 +1249,6 @@ a:hover {
   );
 }
 
-.stars-container {
-  position: fixed;
-  inset: 0;
-  transition:
-    filter 2s ease-in-out,
-    opacity 2s ease-in-out;
-  pointer-events: none;
-}
-
-// Realistic planet styles for Landing.tsx
-
-#planet1 {
-  // Mars - red planet with surface details
-  fill: url(#planet1Gradient);
-}
-
-#planet2 {
-  // Neptune - blue gas giant with atmospheric bands
-  fill: url(#planet2Gradient);
-}
-
-#planet3 {
-  // Saturn - golden planet with ring system effect
-  fill: url(#planet3Gradient);
-}
-
-#planet4 {
-  // Uranus - ice giant with subtle atmospheric layers
-  fill: url(#planet4Gradient);
-}
-
 @keyframes fadeIn {
   from {
     opacity: 0;
@@ -1354,8 +1258,7 @@ a:hover {
   }
 }
 
-#solar-system,
-.stars-container {
+#solar-system {
   animation: fadeIn 1s ease-in-out both;
 }
 
@@ -1368,55 +1271,6 @@ a:hover {
   &.no-intro-delay {
     animation-delay: 0s;
   }
-}
-
-// Planet label styles
-.planet-label {
-  pointer-events: none;
-  user-select: none;
-  opacity: 0.8;
-  text-shadow: 0 0 8px rgba(255, 255, 255, 0.3);
-  font-weight: 600;
-  letter-spacing: 1px;
-
-  // Ensure text is visible against the background
-  mix-blend-mode: normal;
-
-  // Add a subtle glow effect
-  filter: drop-shadow(0 0 4px rgba(255, 255, 255, 0.2));
-
-  > textPath {
-    margin-bottom: -24px;
-  }
-}
-
-// Thin, solid, faint rings (hunt-codes-3 style) — the no-WebGL fallback;
-// the live 3D scene draws its own rings
-.orbit-path {
-  stroke: rgba(255, 255, 255, 0.14);
-  stroke-width: 1;
-  fill: transparent;
-}
-
-.App.day .orbit-path {
-  stroke: rgba(20, 20, 40, 0.16);
-}
-
-// While the 3D solar scene owns the landing (SunSvgAnchor flags the svg
-// and glues it to the projected sun), the SVG keeps only the sun ring +
-// "enter" link; its fallback orbits, flat planets and labels would
-// double-render under the 3D ones
-#solar-system[data-rendered-3d] {
-  .orbit-path,
-  .planet,
-  .planet-label,
-  .landing-enter-text {
-    display: none;
-  }
-}
-
-.planet-emoji {
-  text-decoration: none !important;
 }
 
 // ─── Day/Night Switch (DayNightSwitch.tsx) ─────────────────

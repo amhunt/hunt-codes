@@ -16,8 +16,6 @@ import GoldenGateFog from "./GoldenGateFog";
 import useWindowSize from "useWindowSize";
 import { Music } from "react-feather";
 // import RetroMac from "./RetroMac";
-import Stars from "Stars";
-import supportsWebGL from "./space3d/webglSupport";
 
 // Loaded on demand so three.js ships as its own chunk
 const Space3DBackground = lazy(() => import("./space3d/Space3DBackground"));
@@ -25,11 +23,11 @@ const Space3DBackground = lazy(() => import("./space3d/Space3DBackground"));
 /**
  * The background must never take the app down: if the three.js chunk
  * fails to load (stale deploy, flaky network) or the canvas throws,
- * fall back to the legacy DOM star field instead of letting the error
+ * swallow the error (plain sky, no stars) instead of letting it
  * propagate past Suspense and unmount the root.
  */
 class BackgroundErrorBoundary extends React.Component<
-  { fallback: React.ReactNode; children: React.ReactNode },
+  { children: React.ReactNode },
   { failed: boolean }
 > {
   state = { failed: false };
@@ -39,11 +37,11 @@ class BackgroundErrorBoundary extends React.Component<
   }
 
   componentDidCatch(error: unknown) {
-    console.error("3D background failed; using DOM fallback", error);
+    console.error("3D background failed", error);
   }
 
   render() {
-    return this.state.failed ? this.props.fallback : this.props.children;
+    return this.state.failed ? null : this.props.children;
   }
 }
 
@@ -68,8 +66,6 @@ const AppBackground = ({
   const isHomePage = location.pathname.includes("home");
   const isAboutPage = location.pathname.includes("about");
   const isLanding = location.pathname === "/" || location.pathname === "";
-  // WebGL background (stars + 3D planets); legacy DOM stars are the fallback
-  const webglEnabled = supportsWebGL();
   const [musicEnabled, setMusicEnabled] = useState(false);
 
   const [highlightedCharIdx, setHighlightedCharIdx] = useState(0);
@@ -180,38 +176,25 @@ const AppBackground = ({
         className={cx(
           "App-background",
           "App-background_night",
-          webglEnabled && "webgl",
+          "webgl",
           isNightMode ? "on" : "off",
         )}
-      >
-        {!webglEnabled && isNightMode && <Stars isLanding={isLanding} />}
-      </div>
-      {webglEnabled && (
-        <BackgroundErrorBoundary
-          fallback={
-            isNightMode ? (
-              // .space-canvas keeps the fallback stars above the night
-              // backdrop, where the canvas would have been
-              <div className="space-canvas">
-                <Stars isLanding={isLanding} />
-              </div>
-            ) : null
-          }
-        >
-          <Suspense fallback={null}>
-            <Space3DBackground
-              isNightMode={isNightMode}
-              isLanding={isLanding}
-              isHomePage={isHomePage}
-              isAboutPage={isAboutPage}
-            />
-          </Suspense>
-        </BackgroundErrorBoundary>
-      )}
-      {/* The about page uses the 3D solar scene (Earth + orbiting moon)
-          instead of the flat SVG sun/moon, so Galaxy is suppressed there */}
-      {!isLanding && !isAboutPage && (
-        <Galaxy isNightMode={isNightMode} forceSun={isHomePage} />
+      />
+      <BackgroundErrorBoundary>
+        <Suspense fallback={null}>
+          <Space3DBackground
+            isNightMode={isNightMode}
+            isLanding={isLanding}
+            isHomePage={isHomePage}
+            isAboutPage={isAboutPage}
+          />
+        </Suspense>
+      </BackgroundErrorBoundary>
+      {/* Landing/home/about all render the 3D solar scene (sun, Earth,
+          moon), so the SVG Galaxy only remains for the other routes
+          (/draw): its sun by day, its moon by night */}
+      {!isLanding && !isHomePage && !isAboutPage && (
+        <Galaxy isNightMode={isNightMode} />
       )}
       {isHomePage && (
         <>

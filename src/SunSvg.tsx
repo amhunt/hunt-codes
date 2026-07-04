@@ -1,26 +1,4 @@
 import React from "react";
-import { Link } from "react-router-dom";
-import useWindowWidth from "useWindowWidth";
-
-// Geometry of the home sun disc, exported for the WebGL sun (space3d/Sun3D)
-// that tracks this SVG and replaces the disc fill with a shader while it is
-// rendering — the same hand-off MoonSvg does for the moon. Values assume the
-// default size=1 (Galaxy renders it that way). Keep in sync with
-// SunInternals' innerRadius/center math below.
-export const HOME_SUN_SVG_ID = "home-sun-svg";
-export const HOME_SUN_CX = 275;
-export const HOME_SUN_CY = 276;
-export const HOME_SUN_RADIUS = 175;
-
-// The orbiting text links are retired for now (replaced by the asteroid
-// links + the Earth "About Me" ring in the 3D scene) but kept
-// compiled behind this flag in case they come back.
-const SHOW_ORBITING_LINKS = false;
-
-const isSafari =
-  navigator.userAgent.includes("Safari") &&
-  // Chrome also has "Safari" in its user-agent string
-  !navigator.userAgent.includes("Chrome");
 
 export function SunInternals({
   size = 1,
@@ -146,41 +124,6 @@ export function SunInternals({
       </defs>
       <style>
         {`
-          #sunText {
-            pointer-events: all;
-            font-size: 20px;
-            transform-origin: center;
-            animation-timing-function: ease-in-out;
-            ${isSafari ? "" : `animation: sun-rotate 20s linear infinite;`}
-            &:hover {
-              animation-play-state: paused;
-            }
-          }
-
-          .svg-link-tspan {
-            fill: black;
-            font-weight: 400;
-            transition: fill 0.1s;
-
-            &:hover {
-              fill: #7400b3;
-            }
-          }
-
-          @keyframes sun-rotate {
-            0% {
-              transform: rotate(0deg);
-            }
-
-            80% {
-              transform: rotate(15deg);
-            }
-
-            100% {
-              transform: rotate(360deg);
-            }
-          }
-
           #circle3 {
             filter: url(#heavycloud);
           }
@@ -190,18 +133,9 @@ export function SunInternals({
   );
 }
 
-export default function SunSvg({
-  isHome,
-  size = 1,
-}: {
-  isHome?: boolean;
-  size?: number;
-}) {
-  const { isSmall } = useWindowWidth();
-
+export default function SunSvg({ size = 1 }: { size?: number }) {
   return (
     <svg
-      id={isHome ? HOME_SUN_SVG_ID : undefined}
       width={550 * size}
       height={550 * size}
       viewBox={`0 0 ${550 * size} ${550 * size}`}
@@ -209,74 +143,6 @@ export default function SunSvg({
       xmlnsXlink="http://www.w3.org/1999/xlink"
     >
       <SunInternals size={size} />
-      <text fontFamily="'Inconsolata', monospace" id="sunText">
-        <textPath
-          fill="black"
-          pointerEvents="fill"
-          xmlnsXlink="http://www.w3.org/1999/xlink"
-          xlinkHref="#circle2"
-        >
-          {SHOW_ORBITING_LINKS && isHome && (
-            <>
-              <Link className="planet-emoji" to="/about">
-                <tspan
-                  dx={isSmall ? "35%" : "5%"}
-                  className="svg-link-tspan"
-                  fontSize="20px"
-                  vectorEffect="non-scaling-size"
-                >
-                  about me
-                </tspan>
-                <tspan
-                  className="planet-emoji"
-                  fontSize="28px"
-                  dx="1%"
-                  dy="6px"
-                >
-                  🌎
-                </tspan>
-              </Link>
-
-              <a
-                target="_blank"
-                rel="noopener noreferrer"
-                href="https://engineering.ziphq.com/material-ui/"
-              >
-                <tspan
-                  className="svg-link-tspan"
-                  vectorEffect="non-scaling-size"
-                  fontSize="16px"
-                  dx={isSmall ? "-12%" : "8%"}
-                  dy={isSmall ? "-64px" : "-6px"}
-                >
-                  {isSmall ? "Zip blog" : "recent blog post"}
-                </tspan>
-              </a>
-              <tspan fontSize="20px" dx="1%" dy="4px">
-                🪐
-              </tspan>
-              <a
-                target="_blank"
-                rel="noopener noreferrer"
-                href="https://andrew-hunt.medium.com/"
-              >
-                <tspan
-                  className="svg-link-tspan"
-                  vectorEffect="non-scaling-size"
-                  fontSize="16px"
-                  dy={isSmall ? "16px" : "-4px"}
-                  dx={isSmall ? "5%" : "8%"}
-                >
-                  {isSmall ? "old blog" : "old personal blog"}
-                </tspan>
-              </a>
-              <tspan fontSize="20px" dx="1%" dy={isSmall ? "4px" : "4px"}>
-                🌚
-              </tspan>
-            </>
-          )}
-        </textPath>
-      </text>
     </svg>
   );
 }

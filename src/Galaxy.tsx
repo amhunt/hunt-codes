@@ -3,17 +3,9 @@ import cx from "classnames";
 import MoonSvg from "./MoonSvg";
 import SunSvg from "./SunSvg";
 
-const Galaxy = ({
-  isNightMode,
-  forceSun = false,
-}: {
-  isNightMode: boolean;
-  /** Home page: the sun (with its orbiting links) stays up in both modes,
-   *  and the moon never rises here. */
-  forceSun?: boolean;
-}) => {
-  // The sun is up in day mode, or always when forced (home page)
-  const sunUp = forceSun || !isNightMode;
+const Galaxy = ({ isNightMode }: { isNightMode: boolean }) => {
+  // The sun is up in day mode, the moon at night
+  const sunUp = !isNightMode;
   const [hasMounted, setHasMounted] = useState(false);
   const [hideMoon, setHideMoon] = useState(sunUp);
   const [hideSun, setHideSun] = useState(!sunUp);
@@ -44,7 +36,7 @@ const Galaxy = ({
             hasMounted && (sunUp ? "on" : "off"),
           )}
         >
-          <SunSvg isHome />
+          <SunSvg />
         </div>
       )}
       {!hideMoon && (

@@ -3,35 +3,26 @@ import { useFrame, useThree } from "@react-three/fiber";
 import * as THREE from "three";
 
 import {
-  RENDERED_3D_FLAG,
   SOLAR_SYSTEM_SVG_ID,
   SUN_CENTER,
   SUN_CLOUD_ID,
   SUN_CORE_ID,
   SUN_SURFACE_RADIUS,
 } from "../../landingScene";
-import {
-  HOME_SUN_CX,
-  HOME_SUN_CY,
-  HOME_SUN_RADIUS,
-  HOME_SUN_SVG_ID,
-} from "../../SunSvg";
 import { SUN_RADIUS, sunState } from "./constants";
 import { liveElementById } from "../svgTracking";
 
 /**
- * Glues the DOM sun rings to the 3D sun — the inverse of the old
- * pixel-space scenes (which glued 3D bodies to the SVG). Every frame the
- * sun's world origin is projected through the perspective camera, and
- * whichever sun SVG is on screen (the landing "enter" ring or the home
- * orbiting-links ring) is positioned and scaled so its disc coincides
- * with the projected sun. During the camera swoop between views the ring
+ * Glues the landing "enter" ring SVG to the 3D sun — the inverse of the
+ * old pixel-space scenes (which glued 3D bodies to the SVG). Every frame
+ * the sun's world origin is projected through the perspective camera and
+ * the SVG is positioned and scaled so its disc coincides with the
+ * projected sun. During the camera swoop between views the ring
  * therefore tracks the sun continuously.
  *
- * Like the old scenes, the SVG's flat disc fill is blanked while this is
- * live (the 3D sphere replaces it) and restored whenever the scene goes
- * away, so the SVG remains the complete no-WebGL fallback. The flag also
- * lets CSS hide the SVG's fallback orbits/planets.
+ * The SVG's flat disc fill is blanked while this is live (the 3D sphere
+ * replaces it) and restored if the scene goes away (unmount, WebGL
+ * context loss) so the ring never renders hollow.
  */
 
 interface AnchorConfig {
@@ -54,15 +45,6 @@ const LANDING_ANCHOR: AnchorConfig = {
   ringScale: 1,
 };
 
-const HOME_ANCHOR: AnchorConfig = {
-  id: HOME_SUN_SVG_ID,
-  viewBox: 550,
-  cx: HOME_SUN_CX,
-  cy: HOME_SUN_CY,
-  discR: HOME_SUN_RADIUS,
-  ringScale: 1.25,
-};
-
 const projected = new THREE.Vector3();
 
 const SunSvgAnchor = () => {
@@ -75,7 +57,6 @@ const SunSvgAnchor = () => {
       const svg = adoptedRef.current;
       adoptedRef.current = null;
       if (!svg) return;
-      svg.removeAttribute(RENDERED_3D_FLAG);
       [SUN_CORE_ID, SUN_CLOUD_ID].forEach((id) => {
         const el = svg.querySelector<SVGElement>(`#${id}`);
         if (el) el.style.fill = "";
@@ -94,7 +75,6 @@ const SunSvgAnchor = () => {
     const adopt = (svg: SVGSVGElement) => {
       release();
       adoptedRef.current = svg;
-      svg.setAttribute(RENDERED_3D_FLAG, "1");
       [SUN_CORE_ID, SUN_CLOUD_ID].forEach((id) => {
         const el = svg.querySelector<SVGElement>(`#${id}`);
         if (el) el.style.fill = "transparent";
@@ -116,26 +96,14 @@ const SunSvgAnchor = () => {
   }, [gl, helpers]);
 
   useFrame(({ camera }) => {
-    const landing = liveElementById(LANDING_ANCHOR.id);
-    const home = landing ? null : liveElementById(HOME_ANCHOR.id);
-    const el = (landing ?? home) as SVGSVGElement | null;
-    const config = landing ? LANDING_ANCHOR : HOME_ANCHOR;
+    const config = LANDING_ANCHOR;
+    const el = liveElementById(config.id) as SVGSVGElement | null;
 
     if (!el) {
       if (adoptedRef.current) helpers.release();
       return;
     }
     if (el !== adoptedRef.current) helpers.adopt(el);
-
-    // The home view now perches ON the sun, so gluing the home links svg
-    // to the projected disc would create a viewport-dwarfing element.
-    // Adopt it (blank the disc, keep the no-WebGL fallback hand-off) but
-    // hide it instead of sizing it; its links live elsewhere now.
-    if (!landing) {
-      el.style.visibility = "hidden";
-      return;
-    }
-    el.style.visibility = "";
 
     // Project the sun's center (world origin) to CSS pixels
     projected.set(0, 0, 0).project(camera);
