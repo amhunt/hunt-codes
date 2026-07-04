@@ -1,6 +1,7 @@
 import React, { useEffect, useMemo, useRef } from "react";
 import { useFrame } from "@react-three/fiber";
 import * as THREE from "three";
+import { DecalGeometry } from "three/examples/jsm/geometries/DecalGeometry.js";
 
 import { planetPosition, type SolarPlanetConfig } from "./constants";
 import { createGitHubMarkTexture, createPlanetTexture } from "../textures";
@@ -12,8 +13,9 @@ import { createGitHubMarkTexture, createPlanetTexture } from "../textures";
  * matching DOM link overlay is glued to it by BodyAnchors via the same
  * planetPosition() the mesh uses, so the two can't drift apart.
  *
- * `withGithubLogo` sticks a GitHub-mark badge onto two opposite faces of
- * the rock (they spin with it, so the logo tumbles in and out of view).
+ * `withGithubLogo` projects a GitHub-mark badge onto two opposite sides of
+ * the rock's surface (DecalGeometry clips the sticker to the mesh, so it
+ * follows the lumps and spins with them).
  */
 export default function Asteroid({
   config,
@@ -54,6 +56,36 @@ export default function Asteroid({
   }, [config.radius]);
   useEffect(() => () => geometry.dispose(), [geometry]);
 
+  // Project the badge onto the surface from +z and -z. DecalGeometry wants
+  // a mesh to shoot at; an identity-transform temp mesh keeps the decal
+  // vertices in the rock's local space, so parenting the decals under the
+  // spinning mesh keeps them glued to the lumps they were cut from. The
+  // box is sized to swallow the full jitter range (0.8r..1.2r).
+  const decalGeometries = useMemo(() => {
+    if (!withGithubLogo) return null;
+    const r = config.radius;
+    const target = new THREE.Mesh(geometry);
+    const size = new THREE.Vector3(r * 1.4, r * 1.4, r * 1.6);
+    return [
+      new DecalGeometry(
+        target,
+        new THREE.Vector3(0, 0, r),
+        new THREE.Euler(0, 0, 0),
+        size,
+      ),
+      new DecalGeometry(
+        target,
+        new THREE.Vector3(0, 0, -r),
+        new THREE.Euler(0, Math.PI, 0),
+        size,
+      ),
+    ];
+  }, [withGithubLogo, geometry, config.radius]);
+  useEffect(
+    () => () => decalGeometries?.forEach((g) => g.dispose()),
+    [decalGeometries],
+  );
+
   useFrame(({ clock }, delta) => {
     if (group.current) {
       planetPosition(config, clock.elapsedTime, group.current.position);
@@ -63,11 +95,6 @@ export default function Asteroid({
       mesh.current.rotation.x += delta * config.spinSpeed * 0.3;
     }
   });
-
-  // Badges hover just past the jittered surface (vertices reach 1.2x the
-  // nominal radius) as children of the spinning mesh, one per side
-  const badgeOffset = config.radius * 1.28;
-  const badgeSize = config.radius * 1.35;
 
   return (
     <group ref={group}>
@@ -79,19 +106,17 @@ export default function Asteroid({
           flatShading
         />
         {logoTexture &&
-          [1, -1].map((sideSign) => (
-            <mesh
-              key={sideSign}
-              position={[0, 0, sideSign * badgeOffset]}
-              rotation={[0, sideSign === 1 ? 0 : Math.PI, 0]}
-            >
-              <planeGeometry args={[badgeSize, badgeSize]} />
+          decalGeometries?.map((decalGeometry, i) => (
+            <mesh key={i} geometry={decalGeometry}>
               {/* Unlit so the badge stays legible on the rock's dark side;
-                  alphaTest keeps the transparent corners from z-fighting */}
+                  polygonOffset floats the decal off the faces it copies so
+                  they don't z-fight */}
               <meshBasicMaterial
                 map={logoTexture}
                 transparent
-                alphaTest={0.5}
+                depthWrite={false}
+                polygonOffset
+                polygonOffsetFactor={-4}
               />
             </mesh>
           ))}
