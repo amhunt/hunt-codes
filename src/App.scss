@@ -834,6 +834,16 @@ button {
   transition: color 50ms ease-in-out;
   font-weight: 600;
 
+  // The about page's Home link slides in/out on scroll (Tailwind toggles
+  // -translate-x-32). Tailwind's transition-transform utility lives in a
+  // cascade layer, so the unlayered `transition: color` above would
+  // clobber it and make the slide jump — re-declare both here instead.
+  &.back-to-home-link {
+    transition:
+      color 50ms ease-in-out,
+      translate 300ms ease;
+  }
+
   &:hover {
     color: #010c73;
   }
