@@ -195,9 +195,44 @@ const GITHUB_MARK_PATH =
   "1.606-.015 2.896-.015 3.286 0 .315.21.69.825.57C20.565 22.092 24 " +
   "17.592 24 12.297c0-6.627-5.373-12-12-12";
 
-/** White badge with the dark GitHub mark, transparent outside the disc —
- *  a "sticker" decal for the GitHub link asteroid. */
-export function createGitHubMarkTexture(): THREE.CanvasTexture {
+/** The LinkedIn logo (rounded square with "in" knocked out), from
+ *  simple-icons (CC0), in a 24x24 viewBox. */
+const LINKEDIN_MARK_PATH =
+  "M20.447 20.452h-3.554v-5.569c0-1.328-.027-3.037-1.852-3.037-1.853 " +
+  "0-2.136 1.445-2.136 2.939v5.667H9.351V9h3.414v1.561h.046c.477-.9 " +
+  "1.637-1.85 3.37-1.85 3.601 0 4.267 2.37 4.267 5.455v6.286zM5.337 " +
+  "7.433c-1.144 0-2.063-.926-2.063-2.065 0-1.138.92-2.063 2.063-2.063 " +
+  "1.14 0 2.064.925 2.064 2.063 0 1.139-.925 2.065-2.064 2.065zm1.782 " +
+  "13.019H3.555V9h3.564v11.452zM22.225 0H1.771C.792 0 0 .774 0 " +
+  "1.729v20.542C0 23.227.792 24 1.771 24h20.451C23.2 24 24 23.227 24 " +
+  "22.271V1.729C24 .774 23.2 0 22.225 0z";
+
+/** The RSS/feed mark (dot + two arcs) — the generic "blog" icon — from
+ *  simple-icons (CC0), in a 24x24 viewBox. */
+const RSS_MARK_PATH =
+  "M19.199 24C19.199 13.467 10.533 4.8 0 4.8V0c13.165 0 24 10.835 24 " +
+  "24h-4.801zM3.291 17.415c1.814 0 3.293 1.479 3.293 3.295 0 1.813-1.485 " +
+  "3.29-3.301 3.29C1.47 24 0 22.526 0 20.71s1.475-3.294 3.291-3.295zM15." +
+  "909 24h-4.665c0-6.169-5.075-11.245-11.244-11.245V8.09c8.727 0 15.909 " +
+  "7.184 15.909 15.91z";
+
+export type AsteroidLogo = "github" | "linkedin" | "blog";
+
+const LOGO_MARKS: Record<
+  AsteroidLogo,
+  { path: string; color: string; scale: number }
+> = {
+  github: { path: GITHUB_MARK_PATH, color: "#5000f0", scale: 0.72 },
+  // The square marks are scaled down so their corners stay inside the disc
+  linkedin: { path: LINKEDIN_MARK_PATH, color: "#0a66c2", scale: 0.6 },
+  blog: { path: RSS_MARK_PATH, color: "#f26522", scale: 0.6 },
+};
+
+/** White badge disc with a brand mark, transparent outside the disc —
+ *  a "sticker" decal for the link asteroids. */
+export function createLogoBadgeTexture(
+  logo: AsteroidLogo,
+): THREE.CanvasTexture {
   const size = 256;
   const canvas = createCanvas(size, size);
   const ctx = canvas.getContext("2d");
@@ -206,15 +241,16 @@ export function createGitHubMarkTexture(): THREE.CanvasTexture {
   const c = size / 2;
   ctx.beginPath();
   ctx.arc(c, c, c * 0.98, 0, Math.PI * 2);
-  ctx.fillStyle = "#f6f8fa";
+  ctx.fillStyle = "#f6f8faaa";
   ctx.fill();
 
-  const scale = (size / 24) * 0.72; // mark at 72% of the badge
+  const mark = LOGO_MARKS[logo];
+  const scale = (size / 24) * mark.scale;
   ctx.translate(c, c);
   ctx.scale(scale, scale);
   ctx.translate(-12, -12);
-  ctx.fillStyle = "#5000f0"; // saturated indigo
-  ctx.fill(new Path2D(GITHUB_MARK_PATH));
+  ctx.fillStyle = mark.color;
+  ctx.fill(new Path2D(mark.path));
   ctx.setTransform(1, 0, 0, 1, 0, 0);
   return asTexture(canvas);
 }

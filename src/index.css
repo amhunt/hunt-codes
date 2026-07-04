@@ -1,6 +1,6 @@
 /* CSS requires every @import to lead the file, so the webfont, Tailwind, and
    the animation utilities are grouped here ahead of everything else. */
-@import url('https://fonts.googleapis.com/css2?family=Inconsolata:wght@300;400;500;600;700;900&display=swap');
+@import url("https://fonts.googleapis.com/css2?family=Inconsolata:wght@300;400;500;600;700;900&display=swap");
 @import "tailwindcss";
 @import "tw-animate-css";
 
@@ -18,7 +18,7 @@
   src: url("./NovaMono-Regular.ttf");
 }
 
-/* Display font for the planet ring links ("ENTER", "ABOUT ANDREW") */
+/* Display font for the planet ring links ("ENTER", "About Me") */
 @font-face {
   font-family: "Retro Floral";
   src: url("./RetroFloral.ttf");
@@ -27,35 +27,44 @@
 body {
   margin: 0;
   padding: 0;
-  font-family: -apple-system, "infini", "Helvetica Neue", "Segoe UI", "Roboto", "Oxygen",
+  font-family:
+    -apple-system, "infini", "Helvetica Neue", "Segoe UI", "Roboto", "Oxygen",
     "Ubuntu", "Cantarell", "Fira Sans", "Droid Sans", sans-serif;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
 }
 
-
-h1, h2, h3, main {
-  font-family: "Inconsolata", "Helvetica Neue", "Segoe UI", "Roboto", "Oxygen",
-    "Ubuntu", "Cantarell", "Fira Sans", "Droid Sans", sans-serif;
+h1,
+h2,
+h3,
+main {
+  font-family:
+    "Inconsolata", "Helvetica Neue", "Segoe UI", "Roboto", "Oxygen", "Ubuntu",
+    "Cantarell", "Fira Sans", "Droid Sans", sans-serif;
 }
 
 code {
-  font-family: source-code-pro, Menlo, Monaco, Consolas, "Courier New",
-    monospace;
+  font-family:
+    source-code-pro, Menlo, Monaco, Consolas, "Courier New", monospace;
 }
 
 @layer base {
-  ul, ol, li {
+  ul,
+  ol,
+  li {
     list-style: revert;
     margin-left: 1rem;
   }
 
-  h1, h2, h3, h4 {
+  h1,
+  h2,
+  h3,
+  h4 {
     margin: revert;
     padding: revert;
     font-weight: revert;
   }
-  
+
   :root {
     --background: 0 0% 100%;
     --foreground: 222.2 47.4% 11.2%;

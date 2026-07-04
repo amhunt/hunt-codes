@@ -15,16 +15,25 @@ import moonMapUrl from "../../assets/moon.jpg";
  * emissive) so the /about camera — which perches over the moon's far side
  * — still reads it when that face is turned away from the sun.
  */
+/** Fade duration for the landing-intro reveal */
+const REVEAL_SECONDS = 0.8;
+
 export default function Moon({
   orbitColor,
   orbitOpacity,
+  revealed = true,
 }: {
   orbitColor: string;
   orbitOpacity: number;
+  /** Fades the moon + its orbit ring in (landing intro) */
+  revealed?: boolean;
 }) {
   const earthGroup = useRef<THREE.Group>(null);
   const moonGroup = useRef<THREE.Group>(null);
   const mesh = useRef<THREE.Mesh>(null);
+  const surfaceMaterial = useRef<THREE.MeshStandardMaterial>(null);
+  const orbitMaterial = useRef<THREE.LineBasicMaterial>(null);
+  const revealOpacity = useRef(revealed ? 1 : 0);
 
   const texture = useMemo(() => {
     const tex = new THREE.TextureLoader().load(moonMapUrl);
@@ -66,12 +75,26 @@ export default function Moon({
     if (mesh.current) {
       mesh.current.rotation.y += delta * MOON.spinSpeed;
     }
+
+    // Landing-intro reveal: fade the moon + its orbit ring in with the planets
+    revealOpacity.current = THREE.MathUtils.clamp(
+      revealOpacity.current + (revealed ? delta : -delta) / REVEAL_SECONDS,
+      0,
+      1,
+    );
+    if (surfaceMaterial.current) {
+      surfaceMaterial.current.opacity = revealOpacity.current;
+    }
+    if (orbitMaterial.current) {
+      orbitMaterial.current.opacity = orbitOpacity * revealOpacity.current;
+    }
   });
 
   return (
     <group ref={earthGroup}>
       <lineLoop geometry={orbitLine}>
         <lineBasicMaterial
+          ref={orbitMaterial}
           color={orbitColor}
           transparent
           opacity={orbitOpacity}
@@ -81,12 +104,14 @@ export default function Moon({
         <mesh ref={mesh}>
           <sphereGeometry args={[MOON.radius, 48, 48]} />
           <meshStandardMaterial
+            ref={surfaceMaterial}
             map={texture}
             roughness={1}
             metalness={0}
             emissive="#aab1bd"
             emissiveMap={texture}
             emissiveIntensity={0.22}
+            transparent
           />
         </mesh>
       </group>

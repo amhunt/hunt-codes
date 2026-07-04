@@ -5,27 +5,46 @@ import * as THREE from "three";
 import { planetPosition, type SolarPlanetConfig } from "./constants";
 import { createPlanetTexture } from "../textures";
 import { hoverState } from "../../solarHover";
+import AboutRing from "./AboutRing";
 import earthMapUrl from "../../assets/earth.jpg";
 
 /**
  * One orbiting planet + its orbit ring, ported from hunt-codes-3.
  * Textures are the shared procedural canvas maps; Earth gets a faint
  * back-side atmosphere shell. Positions come from the shared clock so
- * the camera rig can compute the same orbit for its Earth perch.
+ * the camera rig can compute the same orbit for its Earth perch. Earth
+ * also carries the curved "ABOUT ME" link label (space3d AboutRing).
  */
+/** Fade duration for the landing-intro reveal */
+const REVEAL_SECONDS = 0.8;
+
 export default function Planet({
   config,
   orbitColor,
   orbitOpacity,
+  isNightMode = true,
+  aboutActive = false,
+  revealed = true,
 }: {
   config: SolarPlanetConfig;
   orbitColor: string;
   orbitOpacity: number;
+  /** Drives the Earth "ABOUT ME" label color (white at night, purple in day) */
+  isNightMode?: boolean;
+  /** Show the Earth "ABOUT ME" label (home view only) */
+  aboutActive?: boolean;
+  /** Fades the planet + its orbit ring in (landing intro) */
+  revealed?: boolean;
 }) {
   const group = useRef<THREE.Group>(null);
   const mesh = useRef<THREE.Mesh>(null);
   const surfaceMaterial = useRef<THREE.MeshStandardMaterial>(null);
   const atmosphereMaterial = useRef<THREE.MeshBasicMaterial>(null);
+  const orbitMaterial = useRef<THREE.LineBasicMaterial>(null);
+  const revealOpacity = useRef(revealed ? 1 : 0);
+  // Atmosphere base opacity (hover-eased); multiplied by the reveal so the
+  // fade-in and the hover swell compose instead of fighting each other
+  const atmosphereBase = useRef(0.16);
 
   const texture = useMemo(() => {
     if (config.kind === "earth") {
@@ -66,14 +85,31 @@ export default function Planet({
     if (mesh.current) {
       mesh.current.rotation.y += delta * config.spinSpeed;
     }
+
+    // Landing-intro reveal: ramp opacity 0→1 (or back) and push it into the
+    // surface + orbit ring, so the planets fade in a beat after the sun.
+    revealOpacity.current = THREE.MathUtils.clamp(
+      revealOpacity.current + (revealed ? delta : -delta) / REVEAL_SECONDS,
+      0,
+      1,
+    );
+    if (surfaceMaterial.current) {
+      surfaceMaterial.current.opacity = revealOpacity.current;
+    }
+    if (orbitMaterial.current) {
+      orbitMaterial.current.opacity = orbitOpacity * revealOpacity.current;
+    }
+
     if (config.kind === "earth") {
-      // Ease the glow up while the "About Andrew" ring/planet is hovered:
+      // Ease the glow up while the "About Me" ring/planet is hovered:
       // the atmosphere shell thickens and the earthshine brightens
       const hovered = hoverState.earth;
       const ease = Math.min(delta * 6, 1);
+      atmosphereBase.current +=
+        ((hovered ? 0.5 : 0.16) - atmosphereBase.current) * ease;
       if (atmosphereMaterial.current) {
-        atmosphereMaterial.current.opacity +=
-          ((hovered ? 0.5 : 0.16) - atmosphereMaterial.current.opacity) * ease;
+        atmosphereMaterial.current.opacity =
+          atmosphereBase.current * revealOpacity.current;
       }
       if (surfaceMaterial.current) {
         surfaceMaterial.current.emissiveIntensity +=
@@ -88,6 +124,7 @@ export default function Planet({
     <>
       <lineLoop geometry={orbitLine}>
         <lineBasicMaterial
+          ref={orbitMaterial}
           color={orbitColor}
           transparent
           opacity={orbitOpacity}
@@ -109,12 +146,15 @@ export default function Planet({
               emissive="#a7bad4"
               emissiveMap={texture}
               emissiveIntensity={0.38}
+              transparent
             />
           ) : (
             <meshStandardMaterial
+              ref={surfaceMaterial}
               map={texture}
               roughness={0.95}
               metalness={0}
+              transparent
             />
           )}
         </mesh>
@@ -130,6 +170,11 @@ export default function Planet({
               side={THREE.BackSide}
             />
           </mesh>
+        )}
+        {/* Curved "ABOUT ME" link label, billboarded around Earth. Lives in
+            the group (not the spinning mesh) so it stays put over Earth. */}
+        {config.kind === "earth" && (
+          <AboutRing active={aboutActive} isNightMode={isNightMode} />
         )}
       </group>
     </>

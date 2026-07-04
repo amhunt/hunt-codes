@@ -478,15 +478,28 @@ const TextStars = ({
   return <points geometry={data.buffers.geometry} material={material} />;
 };
 
+// Hold the stars hidden for a beat after mount before the fade-in starts
+// (part of the landing intro choreography)
+const FADE_IN_DELAY_SECONDS = 2;
+
 const StarField = ({ isLanding, opacityTarget }: StarFieldProps) => {
-  // Shared fade value, ramped in the frame loop (mount fade-in ~1s,
-  // day/night switch fade-out ~0.6s to match the legacy CSS transitions).
+  // Shared fade value, ramped in the frame loop (mount fade-in ~1s after
+  // the delay above, day/night switch fade-out ~0.6s to match the legacy
+  // CSS transitions).
   const opacityRef = useRef(0);
   const targetRef = useRef(opacityTarget);
+  const delayRef = useRef(FADE_IN_DELAY_SECONDS);
   const groupRef = useRef<THREE.Group>(null);
   targetRef.current = opacityTarget;
 
   useFrame((_, delta) => {
+    // Stars mount at opacity 0, so burning the delay first postpones only
+    // the initial reveal — later day/night fades are unaffected
+    if (delayRef.current > 0) {
+      delayRef.current -= Math.min(delta, 0.1);
+      if (groupRef.current) groupRef.current.visible = false;
+      return;
+    }
     const target = targetRef.current;
     const rate = target > opacityRef.current ? 1 : 1.6;
     const step = Math.min(delta, 0.1) * rate;

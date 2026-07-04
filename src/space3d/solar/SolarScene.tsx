@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useEffect, useState } from "react";
 import { Canvas } from "@react-three/fiber";
 
 import CameraRig, { type SolarView } from "./CameraRig";
@@ -19,6 +19,15 @@ import { ASTEROIDS, PLANETS } from "./constants";
  * The canvas never takes pointer input — the clickable sun rings are
  * DOM/SVG overlays that SunSvgAnchor glues to the projected sun.
  */
+
+// First landing load plays a staggered reveal: the sun is up immediately,
+// the planets fade in at +1s and the "ENTER" ring at +2s. Only the very
+// first landing visit runs it — remounts / returning from /home skip
+// straight to fully shown so the scene doesn't blink out.
+const PLANETS_DELAY_MS = 1000;
+const ENTER_DELAY_MS = 2000;
+let hasPlayedLandingIntro = false;
+
 const SolarScene = ({
   view,
   isNightMode,
@@ -26,6 +35,34 @@ const SolarScene = ({
   view: SolarView;
   isNightMode: boolean;
 }) => {
+  const isLanding = view === "landing";
+  const [planetsRevealed, setPlanetsRevealed] = useState(
+    () => hasPlayedLandingIntro || !isLanding,
+  );
+  const [enterRevealed, setEnterRevealed] = useState(
+    () => hasPlayedLandingIntro || !isLanding,
+  );
+
+  useEffect(() => {
+    if (hasPlayedLandingIntro || !isLanding) {
+      setPlanetsRevealed(true);
+      setEnterRevealed(true);
+      return;
+    }
+    const planetsTimer = window.setTimeout(
+      () => setPlanetsRevealed(true),
+      PLANETS_DELAY_MS,
+    );
+    const enterTimer = window.setTimeout(() => {
+      setEnterRevealed(true);
+      hasPlayedLandingIntro = true;
+    }, ENTER_DELAY_MS);
+    return () => {
+      window.clearTimeout(planetsTimer);
+      window.clearTimeout(enterTimer);
+    };
+  }, [isLanding]);
+
   return (
     <Canvas
       className="solar-canvas"
@@ -43,8 +80,10 @@ const SolarScene = ({
       {/* From the home sun-perch the full glow would fill the frame and
           wash out the stars — shrink it to hug the limb there */}
       <Sun
-        targetGlowScale={view === "home" ? 2.5 : 6}
+        targetGlowScale={view === "home" ? 2.5 : 4}
         isNightMode={isNightMode}
+        showEnterRing={isLanding}
+        enterRevealed={enterRevealed}
       />
       {PLANETS.map((planet) => (
         <Planet
@@ -53,17 +92,23 @@ const SolarScene = ({
           // hunt-codes-3's faint white rings, flipped dark for day mode
           orbitColor={isNightMode ? "#ffffff" : "#141428"}
           orbitOpacity={isNightMode ? 0.08 : 0.2}
+          isNightMode={isNightMode}
+          aboutActive={view === "home"}
+          revealed={planetsRevealed}
         />
       ))}
       <Moon
         orbitColor={isNightMode ? "#ffffff" : "#141428"}
         orbitOpacity={isNightMode ? 0.08 : 0.2}
+        revealed={planetsRevealed}
       />
       {ASTEROIDS.map((asteroid) => (
+        // Hidden in the top-down landing view (they'd read as clutter
+        // around the sun); they fade in on the way to the home perch
         <Asteroid
           key={asteroid.name}
           config={asteroid}
-          withGithubLogo={asteroid.name === "github"}
+          visible={view !== "landing"}
         />
       ))}
       <CameraRig view={view} />

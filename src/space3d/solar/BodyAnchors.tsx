@@ -26,6 +26,9 @@ import { liveElementById } from "../svgTracking";
 
 export const EARTH_ABOUT_RING_ID = "earth-about-ring";
 export const asteroidAnchorId = (name: string) => `asteroid-link-${name}`;
+/** Group inside the anchor holding the hover-outline paths; Asteroid
+ *  writes the projected silhouette into every path under it. */
+export const asteroidOutlineId = (name: string) => `asteroid-outline-${name}`;
 
 interface BodyAnchorConfig {
   domId: string;

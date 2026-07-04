@@ -4,7 +4,9 @@ import * as THREE from "three";
 import { DecalGeometry } from "three/examples/jsm/geometries/DecalGeometry.js";
 
 import { planetPosition, type SolarPlanetConfig } from "./constants";
-import { createGitHubMarkTexture, createPlanetTexture } from "../textures";
+import { asteroidOutlineId } from "./BodyAnchors";
+import { createLogoBadgeTexture, createPlanetTexture } from "../textures";
+import { hoverState } from "../../solarHover";
 
 /**
  * A small rocky link-asteroid: a jittered icosahedron (lumpy, flat-shaded)
@@ -13,26 +15,78 @@ import { createGitHubMarkTexture, createPlanetTexture } from "../textures";
  * matching DOM link overlay is glued to it by BodyAnchors via the same
  * planetPosition() the mesh uses, so the two can't drift apart.
  *
- * `withGithubLogo` projects a GitHub-mark badge onto two opposite sides of
- * the rock's surface (DecalGeometry clips the sticker to the mesh, so it
- * follows the lumps and spins with them).
+ * `config.logo` projects a brand badge onto two opposite sides of the
+ * rock's surface (DecalGeometry clips the sticker to the mesh, so it
+ * follows the lumps and spins with them). Logo rocks spin about the
+ * world-vertical axis only — the decals' texture-up stays world-up, so
+ * the mark always reads (approximately) right-side up as it pans by.
+ *
+ * `visible` fades the whole rock (materials' opacity eased per frame):
+ * the asteroids are hidden in the landing view and fade in during the
+ * swoop to the home perch.
  */
+const FADE_IN_SECONDS = 3;
+const FADE_OUT_SECONDS = 1;
+
+const scratchVertex = new THREE.Vector3();
+
+type Point2 = [number, number];
+
+const cross = (o: Point2, a: Point2, b: Point2) =>
+  (a[0] - o[0]) * (b[1] - o[1]) - (a[1] - o[1]) * (b[0] - o[0]);
+
+/** Convex hull (Andrew's monotone chain), counter-clockwise. The rock is
+ *  a jittered icosahedron — near-convex — so the hull of its projected
+ *  vertices is an excellent stand-in for its screen silhouette. */
+function convexHull(points: Point2[]): Point2[] {
+  const pts = [...points].sort((a, b) => a[0] - b[0] || a[1] - b[1]);
+  if (pts.length <= 3) return pts;
+  const lower: Point2[] = [];
+  for (const p of pts) {
+    while (
+      lower.length >= 2 &&
+      cross(lower[lower.length - 2], lower[lower.length - 1], p) <= 0
+    ) {
+      lower.pop();
+    }
+    lower.push(p);
+  }
+  const upper: Point2[] = [];
+  for (let i = pts.length - 1; i >= 0; i--) {
+    const p = pts[i];
+    while (
+      upper.length >= 2 &&
+      cross(upper[upper.length - 2], upper[upper.length - 1], p) <= 0
+    ) {
+      upper.pop();
+    }
+    upper.push(p);
+  }
+  lower.pop();
+  upper.pop();
+  return lower.concat(upper);
+}
+
 export default function Asteroid({
   config,
-  withGithubLogo = false,
+  visible = true,
 }: {
   config: SolarPlanetConfig;
-  withGithubLogo?: boolean;
+  visible?: boolean;
 }) {
   const group = useRef<THREE.Group>(null);
   const mesh = useRef<THREE.Mesh>(null);
+  const rockMaterial = useRef<THREE.MeshStandardMaterial>(null);
+  // Start faded out when mounting into a view that hides asteroids (the
+  // landing page), fully shown when mounting straight into /home
+  const opacity = useRef(visible ? 1 : 0);
 
   const texture = useMemo(() => createPlanetTexture(config.kind), [config]);
   useEffect(() => () => texture.dispose(), [texture]);
 
   const logoTexture = useMemo(
-    () => (withGithubLogo ? createGitHubMarkTexture() : null),
-    [withGithubLogo],
+    () => (config.logo ? createLogoBadgeTexture(config.logo) : null),
+    [config.logo],
   );
   useEffect(() => () => logoTexture?.dispose(), [logoTexture]);
 
@@ -62,7 +116,7 @@ export default function Asteroid({
   // spinning mesh keeps them glued to the lumps they were cut from. The
   // box is sized to swallow the full jitter range (0.8r..1.2r).
   const decalGeometries = useMemo(() => {
-    if (!withGithubLogo) return null;
+    if (!config.logo) return null;
     const r = config.radius;
     const target = new THREE.Mesh(geometry);
     const size = new THREE.Vector3(r * 1.82, r * 1.82, r * 1.6);
@@ -80,30 +134,111 @@ export default function Asteroid({
         size,
       ),
     ];
-  }, [withGithubLogo, geometry, config.radius]);
+  }, [config.logo, geometry, config.radius]);
   useEffect(
     () => () => decalGeometries?.forEach((g) => g.dispose()),
     [decalGeometries],
   );
 
-  useFrame(({ clock }, delta) => {
+  useFrame(({ clock, camera, size }, delta) => {
+    const hovered = hoverState.asteroid === config.name;
+
     if (group.current) {
       planetPosition(config, clock.elapsedTime, group.current.position);
+
+      // Linear ramp toward shown/hidden — a slow 3s reveal riding the
+      // landing->home swoop, a quicker 1s exit on the way back — pushed
+      // into the rock and decal materials (a group-level opacity doesn't
+      // exist in three)
+      const step = visible
+        ? delta / FADE_IN_SECONDS
+        : -delta / FADE_OUT_SECONDS;
+      opacity.current = THREE.MathUtils.clamp(opacity.current + step, 0, 1);
+      group.current.visible = opacity.current > 0.005;
+      group.current.traverse((obj) => {
+        const material = (obj as THREE.Mesh).material;
+        if (material && !Array.isArray(material)) {
+          material.opacity = opacity.current;
+        }
+      });
     }
-    if (mesh.current) {
+    // Hover freezes the tumble (the outline below is cut from the frozen
+    // pose, and a spinning rock under a static outline would look broken)
+    if (mesh.current && !hovered) {
       mesh.current.rotation.y += delta * config.spinSpeed;
-      mesh.current.rotation.x += delta * config.spinSpeed * 0.3;
+      // Logo rocks skip the x-axis tumble: any pitch would tilt the badge
+      // (projected with texture-up = +y), and yaw-only spin can't
+      if (!config.logo) {
+        mesh.current.rotation.x += delta * config.spinSpeed * 0.3;
+      }
+    }
+    if (rockMaterial.current) {
+      // Hovering the rock's link washes the surface out to near-white
+      // (flat white emissive over the texture); the unlit decal badges
+      // have their own materials and don't change
+      const ease = Math.min(delta * 6, 1);
+      rockMaterial.current.emissiveIntensity +=
+        ((hovered ? 0.9 : 0) - rockMaterial.current.emissiveIntensity) * ease;
+    }
+    if (hovered && mesh.current) {
+      // Cut the rock's screen silhouette in its frozen pose and hand it to
+      // the DOM overlay's outline paths. Recomputed per frame (cheap: a
+      // couple hundred vertices) so it tracks the slow orbital drift; the
+      // SHAPE stays put because the spin is frozen while hovered.
+      const outlineGroup = document.getElementById(
+        asteroidOutlineId(config.name),
+      );
+      const svg = outlineGroup?.closest("svg");
+      if (outlineGroup && svg) {
+        mesh.current.updateWorldMatrix(true, false);
+        const positions = geometry.getAttribute(
+          "position",
+        ) as THREE.BufferAttribute;
+        const points: Point2[] = [];
+        for (let i = 0; i < positions.count; i++) {
+          scratchVertex
+            .fromBufferAttribute(positions, i)
+            .applyMatrix4(mesh.current.matrixWorld)
+            .project(camera);
+          points.push([
+            (scratchVertex.x * 0.5 + 0.5) * size.width,
+            (0.5 - scratchVertex.y * 0.5) * size.height,
+          ]);
+        }
+        // Map viewport px -> the overlay svg's 0-100 viewBox (its rect is
+        // the anchor box BodyAnchors placed around the rock's projection)
+        const rect = svg.getBoundingClientRect();
+        if (rect.width > 0) {
+          const d =
+            convexHull(points)
+              .map(
+                ([x, y], i) =>
+                  `${i === 0 ? "M" : "L"}${(((x - rect.left) / rect.width) * 100).toFixed(2)} ${(((y - rect.top) / rect.height) * 100).toFixed(2)}`,
+              )
+              .join(" ") + " Z";
+          outlineGroup.querySelectorAll("path").forEach((path) => {
+            path.setAttribute("d", d);
+          });
+        }
+      }
     }
   });
 
   return (
     <group ref={group}>
       <mesh ref={mesh} geometry={geometry}>
+        {/* transparent so the landing->home fade-in can drive opacity;
+            the white emissive is the hover brighten (intensity eased
+            0 -> 0.9 in useFrame) */}
         <meshStandardMaterial
+          ref={rockMaterial}
           map={texture}
           roughness={1}
           metalness={0}
           flatShading
+          transparent
+          emissive="#ffffff"
+          emissiveIntensity={0}
         />
         {logoTexture &&
           decalGeometries?.map((decalGeometry, i) => (

@@ -3,7 +3,7 @@ import Typed from "typed.js";
 import cx from "classnames";
 
 import { GitHub, Linkedin, Mail } from "react-feather";
-import { ArrowLeftIcon } from "lucide-react";
+import { ArrowLeftCircleIcon } from "lucide-react";
 import useWindowSize from "./useWindowSize";
 import SolarOverlays from "./SolarOverlays";
 
@@ -91,8 +91,8 @@ const Home = () => {
           className={cx("mt-4 flex items-center gap-1 transition-transform")}
           to="/"
         >
-          <ArrowLeftIcon className="starIcon" size={16} />
-          <span>Back to space</span>
+          <ArrowLeftCircleIcon className="starIcon" size={16} />
+          <span>Landing page</span>
         </Link>
       </div>
       <main className={cx("homeInfoContainer", logoOpacity === 1 && "show")}>
