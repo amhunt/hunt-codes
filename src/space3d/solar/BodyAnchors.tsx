@@ -53,7 +53,9 @@ const ANCHORS: BodyAnchorConfig[] = [
     domId: EARTH_ABOUT_RING_ID,
     position: (t, out) => planetPosition(EARTH, t, out),
     radius: EARTH.radius,
-    ringScale: 1.3,
+    // The text path sits at 82% of the overlay's radius, so 1.55 floats
+    // the letters ~27% clear of Earth's limb (1.3 grazed the surface)
+    ringScale: 1.55,
     minSizePx: 140,
     fadeInOnArrival: true,
   },
