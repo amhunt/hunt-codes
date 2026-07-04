@@ -62,9 +62,11 @@ const experienceItems = [
 
 const Resume = () => {
   const [opacity, setOpacity] = useState(false);
+  // Drives the Home link's slide: at rest the heading sits ~288px from
+  // the viewport top on xl, so the -260px margin keeps it "in view" until
+  // the user scrolls a few dozen px, then the link slides away
   const { ref, inView } = useInView({
-    /* Optional options */
-    rootMargin: "-320px",
+    rootMargin: "-260px",
     threshold: 0,
   });
 
@@ -79,131 +81,135 @@ const Resume = () => {
 
   return (
     <div className="resume-container" style={{ opacity: opacity ? 1 : 0 }}>
+      {/* The link lives outside .resume-panel so the frosted background
+          starts above the "About Andrew" heading, not around the link */}
       <div className="resume-inner-container">
         <Link
           className={cx(
-            "back-to-home-link flex transition-transform items-center gap-4 mb-12 inverse xl:sticky xl:top-[200px] xl:-ml-16",
-            !inView && isLarge && "-translate-x-32"
+            "back-to-home-link flex transition-transform items-center gap-4 mb-6 inverse ml-8 xl:sticky xl:top-[200px] xl:-ml-8",
+            !inView && isLarge && "-translate-x-32",
           )}
           to="/home"
         >
           <ArrowLeftCircle size={40} />
           Home
         </Link>
-        <h1 ref={ref} className="mb-6">
-          About Andrew
-        </h1>
-        <h4>
-          Hey! I’m a frontend engineer based in San Francisco. I’m currently
-          working as a staff engineer at{" "}
-          <a
-            target="_blank"
-            rel="noreferrer"
-            className="inverse"
-            href="https://ziphq.com"
-          >
-            Zip
-          </a>
-          . For consulting inquiries, reach out to{" "}
-          <a
-            className="inverse"
-            href="mailto:andrew@hunt.codes?Subject=Hey%20Andrew"
-          >
-            andrew@hunt.codes
-          </a>
-          .
-        </h4>
-        <div className="resume-divider" />
-        <h3>A few things I care about:</h3>
-        <ul className="hor-list">
-          <li>
-            <div className="card-title">Dev infrastructure</div>I believe it’s
-            difficult to overstate the importance of investing in the
-            development process. Great DevX is a prerequisite to quality UX and
-            efficient product development — this includes strong linters, fast
-            and thorough CI checks, and investment in AI tools to take the
-            burden of repetitive work off of engineers.
-          </li>
-          <li>
-            <div className="card-title">Component systems</div>Investing in a
-            well-structured and robust component system will accelerate design
-            and engineering work, reduce bugs, and create a more consistent user
-            experience.
-          </li>
-          <li>
-            <div className="card-title">Product collaboration</div>I excel when
-            collaborating closely with designers + researchers to build
-            delightful, engaging web products.
-          </li>
-          <li>
-            <div className="card-title">Performance</div>
-            I’m passionate about delivering a lightning-fast, responsive user
-            experience. Performance can be a complex problem, and often needs to
-            be approached with both a data-driven and user-centric lens.
-          </li>
-        </ul>
-        <div>
-          <div className="card-title">
-            Tools and frameworks I know fairly well:
-          </div>
-          TypeScript / JavaScript, Material UI, React, Apollo + GraphQL,
-          Storybook, ESLint, GitHub Actions, D3, Tailwind, Chromatic,
-          Cloudflare, Jest, Webpack, Vite, Vue
-        </div>
-
-        <div className="resume-divider" />
-
-        <h2>Experience</h2>
-        {experienceItems.map((item) => (
-          <React.Fragment key={item.title}>
-            <div className="splitRow">
-              <h4 className="flex items-center">
-                {item.title}{" "}
-                <span className="pill location-pill">{item.location}</span>
-              </h4>
-              <h4 className="flex items-center gap-2">
-                {item.date}
-                <Calendar size={12} />
-              </h4>
-            </div>
-            <ul>
-              {item.description.map((d, idx) => (
-                <li key={idx}>
-                  {typeof d === "string" ? (
-                    d
-                  ) : (
-                    <>
-                      {d.item}
-                      <ul>
-                        {d.subbullets?.map((s) => (
-                          <li key={s}>{s}</li>
-                        ))}
-                      </ul>
-                    </>
-                  )}
-                </li>
-              ))}
-            </ul>
-          </React.Fragment>
-        ))}
-        <div className="resume-divider" />
-        <h2>Education</h2>
-        <div className="splitRow">
-          <h4 className="flex items-center">
-            Princeton University
-            <span className="pill location-pill">BSE</span>
-            <span className="pill location-pill">Computer Science</span>
+        <div className="resume-panel">
+          <h1 ref={ref} className="mt-0 mb-6">
+            About Andrew
+          </h1>
+          <h4>
+            Hey! I’m a frontend engineer based in San Francisco. I’m currently
+            working as a staff engineer at{" "}
+            <a
+              target="_blank"
+              rel="noreferrer"
+              className="inverse"
+              href="https://ziphq.com"
+            >
+              Zip
+            </a>
+            . For consulting inquiries, reach out to{" "}
+            <a
+              className="inverse"
+              href="mailto:andrew@hunt.codes?Subject=Hey%20Andrew"
+            >
+              andrew@hunt.codes
+            </a>
+            .
           </h4>
-          <h4>September 2013 — June 2017</h4>
-        </div>
-        <div className="resume-divider" />
-        <h2>Other interests</h2>
-        <div className="flex flex-wrap gap-2">
-          {interests.map((i) => (
-            <span className="pill interest-pill" key={i}>
-              {i}
-            </span>
+          <div className="resume-divider" />
+          <h3>A few things I care about:</h3>
+          <ul className="hor-list">
+            <li>
+              <div className="card-title">Dev infrastructure</div>I believe it’s
+              difficult to overstate the importance of investing in the
+              development process. Great DevX is a prerequisite to quality UX
+              and efficient product development — this includes strong linters,
+              fast and thorough CI checks, and investment in AI tools to take
+              the burden of repetitive work off of engineers.
+            </li>
+            <li>
+              <div className="card-title">Component systems</div>Investing in a
+              well-structured and robust component system will accelerate design
+              and engineering work, reduce bugs, and create a more consistent
+              user experience.
+            </li>
+            <li>
+              <div className="card-title">Product collaboration</div>I excel
+              when collaborating closely with designers + researchers to build
+              delightful, engaging web products.
+            </li>
+            <li>
+              <div className="card-title">Performance</div>
+              I’m passionate about delivering a lightning-fast, responsive user
+              experience. Performance can be a complex problem, and often needs
+              to be approached with both a data-driven and user-centric lens.
+            </li>
+          </ul>
+          <div>
+            <div className="card-title">
+              Tools and frameworks I know fairly well:
+            </div>
+            TypeScript / JavaScript, Material UI, React, Apollo + GraphQL,
+            Storybook, ESLint, GitHub Actions, D3, Tailwind, Chromatic,
+            Cloudflare, Jest, Webpack, Vite, Vue
+          </div>
+
+          <div className="resume-divider" />
+
+          <h2>Experience</h2>
+          {experienceItems.map((item) => (
+            <React.Fragment key={item.title}>
+              <div className="splitRow">
+                <h4 className="flex items-center">
+                  {item.title}{" "}
+                  <span className="pill location-pill">{item.location}</span>
+                </h4>
+                <h4 className="flex items-center gap-2">
+                  {item.date}
+                  <Calendar size={12} />
+                </h4>
+              </div>
+              <ul>
+                {item.description.map((d, idx) => (
+                  <li key={idx}>
+                    {typeof d === "string" ? (
+                      d
+                    ) : (
+                      <>
+                        {d.item}
+                        <ul>
+                          {d.subbullets?.map((s) => (
+                            <li key={s}>{s}</li>
+                          ))}
+                        </ul>
+                      </>
+                    )}
+                  </li>
+                ))}
+              </ul>
+            </React.Fragment>
           ))}
+          <div className="resume-divider" />
+          <h2>Education</h2>
+          <div className="splitRow">
+            <h4 className="flex items-center">
+              Princeton University
+              <span className="pill location-pill">BSE</span>
+              <span className="pill location-pill">Computer Science</span>
+            </h4>
+            <h4>September 2013 — June 2017</h4>
+          </div>
+          <div className="resume-divider" />
+          <h2>Other interests</h2>
+          <div className="flex flex-wrap gap-2">
+            {interests.map((i) => (
+              <span className="pill interest-pill" key={i}>
+                {i}
+              </span>
+            ))}
+          </div>
         </div>
       </div>
     </div>

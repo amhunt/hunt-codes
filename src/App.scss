@@ -116,7 +116,6 @@ $breakpoint-lg: 1280px;
       fill: white;
       font-weight: 400;
       transition: fill 0.1s;
-      text-decoration: underline;
     }
   }
 }
@@ -627,15 +626,7 @@ li > ul > li {
   margin: auto;
   margin-top: 80px;
   max-width: 800px;
-  padding: 32px 32px 64px;
   margin-bottom: 96px;
-
-  // Translucent, blurred panel so the text stays legible over whatever
-  // the 3D scene puts behind it (Earth's bright limb, the drifting moon)
-  background: rgba(8, 6, 28, 0.55);
-  backdrop-filter: blur(10px);
-  -webkit-backdrop-filter: blur(10px);
-  border-radius: 16px;
 
   @media (min-width: 1280px) {
     max-width: 980px;
@@ -643,7 +634,19 @@ li > ul > li {
   }
 }
 
-.App.day .resume-inner-container {
+// Translucent, blurred panel so the text stays legible over whatever
+// the 3D scene puts behind it (Earth's bright limb, the drifting moon).
+// The back-to-home link sits above this panel, outside the background;
+// the 24px top padding puts the frosted edge just above "About Andrew".
+.resume-panel {
+  padding: 24px 32px 64px;
+  background: rgba(8, 6, 28, 0.55);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  border-radius: 16px;
+}
+
+.App.day .resume-panel {
   background: rgba(255, 255, 255, 0.55);
 }
 
@@ -802,7 +805,10 @@ li > ul > li {
     backdrop-filter: blur(10px);
     border-radius: 16px;
     padding: 8px;
+    // The link sits outside the padded .resume-panel now, so it needs its
+    // own left inset (this unlayered margin overrides the Tailwind ml-8)
     margin: -8px;
+    margin-left: 24px;
     width: min-content;
     background: linear-gradient(
       to bottom,
@@ -834,6 +840,16 @@ button {
   color: $purp;
   transition: color 50ms ease-in-out;
   font-weight: 600;
+
+  // The about page's Home link slides in/out on scroll (Tailwind toggles
+  // -translate-x-32). Tailwind's transition-transform utility lives in a
+  // cascade layer, so the unlayered `transition: color` above would
+  // clobber it and make the slide jump — re-declare both here instead.
+  &.back-to-home-link {
+    transition:
+      color 50ms ease-in-out,
+      translate 300ms ease;
+  }
 
   &:hover {
     color: #010c73;
@@ -867,6 +883,13 @@ a:hover {
   //   url(./cursor_pointer.png) 16 0,
   //   auto;
   cursor: pointer;
+}
+
+// Planet ring links ("ENTER", "ABOUT ANDREW"): no underline — the planet
+// glows on hover instead
+#solar-system a:hover,
+.earth-about-ring:hover {
+  text-decoration: none;
 }
 
 @keyframes spin {

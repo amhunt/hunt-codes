@@ -27,13 +27,18 @@ const UP = new THREE.Vector3(0, 1, 0);
 const TRANSITION_SECONDS = 3.2;
 
 // Home-view framing: the sun-perch. Offsets from the SUN's center (r 3),
-// on the far side from Earth, elevated — camera ends up ~0.9 above the
-// surface (well clear of the 0.1 near plane) with the sun's limb filling
-// the bottom third and Earth ~9deg wide in the middle distance.
+// on the far side from Earth, elevated well above the surface so the
+// sun's limb only fills the bottom ~20% of the frame, with Earth ~9deg
+// wide in the middle distance.
 const HOME_CAM_BEHIND = 1.6; // away from Earth
-const HOME_CAM_ABOVE = 3.4;
+const HOME_CAM_ABOVE = 5.6;
 const HOME_CAM_SIDE = 1; // camera right => sun apex drifts screen-left
-const HOME_LOOK_HEIGHT = 3; // raise the aim so Earth sits below center
+// Earth's screen spot: on lg+ screens, pixel offsets from the viewport
+// center; below that, fixed viewport fractions (same look, scaled down)
+const HOME_EARTH_RIGHT_PX = 300;
+const HOME_EARTH_UP_PX = 120;
+const HOME_EARTH_NDC_X_SMALL = 0.4;
+const HOME_EARTH_NDC_Y_SMALL = 0.28;
 
 // About-view framing: the Earth-perch, placed on the side of Earth
 // OPPOSITE the moon and co-rotating with the moon's orbit (the same way
@@ -51,6 +56,10 @@ const ABOUT_LOOK_HEIGHT = 0.45; // aim slightly above the moon's plane
  *  offset instead, putting itself on the Earth-moon line so the moon
  *  reads dead-center, directly above Earth. */
 const ABOUT_MOON_NDC_X = -0.5;
+/** Extra downward aim, as an NDC fraction at the moon's distance: rotating
+ *  the view down lifts the whole scene — the moon rides ~20vh higher and
+ *  more of Earth's limb clears the bottom edge. */
+const ABOUT_MOON_NDC_Y_LIFT = 0.4;
 const LG_BREAKPOINT_PX = 1280;
 
 // scratch vectors, reused every frame
@@ -71,7 +80,7 @@ function computeGoal(
   view: SolarView,
   t: number,
   camera: THREE.Camera,
-  viewportWidth: number,
+  viewport: { width: number; height: number },
 ) {
   if (view === "landing") {
     goalPos.copy(LANDING_POS);
@@ -84,7 +93,7 @@ function computeGoal(
     moonPosition(t, moonPos);
     moonDir.copy(moonPos).sub(earthPos).normalize();
     side.crossVectors(moonDir, UP).normalize();
-    const centered = viewportWidth < LG_BREAKPOINT_PX;
+    const centered = viewport.width < LG_BREAKPOINT_PX;
     goalPos
       .copy(earthPos)
       .addScaledVector(moonDir, -ABOUT_CAM_BEHIND)
@@ -92,16 +101,18 @@ function computeGoal(
       // reads directly above Earth
       .addScaledVector(side, centered ? 0 : ABOUT_CAM_SIDE);
     goalPos.y += ABOUT_CAM_ABOVE;
+    const persp = camera as THREE.PerspectiveCamera;
+    const tanHalfV = Math.tan((persp.fov * Math.PI) / 360);
     goalLook.copy(moonPos);
-    goalLook.y = moonPos.y + ABOUT_LOOK_HEIGHT;
+    goalLook.y =
+      moonPos.y +
+      ABOUT_LOOK_HEIGHT -
+      goalPos.distanceTo(moonPos) * ABOUT_MOON_NDC_Y_LIFT * tanHalfV;
     if (!centered) {
       // Aim sideways of the moon by the angle that lands it at
       // ABOUT_MOON_NDC_X for the current aspect (~25vw from the left)
-      const persp = camera as THREE.PerspectiveCamera;
-      const tanHalfH =
-        Math.tan((persp.fov * Math.PI) / 360) * (persp.aspect || 1);
-      const lateral =
-        goalPos.distanceTo(moonPos) * ABOUT_MOON_NDC_X * tanHalfH;
+      const tanHalfH = tanHalfV * (persp.aspect || 1);
+      const lateral = goalPos.distanceTo(moonPos) * ABOUT_MOON_NDC_X * tanHalfH;
       goalLook.addScaledVector(side, -lateral);
     }
   } else {
@@ -116,8 +127,21 @@ function computeGoal(
       .addScaledVector(toEarth, -HOME_CAM_BEHIND)
       .addScaledVector(side, HOME_CAM_SIDE);
     goalPos.y += HOME_CAM_ABOVE;
-    goalLook.copy(earthPos);
-    goalLook.y += HOME_LOOK_HEIGHT;
+    // Aim so Earth lands right of and above the viewport center (aiming
+    // left of / below a body pushes it right / up on screen)
+    const persp = camera as THREE.PerspectiveCamera;
+    const tanHalfV = Math.tan((persp.fov * Math.PI) / 360);
+    const tanHalfH = tanHalfV * (persp.aspect || 1);
+    const lg = viewport.width >= LG_BREAKPOINT_PX;
+    const ndcX = lg
+      ? HOME_EARTH_RIGHT_PX / (viewport.width / 2)
+      : HOME_EARTH_NDC_X_SMALL;
+    const ndcY = lg
+      ? HOME_EARTH_UP_PX / (viewport.height / 2)
+      : HOME_EARTH_NDC_Y_SMALL;
+    const d = goalPos.distanceTo(earthPos);
+    goalLook.copy(earthPos).addScaledVector(side, -ndcX * d * tanHalfH);
+    goalLook.y = earthPos.y - ndcY * d * tanHalfV;
   }
 }
 
@@ -139,7 +163,7 @@ export default function CameraRig({ view }: { view: SolarView }) {
       fromLook.current.copy(camera.position).addScaledVector(viewDir, 20);
     }
 
-    computeGoal(view, t, camera, size.width);
+    computeGoal(view, t, camera, size);
 
     const p = Math.min(1, (t - transitionStart.current) / TRANSITION_SECONDS);
     rigState.settled = p >= 1;

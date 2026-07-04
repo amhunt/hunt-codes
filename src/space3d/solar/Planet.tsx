@@ -4,6 +4,7 @@ import * as THREE from "three";
 
 import { planetPosition, type SolarPlanetConfig } from "./constants";
 import { createPlanetTexture } from "../textures";
+import { hoverState } from "../../solarHover";
 import earthMapUrl from "../../assets/earth.jpg";
 
 /**
@@ -23,6 +24,8 @@ export default function Planet({
 }) {
   const group = useRef<THREE.Group>(null);
   const mesh = useRef<THREE.Mesh>(null);
+  const surfaceMaterial = useRef<THREE.MeshStandardMaterial>(null);
+  const atmosphereMaterial = useRef<THREE.MeshBasicMaterial>(null);
 
   const texture = useMemo(() => {
     if (config.kind === "earth") {
@@ -63,6 +66,22 @@ export default function Planet({
     if (mesh.current) {
       mesh.current.rotation.y += delta * config.spinSpeed;
     }
+    if (config.kind === "earth") {
+      // Ease the glow up while the "About Andrew" ring/planet is hovered:
+      // the atmosphere shell thickens and the earthshine brightens
+      const hovered = hoverState.earth;
+      const ease = Math.min(delta * 6, 1);
+      if (atmosphereMaterial.current) {
+        atmosphereMaterial.current.opacity +=
+          ((hovered ? 0.5 : 0.16) - atmosphereMaterial.current.opacity) * ease;
+      }
+      if (surfaceMaterial.current) {
+        surfaceMaterial.current.emissiveIntensity +=
+          ((hovered ? 0.62 : 0.38) -
+            surfaceMaterial.current.emissiveIntensity) *
+          ease;
+      }
+    }
   });
 
   return (
@@ -83,6 +102,7 @@ export default function Planet({
             // otherwise be a near-black silhouette. The cool tint reads as
             // earthshine so oceans/land stay recognizable in the dark.
             <meshStandardMaterial
+              ref={surfaceMaterial}
               map={texture}
               roughness={0.95}
               metalness={0}
@@ -103,6 +123,7 @@ export default function Planet({
           <mesh scale={1.04}>
             <sphereGeometry args={[config.radius, 48, 48]} />
             <meshBasicMaterial
+              ref={atmosphereMaterial}
               color="#6ab0ff"
               transparent
               opacity={0.16}

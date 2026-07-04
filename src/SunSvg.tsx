@@ -161,7 +161,6 @@ export function SunInternals({
             fill: black;
             font-weight: 400;
             transition: fill 0.1s;
-            text-decoration: underline;
 
             &:hover {
               fill: #7400b3;
