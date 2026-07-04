@@ -6,6 +6,7 @@ import Planet from "./Planet";
 import Moon from "./Moon";
 import Sun from "./Sun";
 import Asteroid from "./Asteroid";
+import Satellite from "./Satellite";
 import SunSvgAnchor from "./SunSvgAnchor";
 import BodyAnchors from "./BodyAnchors";
 import { ASTEROIDS, PLANETS } from "./constants";
@@ -102,15 +103,24 @@ const SolarScene = ({
         orbitOpacity={isNightMode ? 0.08 : 0.2}
         revealed={planetsRevealed}
       />
-      {ASTEROIDS.map((asteroid) => (
-        // Hidden in the top-down landing view (they'd read as clutter
-        // around the sun); they fade in on the way to the home perch
-        <Asteroid
-          key={asteroid.name}
-          config={asteroid}
-          visible={view !== "landing"}
-        />
-      ))}
+      {/* Link bodies — hidden in the top-down landing view (they'd read
+          as clutter around the sun); they fade in on the way to the home
+          perch. GitHub gets the Sputnik satellite, the rest are rocks. */}
+      {ASTEROIDS.map((asteroid) =>
+        asteroid.name === "github" ? (
+          <Satellite
+            key={asteroid.name}
+            config={asteroid}
+            visible={view !== "landing"}
+          />
+        ) : (
+          <Asteroid
+            key={asteroid.name}
+            config={asteroid}
+            visible={view !== "landing"}
+          />
+        ),
+      )}
       <CameraRig view={view} />
       <SunSvgAnchor />
       <BodyAnchors />

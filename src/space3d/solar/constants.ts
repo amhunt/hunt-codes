@@ -112,6 +112,8 @@ export const ASTEROIDS: SolarPlanetConfig[] = [
     logo: "blog",
   },
   {
+    // Rendered as the Sputnik satellite (Satellite.tsx), which carries
+    // its own GitHub badge — no decal `logo` needed
     name: "github",
     kind: "mercury",
     radius: 0.32,
@@ -119,7 +121,6 @@ export const ASTEROIDS: SolarPlanetConfig[] = [
     orbitSpeed: EARTH.orbitSpeed,
     orbitPhase: EARTH.orbitPhase - 0.7,
     spinSpeed: -0.25,
-    logo: "github",
     yOffset: ASTEROID_Y,
   },
   {

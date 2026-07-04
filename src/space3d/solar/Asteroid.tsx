@@ -5,6 +5,7 @@ import { DecalGeometry } from "three/examples/jsm/geometries/DecalGeometry.js";
 
 import { planetPosition, type SolarPlanetConfig } from "./constants";
 import { asteroidOutlineId } from "./BodyAnchors";
+import { writeSilhouette } from "./outline";
 import { createLogoBadgeTexture, createPlanetTexture } from "../textures";
 import { hoverState } from "../../solarHover";
 
@@ -27,45 +28,6 @@ import { hoverState } from "../../solarHover";
  */
 const FADE_IN_SECONDS = 3;
 const FADE_OUT_SECONDS = 1;
-
-const scratchVertex = new THREE.Vector3();
-
-type Point2 = [number, number];
-
-const cross = (o: Point2, a: Point2, b: Point2) =>
-  (a[0] - o[0]) * (b[1] - o[1]) - (a[1] - o[1]) * (b[0] - o[0]);
-
-/** Convex hull (Andrew's monotone chain), counter-clockwise. The rock is
- *  a jittered icosahedron — near-convex — so the hull of its projected
- *  vertices is an excellent stand-in for its screen silhouette. */
-function convexHull(points: Point2[]): Point2[] {
-  const pts = [...points].sort((a, b) => a[0] - b[0] || a[1] - b[1]);
-  if (pts.length <= 3) return pts;
-  const lower: Point2[] = [];
-  for (const p of pts) {
-    while (
-      lower.length >= 2 &&
-      cross(lower[lower.length - 2], lower[lower.length - 1], p) <= 0
-    ) {
-      lower.pop();
-    }
-    lower.push(p);
-  }
-  const upper: Point2[] = [];
-  for (let i = pts.length - 1; i >= 0; i--) {
-    const p = pts[i];
-    while (
-      upper.length >= 2 &&
-      cross(upper[upper.length - 2], upper[upper.length - 1], p) <= 0
-    ) {
-      upper.pop();
-    }
-    upper.push(p);
-  }
-  lower.pop();
-  upper.pop();
-  return lower.concat(upper);
-}
 
 export default function Asteroid({
   config,
@@ -185,42 +147,12 @@ export default function Asteroid({
       // the DOM overlay's outline paths. Recomputed per frame (cheap: a
       // couple hundred vertices) so it tracks the slow orbital drift; the
       // SHAPE stays put because the spin is frozen while hovered.
-      const outlineGroup = document.getElementById(
+      writeSilhouette(
         asteroidOutlineId(config.name),
+        [mesh.current],
+        camera,
+        size,
       );
-      const svg = outlineGroup?.closest("svg");
-      if (outlineGroup && svg) {
-        mesh.current.updateWorldMatrix(true, false);
-        const positions = geometry.getAttribute(
-          "position",
-        ) as THREE.BufferAttribute;
-        const points: Point2[] = [];
-        for (let i = 0; i < positions.count; i++) {
-          scratchVertex
-            .fromBufferAttribute(positions, i)
-            .applyMatrix4(mesh.current.matrixWorld)
-            .project(camera);
-          points.push([
-            (scratchVertex.x * 0.5 + 0.5) * size.width,
-            (0.5 - scratchVertex.y * 0.5) * size.height,
-          ]);
-        }
-        // Map viewport px -> the overlay svg's 0-100 viewBox (its rect is
-        // the anchor box BodyAnchors placed around the rock's projection)
-        const rect = svg.getBoundingClientRect();
-        if (rect.width > 0) {
-          const d =
-            convexHull(points)
-              .map(
-                ([x, y], i) =>
-                  `${i === 0 ? "M" : "L"}${(((x - rect.left) / rect.width) * 100).toFixed(2)} ${(((y - rect.top) / rect.height) * 100).toFixed(2)}`,
-              )
-              .join(" ") + " Z";
-          outlineGroup.querySelectorAll("path").forEach((path) => {
-            path.setAttribute("d", d);
-          });
-        }
-      }
     }
   });
 

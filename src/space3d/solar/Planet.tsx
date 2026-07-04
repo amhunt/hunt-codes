@@ -18,6 +18,11 @@ import earthMapUrl from "../../assets/earth.jpg";
 /** Fade duration for the landing-intro reveal */
 const REVEAL_SECONDS = 0.8;
 
+// >1 white multiplier on Earth's diffuse: the sun-facing side (diffuse =
+// map x color x sunlight) brightens, while the night side — lit almost
+// entirely by the emissive earthshine — barely moves
+const EARTH_SUNLIT_BOOST = new THREE.Color(1.45, 1.45, 1.45);
+
 export default function Planet({
   config,
   orbitColor,
@@ -113,7 +118,7 @@ export default function Planet({
       }
       if (surfaceMaterial.current) {
         surfaceMaterial.current.emissiveIntensity +=
-          ((hovered ? 0.62 : 0.38) -
+          ((hovered ? 0.62 : 0.28) -
             surfaceMaterial.current.emissiveIntensity) *
           ease;
       }
@@ -141,11 +146,12 @@ export default function Planet({
             <meshStandardMaterial
               ref={surfaceMaterial}
               map={texture}
+              color={EARTH_SUNLIT_BOOST}
               roughness={0.95}
               metalness={0}
               emissive="#a7bad4"
               emissiveMap={texture}
-              emissiveIntensity={0.38}
+              emissiveIntensity={0.28}
               transparent
             />
           ) : (
