@@ -31,8 +31,14 @@ const asTexture = (canvas: HTMLCanvasElement) => {
 };
 
 /**
- * Soft circular radial-gradient blotches, repeated at x±w so the pattern
- * tiles across the sphere's horizontal seam.
+ * Soft radial-gradient blotches, repeated at x±w so the pattern tiles
+ * across the sphere's horizontal seam — and drawn pole-aware for the
+ * equirectangular mapping: rows near the top/bottom of the texture get
+ * squeezed onto tiny polar circles, so blotches there are pre-stretched
+ * horizontally by 1/cos(latitude) (round again on the sphere) and the
+ * latitude is sampled so density stays uniform per unit sphere area
+ * (uniform sampling would pile blotches up at the poles). Without this
+ * the poles read as a pinched radial smear.
  */
 const drawBlotches = (
   ctx: CanvasRenderingContext2D,
@@ -46,17 +52,22 @@ const drawBlotches = (
 ) => {
   for (let i = 0; i < count; i++) {
     const x = Math.random() * w;
-    const y = Math.random() * h;
+    // Uniform in sin(latitude) => uniform per unit sphere area
+    const lat = Math.asin(Math.random() * 2 - 1);
+    const y = (0.5 + lat / Math.PI) * h;
     const r = minR + Math.random() * (maxR - minR);
-    const gradient = ctx.createRadialGradient(x, y, 0, x, y, r);
+    const stretch = 1 / Math.max(Math.cos(lat), 0.08);
+    const gradient = ctx.createRadialGradient(0, 0, 0, 0, 0, r);
     const color = colors[Math.floor(Math.random() * colors.length)];
     gradient.addColorStop(0, color);
     gradient.addColorStop(1, "rgba(0,0,0,0)");
     ctx.globalAlpha = alpha;
     ctx.fillStyle = gradient;
-    ctx.fillRect(x - r, y - r, r * 2, r * 2);
-    ctx.fillRect(x - r - w, y - r, r * 2, r * 2);
-    ctx.fillRect(x - r + w, y - r, r * 2, r * 2);
+    for (const wrapX of [x, x - w, x + w]) {
+      ctx.setTransform(stretch, 0, 0, 1, wrapX, y);
+      ctx.fillRect(-r, -r, r * 2, r * 2);
+    }
+    ctx.setTransform(1, 0, 0, 1, 0, 0);
   }
   ctx.globalAlpha = 1;
 };

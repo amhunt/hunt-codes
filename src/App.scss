@@ -1011,9 +1011,13 @@ a:hover {
 
 // Earth's /about ring: "About Andrew" curved over the projected Earth,
 // styled after the landing "enter" arc. The whole circle is the link.
+// It fades in only once the camera's swoop to the home view settles
+// (BodyAnchors drives opacity 0 -> 1; this transition does the fading).
 .earth-about-ring {
   position: fixed;
   visibility: hidden;
+  opacity: 0;
+  transition: opacity 0.8s ease;
   z-index: 3;
   border-radius: 50%;
   pointer-events: auto;
