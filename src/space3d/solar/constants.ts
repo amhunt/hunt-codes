@@ -97,7 +97,7 @@ export const ASTEROIDS: SolarPlanetConfig[] = [
     spinSpeed: 0.6,
   },
   {
-    name: "old",
+    name: "github",
     kind: "mercury",
     radius: 0.22,
     orbitRadius: 9.8,

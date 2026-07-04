@@ -28,9 +28,9 @@ const ASTEROID_LINKS = [
     href: "https://engineering.ziphq.com/material-ui/",
   },
   {
-    name: "old",
-    label: "Old personal blog",
-    href: "https://andrew-hunt.medium.com/",
+    name: "github",
+    label: "GitHub",
+    href: "https://www.github.com/amhunt",
   },
 ];
 

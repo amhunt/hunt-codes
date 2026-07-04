@@ -60,7 +60,11 @@ const SolarScene = ({
         orbitOpacity={isNightMode ? 0.08 : 0.2}
       />
       {ASTEROIDS.map((asteroid) => (
-        <Asteroid key={asteroid.name} config={asteroid} />
+        <Asteroid
+          key={asteroid.name}
+          config={asteroid}
+          withGithubLogo={asteroid.name === "github"}
+        />
       ))}
       <CameraRig view={view} />
       <SunSvgAnchor />

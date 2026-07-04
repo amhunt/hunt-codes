@@ -3,7 +3,7 @@ import { useFrame } from "@react-three/fiber";
 import * as THREE from "three";
 
 import { planetPosition, type SolarPlanetConfig } from "./constants";
-import { createPlanetTexture } from "../textures";
+import { createGitHubMarkTexture, createPlanetTexture } from "../textures";
 
 /**
  * A small rocky link-asteroid: a jittered icosahedron (lumpy, flat-shaded)
@@ -11,13 +11,28 @@ import { createPlanetTexture } from "../textures";
  * floating debris, and rings would clutter the zoomed landing view. The
  * matching DOM link overlay is glued to it by BodyAnchors via the same
  * planetPosition() the mesh uses, so the two can't drift apart.
+ *
+ * `withGithubLogo` sticks a GitHub-mark badge onto two opposite faces of
+ * the rock (they spin with it, so the logo tumbles in and out of view).
  */
-export default function Asteroid({ config }: { config: SolarPlanetConfig }) {
+export default function Asteroid({
+  config,
+  withGithubLogo = false,
+}: {
+  config: SolarPlanetConfig;
+  withGithubLogo?: boolean;
+}) {
   const group = useRef<THREE.Group>(null);
   const mesh = useRef<THREE.Mesh>(null);
 
   const texture = useMemo(() => createPlanetTexture(config.kind), [config]);
   useEffect(() => () => texture.dispose(), [texture]);
+
+  const logoTexture = useMemo(
+    () => (withGithubLogo ? createGitHubMarkTexture() : null),
+    [withGithubLogo],
+  );
+  useEffect(() => () => logoTexture?.dispose(), [logoTexture]);
 
   const geometry = useMemo(() => {
     const geo = new THREE.IcosahedronGeometry(config.radius, 1);
@@ -49,6 +64,11 @@ export default function Asteroid({ config }: { config: SolarPlanetConfig }) {
     }
   });
 
+  // Badges hover just past the jittered surface (vertices reach 1.2x the
+  // nominal radius) as children of the spinning mesh, one per side
+  const badgeOffset = config.radius * 1.28;
+  const badgeSize = config.radius * 1.35;
+
   return (
     <group ref={group}>
       <mesh ref={mesh} geometry={geometry}>
@@ -58,6 +78,23 @@ export default function Asteroid({ config }: { config: SolarPlanetConfig }) {
           metalness={0}
           flatShading
         />
+        {logoTexture &&
+          [1, -1].map((sideSign) => (
+            <mesh
+              key={sideSign}
+              position={[0, 0, sideSign * badgeOffset]}
+              rotation={[0, sideSign === 1 ? 0 : Math.PI, 0]}
+            >
+              <planeGeometry args={[badgeSize, badgeSize]} />
+              {/* Unlit so the badge stays legible on the rock's dark side;
+                  alphaTest keeps the transparent corners from z-fighting */}
+              <meshBasicMaterial
+                map={logoTexture}
+                transparent
+                alphaTest={0.5}
+              />
+            </mesh>
+          ))}
       </mesh>
     </group>
   );
