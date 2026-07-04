@@ -45,8 +45,13 @@ const HOME_LOOK_HEIGHT = 3; // raise the aim so Earth sits below center
 const ABOUT_CAM_BEHIND = 0.9; // from Earth's center, away from the moon
 const ABOUT_CAM_ABOVE = 2.6;
 const ABOUT_CAM_SIDE = 0.5;
-const ABOUT_AIM_LEFT_OF_MOON = 1.5; // world units => moon drifts right
 const ABOUT_LOOK_HEIGHT = 0.45; // aim slightly above the moon's plane
+/** Moon's horizontal screen spot on wide screens: NDC -0.5 = 25vw from
+ *  the left edge. Below the lg breakpoint the camera drops its side
+ *  offset instead, putting itself on the Earth-moon line so the moon
+ *  reads dead-center, directly above Earth. */
+const ABOUT_MOON_NDC_X = -0.5;
+const LG_BREAKPOINT_PX = 1280;
 
 // scratch vectors, reused every frame
 const goalPos = new THREE.Vector3();
@@ -62,27 +67,43 @@ const easeInOutCubic = (x: number) =>
   x < 0.5 ? 4 * x * x * x : 1 - Math.pow(-2 * x + 2, 3) / 2;
 
 /** Camera pos/look for a view at elapsed time t, written into goalPos/goalLook. */
-function computeGoal(view: SolarView, t: number) {
+function computeGoal(
+  view: SolarView,
+  t: number,
+  camera: THREE.Camera,
+  viewportWidth: number,
+) {
   if (view === "landing") {
     goalPos.copy(LANDING_POS);
     goalLook.copy(ORIGIN);
   } else if (view === "about") {
     // Perch over Earth's limb opposite the moon, riding the moon's orbit:
     // Earth's top curve fills the bottom of the frame and the moon stays
-    // pinned above-right of it.
+    // pinned in view, floating over the horizon.
     planetPosition(EARTH, t, earthPos);
     moonPosition(t, moonPos);
     moonDir.copy(moonPos).sub(earthPos).normalize();
     side.crossVectors(moonDir, UP).normalize();
+    const centered = viewportWidth < LG_BREAKPOINT_PX;
     goalPos
       .copy(earthPos)
       .addScaledVector(moonDir, -ABOUT_CAM_BEHIND)
-      .addScaledVector(side, ABOUT_CAM_SIDE);
+      // Centered (sm/md): sit right on the Earth-moon line so the moon
+      // reads directly above Earth
+      .addScaledVector(side, centered ? 0 : ABOUT_CAM_SIDE);
     goalPos.y += ABOUT_CAM_ABOVE;
-    // Aim left of the moon and slightly above its plane: the moon reads
-    // to the right, floating just over Earth's horizon
-    goalLook.copy(moonPos).addScaledVector(side, -ABOUT_AIM_LEFT_OF_MOON);
+    goalLook.copy(moonPos);
     goalLook.y = moonPos.y + ABOUT_LOOK_HEIGHT;
+    if (!centered) {
+      // Aim sideways of the moon by the angle that lands it at
+      // ABOUT_MOON_NDC_X for the current aspect (~25vw from the left)
+      const persp = camera as THREE.PerspectiveCamera;
+      const tanHalfH =
+        Math.tan((persp.fov * Math.PI) / 360) * (persp.aspect || 1);
+      const lateral =
+        goalPos.distanceTo(moonPos) * ABOUT_MOON_NDC_X * tanHalfH;
+      goalLook.addScaledVector(side, -lateral);
+    }
   } else {
     // Perch just over the sun's limb on the far side from Earth, looking
     // out at the stars: the sun's top curve fills the bottom of the frame
@@ -106,7 +127,7 @@ export default function CameraRig({ view }: { view: SolarView }) {
   const fromPos = useRef(LANDING_POS.clone());
   const fromLook = useRef(ORIGIN.clone());
 
-  useFrame(({ camera, clock }) => {
+  useFrame(({ camera, clock, size }) => {
     const t = clock.elapsedTime;
 
     if (view !== activeView.current) {
@@ -118,7 +139,7 @@ export default function CameraRig({ view }: { view: SolarView }) {
       fromLook.current.copy(camera.position).addScaledVector(viewDir, 20);
     }
 
-    computeGoal(view, t);
+    computeGoal(view, t, camera, size.width);
 
     const p = Math.min(1, (t - transitionStart.current) / TRANSITION_SECONDS);
     rigState.settled = p >= 1;
