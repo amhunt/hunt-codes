@@ -3,12 +3,11 @@ import * as THREE from "three";
 import type { PlanetKind } from "../landingScene";
 
 /**
- * Procedural equirectangular textures for the sun, planets and moon,
+ * Procedural equirectangular textures for the sun and planets,
  * generated on a 2D canvas at runtime (no image assets). The sun/planet
  * style is ported from the hunt-codes-3 prototype: soft radial-gradient
  * blotches over a base color, wrapped horizontally so the sphere seam is
- * less obvious. Palettes match the fallback radialGradient defs in
- * Landing.tsx / MoonSvg.tsx.
+ * less obvious.
  */
 
 export type { PlanetKind };
@@ -252,36 +251,5 @@ export function createLogoBadgeTexture(
   ctx.fillStyle = mark.color;
   ctx.fill(new Path2D(mark.path));
   ctx.setTransform(1, 0, 0, 1, 0, 0);
-  return asTexture(canvas);
-}
-
-/** Dark blue/purple moon surface (palette from the old MoonSvg gradient). */
-export function createMoonTexture(): THREE.CanvasTexture {
-  const canvas = createCanvas(TEX_W, TEX_H);
-  const ctx = canvas.getContext("2d");
-  if (!ctx) return asTexture(canvas);
-
-  const base = ctx.createLinearGradient(0, 0, TEX_W, TEX_H);
-  base.addColorStop(0, "#080556");
-  base.addColorStop(1, "#0a0030");
-  ctx.fillStyle = base;
-  ctx.fillRect(0, 0, TEX_W, TEX_H);
-
-  // Craters: soft lighter discs with a darker rim
-  for (let i = 0; i < 40; i++) {
-    const r = 2 + Math.random() * 8;
-    const x = Math.random() * TEX_W;
-    const y = Math.random() * TEX_H;
-    ctx.globalAlpha = 0.25 + Math.random() * 0.3;
-    ctx.fillStyle = "#150b6e";
-    ctx.beginPath();
-    ctx.arc(x, y, r, 0, Math.PI * 2);
-    ctx.fill();
-    ctx.globalAlpha = 0.3;
-    ctx.strokeStyle = "#05012a";
-    ctx.lineWidth = 1.5;
-    ctx.stroke();
-  }
-  ctx.globalAlpha = 1;
   return asTexture(canvas);
 }

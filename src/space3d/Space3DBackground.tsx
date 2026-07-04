@@ -2,15 +2,14 @@ import React, { memo } from "react";
 
 import SpaceCanvas from "./SpaceCanvas";
 import StarField from "./StarField";
-import Moon3D from "./Moon3D";
 import SolarScene from "./solar/SolarScene";
 
 /**
  * Entry point for the WebGL background (lazy-loaded so three.js ships as
  * its own chunk). Two canvases:
  *
- * - SpaceCanvas: the orthographic pixel-space layer (GPU stars, the moon
- *   glued to its SVG). Mounted on every route.
+ * - SpaceCanvas: the orthographic pixel-space layer (the GPU star
+ *   field). Mounted on every route.
  * - SolarScene: the perspective solar system (hunt-codes-3's scene — sun,
  *   orbiting planets + Earth's moon, camera rig). Mounted on the landing,
  *   home and about routes; the camera swoops between the top-down landing
@@ -37,9 +36,6 @@ const Space3DBackground = ({
     <>
       <SpaceCanvas>
         <StarField isLanding={isLanding} opacityTarget={isNightMode ? 1 : 0} />
-        {/* Moon3D tracks the #moon-svg element and hides itself while the
-            element is absent (landing/home/about pages, day mode) */}
-        <Moon3D />
       </SpaceCanvas>
       {(isLanding || isHomePage || isAboutPage) && (
         <SolarScene

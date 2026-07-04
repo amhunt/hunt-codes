@@ -9,8 +9,6 @@ import React, {
 import { useLocation } from "react-router-dom";
 import cx from "classnames";
 
-import Galaxy from "./Galaxy";
-
 import GoldenGate from "./gg-bridge.png";
 import GoldenGateFog from "./GoldenGateFog";
 import useWindowSize from "useWindowSize";
@@ -64,7 +62,9 @@ const AppBackground = ({
   const location = useLocation();
 
   const isHomePage = location.pathname.includes("home");
-  const isAboutPage = location.pathname.includes("about");
+  // /draw shares the about-page background (Earth + moon in the 3D scene)
+  const isAboutPage =
+    location.pathname.includes("about") || location.pathname.includes("draw");
   const isLanding = location.pathname === "/" || location.pathname === "";
   const [musicEnabled, setMusicEnabled] = useState(false);
 
@@ -190,12 +190,6 @@ const AppBackground = ({
           />
         </Suspense>
       </BackgroundErrorBoundary>
-      {/* Landing/home/about all render the 3D solar scene (sun, Earth,
-          moon), so the SVG Galaxy only remains for the other routes
-          (/draw): its sun by day, its moon by night */}
-      {!isLanding && !isHomePage && !isAboutPage && (
-        <Galaxy isNightMode={isNightMode} />
-      )}
       {isHomePage && (
         <>
           {/* <RetroMac /> */}

@@ -396,129 +396,6 @@ p {
   }
 }
 
-.planet-container {
-  position: fixed;
-  inset: 0;
-  z-index: 2;
-}
-
-.planet1 {
-  position: absolute;
-  transition: opacity 500ms ease;
-  transition-delay: 1s;
-  transform: translateY(100vh);
-  opacity: 0;
-
-  @media (max-width: $breakpoint-sm) {
-    top: unset !important;
-    bottom: -50vw !important;
-    left: -100px !important;
-    right: -100px !important;
-
-    > svg {
-      width: calc(100vw + 200px) !important;
-      height: calc(100vw + 200px) !important;
-      max-width: unset !important;
-    }
-  }
-}
-
-.planet1_day {
-  right: calc(-5vw - 7.5vh);
-  bottom: calc(-20vw - 18vh);
-
-  > svg {
-    width: calc(45vw + 55vh);
-    height: calc(45vw + 55vh);
-  }
-
-  &.unmounted {
-    opacity: 0;
-  }
-
-  &.on {
-    opacity: 1;
-    animation: 1.25s ease-in 0.25s both sunrise;
-  }
-
-  &.off {
-    opacity: 1;
-    animation: 1s ease-in both sunset;
-  }
-}
-
-.planet1_night {
-  left: calc(-5vw - 7.5vh);
-  bottom: calc(-10vw - 15vh);
-
-  > svg {
-    width: calc(30vw + 30vh);
-    height: calc(30vw + 30vh);
-  }
-
-  &.unmounted {
-    opacity: 0;
-  }
-
-  &.on {
-    opacity: 1;
-
-    @media (max-width: $breakpoint-sm) {
-      opacity: 0.75;
-    }
-    animation: 1.25s ease-in 0.25s both nightfall;
-  }
-
-  &.off {
-    opacity: 1;
-    animation: 1s ease-in both nightset;
-  }
-}
-
-@keyframes sunrise {
-  0% {
-    transform: translateY(100vh);
-    filter: drop-shadow(0px 0px 0px rgb(255, 225, 0));
-  }
-  100% {
-    transform: translateY(0);
-    filter: drop-shadow(0px 0px 40px rgb(255, 123, 0));
-  }
-}
-
-@keyframes sunset {
-  0% {
-    transform: translateY(0);
-    filter: drop-shadow(0px 0px 40px rgb(255, 123, 0));
-  }
-  100% {
-    transform: translateY(100vh);
-    filter: drop-shadow(0px 0px 0px rgb(255, 225, 0));
-  }
-}
-
-@keyframes nightfall {
-  0% {
-    transform: translateY(100vh);
-    filter: drop-shadow(0px 0px 0px $purp-light-transparent);
-  }
-  100% {
-    transform: translateY(0);
-    filter: drop-shadow(0px 0px 48px $purp-light-transparent);
-  }
-}
-
-@keyframes nightset {
-  0% {
-    transform: translateY(0);
-    filter: drop-shadow(0px 0px 48px $purp-light-transparent);
-  }
-  100% {
-    transform: translateY(100vh);
-    filter: drop-shadow(0px 0px 0px $purp-light-transparent);
-  }
-}
-
 .nameTitle {
   position: absolute;
   left: 24px;
@@ -753,10 +630,6 @@ li > ul > li {
     }
   }
 
-  #rainbow-text {
-    opacity: 0.5;
-  }
-
   .back-to-home-link {
     // This is all for a slight background behind the link so that it's always legible
     backdrop-filter: blur(10px);
@@ -945,11 +818,9 @@ a:hover {
   }
 }
 
-// Shared fullscreen WebGL canvas for the background scenes (stars, 3D
-// planets, moon). Sits above the flat backgrounds and the landing SVG,
-// below page content and the Galaxy moon/sun (same z, later in DOM);
-// never intercepts pointer events. Also used by the DOM-stars fallback
-// wrapper when the 3D chunk fails, so it stays above the night backdrop.
+// Shared fullscreen WebGL canvas for the pixel-space star field. Sits
+// above the flat backgrounds and the landing SVG, below page content;
+// never intercepts pointer events.
 .space-canvas {
   position: fixed;
   inset: 0;

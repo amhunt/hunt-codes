@@ -132,17 +132,3 @@ export function SunInternals({
     </>
   );
 }
-
-export default function SunSvg({ size = 1 }: { size?: number }) {
-  return (
-    <svg
-      width={550 * size}
-      height={550 * size}
-      viewBox={`0 0 ${550 * size} ${550 * size}`}
-      xmlns="http://www.w3.org/2000/svg"
-      xmlnsXlink="http://www.w3.org/1999/xlink"
-    >
-      <SunInternals size={size} />
-    </svg>
-  );
-}
