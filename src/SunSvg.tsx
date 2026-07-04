@@ -13,7 +13,7 @@ export const HOME_SUN_CY = 276;
 export const HOME_SUN_RADIUS = 175;
 
 // The orbiting text links are retired for now (replaced by the asteroid
-// links + the Earth "About Andrew" ring in the 3D scene) but kept
+// links + the Earth "About Me" ring in the 3D scene) but kept
 // compiled behind this flag in case they come back.
 const SHOW_ORBITING_LINKS = false;
 

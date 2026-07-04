@@ -1,4 +1,11 @@
-import React, { useState, useEffect, memo, lazy, Suspense } from "react";
+import React, {
+  useState,
+  useEffect,
+  useRef,
+  memo,
+  lazy,
+  Suspense,
+} from "react";
 import { useLocation } from "react-router-dom";
 import cx from "classnames";
 
@@ -81,6 +88,33 @@ const AppBackground = ({
     }
     return () => clearTimeout(timeout);
   }, [isNightMode]);
+
+  // Start the music when the visitor clicks ENTER on the landing page:
+  // that click is a user gesture, so play() is allowed. The flag survives
+  // one render in case the <audio> isn't mounted yet (musicEnabled flips
+  // first, then the re-run of this effect starts playback).
+  const prevPathname = useRef(location.pathname);
+  const autoplayPending = useRef(false);
+  useEffect(() => {
+    const cameFromLanding =
+      prevPathname.current === "/" || prevPathname.current === "";
+    prevPathname.current = location.pathname;
+    if (cameFromLanding && isHomePage) {
+      autoplayPending.current = true;
+    }
+    if (!autoplayPending.current) return;
+    if (!musicEnabled) {
+      setMusicEnabled(true);
+      return;
+    }
+    autoplayPending.current = false;
+    document
+      .querySelector("audio")
+      ?.play()
+      // Playback can still be denied (e.g. autoplay policies on a stale
+      // gesture) — the visible controls remain the fallback
+      .catch(() => {});
+  }, [location.pathname, isHomePage, musicEnabled]);
 
   return (
     <>

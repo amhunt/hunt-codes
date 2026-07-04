@@ -9,6 +9,7 @@ import {
 } from "./ui/tooltip";
 import {
   asteroidAnchorId,
+  asteroidOutlineId,
   EARTH_ABOUT_RING_ID,
 } from "./space3d/solar/BodyAnchors";
 import { hoverState } from "./solarHover";
@@ -32,60 +33,43 @@ const ASTEROID_LINKS = [
     label: "GitHub",
     href: "https://www.github.com/amhunt",
   },
+  {
+    name: "linkedin",
+    label: "LinkedIn",
+    href: "https://www.linkedin.com/in/andrewmhunt/",
+  },
 ];
 
 const SolarOverlays = () => {
-  // Clicking the ring navigates away without a pointerleave — don't
-  // leave Earth's hover glow stuck on
+  // Navigating away doesn't fire pointerleave — don't leave a hover
+  // glow stuck on
   React.useEffect(
     () => () => {
       hoverState.earth = false;
+      hoverState.asteroid = null;
     },
     [],
   );
 
   return (
     <>
-      {/* Earth is the /about link: a ring glued around its projection with
-        "About Andrew" curved over the top, styled like the landing
-        "enter" ring. The whole circle (Earth included) is clickable. */}
+      {/* Earth is the /about link. The "ABOUT ME" label curving over the top
+          is now rendered in WebGL (space3d/solar/AboutRing) around the 3D
+          Earth; this element is just the circular hit target (Earth included)
+          that BodyAnchors glues to Earth's projection — the canvas itself
+          takes no pointer input. */}
       <Link
         to="/about"
         id={EARTH_ABOUT_RING_ID}
         className="earth-about-ring"
-        aria-label="About Andrew"
+        aria-label="About Me"
         onPointerEnter={() => {
           hoverState.earth = true;
         }}
         onPointerLeave={() => {
           hoverState.earth = false;
         }}
-      >
-        <svg viewBox="0 0 100 100" width="100%" height="100%">
-          <path
-            id="earth-about-ring-path"
-            fill="none"
-            d="
-            M 9,50
-            a 41,41 0 1,1 82,0
-            a 41,41 0 1,1 -82,0
-          "
-          />
-          <text
-            fontFamily="'Retro Floral', 'Inconsolata', monospace"
-            textAnchor="middle"
-          >
-            <textPath
-              href="#earth-about-ring-path"
-              startOffset="25%"
-              className="svg-link-tspan"
-              fontSize="13px"
-            >
-              ABOUT ANDREW
-            </textPath>
-          </text>
-        </svg>
-      </Link>
+      />
       {ASTEROID_LINKS.map((link) => (
         <TooltipProvider key={link.name} delayDuration={100}>
           <Tooltip disableHoverableContent>
@@ -97,7 +81,29 @@ const SolarOverlays = () => {
                 target="_blank"
                 rel="noopener noreferrer"
                 aria-label={link.label}
-              />
+                onPointerEnter={() => {
+                  hoverState.asteroid = link.name;
+                }}
+                onPointerLeave={() => {
+                  if (hoverState.asteroid === link.name) {
+                    hoverState.asteroid = null;
+                  }
+                }}
+              >
+                {/* Hover outline: the rock's projected silhouette, drawn
+                    by Asteroid into these paths (viewBox matches the
+                    anchor box; pathLength normalizes the dash pulse) */}
+                <svg
+                  className="asteroid-outline"
+                  viewBox="0 0 100 100"
+                  aria-hidden
+                >
+                  <g id={asteroidOutlineId(link.name)}>
+                    <path className="asteroid-outline-base" pathLength={100} />
+                    <path className="asteroid-outline-pulse" pathLength={100} />
+                  </g>
+                </svg>
+              </a>
             </TooltipTrigger>
             <TooltipContent updatePositionStrategy="always">
               <p>{link.label}</p>

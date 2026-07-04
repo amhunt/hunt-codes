@@ -115,7 +115,10 @@ const Landing = () => {
           }}
         >
           <SunInternals size={SUN_SIZE} radiusOffset={SUN_RADIUS_OFFSET} />
-          <text fontFamily="'Retro Floral', 'Inconsolata', monospace">
+          <text
+            className="landing-enter-text"
+            fontFamily="'Retro Floral', 'Inconsolata', monospace"
+          >
             <textPath
               fill="white"
               pointerEvents="fill"

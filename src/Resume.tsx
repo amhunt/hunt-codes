@@ -82,7 +82,7 @@ const Resume = () => {
   return (
     <div className="resume-container" style={{ opacity: opacity ? 1 : 0 }}>
       {/* The link lives outside .resume-panel so the frosted background
-          starts above the "About Andrew" heading, not around the link */}
+          starts above the "About Me" heading, not around the link */}
       <div className="resume-inner-container">
         <Link
           className={cx(
@@ -96,7 +96,7 @@ const Resume = () => {
         </Link>
         <div className="resume-panel">
           <h1 ref={ref} className="mt-0 mb-6">
-            About Andrew
+            About Me
           </h1>
           <h4>
             Hey! I’m a frontend engineer based in San Francisco. I’m currently
@@ -217,6 +217,7 @@ const Resume = () => {
 };
 
 const interests = [
+  "3D Printing",
   "Singing",
   "Easter Eggs",
   "Crosswords",

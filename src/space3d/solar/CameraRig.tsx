@@ -24,7 +24,13 @@ export type SolarView = "landing" | "home" | "about";
 const LANDING_POS = new THREE.Vector3(0, 35, 0.01);
 const ORIGIN = new THREE.Vector3(0, 0, 0);
 const UP = new THREE.Vector3(0, 1, 0);
-const TRANSITION_SECONDS = 3.2;
+const TRANSITION_SECONDS = 2;
+
+// On lg/xl screens, pan the top-down landing camera straight down (world −Z
+// is screen-up, so panning −Z drops the sun below center). A pure pan keeps
+// the orbital diagram flat/undistorted rather than tilting it into ellipses.
+// Expressed in vh below the viewport's vertical center (50vh = half-height).
+const LANDING_SUN_DROP_VH = 15;
 
 // Home-view framing: the sun-perch. Offsets from the SUN's center (r 3),
 // on the far side from Earth, elevated well above the surface so the
@@ -62,15 +68,16 @@ const ABOUT_MOON_NDC_X = -0.5;
 const ABOUT_MOON_NDC_Y_LIFT = 0.4;
 const LG_BREAKPOINT_PX = 1280;
 
-// scratch vectors, reused every frame
+// scratch values, reused every frame
 const goalPos = new THREE.Vector3();
 const goalLook = new THREE.Vector3();
 const earthPos = new THREE.Vector3();
 const moonPos = new THREE.Vector3();
 const toEarth = new THREE.Vector3();
 const moonDir = new THREE.Vector3();
-const viewDir = new THREE.Vector3();
 const side = new THREE.Vector3();
+const goalQuat = new THREE.Quaternion();
+const lookMatrix = new THREE.Matrix4();
 
 const easeInOutCubic = (x: number) =>
   x < 0.5 ? 4 * x * x * x : 1 - Math.pow(-2 * x + 2, 3) / 2;
@@ -83,8 +90,18 @@ function computeGoal(
   viewport: { width: number; height: number },
 ) {
   if (view === "landing") {
-    goalPos.copy(LANDING_POS);
-    goalLook.copy(ORIGIN);
+    if (viewport.width >= LG_BREAKPOINT_PX) {
+      // Drop the sun below center by panning the camera + look target the
+      // same amount in −Z (screen-down), so the view stays straight-down.
+      const persp = camera as THREE.PerspectiveCamera;
+      const tanHalfV = Math.tan((persp.fov * Math.PI) / 360);
+      const drop = (LANDING_SUN_DROP_VH / 50) * tanHalfV * LANDING_POS.y;
+      goalPos.set(LANDING_POS.x, LANDING_POS.y, LANDING_POS.z - drop);
+      goalLook.set(0, 0, -drop);
+    } else {
+      goalPos.copy(LANDING_POS);
+      goalLook.copy(ORIGIN);
+    }
   } else if (view === "about") {
     // Perch over Earth's limb opposite the moon, riding the moon's orbit:
     // Earth's top curve fills the bottom of the frame and the moon stays
@@ -149,7 +166,7 @@ export default function CameraRig({ view }: { view: SolarView }) {
   const activeView = useRef(view);
   const transitionStart = useRef(-Infinity);
   const fromPos = useRef(LANDING_POS.clone());
-  const fromLook = useRef(ORIGIN.clone());
+  const fromQuat = useRef(new THREE.Quaternion());
 
   useFrame(({ camera, clock, size }) => {
     const t = clock.elapsedTime;
@@ -159,8 +176,7 @@ export default function CameraRig({ view }: { view: SolarView }) {
       activeView.current = view;
       transitionStart.current = t;
       fromPos.current.copy(camera.position);
-      camera.getWorldDirection(viewDir);
-      fromLook.current.copy(camera.position).addScaledVector(viewDir, 20);
+      fromQuat.current.copy(camera.quaternion);
     }
 
     computeGoal(view, t, camera, size);
@@ -168,10 +184,16 @@ export default function CameraRig({ view }: { view: SolarView }) {
     const p = Math.min(1, (t - transitionStart.current) / TRANSITION_SECONDS);
     rigState.settled = p >= 1;
     if (p < 1) {
+      // Movement and rotation ride the same eased progress: the position
+      // lerps to the perch while the orientation slerps to the arrival
+      // pose, so the whole spin is spread evenly across the transition
+      // (lerping a look POINT instead whipped the view around wherever
+      // the point's chord passed near the camera — spin first, then zoom)
       const e = easeInOutCubic(p);
       camera.position.lerpVectors(fromPos.current, goalPos, e);
-      goalLook.lerpVectors(fromLook.current, goalLook, e);
-      camera.lookAt(goalLook);
+      lookMatrix.lookAt(goalPos, goalLook, UP);
+      goalQuat.setFromRotationMatrix(lookMatrix);
+      camera.quaternion.slerpQuaternions(fromQuat.current, goalQuat, e);
     } else {
       // fully arrived: track the (possibly moving) goal exactly
       camera.position.copy(goalPos);

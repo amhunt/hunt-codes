@@ -2,7 +2,7 @@ import * as THREE from "three";
 
 /**
  * Shared camera->screen projection for the DOM overlays that ride 3D
- * bodies (the sun rings, the Earth "About Andrew" ring, the asteroid
+ * bodies (the sun rings, the Earth "About Me" ring, the asteroid
  * links). Positions come out in CSS pixels; projR is the body's apparent
  * radius on screen.
  */
@@ -37,7 +37,8 @@ export function projectBody(
 
   const distance = camera.position.distanceTo(worldPos);
   out.projR =
-    (worldRadius / Math.max(distance, 1e-6) /
+    (worldRadius /
+      Math.max(distance, 1e-6) /
       Math.tan((camera.fov * Math.PI) / 360)) *
     (size.height / 2);
   return out;
