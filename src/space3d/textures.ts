@@ -213,7 +213,7 @@ export function createGitHubMarkTexture(): THREE.CanvasTexture {
   ctx.translate(c, c);
   ctx.scale(scale, scale);
   ctx.translate(-12, -12);
-  ctx.fillStyle = "#1b1f24";
+  ctx.fillStyle = "#5000f0"; // saturated indigo
   ctx.fill(new Path2D(GITHUB_MARK_PATH));
   ctx.setTransform(1, 0, 0, 1, 0, 0);
   return asTexture(canvas);

@@ -65,7 +65,7 @@ export default function Asteroid({
     if (!withGithubLogo) return null;
     const r = config.radius;
     const target = new THREE.Mesh(geometry);
-    const size = new THREE.Vector3(r * 1.4, r * 1.4, r * 1.6);
+    const size = new THREE.Vector3(r * 1.82, r * 1.82, r * 1.6);
     return [
       new DecalGeometry(
         target,
