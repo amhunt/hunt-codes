@@ -97,7 +97,7 @@ const Landing = () => {
 
         <Link to="/home">
           <SunInternals size={SUN_SIZE} radiusOffset={SUN_RADIUS_OFFSET} />
-          <text fontFamily="'Inconsolata', monospace">
+          <text fontFamily="'Retro Floral', 'Inconsolata', monospace">
             <textPath
               fill="white"
               pointerEvents="fill"
@@ -110,7 +110,7 @@ const Landing = () => {
                 fontSize="22px"
                 vectorEffect="non-scaling-size"
               >
-                enter
+                ENTER
               </tspan>
             </textPath>
           </text>

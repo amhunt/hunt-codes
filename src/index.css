@@ -18,6 +18,12 @@
   src: url("./NovaMono-Regular.ttf");
 }
 
+/* Display font for the planet ring links ("ENTER", "ABOUT ANDREW") */
+@font-face {
+  font-family: "Retro Floral";
+  src: url("./RetroFloral.ttf");
+}
+
 body {
   margin: 0;
   padding: 0;
