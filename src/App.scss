@@ -750,14 +750,16 @@ li > ul > li {
     width: unset;
     max-width: min(360px, calc(100vw - 40px));
     top: unset;
-    bottom: 64px;
+    bottom: 184px;
     min-width: 300px;
     transform: unset;
   }
 
   .sm-screen-summary-line {
     position: fixed;
-    top: 208px;
+    // Tucked just under the "andrewhunt" name letters (their box ends
+    // ~109px down at iPhone widths)
+    top: 120px;
     width: 100%;
     text-align: center;
     font-size: 20px;
