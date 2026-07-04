@@ -27,11 +27,11 @@ const UP = new THREE.Vector3(0, 1, 0);
 const TRANSITION_SECONDS = 3.2;
 
 // Home-view framing: the sun-perch. Offsets from the SUN's center (r 3),
-// on the far side from Earth, elevated — camera ends up ~0.9 above the
-// surface (well clear of the 0.1 near plane) with the sun's limb filling
-// the bottom third and Earth ~9deg wide in the middle distance.
+// on the far side from Earth, elevated well above the surface so the
+// sun's limb only fills the bottom ~20% of the frame, with Earth ~9deg
+// wide in the middle distance.
 const HOME_CAM_BEHIND = 1.6; // away from Earth
-const HOME_CAM_ABOVE = 3.4;
+const HOME_CAM_ABOVE = 5.6;
 const HOME_CAM_SIDE = 1; // camera right => sun apex drifts screen-left
 // Earth's screen spot: on lg+ screens, pixel offsets from the viewport
 // center; below that, fixed viewport fractions (same look, scaled down)
