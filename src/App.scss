@@ -1400,7 +1400,22 @@ $dns-ease: cubic-bezier(0.45, 0.05, 0.25, 1.2);
     inset 0 2px 4px rgba(0, 0, 0, 0.35),
     inset 0 -1px 2px rgba(255, 255, 255, 0.35),
     0 2px 6px rgba(0, 0, 0, 0.25);
-  transition: background 500ms ease;
+  opacity: 1;
+  // The 1.5s opacity delay is the fade-in after leaving the landing page:
+  // the camera swoop leads, then the toggle appears
+  transition:
+    background 500ms ease,
+    opacity 800ms ease 1500ms;
+
+  &.dns-hidden {
+    // Hidden on the landing page; disappear instantly (no delay) so
+    // navigating back to space doesn't leave it lingering
+    opacity: 0;
+    pointer-events: none;
+    transition:
+      background 500ms ease,
+      opacity 200ms ease;
+  }
 
   &[data-state="checked"] {
     background: linear-gradient(180deg, #1a2340 0%, #2c3660 60%, #3f4a7a 100%);
