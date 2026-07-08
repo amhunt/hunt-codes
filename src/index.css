@@ -1,6 +1,6 @@
-/* CSS requires every @import to lead the file, so the webfont, Tailwind, and
-   the animation utilities are grouped here ahead of everything else. */
-@import url("https://fonts.googleapis.com/css2?family=Inconsolata:wght@300;400;500;600;700;900&display=swap");
+/* CSS requires every @import to lead the file, so Tailwind and the animation
+   utilities are grouped here ahead of everything else. The Inconsolata webfont
+   is loaded non-render-blocking via <link> in public/index.html instead. */
 @import "tailwindcss";
 @import "tw-animate-css";
 
@@ -11,17 +11,20 @@
 @font-face {
   font-family: "infini";
   src: url("./infini-regular.woff");
+  font-display: swap;
 }
 
 @font-face {
   font-family: "nova-mono";
   src: url("./NovaMono-Regular.ttf");
+  font-display: swap;
 }
 
 /* Display font for the planet ring links ("ENTER", "About Me") */
 @font-face {
   font-family: "Retro Floral";
   src: url("./RetroFloral.ttf");
+  font-display: swap;
 }
 
 body {

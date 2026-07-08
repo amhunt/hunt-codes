@@ -12,6 +12,11 @@ export default defineConfig({
       root: "build",
     },
     manifest: true,
+    // Emit external JS source maps in production so tooling (and Lighthouse's
+    // "valid source maps" audit) can map the minified bundles back to source.
+    sourceMap: {
+      js: "source-map",
+    },
   },
   html: {
     template: "public/index.html",
