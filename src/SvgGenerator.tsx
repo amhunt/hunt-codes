@@ -178,35 +178,29 @@ const SvgGenerator = () => {
       );
 
       if (!response.ok) {
-        // eslint-disable-next-line -- TODO: rm this comment and fix the lint error
-        const errorData = await response.json().catch(() => null);
+        const errorData = (await response.json().catch(() => null)) as {
+          error?: { message?: string };
+        } | null;
         throw new Error(
-          // eslint-disable-next-line -- TODO: rm this comment and fix the lint error
           errorData?.error?.message || `API error: ${response.status}`,
         );
       }
 
-      // eslint-disable-next-line -- TODO: rm this comment and fix the lint error
-      const data = await response.json();
-      // eslint-disable-next-line -- TODO: rm this comment and fix the lint error
-      let svg = data.choices[0]?.message?.content?.trim() || "";
+      const data = (await response.json()) as {
+        choices?: Array<{ message?: { content?: string } }>;
+      };
+      let svg = data.choices?.[0]?.message?.content?.trim() || "";
 
       // Strip markdown code fences if the model wrapped them
-      // eslint-disable-next-line -- TODO: rm this comment and fix the lint error
       svg = svg
-        // eslint-disable-next-line -- TODO: rm this comment and fix the lint error
         .replace(/^```(?:svg|xml|html)?\n?/i, "")
-        // eslint-disable-next-line -- TODO: rm this comment and fix the lint error
         .replace(/\n?```$/i, "")
-        // eslint-disable-next-line -- TODO: rm this comment and fix the lint error
         .trim();
 
-      // eslint-disable-next-line -- TODO: rm this comment and fix the lint error
       if (!svg.startsWith("<svg")) {
         throw new Error("The model did not return valid SVG markup");
       }
 
-      // eslint-disable-next-line -- TODO: rm this comment and fix the lint error
       setSvgContent(svg);
     } catch (err) {
       setError(err instanceof Error ? err.message : "Failed to generate SVG");
@@ -227,8 +221,7 @@ const SvgGenerator = () => {
 
   const handleKeyDown = (e: React.KeyboardEvent) => {
     if (e.key === "Enter" && !loading) {
-      // eslint-disable-next-line -- TODO: rm this comment and fix the lint error
-      generateSvg();
+      void generateSvg();
     }
   };
 
@@ -246,8 +239,7 @@ const SvgGenerator = () => {
       <div className="svg-generator-container">
         <h1 className="svg-generator-title">SVG Studio</h1>
         <p className="svg-generator-subtitle">
-          Describe something and watch it come to life as an animated vector
-          image
+          Describe an image and watch AI bring it to life as an animated SVG
         </p>
 
         {/* API Key Field */}
@@ -295,8 +287,7 @@ const SvgGenerator = () => {
           />
           <button
             className="svg-generator-button"
-            // eslint-disable-next-line -- TODO: rm this comment and fix the lint error
-            onClick={generateSvg}
+            onClick={() => void generateSvg()}
             disabled={loading || !prompt.trim()}
             type="button"
           >

@@ -37,7 +37,8 @@ $breakpoint-lg: 1280px;
 
 .App.day {
   .resume-container {
-    color: #222;
+    // Soft near-black on the opaque white panel but gentler, matching the site's soft aesthetic
+    color: #24203a;
   }
 
   .svg-generator-title,
@@ -349,8 +350,17 @@ p {
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .gg-fog-drift {
-    animation: none;
+  // Honor the OS "reduce motion" setting: stop the always-on, looping
+  // animations. Deliberate one-shot transitions (fades, the day/night
+  // thumb) are left alone; this targets the continuous motion that can
+  // trigger vestibular discomfort.
+  .gg-fog-drift,
+  .interest-pill,
+  .App-background_day,
+  .star_disco,
+  .svg-generator-spinner,
+  .svg-generator-svg-wrapper svg {
+    animation: none !important;
   }
 }
 
@@ -442,7 +452,11 @@ li > ul > li {
 
 .resume-container {
   max-height: 100%;
-  overflow-y: scroll;
+  // auto (not scroll) so the gutter only appears when content overflows;
+  // themed thin scrollbar to match the panel instead of the raw native bar
+  overflow-y: auto;
+  scrollbar-width: thin;
+  scrollbar-color: rgba(150, 116, 249, 0.6) transparent;
   transition: opacity 1s ease;
   z-index: 4;
   position: relative;
@@ -479,7 +493,10 @@ li > ul > li {
 }
 
 .App.day .resume-panel {
-  background: rgba(255, 255, 255, 0.55);
+  // More opaque + a soft shadow so the panel separates from the very bright
+  // pink-to-white day gradient and the dark body text keeps its contrast
+  background: rgba(255, 255, 255, 0.8);
+  box-shadow: 0 8px 24px rgba(80, 40, 120, 0.12);
 }
 
 .splitRow {
@@ -499,13 +516,35 @@ li > ul > li {
 }
 
 .location-pill {
-  background: #84ff5e44;
+  // Opaque green so the white pill text stays legible on both the dark
+  // night panel and the frosted-white day panel (the old #84ff5e44 was
+  // translucent light-green and failed contrast in both modes).
+  background: #1f7a3d;
+  color: #eafff0;
   margin-left: 8px;
+}
+
+// Skill/tool tags: purple to match the site's accent, distinct from the
+// green location pills and the rainbow interest pills.
+.tool-pill {
+  background: rgba(150, 116, 249, 0.22);
+  color: #efeaff;
+  text-transform: none;
+  letter-spacing: 0.3px;
+}
+
+// Lead paragraph on the About page (was an <h4> used as body copy)
+.resume-intro {
+  font-size: 1.15rem;
+  line-height: 1.7;
+  margin: 0;
 }
 
 .interest-pill {
   background-color: #462d93;
-  animation: rainbowFromRedToIndigo 7s ease-in-out infinite;
+  // Slow, gentle shimmer (was 7s) — keeps the playful rainbow without the
+  // frantic "disco" feel that competed with the content
+  animation: rainbowFromRedToIndigo 16s ease-in-out infinite;
 
   &:nth-of-type(1) {
     animation-delay: 0s;
@@ -685,6 +724,14 @@ button {
     color: #010c73;
   }
 
+  // Keyboard focus ring. The custom cursor hides where mouse focus is, so
+  // keyboard-only and screen-reader users need a clear visible indicator.
+  &:focus-visible {
+    outline: 2px solid $purp-light;
+    outline-offset: 2px;
+    border-radius: 4px;
+  }
+
   &.inverse {
     color: $purp-light;
 
@@ -692,6 +739,12 @@ button {
       color: #806eb8;
     }
   }
+}
+
+// Darker focus ring on the light day background for adequate contrast
+.App.day a:focus-visible,
+.App.day button:focus-visible {
+  outline-color: $purp;
 }
 
 li {
@@ -793,7 +846,6 @@ a:hover {
   position: absolute;
   // filter: hue-rotate(210deg);
   transition: 500ms opacity ease-in-out;
-  animation: 20s linear infinite alternate starsHueAnim;
 
   &.on {
     z-index: 1;
@@ -808,14 +860,9 @@ a:hover {
 }
 
 .App-background_night {
+  // A bare black backdrop; the WebGL star field renders on top and its hue
+  // rotation happens in the shader, so no GPU-filter animation here.
   background-color: black;
-
-  // With the WebGL star field the night layer is a bare black backdrop;
-  // the stars' hue rotation happens in the shader instead, so skip the
-  // (GPU-filter) animation here.
-  &.webgl {
-    animation: none;
-  }
 }
 
 // Shared fullscreen WebGL canvas for the pixel-space star field. Sits
@@ -915,6 +962,10 @@ a:hover {
 }
 
 .App-background_day {
+  // Gentle full-spectrum hue drift on the pastel day gradient (the night
+  // layer's stars animate in-shader instead). Disabled under
+  // prefers-reduced-motion.
+  animation: 20s linear infinite alternate starsHueAnim;
   background: linear-gradient(
     168deg,
     hsl(337.38, 100%, 88.04%) 0%,

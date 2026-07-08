@@ -71,11 +71,14 @@ const AppBackground = ({
   const [highlightedCharIdx, setHighlightedCharIdx] = useState(0);
 
   useEffect(() => {
+    // The nameTitle SVG this drives only renders off the landing page, so
+    // don't fire a 5x/sec state update + re-render on the landing route.
+    if (isLanding) return;
     const interval = setInterval(() => {
       setHighlightedCharIdx((idx) => (idx + 1) % nameArr.length);
     }, 200);
     return () => clearInterval(interval);
-  }, []);
+  }, [isLanding]);
 
   useEffect(() => {
     let timeout: ReturnType<typeof setTimeout>;
@@ -114,27 +117,31 @@ const AppBackground = ({
 
   return (
     <>
-      {musicEnabled ? (
-        <audio
-          controlsList="nodownload"
-          // autoPlay
-          loop
-          className={cx(
-            "z-[10000] fixed bottom-4 left-4",
-            isNightMode && "nightmode",
-          )}
-          controls
-        >
-          <source src="analog.wav" />
-        </audio>
-      ) : (
-        <button
-          aria-label="Play music"
-          className="fixed bottom-4 left-4 z-[5000] flex size-12 items-center justify-center rounded-full p-2 transition-colors hover:bg-[#5efffc57]"
-        >
-          <Music onClick={() => setMusicEnabled(true)} />
-        </button>
-      )}
+      {/* Keep the landing page's solar-system intro uncluttered — the audio
+          player and its trigger only appear once the visitor has entered */}
+      {!isLanding &&
+        (musicEnabled ? (
+          <audio
+            controlsList="nodownload"
+            // autoPlay
+            loop
+            className={cx(
+              "z-[10000] fixed bottom-4 left-4",
+              isNightMode && "nightmode",
+            )}
+            controls
+          >
+            <source src="analog.wav" />
+          </audio>
+        ) : (
+          <button
+            aria-label="Play music"
+            onClick={() => setMusicEnabled(true)}
+            className="fixed bottom-4 left-4 z-[5000] flex size-12 items-center justify-center rounded-full p-2 transition-colors hover:bg-[#5efffc57]"
+          >
+            <Music />
+          </button>
+        ))}
       {!isLanding && (
         <svg
           className={cx(

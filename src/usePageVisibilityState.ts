@@ -10,11 +10,11 @@ export default function usePageVisibilityState() {
     const handleVisibilityChange = () => {
       setVisibilityState(document.visibilityState);
     };
-    window.addEventListener("visibilitychange", handleVisibilityChange, {
+    document.addEventListener("visibilitychange", handleVisibilityChange, {
       passive: true,
     });
     return () => {
-      window.removeEventListener("visibilitychange", handleVisibilityChange);
+      document.removeEventListener("visibilitychange", handleVisibilityChange);
     };
   }, []);
 
