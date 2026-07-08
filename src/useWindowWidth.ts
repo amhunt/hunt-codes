@@ -10,7 +10,7 @@ export default function useWindowWidth() {
       setWidth(width);
       setHeight(height);
     },
-    100
+    100,
   ); // Debounce window resizing to 100ms
 
   useEffect(() => {

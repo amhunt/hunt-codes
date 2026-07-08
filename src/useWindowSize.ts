@@ -2,7 +2,7 @@ import { useEffect, useState } from "react";
 
 export default function useWindowSize() {
   const [size, setSize] = useState<"sm" | "md" | "lg">(
-    window.innerWidth < 768 ? "sm" : window.innerWidth < 1000 ? "md" : "lg"
+    window.innerWidth < 768 ? "sm" : window.innerWidth < 1000 ? "md" : "lg",
   );
 
   // this useEffect sets up a listener for window resize events, to update a width state value
