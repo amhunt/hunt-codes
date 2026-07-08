@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useCallback } from "react";
-import { BrowserRouter as Router, Switch, Route } from "react-router-dom";
+import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
 import cx from "classnames";
 import "./App.scss";
 
@@ -66,20 +66,12 @@ const App = () => {
           isNightMode={isNightMode}
           onCheckedChange={setIsNightMode}
         />
-        <Switch>
-          <Route exact path="/">
-            <Landing />
-          </Route>
-          <Route path="/home">
-            <Home />
-          </Route>
-          <Route path="/about">
-            <Resume />
-          </Route>
-          <Route path="/draw">
-            <SvgGenerator />
-          </Route>
-        </Switch>
+        <Routes>
+          <Route path="/" element={<Landing />} />
+          <Route path="/home" element={<Home />} />
+          <Route path="/about" element={<Resume />} />
+          <Route path="/draw" element={<SvgGenerator />} />
+        </Routes>
       </Router>
     </div>
   );
