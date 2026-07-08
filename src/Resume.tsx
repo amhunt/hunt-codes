@@ -21,8 +21,8 @@ const experienceItems = [
     location: "San Francisco",
     date: "2021 - 2025",
     description: [
-      "Develop, ship, and iterate on new product features",
-      "Lead initiatives to standardize and improve shared components",
+      "Developed, shipped, and iterated on new product features",
+      "Led initiatives to standardize and improve shared components",
       {
         item: "Dev infra – CI/Quality/Dev experience:",
         subbullets: [
@@ -31,9 +31,9 @@ const experienceItems = [
           "Built FE/BE logging system with Segment",
         ],
       },
-      "Architect and manage build & deploy systems across Webpack, Jenkins, Docker, S3, Cloudflare, and Webflow",
-      "Build & maintain frontend infrastructure: dev server, Storybook, testing, logging, sourcemaps, TS/React usage, third-party package usage/maintenance",
-      "TypeScript: enabled TypeScript in repo and led migration of frontend code to 99% coverage",
+      "Architected and managed build & deploy systems across Webpack, Jenkins, Docker, S3, Cloudflare, and Webflow",
+      "Built & maintained frontend infrastructure: dev server, Storybook, testing, logging, sourcemaps, TS/React usage, third-party package usage/maintenance",
+      "TypeScript: enabled TypeScript and led migration of frontend code to 99% type safety",
       "Performance: Improved page load times by >50%, primarily via code splitting and routing optimizations",
     ],
   },
@@ -138,8 +138,8 @@ const Resume = () => {
               difficult to overstate the importance of investing in the
               development process. Great DevX is a prerequisite to quality UX
               and efficient product development — this includes strong linters,
-              fast and thorough CI checks, and leaning on AI (LLMs and code
-              generation) to automate repetitive work and free engineers for
+              fast and thorough CI checks, and leaning on AI (LLMs and coding
+              agents) to automate repetitive work and free engineers for
               higher-leverage problems.
             </li>
             <li>
@@ -254,12 +254,11 @@ const tools = [
 const interests = [
   "3D Printing",
   "Singing",
-  "Politics",
+  "Product Easter Eggs",
   "Music Production",
+  "Politics 😬",
   "Crosswords",
   "Web3",
-  "Easter Eggs",
-  "Running",
 ];
 
 export default Resume;

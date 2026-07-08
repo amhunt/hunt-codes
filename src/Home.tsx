@@ -28,12 +28,9 @@ const typedOptions = {
   autoInsertCss: false,
 };
 
-// Chromium-based browsers (Edge, Brave, Opera) all include "Chrome" in their
-// UA, so exclude the ones that identify themselves distinctly
-const isChrome =
-  navigator.userAgent.includes("Chrome") &&
-  !navigator.userAgent.includes("Edg") &&
-  !navigator.userAgent.includes("OPR");
+// Chromium-based browsers (Chrome, Edge, Brave, Opera) all include "Chrome"
+// in their UA, so this matches the whole family
+const isChromium = navigator.userAgent.includes("Chrome");
 
 const Home = () => {
   const [logoOpacity, setLogoOpacity] = useState(0);
@@ -205,7 +202,7 @@ const Home = () => {
           </div>
         </div>
         {/* )} */}
-        {!isChrome && !isSmall && (
+        {!isChromium && !isSmall && (
           <>
             <div className="absolute rounded bg-white p-4 text-sm leading-tight">
               You are using a browser other than Chrome (🚩)
