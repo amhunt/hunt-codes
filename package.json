@@ -60,7 +60,7 @@
     "lint": "eslint src/**/*.{js,jsx,ts,tsx}",
     "knip": "knip",
     "serve": "serve -s build/",
-    "deploy": "aws s3 sync build/ s3://hunt.codes --acl public-read --delete --profile AdministratorAccess-98532647733",
+    "deploy": "aws s3 sync build/ s3://hunt.codes --acl public-read --delete --exclude \"*.html\" --exclude \"manifest.json\" --cache-control \"public,max-age=31536000,immutable\" --profile andrew && aws s3 sync build/ s3://hunt.codes --acl public-read --exclude \"*\" --include \"*.html\" --include \"manifest.json\" --cache-control \"public,max-age=0,must-revalidate\" --profile andrew",
     "test": "jest"
   },
   "browserslist": [
