@@ -131,7 +131,8 @@ export default function AboutRing({
     // Fade in only once the camera settles on the home view (mirrors the old
     // DOM ring's opacity transition); fade back out otherwise.
     const targetOpacity = active && rigState.settled ? 1 : 0;
-    opacity.current += (targetOpacity - opacity.current) * Math.min(1, delta * 4);
+    opacity.current +=
+      (targetOpacity - opacity.current) * Math.min(1, delta * 4);
 
     const base = isNightMode ? NIGHT_COLOR : DAY_COLOR;
     const targetColor = hoverState.earth ? HOVER_COLOR : base;

@@ -86,7 +86,9 @@ function EnterRing({
     if (totalWidth <= 0) return null;
 
     const worldFontSize =
-      SUN_RADIUS * (ENTER_FONT_SIZE_SVG / SUN_SURFACE_RADIUS) * ENTER_TEXT_SCALE;
+      SUN_RADIUS *
+      (ENTER_FONT_SIZE_SVG / SUN_SURFACE_RADIUS) *
+      ENTER_TEXT_SCALE;
     // Float the ring off the sun's surface by ~10% of its diameter so the
     // (now larger) word clears the limb instead of grazing it.
     const worldRadius =
@@ -241,7 +243,11 @@ export default function Sun({
       <group ref={group}>
         <mesh ref={mesh}>
           <sphereGeometry args={[SUN_RADIUS, 64, 64]} />
-          <meshBasicMaterial ref={materialRef} map={texture} toneMapped={false} />
+          <meshBasicMaterial
+            ref={materialRef}
+            map={texture}
+            toneMapped={false}
+          />
           {/* Crossfading spot layer, drawn just over the base surface */}
           <mesh scale={1.001} renderOrder={1}>
             <sphereGeometry args={[SUN_RADIUS, 64, 64]} />

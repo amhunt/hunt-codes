@@ -2,7 +2,7 @@ import { useEffect, useState } from "react";
 
 export default function usePageVisibilityState() {
   const [visibilityState, setVisibilityState] = useState<"visible" | "hidden">(
-    document.visibilityState
+    document.visibilityState,
   );
 
   // this useEffect sets up a listener for visibilitychange events, to update a visibility state value

@@ -67,7 +67,7 @@ const Logo = ({
               MIRROR_OFFSET_PX - (paddingTop1 ?? 0)
             }px linear-gradient(transparent 0%, transparent 50%, #000d 100%)`,
     }),
-    [size, paddingLeft1, paddingTop1]
+    [size, paddingLeft1, paddingTop1],
   );
 
   const svgStyle2 = useMemo(
@@ -81,7 +81,7 @@ const Logo = ({
               MIRROR_OFFSET_PX - (paddingTop2 ?? 0)
             }px linear-gradient(transparent 0%, transparent 50%, #000d 100%)`,
     }),
-    [size, paddingLeft2, paddingTop2]
+    [size, paddingLeft2, paddingTop2],
   );
 
   return (
