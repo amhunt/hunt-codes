@@ -3,6 +3,7 @@ import { useFrame } from "@react-three/fiber";
 import * as THREE from "three";
 
 import { planetPosition, type SolarPlanetConfig } from "./constants";
+import { applyOffAxisSquash } from "./offAxisSquash";
 import { createPlanetTexture } from "../textures";
 import { hoverState } from "../../solarHover";
 import AboutRing from "./AboutRing";
@@ -42,6 +43,7 @@ export default function Planet({
   revealed?: boolean;
 }) {
   const group = useRef<THREE.Group>(null);
+  const squashWrapper = useRef<THREE.Group>(null);
   const mesh = useRef<THREE.Mesh>(null);
   const surfaceMaterial = useRef<THREE.MeshStandardMaterial>(null);
   const atmosphereMaterial = useRef<THREE.MeshBasicMaterial>(null);
@@ -83,9 +85,18 @@ export default function Planet({
   }, [config.orbitRadius]);
   useEffect(() => () => orbitLine.dispose(), [orbitLine]);
 
-  useFrame(({ clock }, delta) => {
+  useFrame(({ clock, camera }, delta) => {
     if (group.current) {
       planetPosition(config, clock.elapsedTime, group.current.position);
+      // Cancel the wide-lens corner stretching (fades out up close)
+      if (squashWrapper.current) {
+        applyOffAxisSquash(
+          squashWrapper.current,
+          camera,
+          group.current.position,
+          config.radius,
+        );
+      }
     }
     if (mesh.current) {
       mesh.current.rotation.y += delta * config.spinSpeed;
@@ -136,49 +147,51 @@ export default function Planet({
         />
       </lineLoop>
       <group ref={group}>
-        <mesh ref={mesh}>
-          <sphereGeometry args={[config.radius, 48, 48]} />
-          {config.kind === "earth" ? (
-            // Earth self-illuminates faintly (its own map as the emissive
-            // map): the home view faces its night side, which would
-            // otherwise be a near-black silhouette. The cool tint reads as
-            // earthshine so oceans/land stay recognizable in the dark.
-            <meshStandardMaterial
-              ref={surfaceMaterial}
-              map={texture}
-              color={EARTH_SUNLIT_BOOST}
-              roughness={0.95}
-              metalness={0}
-              emissive="#a7bad4"
-              emissiveMap={texture}
-              emissiveIntensity={0.28}
-              transparent
-            />
-          ) : (
-            <meshStandardMaterial
-              ref={surfaceMaterial}
-              map={texture}
-              roughness={0.95}
-              metalness={0}
-              transparent
-            />
-          )}
-        </mesh>
-        {config.kind === "earth" && (
-          // faint atmosphere shell
-          <mesh scale={1.04}>
+        <group ref={squashWrapper}>
+          <mesh ref={mesh}>
             <sphereGeometry args={[config.radius, 48, 48]} />
-            <meshBasicMaterial
-              ref={atmosphereMaterial}
-              color="#6ab0ff"
-              transparent
-              opacity={0.16}
-              side={THREE.BackSide}
-            />
+            {config.kind === "earth" ? (
+              // Earth self-illuminates faintly (its own map as the emissive
+              // map): the home view faces its night side, which would
+              // otherwise be a near-black silhouette. The cool tint reads as
+              // earthshine so oceans/land stay recognizable in the dark.
+              <meshStandardMaterial
+                ref={surfaceMaterial}
+                map={texture}
+                color={EARTH_SUNLIT_BOOST}
+                roughness={0.95}
+                metalness={0}
+                emissive="#a7bad4"
+                emissiveMap={texture}
+                emissiveIntensity={0.28}
+                transparent
+              />
+            ) : (
+              <meshStandardMaterial
+                ref={surfaceMaterial}
+                map={texture}
+                roughness={0.95}
+                metalness={0}
+                transparent
+              />
+            )}
           </mesh>
-        )}
+          {config.kind === "earth" && (
+            // faint atmosphere shell
+            <mesh scale={1.04}>
+              <sphereGeometry args={[config.radius, 48, 48]} />
+              <meshBasicMaterial
+                ref={atmosphereMaterial}
+                color="#6ab0ff"
+                transparent
+                opacity={0.16}
+                side={THREE.BackSide}
+              />
+            </mesh>
+          )}
+        </group>
         {/* Curved "ABOUT ME" link label, billboarded around Earth. Lives in
-            the group (not the spinning mesh) so it stays put over Earth. */}
+            the group (not the squash wrapper) so it stays put over Earth. */}
         {config.kind === "earth" && (
           <AboutRing active={aboutActive} isNightMode={isNightMode} />
         )}

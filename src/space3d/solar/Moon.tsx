@@ -3,6 +3,7 @@ import { useFrame } from "@react-three/fiber";
 import * as THREE from "three";
 
 import { EARTH, MOON, planetPosition } from "./constants";
+import { applyOffAxisSquash } from "./offAxisSquash";
 import moonMapUrl from "../../assets/moon.jpg";
 
 /**
@@ -18,6 +19,8 @@ import moonMapUrl from "../../assets/moon.jpg";
 /** Fade duration for the landing-intro reveal */
 const REVEAL_SECONDS = 0.8;
 
+const moonWorldPos = new THREE.Vector3();
+
 export default function Moon({
   orbitColor,
   orbitOpacity,
@@ -30,6 +33,7 @@ export default function Moon({
 }) {
   const earthGroup = useRef<THREE.Group>(null);
   const moonGroup = useRef<THREE.Group>(null);
+  const squashWrapper = useRef<THREE.Group>(null);
   const mesh = useRef<THREE.Mesh>(null);
   const surfaceMaterial = useRef<THREE.MeshStandardMaterial>(null);
   const orbitMaterial = useRef<THREE.LineBasicMaterial>(null);
@@ -59,7 +63,7 @@ export default function Moon({
   }, []);
   useEffect(() => () => orbitLine.dispose(), [orbitLine]);
 
-  useFrame(({ clock }, delta) => {
+  useFrame(({ clock, camera }, delta) => {
     const t = clock.elapsedTime;
     if (earthGroup.current) {
       planetPosition(EARTH, t, earthGroup.current.position);
@@ -71,6 +75,19 @@ export default function Moon({
         0,
         Math.sin(a) * MOON.orbitRadius,
       );
+      // Cancel the wide-lens corner stretching (fades out up close, e.g.
+      // under the about view's moon-adjacent perch)
+      if (squashWrapper.current && earthGroup.current) {
+        moonWorldPos
+          .copy(earthGroup.current.position)
+          .add(moonGroup.current.position);
+        applyOffAxisSquash(
+          squashWrapper.current,
+          camera,
+          moonWorldPos,
+          MOON.radius,
+        );
+      }
     }
     if (mesh.current) {
       mesh.current.rotation.y += delta * MOON.spinSpeed;
@@ -101,19 +118,21 @@ export default function Moon({
         />
       </lineLoop>
       <group ref={moonGroup}>
-        <mesh ref={mesh}>
-          <sphereGeometry args={[MOON.radius, 48, 48]} />
-          <meshStandardMaterial
-            ref={surfaceMaterial}
-            map={texture}
-            roughness={1}
-            metalness={0}
-            emissive="#aab1bd"
-            emissiveMap={texture}
-            emissiveIntensity={0.22}
-            transparent
-          />
-        </mesh>
+        <group ref={squashWrapper}>
+          <mesh ref={mesh}>
+            <sphereGeometry args={[MOON.radius, 48, 48]} />
+            <meshStandardMaterial
+              ref={surfaceMaterial}
+              map={texture}
+              roughness={1}
+              metalness={0}
+              emissive="#aab1bd"
+              emissiveMap={texture}
+              emissiveIntensity={0.22}
+              transparent
+            />
+          </mesh>
+        </group>
       </group>
     </group>
   );
