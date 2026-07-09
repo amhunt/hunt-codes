@@ -229,16 +229,12 @@ export function createLogoBadgeTexture(
   if (!ctx) return asTexture(canvas);
 
   const c = size / 2;
-  ctx.beginPath();
-  ctx.arc(c, c, c * 0.98, 0, Math.PI * 2);
-  ctx.fillStyle = "#f6f8faaa";
-  ctx.fill();
 
   const mark = LOGO_MARKS[logo];
   const scale = (size / 24) * mark.scale;
   ctx.translate(c, c);
   ctx.scale(scale, scale);
-  ctx.translate(-12, -12);
+  ctx.translate(-12, -16);
   ctx.fillStyle = mark.color;
   ctx.fill(new Path2D(mark.path));
   ctx.setTransform(1, 0, 0, 1, 0, 0);
