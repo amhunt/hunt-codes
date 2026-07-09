@@ -59,6 +59,8 @@ const letterBasis = new THREE.Matrix4();
 const tangentAxis = new THREE.Vector3();
 const radialAxis = new THREE.Vector3();
 const upAxis = new THREE.Vector3(0, 1, 0);
+const camForward = new THREE.Vector3();
+const sunDir = new THREE.Vector3();
 
 /**
  * Orient a glyph flat in the XZ plane (facing the top-down camera) with its
@@ -252,13 +254,40 @@ export default function Sun({
     if (corona.current) {
       corona.current.quaternion.copy(camera.quaternion);
       const persp = camera as THREE.PerspectiveCamera;
+      const dist = persp.position.length();
       const worldPerPx =
-        (2 * persp.position.length() * Math.tan((persp.fov * Math.PI) / 360)) /
-        size.height;
+        (2 * dist * Math.tan((persp.fov * Math.PI) / 360)) / size.height;
+      const planeHalf = CORONA_HALF_RADII * SUN_RADIUS * scale;
       coronaMaterial.uniforms.uRingW.value = THREE.MathUtils.clamp(
-        (FLARE_RING_PX * worldPerPx) / (CORONA_HALF_RADII * SUN_RADIUS * scale),
+        (FLARE_RING_PX * worldPerPx) / planeHalf,
         0.004,
         0.12,
+      );
+      // Ring start: anchor the ring to the sphere's visible SILHOUETTE,
+      // not its radius. Up close the silhouette (the tangent cone) sits
+      // outside a radius-R circle drawn at the center's depth, and when
+      // the sun is off the optical axis (the home perch puts it at the
+      // frame's bottom) the silhouette is additionally an ellipse — so a
+      // radius-R ring floated visibly inside the limb. Anchor instead to
+      // the NEAR-SIDE tangent ray (the arc that's actually in frame):
+      // with β the sun's off-axis angle and θ the tangent-cone half-angle,
+      // that ray crosses the center-depth billboard at
+      //   d·cosβ · (tanβ − tan(β−θ))
+      // from the sun's center — which degrades to the on-axis d·tanθ.
+      const worldR = SUN_RADIUS * scale;
+      const theta = Math.asin(Math.min(worldR / dist, 0.999));
+      persp.getWorldDirection(camForward);
+      sunDir.copy(persp.position).multiplyScalar(-1 / dist); // toward origin
+      const cosBeta = THREE.MathUtils.clamp(camForward.dot(sunDir), 0.15, 1);
+      const beta = Math.acos(cosBeta);
+      const silhouette =
+        dist *
+        cosBeta *
+        (Math.tan(beta) - Math.tan(Math.max(beta - theta, -1.4)));
+      coronaMaterial.uniforms.uDiscR.value = THREE.MathUtils.clamp(
+        silhouette / planeHalf,
+        0.05,
+        0.95,
       );
       // Flares surge a touch while the sun/ENTER link is hovered
       const intensity = coronaMaterial.uniforms.uIntensity;
