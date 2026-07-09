@@ -39,8 +39,16 @@ const SpaceCanvas = ({ children }: { children: React.ReactNode }) => {
       orthographic
       flat
       camera={{ position: [0, 0, 1000], near: 0.1, far: 4000, zoom: 1 }}
-      dpr={[1, 2]}
-      gl={{ alpha: true, antialias: true }}
+      // Cap DPR at 1.5: on retina, 2x meant ~78% more pixels for a soft
+      // star field where the difference is invisible
+      dpr={[1, 1.5]}
+      // No MSAA: this canvas only draws alpha-blended point sprites, which
+      // antialiasing does nothing for — skip the multisample cost entirely
+      gl={{
+        alpha: true,
+        antialias: false,
+        powerPreference: "high-performance",
+      }}
     >
       {children}
     </Canvas>
