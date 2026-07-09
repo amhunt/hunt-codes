@@ -38,8 +38,8 @@ const LANDING_SUN_DROP_VH = 15;
 // sun's limb only fills the bottom ~20% of the frame, with Earth ~9deg
 // wide in the middle distance.
 const HOME_CAM_BEHIND = 1.6; // away from Earth
-const HOME_CAM_ABOVE = 5.6;
-const HOME_CAM_SIDE = 1; // camera right => sun apex drifts screen-left
+const HOME_CAM_ABOVE = 5;
+const HOME_CAM_SIDE = 2; // camera right => sun apex drifts screen-left
 // Earth's screen spot: on lg+ screens, pixel offsets from the viewport
 // center; below that, fixed viewport fractions (same look, scaled down)
 const HOME_EARTH_RIGHT_PX = 300;
