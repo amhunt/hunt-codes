@@ -128,10 +128,14 @@ export default function Satellite({
         new THREE.Euler(0, Math.PI / 2, 0),
         size,
       ),
+      // The backside badge is projected upside down (the extra Z roll):
+      // it comes around half a roll after the front one, so flipping it
+      // makes BOTH marks read right-side up at the moment they face the
+      // camera.
       new DecalGeometry(
         target,
         new THREE.Vector3(-bodyRadius, 0, 0),
-        new THREE.Euler(0, -Math.PI / 2, 0),
+        new THREE.Euler(0, -Math.PI / 2, Math.PI),
         size,
       ),
     ];

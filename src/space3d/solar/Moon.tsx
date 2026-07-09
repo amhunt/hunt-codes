@@ -1,9 +1,14 @@
 import React, { useEffect, useMemo, useRef } from "react";
 import { useFrame } from "@react-three/fiber";
 import * as THREE from "three";
+import { DecalGeometry } from "three/examples/jsm/geometries/DecalGeometry.js";
 
 import { EARTH, MOON, planetPosition } from "./constants";
 import { applyOffAxisSquash } from "./offAxisSquash";
+import { MOON_VIDEO_OUTLINE_ID } from "./BodyAnchors";
+import { writeSilhouette } from "./outline";
+import { createLogoBadgeTexture } from "../textures";
+import { hoverState } from "../../solarHover";
 import moonMapUrl from "../../assets/moon.jpg";
 
 /**
@@ -15,9 +20,19 @@ import moonMapUrl from "../../assets/moon.jpg";
  * Like Earth, the moon self-illuminates faintly (its own map as a dim
  * emissive) so the /about camera — which perches over the moon's far side
  * — still reads it when that face is turned away from the sun.
+ *
+ * On /about the moon doubles as a video link (the Zip brand-launch reel —
+ * see ZipVideoMoon): play-icon badges are decaled onto the surface, and
+ * hovering the DOM overlay brightens the moon and pulses its silhouette
+ * outline, matching the other link bodies.
  */
 /** Fade duration for the landing-intro reveal */
 const REVEAL_SECONDS = 0.8;
+
+/** Play badges around the equator: 3 at 120° apart, so from any camera
+ *  angle at least one is within 60° of facing the viewer (the moon's
+ *  self-spin is glacial — a single badge could hide for minutes). */
+const BADGE_YAWS = [0, (2 * Math.PI) / 3, (4 * Math.PI) / 3];
 
 const moonWorldPos = new THREE.Vector3();
 
@@ -48,6 +63,52 @@ export default function Moon({
   }, []);
   useEffect(() => () => texture.dispose(), [texture]);
 
+  const geometry = useMemo(
+    () => new THREE.SphereGeometry(MOON.radius, 48, 48),
+    [],
+  );
+  useEffect(() => () => geometry.dispose(), [geometry]);
+
+  // Play-icon stickers on the surface (same decal treatment as the
+  // asteroid badges), riding the moon's slow self-spin
+  const badgeMaterial = useMemo(
+    () =>
+      new THREE.MeshBasicMaterial({
+        map: createLogoBadgeTexture("play"),
+        transparent: true,
+        depthWrite: false,
+        polygonOffset: true,
+        polygonOffsetFactor: -4,
+      }),
+    [],
+  );
+  useEffect(
+    () => () => {
+      badgeMaterial.map?.dispose();
+      badgeMaterial.dispose();
+    },
+    [badgeMaterial],
+  );
+
+  const badgeGeometries = useMemo(() => {
+    const target = new THREE.Mesh(geometry);
+    const r = MOON.radius;
+    const size = new THREE.Vector3(r * 0.95, r * 0.95, r * 0.8);
+    return BADGE_YAWS.map(
+      (yaw) =>
+        new DecalGeometry(
+          target,
+          new THREE.Vector3(Math.sin(yaw) * r, 0, Math.cos(yaw) * r),
+          new THREE.Euler(0, yaw, 0),
+          size,
+        ),
+    );
+  }, [geometry]);
+  useEffect(
+    () => () => badgeGeometries.forEach((g) => g.dispose()),
+    [badgeGeometries],
+  );
+
   const orbitLine = useMemo(() => {
     const points: THREE.Vector3[] = [];
     for (let i = 0; i <= 128; i++) {
@@ -64,7 +125,7 @@ export default function Moon({
   }, []);
   useEffect(() => () => orbitLine.dispose(), [orbitLine]);
 
-  useFrame(({ clock, camera }, delta) => {
+  useFrame(({ clock, camera, size }, delta) => {
     const t = clock.elapsedTime;
     if (earthGroup.current) {
       planetPosition(EARTH, t, earthGroup.current.position);
@@ -108,8 +169,22 @@ export default function Moon({
     if (surfaceMaterial.current) {
       surfaceMaterial.current.opacity = revealOpacity.current;
     }
+    badgeMaterial.opacity = revealOpacity.current;
     if (orbitMaterial.current) {
       orbitMaterial.current.opacity = orbitOpacity * revealOpacity.current;
+    }
+
+    // Video-link hover (the /about overlay): brighten the moonshine and
+    // hand the silhouette to the overlay's pulsing outline paths
+    const hovered = hoverState.moon;
+    if (surfaceMaterial.current) {
+      const ease = Math.min(delta * 6, 1);
+      surfaceMaterial.current.emissiveIntensity +=
+        ((hovered ? 0.55 : 0.22) - surfaceMaterial.current.emissiveIntensity) *
+        ease;
+    }
+    if (hovered && mesh.current) {
+      writeSilhouette(MOON_VIDEO_OUTLINE_ID, [mesh.current], camera, size);
     }
   });
 
@@ -126,8 +201,7 @@ export default function Moon({
       <group ref={moonGroup}>
         <group ref={squashWrapper}>
           <group ref={squashCounterRotate}>
-            <mesh ref={mesh}>
-              <sphereGeometry args={[MOON.radius, 48, 48]} />
+            <mesh ref={mesh} geometry={geometry}>
               <meshStandardMaterial
                 ref={surfaceMaterial}
                 map={texture}
@@ -138,6 +212,14 @@ export default function Moon({
                 emissiveIntensity={0.22}
                 transparent
               />
+              {/* Play-icon stickers, riding the spin with the surface */}
+              {badgeGeometries.map((badgeGeometry, i) => (
+                <mesh
+                  key={i}
+                  geometry={badgeGeometry}
+                  material={badgeMaterial}
+                />
+              ))}
             </mesh>
           </group>
         </group>

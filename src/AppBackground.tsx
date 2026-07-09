@@ -109,7 +109,8 @@ const AppBackground = ({
             type="button"
             onClick={() => setMusicEnabled(true)}
             className={cx(
-              "fixed bottom-4 left-4 z-[5000] flex items-center gap-1",
+              // music-toggle: hook for the video-mode hiding rules (App.scss)
+              "music-toggle fixed bottom-4 left-4 z-[5000] flex items-center gap-1",
               isNightMode && "inverse",
             )}
           >
