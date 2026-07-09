@@ -7,10 +7,12 @@ import * as THREE from "three";
  *   the convection cells and dark spots drift, grow and dissolve (the old
  *   static canvas texture couldn't evolve). Limb darkening keeps the
  *   close-up home view reading as a photosphere rather than a flat disc.
- * - Corona: a billboarded ring just past the limb whose width undulates
+ * - Corona: a 3D shell enveloping the sun whose rim glow hugs the limb
  *   with angular waves plus traveling "burst" lobes — solar flares going
- *   off at different spots. The nominal ring width is fed in per frame so
- *   it can hug a fixed ~24 CSS px past the projected limb.
+ *   off at different spots. The limb is derived per fragment from the
+ *   view geometry itself (see the impact-parameter note below), so the
+ *   glow can't misalign with the sphere; the nominal band width is fed
+ *   in per frame to track a fixed ~24 CSS px.
  *
  * Fragment cost scales with the sun's on-screen pixel coverage, so the
  * landing view (small sun) and about view (sun mostly off-frame) pay
@@ -125,31 +127,45 @@ export function createSunSurfaceMaterial(): THREE.ShaderMaterial {
   });
 }
 
+// The corona is a 3D SHELL enveloping the sun (rendered back-side, like
+// Earth's atmosphere), not a billboard. Each fragment computes the
+// impact parameter b — the perpendicular distance from the sun's center
+// to its own view ray. Rays tangent to the sphere have b == R exactly,
+// so (b − R) measures distance past the limb using the GPU's own
+// projection: the glow is aligned with the silhouette by construction,
+// from any camera angle, with no screen-space math to drift. The sun
+// sphere's depth buffer hides the shell inside the silhouette.
 const CORONA_VERTEX = /* glsl */ `
-  varying vec2 vUv;
+  varying vec3 vViewPos;
+  varying vec3 vCenterView;
 
   void main() {
-    vUv = uv;
-    gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0);
+    vec4 mvPosition = modelViewMatrix * vec4(position, 1.0);
+    vViewPos = mvPosition.xyz;
+    // The sun's center (the shell's origin) in view space
+    vCenterView = (modelViewMatrix * vec4(0.0, 0.0, 0.0, 1.0)).xyz;
+    gl_Position = projectionMatrix * mvPosition;
   }
 `;
 
 const CORONA_FRAGMENT = /* glsl */ `
   uniform float uTime;
-  // The sun's projected SILHOUETTE radius mapped onto the billboard
-  // plane, plane units (half-size = 1) — written per frame by Sun, since
-  // up close the silhouette appears larger than the sphere radius at the
-  // plane's depth
-  uniform float uDiscR;
-  uniform float uRingW;      // nominal ring width, plane units
+  uniform float uSunR;   // sun radius, world units (incl. group scale)
+  uniform float uRingW;  // nominal flare band width, world units
   uniform float uIntensity;
   uniform vec3 uColorInner;
   uniform vec3 uColorOuter;
-  varying vec2 vUv;
+  varying vec3 vViewPos;
+  varying vec3 vCenterView;
 
   void main() {
-    vec2 p = vUv * 2.0 - 1.0;
-    float d = length(p);
+    // Impact parameter: perpendicular distance from the sun's center to
+    // this fragment's view ray (camera at the view-space origin)
+    vec3 rayDir = normalize(vViewPos);
+    float b = length(vCenterView - dot(vCenterView, rayDir) * rayDir);
+
+    // Angle around the disc (view-plane approximation) for the lobes
+    vec2 p = vViewPos.xy - vCenterView.xy;
     float ang = atan(p.y, p.x);
     float t = uTime;
 
@@ -169,8 +185,8 @@ const CORONA_FRAGMENT = /* glsl */ `
     float flare = clamp(base, 0.2, 1.3) + 1.9 * (burst1 + burst2);
 
     float w = uRingW * flare;
-    float x = (d - uDiscR) / max(w, 1e-4);
-    if (x < 0.0) discard; // inside the disc (the sphere occludes it anyway)
+    float x = (b - uSunR) / max(w, 1e-4);
+    if (x < 0.0) discard; // inside the silhouette (sun depth hides it too)
     float ring = exp(-x * 2.2);
 
     vec3 col = mix(uColorOuter, uColorInner, clamp(1.0 - x * 0.6, 0.0, 1.0));
@@ -180,19 +196,21 @@ const CORONA_FRAGMENT = /* glsl */ `
   }
 `;
 
-export function createSunCoronaMaterial(
-  discRPlane: number,
-): THREE.ShaderMaterial {
+export function createSunCoronaMaterial(): THREE.ShaderMaterial {
   return new THREE.ShaderMaterial({
     vertexShader: CORONA_VERTEX,
     fragmentShader: CORONA_FRAGMENT,
     transparent: true,
     depthWrite: false,
+    // Back side only: one shell layer per ray (no double-brightness), and
+    // the far half behind the sun's limb is depth-culled by the sun
+    // itself, so occlusion inside the silhouette is pixel-exact
+    side: THREE.BackSide,
     blending: THREE.AdditiveBlending,
     uniforms: {
       uTime: { value: 0 },
-      uDiscR: { value: discRPlane }, // pre-first-frame placeholder
-      uRingW: { value: 0.02 }, // written per frame (screen-space target)
+      uSunR: { value: 1 }, // written per frame
+      uRingW: { value: 0.1 }, // written per frame (screen-space target)
       uIntensity: { value: 1 },
       uColorInner: { value: new THREE.Color("#ffd27a") },
       uColorOuter: { value: new THREE.Color("#ff7a1a") },
