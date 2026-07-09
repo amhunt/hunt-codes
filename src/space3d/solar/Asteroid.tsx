@@ -39,9 +39,13 @@ export default function Asteroid({
   const group = useRef<THREE.Group>(null);
   const mesh = useRef<THREE.Mesh>(null);
   const rockMaterial = useRef<THREE.MeshStandardMaterial>(null);
-  // Start faded out when mounting into a view that hides asteroids (the
-  // landing page), fully shown when mounting straight into /home
+  // Start faded out when mounting into a view that hides asteroids
+  // (landing, /about), fully shown when mounting straight into /home
   const opacity = useRef(visible ? 1 : 0);
+  // Last opacity pushed into the group/materials; starts out-of-band so
+  // the first frame always initializes them (the JSX materials mount at
+  // opacity 1 regardless of the fade state)
+  const appliedOpacity = useRef(-1);
 
   const texture = useMemo(() => createPlanetTexture(config.kind), [config]);
   useEffect(() => () => texture.dispose(), [texture]);
@@ -115,15 +119,17 @@ export default function Asteroid({
       const step = visible
         ? delta / FADE_IN_SECONDS
         : -delta / FADE_OUT_SECONDS;
-      const next = THREE.MathUtils.clamp(opacity.current + step, 0, 1);
-      // Only walk the material tree while the fade is actually moving
-      if (next !== opacity.current) {
-        opacity.current = next;
-        group.current.visible = next > 0.005;
+      opacity.current = THREE.MathUtils.clamp(opacity.current + step, 0, 1);
+      // Only walk the material tree when the pushed value actually
+      // changes (appliedOpacity starts at -1, so the first frame always
+      // initializes the group/material state)
+      if (opacity.current !== appliedOpacity.current) {
+        appliedOpacity.current = opacity.current;
+        group.current.visible = opacity.current > 0.005;
         group.current.traverse((obj) => {
           const material = (obj as THREE.Mesh).material;
           if (material && !Array.isArray(material)) {
-            material.opacity = next;
+            material.opacity = opacity.current;
           }
         });
       }

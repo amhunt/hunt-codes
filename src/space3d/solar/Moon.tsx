@@ -34,6 +34,7 @@ export default function Moon({
   const earthGroup = useRef<THREE.Group>(null);
   const moonGroup = useRef<THREE.Group>(null);
   const squashWrapper = useRef<THREE.Group>(null);
+  const squashCounterRotate = useRef<THREE.Group>(null);
   const mesh = useRef<THREE.Mesh>(null);
   const surfaceMaterial = useRef<THREE.MeshStandardMaterial>(null);
   const orbitMaterial = useRef<THREE.LineBasicMaterial>(null);
@@ -77,12 +78,17 @@ export default function Moon({
       );
       // Cancel the wide-lens corner stretching (fades out up close, e.g.
       // under the about view's moon-adjacent perch)
-      if (squashWrapper.current && earthGroup.current) {
+      if (
+        squashWrapper.current &&
+        squashCounterRotate.current &&
+        earthGroup.current
+      ) {
         moonWorldPos
           .copy(earthGroup.current.position)
           .add(moonGroup.current.position);
         applyOffAxisSquash(
           squashWrapper.current,
+          squashCounterRotate.current,
           camera,
           moonWorldPos,
           MOON.radius,
@@ -119,19 +125,21 @@ export default function Moon({
       </lineLoop>
       <group ref={moonGroup}>
         <group ref={squashWrapper}>
-          <mesh ref={mesh}>
-            <sphereGeometry args={[MOON.radius, 48, 48]} />
-            <meshStandardMaterial
-              ref={surfaceMaterial}
-              map={texture}
-              roughness={1}
-              metalness={0}
-              emissive="#aab1bd"
-              emissiveMap={texture}
-              emissiveIntensity={0.22}
-              transparent
-            />
-          </mesh>
+          <group ref={squashCounterRotate}>
+            <mesh ref={mesh}>
+              <sphereGeometry args={[MOON.radius, 48, 48]} />
+              <meshStandardMaterial
+                ref={surfaceMaterial}
+                map={texture}
+                roughness={1}
+                metalness={0}
+                emissive="#aab1bd"
+                emissiveMap={texture}
+                emissiveIntensity={0.22}
+                transparent
+              />
+            </mesh>
+          </group>
         </group>
       </group>
     </group>

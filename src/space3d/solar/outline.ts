@@ -1,12 +1,12 @@
 import * as THREE from "three";
 
 /**
- * Shared hover-outline helper for the link bodies (asteroids, the
- * satellite): projects every vertex of the given meshes through the
- * camera, takes the 2D convex hull — an excellent stand-in for the
- * silhouette of near-convex bodies — and writes it as a path into the
- * body's DOM overlay (the `.asteroid-outline` svg), mapped into its
- * 0-100 viewBox. The overlay's CSS supplies the purple stroke and the
+ * Shared hover-outline helper for the link bodies (Earth's /about ring,
+ * the asteroids, the satellite): projects every vertex of the given
+ * meshes through the camera, takes the 2D convex hull — an excellent
+ * stand-in for the silhouette of near-convex bodies — and writes it as a
+ * path into the body's DOM overlay (the `.body-outline` svg), mapped into
+ * its 0-100 viewBox. The overlay's CSS supplies the purple stroke and the
  * white perimeter pulses.
  */
 
