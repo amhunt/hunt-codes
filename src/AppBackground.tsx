@@ -1,18 +1,11 @@
-import React, {
-  useState,
-  useEffect,
-  useRef,
-  memo,
-  lazy,
-  Suspense,
-} from "react";
+import React, { useState, useEffect, memo, lazy, Suspense } from "react";
 import { useLocation } from "react-router-dom";
 import cx from "classnames";
 
 import GoldenGate from "./gg-bridge.png";
 import GoldenGateFog from "./GoldenGateFog";
 import useWindowSize from "useWindowSize";
-import { Music } from "react-feather";
+import { MusicIcon } from "lucide-react";
 // import RetroMac from "./RetroMac";
 
 // Loaded on demand so three.js ships as its own chunk
@@ -80,40 +73,19 @@ const AppBackground = ({
     return () => clearInterval(interval);
   }, [isLanding]);
 
+  // Start playback as soon as the player mounts — i.e. right after the
+  // visitor clicks "Enable space jams". That click is the user gesture that
+  // makes play() allowed, and the <audio> only exists once musicEnabled is
+  // true, so there's nothing to play before then.
   useEffect(() => {
-    let timeout: ReturnType<typeof setTimeout>;
-    if (isNightMode) {
-      timeout = setTimeout(() => setMusicEnabled(true), 4000);
-    }
-    return () => clearTimeout(timeout);
-  }, [isNightMode]);
-
-  // Start the music when the visitor clicks ENTER on the landing page:
-  // that click is a user gesture, so play() is allowed. The flag survives
-  // one render in case the <audio> isn't mounted yet (musicEnabled flips
-  // first, then the re-run of this effect starts playback).
-  const prevPathname = useRef(location.pathname);
-  const autoplayPending = useRef(false);
-  useEffect(() => {
-    const cameFromLanding =
-      prevPathname.current === "/" || prevPathname.current === "";
-    prevPathname.current = location.pathname;
-    if (cameFromLanding && isHomePage) {
-      autoplayPending.current = true;
-    }
-    if (!autoplayPending.current) return;
-    if (!musicEnabled) {
-      setMusicEnabled(true);
-      return;
-    }
-    autoplayPending.current = false;
+    if (!musicEnabled) return;
     document
       .querySelector("audio")
       ?.play()
-      // Playback can still be denied (e.g. autoplay policies on a stale
-      // gesture) — the visible controls remain the fallback
+      // Playback can still be denied by autoplay policies — the visible
+      // controls remain the fallback.
       .catch(() => {});
-  }, [location.pathname, isHomePage, musicEnabled]);
+  }, [musicEnabled]);
 
   return (
     <>
@@ -123,7 +95,6 @@ const AppBackground = ({
         (musicEnabled ? (
           <audio
             controlsList="nodownload"
-            // autoPlay
             loop
             className={cx(
               "z-[10000] fixed bottom-4 left-4",
@@ -135,11 +106,15 @@ const AppBackground = ({
           </audio>
         ) : (
           <button
-            aria-label="Play music"
+            type="button"
             onClick={() => setMusicEnabled(true)}
-            className="fixed bottom-4 left-4 z-[5000] flex size-12 items-center justify-center rounded-full p-2 transition-colors hover:bg-[#5efffc57]"
+            className={cx(
+              "fixed bottom-4 left-4 z-[5000] flex items-center gap-1",
+              isNightMode && "inverse",
+            )}
           >
-            <Music />
+            <MusicIcon size={16} />
+            <span>Enable space jams</span>
           </button>
         ))}
       {!isLanding && (
