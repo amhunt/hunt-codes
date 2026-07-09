@@ -67,8 +67,11 @@ Invariants worth knowing:
 - `offAxisSquash` must apply R·S·R⁻¹ (wrapper rotation + inner
   counter-rotation); dropping the counter-rotation reorients textured
   globes (Earth reads upside down) — regression to watch for.
-- The flare corona anchors to the sun's *visible silhouette* (near-side
-  tangent ray, computed per frame), not the sphere radius.
+- The flare corona is a back-side 3D shell around the sun; the shader
+  derives the limb per fragment from the view ray's distance to the
+  center (impact parameter b: tangent rays have b = R exactly), so it
+  aligns with the silhouette by construction. Don't replace it with a
+  billboard — screen-space anchoring drifted twice.
 - Fade-in ramps write material opacity from `useFrame`; anything guarded
   by "only when changed" needs a first-frame initialization (JSX materials
   mount at opacity 1).
