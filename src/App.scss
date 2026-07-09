@@ -899,12 +899,13 @@ a:hover {
   cursor: pointer;
 }
 
-// Hover treatment: the rock freezes and its actual silhouette (a hull the
-// scene recomputes from the frozen mesh, so it matches whatever
-// orientation the hover caught it in) lights up purple with white pulses
-// chasing around the perimeter. Both paths carry pathLength="100", so the
-// dash animation below works for any silhouette shape or length.
-.asteroid-outline {
+// Hover treatment shared by every link body (asteroids, the satellite,
+// and Earth's /about ring): the body's actual screen silhouette (a hull
+// the scene recomputes from the mesh, so it matches whatever orientation
+// the hover caught it in) lights up purple with white pulses chasing
+// around the perimeter. Both paths carry pathLength="100", so the dash
+// animation below works for any silhouette shape or length.
+.body-outline {
   position: absolute;
   inset: 0;
   width: 100%;
@@ -921,29 +922,31 @@ a:hover {
     vector-effect: non-scaling-stroke;
   }
 
-  .asteroid-outline-base {
+  .body-outline-base {
     stroke: $purp-light;
     stroke-width: 2px;
   }
 
-  .asteroid-outline-pulse {
+  .body-outline-pulse {
     stroke: #ffffff;
     stroke-width: 2.5px;
     stroke-dasharray: 12 88;
-    animation: asteroid-outline-pulse 1.8s linear infinite;
+    animation: body-outline-pulse 1.8s linear infinite;
   }
 }
 
-.asteroid-link:hover .asteroid-outline,
-.asteroid-link:focus-visible .asteroid-outline {
+.asteroid-link:hover .body-outline,
+.asteroid-link:focus-visible .body-outline,
+.earth-about-ring:hover .body-outline,
+.earth-about-ring:focus-visible .body-outline {
   opacity: 1;
 }
 
-.App.day .asteroid-outline .asteroid-outline-base {
+.App.day .body-outline .body-outline-base {
   stroke: $purp;
 }
 
-@keyframes asteroid-outline-pulse {
+@keyframes body-outline-pulse {
   to {
     stroke-dashoffset: -100;
   }

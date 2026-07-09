@@ -26,8 +26,18 @@ const basis = new THREE.Matrix4();
 const BLEND_NEAR_RADII = 5;
 const BLEND_FAR_RADII = 10;
 
+/**
+ * @param wrapper Outer group: rotated into the squash frame and scaled.
+ * @param counterRotate Inner group (direct child of `wrapper`): receives
+ *   the inverse rotation, so the net transform is R·S·R⁻¹ — a pure
+ *   directional squash that leaves the body's world orientation alone.
+ *   Without it the body is visibly REORIENTED to the camera frame: a
+ *   textured globe reads upside down wherever the squash basis points
+ *   its Y axis down, and camera swoops drag it through a tumble.
+ */
 export function applyOffAxisSquash(
   wrapper: THREE.Group,
+  counterRotate: THREE.Group,
   camera: THREE.Camera,
   bodyWorldPos: THREE.Vector3,
   bodyRadius: number,
@@ -45,6 +55,7 @@ export function applyOffAxisSquash(
   if (distance < 1e-4 || blend === 0) {
     wrapper.quaternion.identity();
     wrapper.scale.setScalar(1);
+    counterRotate.quaternion.identity();
     return;
   }
 
@@ -56,14 +67,17 @@ export function applyOffAxisSquash(
     // On-axis: no distortion to cancel
     wrapper.quaternion.identity();
     wrapper.scale.setScalar(1);
+    counterRotate.quaternion.identity();
     return;
   }
   radialDir.multiplyScalar(1 / radialLength);
 
   // Camera-aligned basis with local X on the screen-radial direction,
-  // then squash X by cos theta (blended)
+  // then squash X by cos theta (blended); the inner group undoes the
+  // rotation so only the squash is left
   upDir.crossVectors(forward, radialDir).normalize();
   basis.makeBasis(radialDir, upDir, forward);
   wrapper.quaternion.setFromRotationMatrix(basis);
   wrapper.scale.set(1 - blend * (1 - cos), 1, 1);
+  counterRotate.quaternion.copy(wrapper.quaternion).invert();
 }

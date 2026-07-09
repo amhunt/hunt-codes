@@ -94,7 +94,7 @@ const SolarScene = ({
           config={planet}
           // hunt-codes-3's faint white rings, flipped dark for day mode
           orbitColor={isNightMode ? "#ffffff" : "#141428"}
-          orbitOpacity={isNightMode ? 0.08 : 0.2}
+          orbitOpacity={isNightMode ? 0.28 : 0.2}
           isNightMode={isNightMode}
           aboutActive={view === "home"}
           revealed={planetsRevealed}
@@ -102,24 +102,26 @@ const SolarScene = ({
       ))}
       <Moon
         orbitColor={isNightMode ? "#ffffff" : "#141428"}
-        orbitOpacity={isNightMode ? 0.08 : 0.2}
+        orbitOpacity={isNightMode ? 0.28 : 0.2}
         revealed={planetsRevealed}
       />
-      {/* Link bodies — hidden in the top-down landing view (they'd read
-          as clutter around the sun); they fade in on the way to the home
-          perch. GitHub gets the Sputnik satellite, the rest are rocks. */}
+      {/* Link bodies — home view only: on landing they'd read as clutter
+          around the sun, and on /about their DOM overlays don't exist, so
+          the rocks would be dead weight drifting near the sun. They fade
+          in on the way to the home perch. GitHub gets the Sputnik
+          satellite, the rest are rocks. */}
       {ASTEROIDS.map((asteroid) =>
         asteroid.name === "github" ? (
           <Satellite
             key={asteroid.name}
             config={asteroid}
-            visible={view !== "landing"}
+            visible={view === "home"}
           />
         ) : (
           <Asteroid
             key={asteroid.name}
             config={asteroid}
-            visible={view !== "landing"}
+            visible={view === "home"}
           />
         ),
       )}
