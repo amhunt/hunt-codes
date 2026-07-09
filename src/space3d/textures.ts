@@ -201,7 +201,11 @@ const RSS_MARK_PATH =
   "909 24h-4.665c0-6.169-5.075-11.245-11.244-11.245V8.09c8.727 0 15.909 " +
   "7.184 15.909 15.91z";
 
-export type AsteroidLogo = "github" | "linkedin" | "blog";
+/** A simple play triangle (Material Design play arrow), in a 24x24
+ *  viewBox — the moon's "watch the video" badge. */
+const PLAY_MARK_PATH = "M8 5v14l11-7z";
+
+export type AsteroidLogo = "github" | "linkedin" | "blog" | "play";
 
 const LOGO_MARKS: Record<
   AsteroidLogo,
@@ -211,6 +215,7 @@ const LOGO_MARKS: Record<
   // The square marks are scaled down so their corners stay inside the disc
   linkedin: { path: LINKEDIN_MARK_PATH, color: "#0a66c2", scale: 0.6 },
   blog: { path: RSS_MARK_PATH, color: "#f26522", scale: 0.6 },
+  play: { path: PLAY_MARK_PATH, color: "#412596", scale: 0.85 },
 };
 
 /** White badge disc with a brand mark, transparent outside the disc —

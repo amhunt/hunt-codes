@@ -23,10 +23,11 @@ import { hoverState } from "./solarHover";
  * revealed once positioned.
  */
 
-/** Hover outline shared by every link body (Earth, asteroids, satellite):
- *  the body's projected silhouette, drawn by the 3D scene into these paths
- *  (viewBox matches the anchor box; pathLength normalizes the dash pulse). */
-const BodyOutline = ({ outlineId }: { outlineId: string }) => (
+/** Hover outline shared by every link body (Earth, the moon, asteroids,
+ *  satellite): the body's projected silhouette, drawn by the 3D scene into
+ *  these paths (viewBox matches the anchor box; pathLength normalizes the
+ *  dash pulse). */
+export const BodyOutline = ({ outlineId }: { outlineId: string }) => (
   <svg className="body-outline" viewBox="0 0 100 100" aria-hidden>
     <g id={outlineId}>
       <path className="body-outline-base" pathLength={100} />

@@ -4,6 +4,8 @@ import * as THREE from "three";
 import {
   ASTEROIDS,
   EARTH,
+  moonPosition,
+  MOON,
   planetPosition,
   rigState,
   type SolarPlanetConfig,
@@ -28,6 +30,10 @@ export const EARTH_ABOUT_RING_ID = "earth-about-ring";
 /** Group inside the /about ring holding Earth's hover-outline paths;
  *  Planet writes Earth's projected silhouette into every path under it. */
 export const EARTH_ABOUT_OUTLINE_ID = "earth-about-outline";
+/** The moon's video-link overlay on /about (rendered by Resume) and the
+ *  group holding its hover-outline paths (written by Moon). */
+export const MOON_VIDEO_LINK_ID = "moon-video-link";
+export const MOON_VIDEO_OUTLINE_ID = "moon-video-outline";
 export const asteroidAnchorId = (name: string) => `asteroid-link-${name}`;
 /** Group inside the anchor holding the hover-outline paths; Asteroid
  *  writes the projected silhouette into every path under it. */
@@ -63,6 +69,15 @@ const ANCHORS: BodyAnchorConfig[] = [
     // the letters ~27% clear of Earth's limb (1.3 grazed the surface)
     ringScale: 1.55,
     minSizePx: 140,
+    fadeInOnArrival: true,
+  },
+  {
+    // The moon's video link (the overlay only exists on /about)
+    domId: MOON_VIDEO_LINK_ID,
+    position: (t, out) => moonPosition(t, out),
+    radius: MOON.radius,
+    ringScale: 1.4,
+    minSizePx: 44,
     fadeInOnArrival: true,
   },
   ...ASTEROIDS.map(asteroidConfig),

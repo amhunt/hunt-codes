@@ -4,6 +4,7 @@ import { ArrowLeftCircle, Calendar } from "react-feather";
 import { useInView } from "react-intersection-observer";
 import { Link } from "react-router-dom";
 import useWindowSize from "useWindowSize";
+import ZipVideoMoon from "./ZipVideoMoon";
 
 const experienceItems = [
   {
@@ -72,6 +73,9 @@ const experienceItems = [
 
 const Resume = () => {
   const [opacity, setOpacity] = useState(false);
+  // The moon's video popover (ZipVideoMoon); while it plays, the résumé
+  // panel hides so only the stars remain behind the video
+  const [videoOpen, setVideoOpen] = useState(false);
   // Drives the Home link's slide: at rest the heading sits ~288px from
   // the viewport top on xl, so the -260px margin keeps it "in view" until
   // the user scrolls a few dozen px, then the link slides away
@@ -91,9 +95,13 @@ const Resume = () => {
 
   return (
     <main className="resume-container" style={{ opacity: opacity ? 1 : 0 }}>
+      {/* The moon doubles as the Zip brand-video link (overlay + popover) */}
+      <ZipVideoMoon open={videoOpen} onOpenChange={setVideoOpen} />
       {/* The link lives outside .resume-panel so the frosted background
           starts above the "About Me" heading, not around the link */}
-      <div className="resume-inner-container">
+      <div
+        className={cx("resume-inner-container", videoOpen && "video-hidden")}
+      >
         <Link
           className={cx(
             "back-to-home-link flex transition-transform items-center gap-4 mb-6 inverse ml-8 xl:sticky xl:top-[200px] xl:-ml-8",

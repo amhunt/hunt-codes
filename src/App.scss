@@ -938,7 +938,9 @@ a:hover {
 .asteroid-link:hover .body-outline,
 .asteroid-link:focus-visible .body-outline,
 .earth-about-ring:hover .body-outline,
-.earth-about-ring:focus-visible .body-outline {
+.earth-about-ring:focus-visible .body-outline,
+.moon-link:hover .body-outline,
+.moon-link:focus-visible .body-outline {
   opacity: 1;
 }
 
@@ -965,6 +967,110 @@ a:hover {
   border-radius: 50%;
   pointer-events: auto;
   cursor: pointer;
+}
+
+// The moon's video link on /about (ZipVideoMoon), glued to the moon by
+// BodyAnchors like the rest; z 5 lifts it above the résumé scroll
+// container (z 4) so it stays hoverable
+.moon-link {
+  position: fixed;
+  visibility: hidden;
+  opacity: 0;
+  transition: opacity 0.8s ease;
+  z-index: 5;
+  border-radius: 50%;
+  pointer-events: auto;
+  cursor: pointer;
+}
+
+// ─── Zip brand-video popover (ZipVideoMoon) ────────────────
+// While the video plays, `video-mode` on <body> hides everything except
+// the stars: the solar canvas, the name letters, the mode toggle, and
+// the music player/toggle. The résumé panel hides itself (.video-hidden).
+body.video-mode {
+  .solar-canvas,
+  .nameTitle,
+  .day-night-switch,
+  audio,
+  .music-toggle {
+    opacity: 0 !important;
+    pointer-events: none !important;
+  }
+}
+
+// Let the scene fade rather than pop when video-mode toggles it
+.solar-canvas {
+  transition: opacity 0.5s ease;
+}
+
+.resume-inner-container {
+  transition: opacity 0.4s ease;
+
+  &.video-hidden {
+    opacity: 0;
+    pointer-events: none;
+  }
+}
+
+.zip-video-layer {
+  // Transparent backdrop — the stars stay visible around the popover;
+  // clicking it closes the video
+  position: fixed;
+  inset: 0;
+  z-index: 6000;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.zip-video-popover {
+  position: relative;
+  width: 80vw;
+  animation: zipVideoIn 0.5s ease both;
+
+  video {
+    display: block;
+    width: 100%;
+    max-height: 82vh;
+    object-fit: contain;
+    background: #000;
+    border-radius: 12px;
+    box-shadow: 0 12px 48px rgba(0, 0, 0, 0.65);
+  }
+}
+
+.zip-video-close {
+  position: absolute;
+  top: -44px;
+  right: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 4px;
+  color: #e8e6f5;
+
+  &:hover {
+    color: #ffffff;
+  }
+}
+
+.App.day .zip-video-close {
+  color: #24203a;
+
+  &:hover {
+    color: #000000;
+  }
+}
+
+@keyframes zipVideoIn {
+  from {
+    opacity: 0;
+    transform: scale(0.96);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
 }
 
 .App-background_day {
