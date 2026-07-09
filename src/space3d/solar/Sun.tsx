@@ -207,7 +207,7 @@ export default function Sun({
   );
 
   useFrame(({ clock }, delta) => {
-    if (mesh.current) mesh.current.rotation.y += delta * 0.013;
+    if (mesh.current) mesh.current.rotation.y += delta * 0.0065;
     if (spotsMaterialRef.current) {
       // Slow morph between the two blotch patterns (~30s round trip)
       spotsMaterialRef.current.opacity =

@@ -115,14 +115,18 @@ export default function Asteroid({
       const step = visible
         ? delta / FADE_IN_SECONDS
         : -delta / FADE_OUT_SECONDS;
-      opacity.current = THREE.MathUtils.clamp(opacity.current + step, 0, 1);
-      group.current.visible = opacity.current > 0.005;
-      group.current.traverse((obj) => {
-        const material = (obj as THREE.Mesh).material;
-        if (material && !Array.isArray(material)) {
-          material.opacity = opacity.current;
-        }
-      });
+      const next = THREE.MathUtils.clamp(opacity.current + step, 0, 1);
+      // Only walk the material tree while the fade is actually moving
+      if (next !== opacity.current) {
+        opacity.current = next;
+        group.current.visible = next > 0.005;
+        group.current.traverse((obj) => {
+          const material = (obj as THREE.Mesh).material;
+          if (material && !Array.isArray(material)) {
+            material.opacity = next;
+          }
+        });
+      }
     }
     // Hover freezes the tumble (the outline below is cut from the frozen
     // pose, and a spinning rock under a static outline would look broken)

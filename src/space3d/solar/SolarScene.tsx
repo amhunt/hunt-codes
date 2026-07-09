@@ -74,8 +74,10 @@ const SolarScene = ({
         gl.domElement.style.pointerEvents = "none";
       }}
       camera={{ position: [0, 58, 0.01], fov: 55, near: 0.1, far: 1200 }}
-      dpr={[1, 2]}
-      gl={{ alpha: true, antialias: true }}
+      // Cap DPR at 1.5 (2x on retina was ~78% more pixels for little
+      // visible gain); keep MSAA — the sphere limbs do need it
+      dpr={[1, 1.5]}
+      gl={{ alpha: true, antialias: true, powerPreference: "high-performance" }}
     >
       <ambientLight intensity={0.14} />
       {/* From the home sun-perch the full glow would fill the frame and
