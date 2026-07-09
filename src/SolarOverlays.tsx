@@ -10,6 +10,7 @@ import {
 import {
   asteroidAnchorId,
   asteroidOutlineId,
+  EARTH_ABOUT_OUTLINE_ID,
   EARTH_ABOUT_RING_ID,
 } from "./space3d/solar/BodyAnchors";
 import { hoverState } from "./solarHover";
@@ -21,6 +22,18 @@ import { hoverState } from "./solarHover";
  * frame. Everything starts `visibility: hidden` (App.scss) and is
  * revealed once positioned.
  */
+
+/** Hover outline shared by every link body (Earth, asteroids, satellite):
+ *  the body's projected silhouette, drawn by the 3D scene into these paths
+ *  (viewBox matches the anchor box; pathLength normalizes the dash pulse). */
+const BodyOutline = ({ outlineId }: { outlineId: string }) => (
+  <svg className="body-outline" viewBox="0 0 100 100" aria-hidden>
+    <g id={outlineId}>
+      <path className="body-outline-base" pathLength={100} />
+      <path className="body-outline-pulse" pathLength={100} />
+    </g>
+  </svg>
+);
 
 const ASTEROID_LINKS = [
   {
@@ -69,7 +82,9 @@ const SolarOverlays = () => {
         onPointerLeave={() => {
           hoverState.earth = false;
         }}
-      />
+      >
+        <BodyOutline outlineId={EARTH_ABOUT_OUTLINE_ID} />
+      </Link>
       {ASTEROID_LINKS.map((link) => (
         <TooltipProvider key={link.name} delayDuration={100}>
           <Tooltip disableHoverableContent>
@@ -90,19 +105,7 @@ const SolarOverlays = () => {
                   }
                 }}
               >
-                {/* Hover outline: the rock's projected silhouette, drawn
-                    by Asteroid into these paths (viewBox matches the
-                    anchor box; pathLength normalizes the dash pulse) */}
-                <svg
-                  className="asteroid-outline"
-                  viewBox="0 0 100 100"
-                  aria-hidden
-                >
-                  <g id={asteroidOutlineId(link.name)}>
-                    <path className="asteroid-outline-base" pathLength={100} />
-                    <path className="asteroid-outline-pulse" pathLength={100} />
-                  </g>
-                </svg>
+                <BodyOutline outlineId={asteroidOutlineId(link.name)} />
               </a>
             </TooltipTrigger>
             <TooltipContent updatePositionStrategy="always">

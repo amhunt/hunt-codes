@@ -24,6 +24,7 @@ import {
   type SampledStar,
 } from "./starSampling";
 import { domToWorldX, domToWorldY, Z_STARS } from "./SpaceCanvas";
+import { starPanState } from "./starPan";
 
 /**
  * GPU star field. Replaces the legacy DOM/SVG stars (one element per star,
@@ -44,6 +45,10 @@ const DISCO_PERIOD_S = 8; // star-disco: 4s alternate = 8s round trip
 
 const HALO_FACTOR = 3; // sprite is 3x the dot diameter, for the glow halo
 
+// Extra wrap range beyond the viewport so big sprites drift fully
+// offscreen before re-entering on the far side instead of popping
+const PAN_WRAP_PAD_PX = 160;
+
 const vertexShader = /* glsl */ `
   attribute float aSize;
   attribute vec3 aColor;
@@ -53,6 +58,8 @@ const vertexShader = /* glsl */ `
   uniform float uTime;
   uniform float uPixelRatio;
   uniform float uMaxPointSize;
+  uniform vec2 uPan;
+  uniform vec2 uWrap;
   varying vec3 vColor;
   varying float vExtraHue;
 
@@ -69,9 +76,16 @@ const vertexShader = /* glsl */ `
     vExtraHue = extraHue;
     // tinycolor.brighten(n) adds n% of full white
     vColor = clamp(aColor + vec3(aBrighten * 0.01), 0.0, 1.0);
-    gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0);
+    // Camera-rotation parallax (starPan.ts): shift by the accumulated pan
+    // and wrap around the padded viewport so the field is endless. uWrap
+    // stays 0 for the text stars, which must hold their glyph positions.
+    vec3 pos = position;
+    if (uWrap.x > 0.5) {
+      pos.xy = mod(pos.xy + uPan + 0.5 * uWrap, uWrap) - 0.5 * uWrap;
+    }
+    gl_Position = projectionMatrix * modelViewMatrix * vec4(pos, 1.0);
     gl_PointSize = min(
-      aSize * 2.5 * ${HALO_FACTOR.toFixed(1)} * scale * uPixelRatio,
+      aSize * 1.5 * ${HALO_FACTOR.toFixed(1)} * scale * uPixelRatio,
       uMaxPointSize
     );
   }
@@ -138,6 +152,8 @@ const createStarMaterial = (glowColor: string, glowStrength: number) => {
       uMaxPointSize: { value: 256 },
       uGlowColor: { value: new THREE.Vector3(glow[0], glow[1], glow[2]) },
       uGlowStrength: { value: glowStrength },
+      uPan: { value: new THREE.Vector2() },
+      uWrap: { value: new THREE.Vector2() },
     },
   });
 };
@@ -193,10 +209,13 @@ const createStarGeometry = (
   };
 };
 
-/** Per-frame uniform updates + the GPU's max point-sprite size cap. */
+/** Per-frame uniform updates + the GPU's max point-sprite size cap.
+ *  `pansWithCamera` opts the material into the solar camera's rotation
+ *  parallax (background stars only — text stars hold their glyphs). */
 const useConfigureMaterial = (
   material: THREE.ShaderMaterial,
   opacityRef: React.MutableRefObject<number>,
+  pansWithCamera = false,
 ) => {
   const gl = useThree((s) => s.gl);
   useEffect(() => {
@@ -216,6 +235,16 @@ const useConfigureMaterial = (
       ((state.clock.elapsedTime / HUE_ROTATION_PERIOD_S) % 1) * Math.PI * 2;
     material.uniforms.uPixelRatio.value = state.gl.getPixelRatio();
     material.uniforms.uOpacity.value = opacityRef.current;
+    if (pansWithCamera) {
+      (material.uniforms.uPan.value as THREE.Vector2).set(
+        starPanState.x,
+        starPanState.y,
+      );
+      (material.uniforms.uWrap.value as THREE.Vector2).set(
+        state.size.width + PAN_WRAP_PAD_PX,
+        state.size.height + PAN_WRAP_PAD_PX,
+      );
+    }
   });
 };
 
@@ -258,7 +287,9 @@ const BackgroundStars = ({
     [],
   );
 
-  useConfigureMaterial(material, opacityRef);
+  // Background stars pan/wrap with the solar camera's rotation, so the
+  // sky turns with the co-rotating home and about views
+  useConfigureMaterial(material, opacityRef, true);
 
   useEffect(() => () => buffers.geometry.dispose(), [buffers]);
   useEffect(() => () => material.dispose(), [material]);

@@ -47,7 +47,15 @@ export const sunState = { scale: 1 };
  */
 export const rigState = { settled: true };
 
-const EARTH_ORBIT_SPEED = 0.09;
+/**
+ * Global tempo for the whole system: every orbit and self-spin below —
+ * planets, asteroids, the moon (and therefore the /about camera, which
+ * rides the moon's orbit) — scales together, preserving the relative
+ * motion that keeps the co-rotating asteroids frozen on screen.
+ */
+const SPEED_SCALE = 0.5;
+
+const EARTH_ORBIT_SPEED = 0.09 * SPEED_SCALE;
 export const PLANETS: SolarPlanetConfig[] = [
   {
     name: "Mercury",
@@ -56,34 +64,34 @@ export const PLANETS: SolarPlanetConfig[] = [
     orbitRadius: 7.5,
     orbitSpeed: EARTH_ORBIT_SPEED,
     orbitPhase: 0.6,
-    spinSpeed: 0.12,
+    spinSpeed: 0.12 * SPEED_SCALE,
   },
   {
     name: "Venus",
     kind: "venus",
     radius: 1.05,
     orbitRadius: 12,
-    orbitSpeed: 0.14,
+    orbitSpeed: 0.14 * SPEED_SCALE,
     orbitPhase: 2.4,
-    spinSpeed: -0.05,
+    spinSpeed: -0.05 * SPEED_SCALE,
   },
   {
     name: "Earth",
     kind: "earth",
     radius: 1.6,
     orbitRadius: 17.5,
-    orbitSpeed: 0.09,
+    orbitSpeed: EARTH_ORBIT_SPEED,
     orbitPhase: 4.2,
-    spinSpeed: 0.03,
+    spinSpeed: 0.03 * SPEED_SCALE,
   },
   {
     name: "Mars",
     kind: "mars",
     radius: 0.85,
     orbitRadius: 23.5,
-    orbitSpeed: 0.065,
+    orbitSpeed: 0.065 * SPEED_SCALE,
     orbitPhase: 1.3,
-    spinSpeed: 0.3,
+    spinSpeed: 0.3 * SPEED_SCALE,
   },
 ];
 
@@ -107,7 +115,7 @@ export const ASTEROIDS: SolarPlanetConfig[] = [
     orbitRadius: 4.2,
     orbitSpeed: EARTH.orbitSpeed,
     orbitPhase: EARTH.orbitPhase + 0.35,
-    spinSpeed: 0.2,
+    spinSpeed: 0.2 * SPEED_SCALE,
     yOffset: ASTEROID_Y,
     logo: "blog",
   },
@@ -120,7 +128,7 @@ export const ASTEROIDS: SolarPlanetConfig[] = [
     orbitRadius: 2.8,
     orbitSpeed: EARTH.orbitSpeed,
     orbitPhase: EARTH.orbitPhase - 0.7,
-    spinSpeed: -0.25,
+    spinSpeed: -0.25 * SPEED_SCALE,
     yOffset: ASTEROID_Y,
   },
   {
@@ -130,7 +138,7 @@ export const ASTEROIDS: SolarPlanetConfig[] = [
     orbitRadius: 2.4,
     orbitSpeed: EARTH.orbitSpeed,
     orbitPhase: EARTH.orbitPhase - 1.15,
-    spinSpeed: 0.3,
+    spinSpeed: 0.3 * SPEED_SCALE,
     logo: "linkedin",
     yOffset: ASTEROID_Y,
   },
@@ -142,9 +150,9 @@ export const MOON = {
   /** orbit radius around Earth's center */
   orbitRadius: 4,
   /** radians per second — slow, so the /about camera drifts gently */
-  orbitSpeed: 0.18,
+  orbitSpeed: 0.18 * SPEED_SCALE,
   orbitPhase: 1.1,
-  spinSpeed: 0.05,
+  spinSpeed: 0.05 * SPEED_SCALE,
 };
 
 /** Position of a planet at elapsed time t (seconds). */
