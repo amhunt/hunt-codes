@@ -1,6 +1,7 @@
 import React, { useEffect, useMemo, useRef } from "react";
 import { useFrame } from "@react-three/fiber";
 import * as THREE from "three";
+import { DecalGeometry } from "three/examples/jsm/geometries/DecalGeometry.js";
 
 import { EARTH, planetPosition, type SolarPlanetConfig } from "./constants";
 import { asteroidOutlineId } from "./BodyAnchors";
@@ -22,6 +23,10 @@ import { hoverState } from "../../solarHover";
  * slow roll about that leg axis — the cone spins in place, so the legs
  * always point right. The beacon hangs off the rig, not the rolling
  * body, so it stays on top of the head.
+ *
+ * The GitHub badge is a pair of decals projected onto opposite sides of
+ * the sphere (the same sticker treatment as the asteroids), glued to the
+ * rolling body so the mark turns with the spin.
  */
 
 const FADE_IN_SECONDS = 3;
@@ -32,13 +37,14 @@ const LEG_TILT = 0.32; // radians each leg splays off the cone axis
 const BLINK_PERIOD_SECONDS = 1.2;
 const BLINK_ON_FRACTION = 0.55;
 const HOVER_EMISSIVE = 0.9;
+/** Slow the body roll well below the config spin (a stately tumble) */
+const ROLL_SPEED_SCALE = 0.35;
 
 const Z_AXIS = new THREE.Vector3(0, 0, 1);
 const Y_AXIS = new THREE.Vector3(0, 1, 0);
 const UP = new THREE.Vector3(0, 1, 0);
 const earthPos = new THREE.Vector3();
 const legsDir = new THREE.Vector3();
-const camDir = new THREE.Vector3();
 
 export default function Satellite({
   config,
@@ -51,7 +57,6 @@ export default function Satellite({
   const rig = useRef<THREE.Group>(null); // aims the leg cone screen-right
   const body = useRef<THREE.Group>(null); // rolls about the leg axis
   const bulb = useRef<THREE.Mesh>(null);
-  const badge = useRef<THREE.Mesh>(null);
   const opacity = useRef(visible ? 1 : 0);
   const roll = useRef(0);
 
@@ -80,10 +85,14 @@ export default function Satellite({
         color: "#ff5252",
         transparent: true,
       }),
+      // Same decal treatment as the asteroids: unlit so the mark stays
+      // legible on the dark side, polygonOffset floats it off the faces
       badge: new THREE.MeshBasicMaterial({
         map: createLogoBadgeTexture("github"),
         transparent: true,
-        alphaTest: 0.5,
+        depthWrite: false,
+        polygonOffset: true,
+        polygonOffsetFactor: -4,
       }),
     }),
     [],
@@ -94,6 +103,42 @@ export default function Satellite({
       Object.values(materials).forEach((material) => material.dispose());
     },
     [materials],
+  );
+
+  const bodyGeometry = useMemo(
+    () => new THREE.SphereGeometry(bodyRadius, 24, 16),
+    [bodyRadius],
+  );
+  useEffect(() => () => bodyGeometry.dispose(), [bodyGeometry]);
+
+  // Badge decals on opposite sides of the sphere, perpendicular to the
+  // roll axis (local Z, the leg cone) so the marks sweep past the camera
+  // as the body rolls — one on each side, like the asteroid stickers.
+  const badgeGeometries = useMemo(() => {
+    const target = new THREE.Mesh(bodyGeometry);
+    const size = new THREE.Vector3(
+      bodyRadius * 1.4,
+      bodyRadius * 1.4,
+      bodyRadius * 1.1,
+    );
+    return [
+      new DecalGeometry(
+        target,
+        new THREE.Vector3(bodyRadius, 0, 0),
+        new THREE.Euler(0, Math.PI / 2, 0),
+        size,
+      ),
+      new DecalGeometry(
+        target,
+        new THREE.Vector3(-bodyRadius, 0, 0),
+        new THREE.Euler(0, -Math.PI / 2, 0),
+        size,
+      ),
+    ];
+  }, [bodyGeometry, bodyRadius]);
+  useEffect(
+    () => () => badgeGeometries.forEach((g) => g.dispose()),
+    [badgeGeometries],
   );
 
   // The antenna cone: thin rods splayed LEG_TILT off local +Z, evenly
@@ -149,8 +194,11 @@ export default function Satellite({
 
     // Slow roll about the leg axis — the cone spins in place, legs never
     // leave screen-right. Frozen while hovered, like the asteroid spins.
+    // The badge decals are children of the body, so they roll along.
     if (body.current) {
-      if (!hovered) roll.current += delta * Math.abs(config.spinSpeed);
+      if (!hovered) {
+        roll.current += delta * Math.abs(config.spinSpeed) * ROLL_SPEED_SCALE;
+      }
       body.current.rotation.z = roll.current;
     }
 
@@ -158,13 +206,6 @@ export default function Satellite({
     if (bulb.current) {
       bulb.current.visible =
         t % BLINK_PERIOD_SECONDS < BLINK_PERIOD_SECONDS * BLINK_ON_FRACTION;
-    }
-
-    // GitHub badge rides the camera-facing side of the sphere, upright
-    if (badge.current && group.current) {
-      camDir.copy(camera.position).sub(group.current.position).normalize();
-      badge.current.position.copy(camDir).multiplyScalar(bodyRadius * 1.12);
-      badge.current.quaternion.copy(camera.quaternion);
     }
 
     // Hover: wash the metal out toward white (badge/bulb unaffected)
@@ -188,9 +229,11 @@ export default function Satellite({
     <group ref={group}>
       <group ref={rig}>
         <group ref={body}>
-          <mesh material={materials.body}>
-            <sphereGeometry args={[bodyRadius, 24, 16]} />
-          </mesh>
+          <mesh material={materials.body} geometry={bodyGeometry} />
+          {/* GitHub badge stickers, one per side, rolling with the body */}
+          {badgeGeometries.map((badgeGeometry, i) => (
+            <mesh key={i} geometry={badgeGeometry} material={materials.badge} />
+          ))}
           {legs.map((leg, i) => (
             <mesh
               key={i}
@@ -215,9 +258,6 @@ export default function Satellite({
           <sphereGeometry args={[bodyRadius * 0.15, 12, 8]} />
         </mesh>
       </group>
-      <mesh ref={badge} material={materials.badge}>
-        <planeGeometry args={[bodyRadius * 1.15, bodyRadius * 1.15]} />
-      </mesh>
     </group>
   );
 }
