@@ -147,22 +147,8 @@ export function createPlanetTexture(kind: PlanetKind): THREE.CanvasTexture {
   return asTexture(canvas);
 }
 
-/** Mottled golden sun surface (unlit; pair with the glow billboard). */
-export function createSunTexture(): THREE.CanvasTexture {
-  const w = 512;
-  const h = 256;
-  const canvas = createCanvas(w, h);
-  const ctx = canvas.getContext("2d");
-  if (!ctx) return asTexture(canvas);
-
-  ctx.fillStyle = "#ffb824";
-  ctx.fillRect(0, 0, w, h);
-  drawBlotches(ctx, w, h, 240, 6, 40, ["#ff8c00", "#ffd75e", "#ff6a00"], 0.35);
-  drawBlotches(ctx, w, h, 300, 2, 10, ["#fff3c4"], 0.3);
-  return asTexture(canvas);
-}
-
-/** Soft warm radial glow for the sun's corona billboard. */
+/** Soft warm radial glow for the sun's wide ambience billboard (the
+ *  animated surface + flare corona are shaders — see solar/sunShaders). */
 export function createSunGlowTexture(): THREE.CanvasTexture {
   const size = 256;
   const canvas = createCanvas(size, size);

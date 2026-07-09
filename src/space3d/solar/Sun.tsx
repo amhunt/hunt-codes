@@ -5,7 +5,11 @@ import * as THREE from "three";
 import { SUN_RADIUS, sunState } from "./constants";
 import { SUN_SIZE, SUN_SURFACE_RADIUS } from "../../landingScene";
 import { hoverState } from "../../solarHover";
-import { createSunGlowTexture, createSunTexture } from "../textures";
+import { createSunGlowTexture } from "../textures";
+import {
+  createSunCoronaMaterial,
+  createSunSurfaceMaterial,
+} from "./sunShaders";
 import {
   createLetterPlane,
   measureCharWidths,
@@ -15,21 +19,27 @@ import {
 } from "./curvedText";
 
 /**
- * The sun, ported from hunt-codes-3: a slowly rotating sphere with the
- * mottled golden canvas texture, a soft glow sprite (billboarded, so the
- * corona reads from any camera angle), and the point light that lights
- * the planets. The whole group eases toward a per-view scale and
- * publishes the rendered scale so the DOM rings can track it; the glow
- * sprite eases toward a per-view size too — from the home sun-perch the
- * full 6x glow would span the whole frame and wash out the stars, so
- * that view shrinks it to hug the limb.
+ * The sun: a slowly rotating sphere with an animated fbm shader surface
+ * (convection cells and dark spots that drift, grow and dissolve — see
+ * sunShaders.ts), a flare corona billboard whose rim hugs a fixed ~24 CSS
+ * px past the projected limb with traveling eruption lobes, a soft wide
+ * glow sprite for distant ambience, and the point light that lights the
+ * planets. The whole group eases toward a per-view scale and publishes
+ * the rendered scale so the DOM rings can track it; the glow sprite eases
+ * toward a per-view size too — from the home sun-perch the full 6x glow
+ * would span the whole frame and wash out the stars, so that view shrinks
+ * it to hug the limb.
  */
-// Surface brightness multipliers (meshBasicMaterial.color, toneMapped
-// off, so components >1 push the texture toward white). Day mode reads
-// noticeably brighter/whiter against the light gradient; night gets a
-// subtler lift.
+// Surface brightness multipliers (shader uTint; components >1 push the
+// palette toward white). Day mode reads noticeably brighter/whiter
+// against the light gradient; night gets a subtler lift.
 const DAY_TINT = new THREE.Color(1.55, 1.55, 1.7);
 const NIGHT_TINT = new THREE.Color(1.12, 1.12, 1.15);
+
+/** How far the flare corona's nominal rim extends past the limb, CSS px */
+const FLARE_RING_PX = 24;
+/** Corona plane half-size, in sun radii (must fit the biggest flare) */
+const CORONA_HALF_RADII = 2.4;
 const ENTER_TEXT = "ENTER";
 const ENTER_FONT_SIZE_SVG = 22;
 /** Enlarge the curved "ENTER" label relative to its SVG-derived size */
@@ -188,38 +198,39 @@ export default function Sun({
   const group = useRef<THREE.Group>(null);
   const enterScaler = useRef<THREE.Group>(null);
   const mesh = useRef<THREE.Mesh>(null);
+  const corona = useRef<THREE.Mesh>(null);
   const glow = useRef<THREE.Sprite>(null);
-  const materialRef = useRef<THREE.MeshBasicMaterial>(null);
-  const spotsMaterialRef = useRef<THREE.MeshBasicMaterial>(null);
-  const texture = useMemo(() => createSunTexture(), []);
-  // A second, independently-random blotch layer: crossfading it in and
-  // out over the base makes the surface spots slowly shift
-  const spotsTexture = useMemo(() => createSunTexture(), []);
+  const surfaceMaterial = useMemo(() => createSunSurfaceMaterial(), []);
+  const coronaMaterial = useMemo(
+    // Disc radius in plane units: the plane's half-size is 1
+    () => createSunCoronaMaterial(1 / CORONA_HALF_RADII),
+    [],
+  );
   const glowTexture = useMemo(() => createSunGlowTexture(), []);
 
   useEffect(
     () => () => {
-      texture.dispose();
-      spotsTexture.dispose();
+      surfaceMaterial.dispose();
+      coronaMaterial.dispose();
       glowTexture.dispose();
     },
-    [texture, spotsTexture, glowTexture],
+    [surfaceMaterial, coronaMaterial, glowTexture],
   );
 
-  useFrame(({ clock }, delta) => {
+  useFrame(({ clock, camera, size }, delta) => {
+    const t = clock.elapsedTime;
     if (mesh.current) mesh.current.rotation.y += delta * 0.0065;
-    if (spotsMaterialRef.current) {
-      // Slow morph between the two blotch patterns (~30s round trip)
-      spotsMaterialRef.current.opacity =
-        0.5 + 0.5 * Math.sin((clock.elapsedTime * Math.PI * 2) / 30);
-    }
+    surfaceMaterial.uniforms.uTime.value = t;
+    coronaMaterial.uniforms.uTime.value = t;
+
     const ease = Math.min(1, delta * 2.5);
+    let scale = 1;
     if (group.current) {
       const current = group.current.scale.x;
-      const next = current + (targetScale - current) * ease;
-      group.current.scale.setScalar(next);
-      sunState.scale = next;
-      enterScaler.current?.scale.setScalar(next);
+      scale = current + (targetScale - current) * ease;
+      group.current.scale.setScalar(scale);
+      sunState.scale = scale;
+      enterScaler.current?.scale.setScalar(scale);
     }
     if (glow.current) {
       // Hovering the ENTER link (or the sun itself) swells the glow
@@ -228,13 +239,31 @@ export default function Sun({
       const next = current + (target - current) * ease;
       glow.current.scale.set(next, next, 1);
     }
-    if (materialRef.current) {
-      // Ease the brightness so the mode toggle doesn't pop; the spot
-      // layer follows the same tint or the crossfade would pulse dark
-      materialRef.current.color.lerp(isNightMode ? NIGHT_TINT : DAY_TINT, ease);
-      if (spotsMaterialRef.current) {
-        spotsMaterialRef.current.color.copy(materialRef.current.color);
-      }
+    // Ease the brightness so the mode toggle doesn't pop
+    (surfaceMaterial.uniforms.uTint.value as THREE.Color).lerp(
+      isNightMode ? NIGHT_TINT : DAY_TINT,
+      ease,
+    );
+
+    // Flare corona: billboard it, and size its nominal rim to a fixed
+    // screen width (~24 CSS px past the limb) regardless of camera
+    // distance — snug on the close home view, still delicate from the
+    // top-down landing view.
+    if (corona.current) {
+      corona.current.quaternion.copy(camera.quaternion);
+      const persp = camera as THREE.PerspectiveCamera;
+      const worldPerPx =
+        (2 * persp.position.length() * Math.tan((persp.fov * Math.PI) / 360)) /
+        size.height;
+      coronaMaterial.uniforms.uRingW.value = THREE.MathUtils.clamp(
+        (FLARE_RING_PX * worldPerPx) / (CORONA_HALF_RADII * SUN_RADIUS * scale),
+        0.004,
+        0.12,
+      );
+      // Flares surge a touch while the sun/ENTER link is hovered
+      const intensity = coronaMaterial.uniforms.uIntensity;
+      intensity.value +=
+        ((hoverState.sun ? 1.45 : 1) - (intensity.value as number)) * ease;
     }
   });
 
@@ -243,25 +272,20 @@ export default function Sun({
       <group ref={group}>
         <mesh ref={mesh}>
           <sphereGeometry args={[SUN_RADIUS, 64, 64]} />
-          <meshBasicMaterial
-            ref={materialRef}
-            map={texture}
-            toneMapped={false}
-          />
-          {/* Crossfading spot layer, drawn just over the base surface */}
-          <mesh scale={1.001} renderOrder={1}>
-            <sphereGeometry args={[SUN_RADIUS, 64, 64]} />
-            <meshBasicMaterial
-              ref={spotsMaterialRef}
-              map={spotsTexture}
-              toneMapped={false}
-              transparent
-              opacity={0}
-              depthWrite={false}
-            />
-          </mesh>
+          <primitive object={surfaceMaterial} attach="material" />
         </mesh>
-        {/* soft corona billboard */}
+        {/* Flare corona billboard: an animated rim of eruptions hugging
+            the limb (depth-tested, so the sphere hides its inner half) */}
+        <mesh ref={corona} renderOrder={2}>
+          <planeGeometry
+            args={[
+              SUN_RADIUS * 2 * CORONA_HALF_RADII,
+              SUN_RADIUS * 2 * CORONA_HALF_RADII,
+            ]}
+          />
+          <primitive object={coronaMaterial} attach="material" />
+        </mesh>
+        {/* soft wide glow billboard, for ambience at a distance */}
         <sprite ref={glow} scale={[SUN_RADIUS * 6, SUN_RADIUS * 6, 1]}>
           <spriteMaterial
             map={glowTexture}
