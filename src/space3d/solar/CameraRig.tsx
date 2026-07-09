@@ -3,6 +3,7 @@ import { useFrame } from "@react-three/fiber";
 import * as THREE from "three";
 
 import { EARTH, moonPosition, planetPosition, rigState } from "./constants";
+import { starPanState } from "../starPan";
 
 /**
  * Camera choreography, ported from hunt-codes-3. Landing hovers straight
@@ -78,6 +79,8 @@ const moonDir = new THREE.Vector3();
 const side = new THREE.Vector3();
 const goalQuat = new THREE.Quaternion();
 const lookMatrix = new THREE.Matrix4();
+const oldForward = new THREE.Vector3();
+const invQuat = new THREE.Quaternion();
 
 const easeInOutCubic = (x: number) =>
   x < 0.5 ? 4 * x * x * x : 1 - Math.pow(-2 * x + 2, 3) / 2;
@@ -167,6 +170,7 @@ export default function CameraRig({ view }: { view: SolarView }) {
   const transitionStart = useRef(-Infinity);
   const fromPos = useRef(LANDING_POS.clone());
   const fromQuat = useRef(new THREE.Quaternion());
+  const prevQuat = useRef<THREE.Quaternion | null>(null);
 
   useFrame(({ camera, clock, size }) => {
     const t = clock.elapsedTime;
@@ -198,6 +202,27 @@ export default function CameraRig({ view }: { view: SolarView }) {
       // fully arrived: track the (possibly moving) goal exactly
       camera.position.copy(goalPos);
       camera.lookAt(goalLook);
+    }
+
+    // Star parallax: fold this frame's camera rotation into a pixel-space
+    // pan (starPan.ts) by measuring where a distant point along LAST
+    // frame's forward lands in the new camera frame. Delta-based, so it's
+    // smooth through swoops, exact for the slow co-rotation on the home
+    // and about perches, and immune to the straight-down landing pose
+    // (where absolute yaw/pitch are degenerate).
+    if (prevQuat.current === null) {
+      prevQuat.current = camera.quaternion.clone();
+    } else if (!camera.quaternion.equals(prevQuat.current)) {
+      const persp = camera as THREE.PerspectiveCamera;
+      oldForward.set(0, 0, -1).applyQuaternion(prevQuat.current);
+      invQuat.copy(camera.quaternion).invert();
+      oldForward.applyQuaternion(invQuat); // in current camera space
+      if (oldForward.z < -0.1) {
+        const focalPx = size.height / 2 / Math.tan((persp.fov * Math.PI) / 360);
+        starPanState.x += (oldForward.x / -oldForward.z) * focalPx;
+        starPanState.y += (oldForward.y / -oldForward.z) * focalPx;
+      }
+      prevQuat.current.copy(camera.quaternion);
     }
   });
 
