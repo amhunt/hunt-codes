@@ -24,9 +24,9 @@ import { hoverState } from "../../solarHover";
  * always point right. The beacon hangs off the rig, not the rolling
  * body, so it stays on top of the head.
  *
- * The GitHub badge is a pair of decals projected onto opposite sides of
- * the sphere (the same sticker treatment as the asteroids), glued to the
- * rolling body so the mark turns with the spin.
+ * The GitHub badge is a trio of decals evenly spaced around the sphere
+ * (the same sticker treatment as the asteroids), glued to the rolling
+ * body so the marks turn with the spin.
  */
 
 const FADE_IN_SECONDS = 3;
@@ -39,6 +39,8 @@ const BLINK_ON_FRACTION = 0.55;
 const HOVER_EMISSIVE = 0.9;
 /** Slow the body roll well below the config spin (a stately tumble) */
 const ROLL_SPEED_SCALE = 0.35;
+/** Badges every 120° around the roll circumference */
+const BADGE_ANGLES = [0, (2 * Math.PI) / 3, (4 * Math.PI) / 3];
 
 const Z_AXIS = new THREE.Vector3(0, 0, 1);
 const Y_AXIS = new THREE.Vector3(0, 1, 0);
@@ -111,9 +113,12 @@ export default function Satellite({
   );
   useEffect(() => () => bodyGeometry.dispose(), [bodyGeometry]);
 
-  // Badge decals on opposite sides of the sphere, perpendicular to the
-  // roll axis (local Z, the leg cone) so the marks sweep past the camera
-  // as the body rolls — one on each side, like the asteroid stickers.
+  // Badge decals evenly spaced around the roll circumference (the plane
+  // perpendicular to local Z, the leg cone) so a mark sweeps past the
+  // camera every third of a roll. Because each projector is the same base
+  // pose spun about the roll axis, ALL badges show the same orientation
+  // at the moment they face the camera — and the unflipped base reads
+  // upside down there, so the base pose carries a 180° texture roll.
   const badgeGeometries = useMemo(() => {
     const target = new THREE.Mesh(bodyGeometry);
     const size = new THREE.Vector3(
@@ -121,24 +126,25 @@ export default function Satellite({
       bodyRadius * 1.4,
       bodyRadius * 1.1,
     );
-    return [
-      new DecalGeometry(
+    // Look from +X toward the center, texture rolled 180°
+    const basePose = new THREE.Quaternion()
+      .setFromAxisAngle(Y_AXIS, Math.PI / 2)
+      .multiply(new THREE.Quaternion().setFromAxisAngle(Z_AXIS, Math.PI));
+    return BADGE_ANGLES.map((angle) => {
+      const pose = new THREE.Quaternion()
+        .setFromAxisAngle(Z_AXIS, angle)
+        .multiply(basePose);
+      return new DecalGeometry(
         target,
-        new THREE.Vector3(bodyRadius, 0, 0),
-        new THREE.Euler(0, Math.PI / 2, 0),
+        new THREE.Vector3(
+          Math.cos(angle) * bodyRadius,
+          Math.sin(angle) * bodyRadius,
+          0,
+        ),
+        new THREE.Euler().setFromQuaternion(pose),
         size,
-      ),
-      // The backside badge is projected upside down (the extra Z roll):
-      // it comes around half a roll after the front one, so flipping it
-      // makes BOTH marks read right-side up at the moment they face the
-      // camera.
-      new DecalGeometry(
-        target,
-        new THREE.Vector3(-bodyRadius, 0, 0),
-        new THREE.Euler(0, -Math.PI / 2, Math.PI),
-        size,
-      ),
-    ];
+      );
+    });
   }, [bodyGeometry, bodyRadius]);
   useEffect(
     () => () => badgeGeometries.forEach((g) => g.dispose()),
