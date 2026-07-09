@@ -136,7 +136,11 @@ const CORONA_VERTEX = /* glsl */ `
 
 const CORONA_FRAGMENT = /* glsl */ `
   uniform float uTime;
-  uniform float uDiscR;      // sun disc radius, plane units (half-size = 1)
+  // The sun's projected SILHOUETTE radius mapped onto the billboard
+  // plane, plane units (half-size = 1) — written per frame by Sun, since
+  // up close the silhouette appears larger than the sphere radius at the
+  // plane's depth
+  uniform float uDiscR;
   uniform float uRingW;      // nominal ring width, plane units
   uniform float uIntensity;
   uniform vec3 uColorInner;
@@ -187,7 +191,7 @@ export function createSunCoronaMaterial(
     blending: THREE.AdditiveBlending,
     uniforms: {
       uTime: { value: 0 },
-      uDiscR: { value: discRPlane },
+      uDiscR: { value: discRPlane }, // pre-first-frame placeholder
       uRingW: { value: 0.02 }, // written per frame (screen-space target)
       uIntensity: { value: 1 },
       uColorInner: { value: new THREE.Color("#ffd27a") },
