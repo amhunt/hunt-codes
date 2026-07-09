@@ -18,11 +18,12 @@ import { hoverState } from "../../solarHover";
  * BodyAnchors via the same planetPosition() the mesh uses, so the two
  * can't drift apart.
  *
- * `config.logo` projects a brand badge onto two opposite sides of the
- * rock's surface (DecalGeometry clips the sticker to the mesh, so it
- * follows the lumps and spins with them). Logo rocks spin about the
- * world-vertical axis only — the decals' texture-up stays world-up, so
- * the mark always reads (approximately) right-side up as it pans by.
+ * `config.logo` projects a brand badge onto three spots evenly spaced
+ * around the rock's spin circumference (DecalGeometry clips the sticker
+ * to the mesh, so it follows the lumps and spins with them). Logo rocks
+ * spin about the world-vertical axis only — the decals' texture-up stays
+ * world-up, so the mark always reads (approximately) right-side up as it
+ * pans by.
  *
  * `visible` fades the whole rock (materials' opacity eased per frame):
  * the asteroids are hidden in the landing view and fade in during the
@@ -30,6 +31,8 @@ import { hoverState } from "../../solarHover";
  */
 const FADE_IN_SECONDS = 3;
 const FADE_OUT_SECONDS = 1;
+/** Badge stickers every 120° around the yaw circumference */
+const BADGE_YAWS = [0, (2 * Math.PI) / 3, (4 * Math.PI) / 3];
 
 export default function Asteroid({
   config,
@@ -86,30 +89,29 @@ export default function Asteroid({
   }, [config.radius]);
   useEffect(() => () => geometry.dispose(), [geometry]);
 
-  // Project the badge onto the surface from +z and -z. DecalGeometry wants
-  // a mesh to shoot at; an identity-transform temp mesh keeps the decal
-  // vertices in the rock's local space, so parenting the decals under the
-  // spinning mesh keeps them glued to the lumps they were cut from. The
-  // box is sized to swallow the full lump range (~0.78r..1.23r).
+  // Project the badge onto the surface at three spots evenly spaced
+  // around the spin circumference (the rock yaws about local Y, so the
+  // marks sweep past the camera every third of a turn). DecalGeometry
+  // wants a mesh to shoot at; an identity-transform temp mesh keeps the
+  // decal vertices in the rock's local space, so parenting the decals
+  // under the spinning mesh keeps them glued to the lumps they were cut
+  // from. Stickers are sized so neighbors 120° apart don't overlap (each
+  // wraps ~±49°), and the box depth swallows the lump range
+  // (~0.78r..1.23r).
   const decalGeometries = useMemo(() => {
     if (!config.logo) return null;
     const r = config.radius;
     const target = new THREE.Mesh(geometry);
-    const size = new THREE.Vector3(r * 1.82, r * 1.82, r * 1.6);
-    return [
-      new DecalGeometry(
-        target,
-        new THREE.Vector3(0, 0, r),
-        new THREE.Euler(0, 0, 0),
-        size,
-      ),
-      new DecalGeometry(
-        target,
-        new THREE.Vector3(0, 0, -r),
-        new THREE.Euler(0, Math.PI, 0),
-        size,
-      ),
-    ];
+    const size = new THREE.Vector3(r * 1.5, r * 1.5, r * 1.6);
+    return BADGE_YAWS.map(
+      (yaw) =>
+        new DecalGeometry(
+          target,
+          new THREE.Vector3(Math.sin(yaw) * r, 0, Math.cos(yaw) * r),
+          new THREE.Euler(0, yaw, 0),
+          size,
+        ),
+    );
   }, [config.logo, geometry, config.radius]);
   useEffect(
     () => () => decalGeometries?.forEach((g) => g.dispose()),
