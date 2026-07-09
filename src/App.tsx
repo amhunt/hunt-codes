@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
 import cx from "classnames";
 import "./App.scss";
@@ -10,31 +10,27 @@ import AppBackground from "AppBackground";
 import DayNightSwitch from "DayNightSwitch";
 import Landing from "Landing";
 
-// Needed to get hover state on individual chars
-const andrewHunt = "andrewhunt";
-const nameArr: string[] = [];
-for (const c of andrewHunt) {
-  nameArr.push(c);
-}
-
-// Pause audio when page is hidden via visibilitychange event listener
+// Pause audio when the page is hidden; resume on return if it was playing.
+// The flag lives in a ref (not a plain `let`) so it survives re-renders —
+// otherwise the "was playing" state would reset every render and playback
+// would never resume.
 const usePauseAudioOnHideEventListener = () => {
-  let playingOnHide = false;
-
-  const handleVisibilityChange = useCallback(() => {
-    const audio = document.querySelector("audio");
-    if (!audio) return;
-    if (document.hidden) {
-      playingOnHide = !audio.paused;
-      audio.pause();
-    } else if (playingOnHide) {
-      // Page became visible again - resume playing if audio was "playing on hide"
-      // eslint-disable-next-line -- TODO: rm this comment and fix the lint error
-      audio.play();
-    }
-  }, []);
+  const playingOnHide = useRef(false);
 
   useEffect(() => {
+    const handleVisibilityChange = () => {
+      const audio = document.querySelector("audio");
+      if (!audio) return;
+      if (document.hidden) {
+        playingOnHide.current = !audio.paused;
+        audio.pause();
+      } else if (playingOnHide.current) {
+        // Resume if it was playing when the page was hidden. Playback can
+        // still be denied by autoplay policies — the visible controls remain
+        // the fallback.
+        void audio.play().catch(() => {});
+      }
+    };
     document.addEventListener("visibilitychange", handleVisibilityChange, {
       passive: true,
     });
@@ -55,7 +51,8 @@ const App = () => {
   useEffect(() => {
     // eslint-disable-next-line -- TODO: rm this comment and fix the lint error
     console.log("bro what r u doing in the console...");
-    setTimeout(() => setShowBridge(true), 1500);
+    const timer = setTimeout(() => setShowBridge(true), 1500);
+    return () => clearTimeout(timer);
   }, []);
 
   return (

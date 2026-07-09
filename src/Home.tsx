@@ -28,7 +28,9 @@ const typedOptions = {
   autoInsertCss: false,
 };
 
-const isChrome = navigator.userAgent.includes("Chrome");
+// Chromium-based browsers (Chrome, Edge, Brave, Opera) all include "Chrome"
+// in their UA, so this matches the whole family
+const isChromium = navigator.userAgent.includes("Chrome");
 
 const Home = () => {
   const [logoOpacity, setLogoOpacity] = useState(0);
@@ -53,7 +55,7 @@ const Home = () => {
 
   const [copied, setCopied] = useState(false);
   const [copyTooltipOpen, setCopyTooltipOpen] = useState(false);
-  const copyTriggerRef = useRef<HTMLAnchorElement>(null);
+  const copyTriggerRef = useRef<HTMLButtonElement>(null);
   const pinCopyTooltipOpen = useRef(false);
 
   const pinCopyTooltip = useCallback(() => {
@@ -104,7 +106,9 @@ const Home = () => {
         <div className="hoverableHomeItem justify-between gap-6">
           {!isSmall && (
             <div className="max-w-[300px] text-left text-lg font-bold">
-              Frontend Engineer based in <s>SF</s> NYC
+              Frontend Engineer based in{" "}
+              <s className="opacity-70 decoration-[#ff6b6b] decoration-2">SF</s>{" "}
+              NYC
             </div>
           )}
           <div className="flex items-center gap-1">
@@ -113,7 +117,7 @@ const Home = () => {
               target="_blank"
               rel="noopener noreferrer"
               href="https://www.linkedin.com/in/andrewmhunt/"
-              className="flex size-8 items-center justify-center rounded-full p-1 transition-colors hover:bg-[#5efffc57]"
+              className="flex size-11 items-center justify-center rounded-full p-1 transition-colors hover:bg-[#5efffc57]"
             >
               <Linkedin size={20} />
             </a>
@@ -122,7 +126,7 @@ const Home = () => {
               target="_blank"
               rel="noopener noreferrer"
               href="https://www.github.com/amhunt"
-              className="flex size-8 items-center justify-center rounded-full p-1 transition-colors hover:bg-[#5efffc57]"
+              className="flex size-11 items-center justify-center rounded-full p-1 transition-colors hover:bg-[#5efffc57]"
             >
               <GitHub size={20} />
             </a>
@@ -132,7 +136,7 @@ const Home = () => {
                   <Link
                     aria-label="SVG Studio"
                     to="/draw"
-                    className="flex size-8 items-center justify-center rounded-full p-1 transition-colors hover:bg-[#5efffc57]"
+                    className="flex size-11 items-center justify-center rounded-full p-1 transition-colors hover:bg-[#5efffc57]"
                   >
                     <Wand2 size={20} />
                   </Link>
@@ -153,23 +157,16 @@ const Home = () => {
                 onOpenChange={handleCopyTooltipOpenChange}
               >
                 <TooltipTrigger asChild>
-                  <a
+                  <button
+                    type="button"
                     ref={copyTriggerRef}
-                    aria-label="Copy email address"
-                    aria-description="andrew+in@hunt.codes"
-                    href="#"
-                    onPointerDown={(e) => {
-                      e.preventDefault();
-                      pinCopyTooltip();
-                    }}
-                    onClick={(e) => {
-                      e.preventDefault();
-                      void handleCopy();
-                    }}
-                    className="flex size-8 items-center justify-center rounded-full p-1 transition-colors hover:bg-[#5efffc57]"
+                    aria-label="Copy email address andrew@hunt.codes"
+                    onPointerDown={() => pinCopyTooltip()}
+                    onClick={() => void handleCopy()}
+                    className="flex size-11 items-center justify-center rounded-full p-1 transition-colors hover:bg-[#5efffc57]"
                   >
                     <Mail size={20} />
-                  </a>
+                  </button>
                 </TooltipTrigger>
                 <TooltipContent
                   onPointerDownOutside={(e) => e.preventDefault()}
@@ -192,7 +189,7 @@ const Home = () => {
               ref={typedEl}
               id="typed-js"
               className="font-bold"
-              aria-description="email address: andrew@hunt.codes"
+              aria-description="Animated intro message"
             />
           </div>
           <div id="typed-strings">
@@ -205,7 +202,7 @@ const Home = () => {
           </div>
         </div>
         {/* )} */}
-        {!isChrome && !isSmall && (
+        {!isChromium && !isSmall && (
           <>
             <div className="absolute rounded bg-white p-4 text-sm leading-tight">
               You are using a browser other than Chrome (🚩)

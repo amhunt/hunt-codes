@@ -54,4 +54,4 @@ const Landing = () => {
   );
 };
 
-export default React.memo(Landing);
+export default Landing;

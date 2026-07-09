@@ -7,12 +7,22 @@ import useWindowSize from "useWindowSize";
 
 const experienceItems = [
   {
-    title: "Software Engineer, Zip",
-    location: "San Francisco",
-    date: "2021 - Present",
+    title: "Independent Software Consultant, Argos",
+    location: "San Francisco + Remote",
+    date: "2025 - Present",
     description: [
-      "Develop, ship, and iterate on new product features",
-      "Lead initiatives to standardize and improve shared components",
+      "Design, build, and ship production frontend features end to end for Argos, a legal tech AI product",
+      "Build product experiences — including an LLM-powered agentic chatbot, legal document management, and data visualization tools",
+      "Advise on and implement best practices in frontend architecture, web performance, and developer tooling / DevX",
+    ],
+  },
+  {
+    title: "Staff Software Engineer, Zip",
+    location: "San Francisco",
+    date: "2021 - 2025",
+    description: [
+      "Developed, shipped, and iterated on new product features",
+      "Led initiatives to standardize and improve shared components",
       {
         item: "Dev infra – CI/Quality/Dev experience:",
         subbullets: [
@@ -21,9 +31,9 @@ const experienceItems = [
           "Built FE/BE logging system with Segment",
         ],
       },
-      "Architect and manage build & deploy systems across Webpack, Jenkins, Docker, S3, Cloudflare, and Webflow",
-      "Build & maintain frontend infrastructure: dev server, Storybook, testing, logging, sourcemaps, TS/React usage, third-party package usage/maintenance",
-      "TypeScript: enabled TypeScript in repo and led migration of frontend code to 99% coverage",
+      "Architected and managed build & deploy systems across Webpack, Jenkins, Docker, S3, Cloudflare, and Webflow",
+      "Built & maintained frontend infrastructure: dev server, Storybook, testing, logging, sourcemaps, TS/React usage, third-party package usage/maintenance",
+      "TypeScript: enabled TypeScript and led migration of frontend code to 99% type safety",
       "Performance: Improved page load times by >50%, primarily via code splitting and routing optimizations",
     ],
   },
@@ -80,7 +90,7 @@ const Resume = () => {
   }, []);
 
   return (
-    <div className="resume-container" style={{ opacity: opacity ? 1 : 0 }}>
+    <main className="resume-container" style={{ opacity: opacity ? 1 : 0 }}>
       {/* The link lives outside .resume-panel so the frosted background
           starts above the "About Me" heading, not around the link */}
       <div className="resume-inner-container">
@@ -98,9 +108,8 @@ const Resume = () => {
           <h1 ref={ref} className="mt-0 mb-6">
             About Me
           </h1>
-          <h4>
-            Hey! I’m a frontend engineer based in San Francisco. I’m currently
-            working as a staff engineer at{" "}
+          <p className="resume-intro">
+            Hey! I’m a frontend engineer based in New York. I spent ~4 years at{" "}
             <a
               target="_blank"
               rel="noreferrer"
@@ -108,8 +117,11 @@ const Resume = () => {
               href="https://ziphq.com"
             >
               Zip
-            </a>
-            . For consulting inquiries, reach out to{" "}
+            </a>{" "}
+            — most recently as a staff engineer — before striking out on my own
+            in 2025. Since then I’ve been contracting and consulting, helping
+            teams ship polished, AI-powered web products. For inquiries, reach
+            out to{" "}
             <a
               className="inverse"
               href="mailto:andrew@hunt.codes?Subject=Hey%20Andrew"
@@ -117,17 +129,18 @@ const Resume = () => {
               andrew@hunt.codes
             </a>
             .
-          </h4>
+          </p>
           <div className="resume-divider" />
-          <h3>A few things I care about:</h3>
+          <h2>A few things I care about:</h2>
           <ul className="hor-list">
             <li>
               <div className="card-title">Dev infrastructure</div>I believe it’s
               difficult to overstate the importance of investing in the
               development process. Great DevX is a prerequisite to quality UX
               and efficient product development — this includes strong linters,
-              fast and thorough CI checks, and investment in AI tools to take
-              the burden of repetitive work off of engineers.
+              fast and thorough CI checks, and leaning on AI (LLMs and coding
+              agents) to automate repetitive work and free engineers for
+              higher-leverage problems.
             </li>
             <li>
               <div className="card-title">Component systems</div>Investing in a
@@ -151,9 +164,13 @@ const Resume = () => {
             <div className="card-title">
               Tools and frameworks I know fairly well:
             </div>
-            TypeScript / JavaScript, Material UI, React, Apollo + GraphQL,
-            Storybook, ESLint, GitHub Actions, D3, Tailwind, Chromatic,
-            Cloudflare, Jest, Webpack, Vite, Vue
+            <div className="flex flex-wrap gap-2 mt-2">
+              {tools.map((t) => (
+                <span className="pill tool-pill" key={t}>
+                  {t}
+                </span>
+              ))}
+            </div>
           </div>
 
           <div className="resume-divider" />
@@ -212,19 +229,36 @@ const Resume = () => {
           </div>
         </div>
       </div>
-    </div>
+    </main>
   );
 };
+
+const tools = [
+  "TypeScript",
+  "React",
+  "GraphQL / Apollo",
+  "Vite",
+  "Tailwind",
+  "LLMs / AI SDKs",
+  "ESLint",
+  "GitHub Actions",
+  "Storybook",
+  "Chromatic",
+  "Vitest + Jest",
+  "D3",
+  "Three.js",
+  "Cloudflare / CDN Management",
+  "Vue",
+];
 
 const interests = [
   "3D Printing",
   "Singing",
-  "Easter Eggs",
-  "Crosswords",
+  "Product Easter Eggs",
   "Music Production",
-  "Politics",
-  "Running",
+  "Politics 😬",
+  "Crosswords",
   "Web3",
 ];
 
-export default React.memo(Resume);
+export default Resume;
