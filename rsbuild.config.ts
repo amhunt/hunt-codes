@@ -11,7 +11,9 @@ export default defineConfig({
     distPath: {
       root: "build",
     },
-    manifest: true,
+    // Emit the build asset manifest under a distinct name so it does not
+    // collide with the PWA manifest served at /site.webmanifest.
+    manifest: "asset-manifest.json",
     // Emit external JS source maps in production so tooling (and Lighthouse's
     // "valid source maps" audit) can map the minified bundles back to source.
     sourceMap: {
@@ -19,8 +21,9 @@ export default defineConfig({
     },
   },
   html: {
+    // rsbuild auto-injects <link rel="icon" href="/favicon.ico"> from public/;
+    // the template declares the additional SVG / PNG / apple-touch icons.
     template: "public/index.html",
-    favicon: "public/favicon.ico",
   },
   source: {
     entry: {

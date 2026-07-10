@@ -1,0 +1,5 @@
+# https://www.hunt.codes
+User-agent: *
+Allow: /
+
+Sitemap: https://www.hunt.codes/sitemap.xml
