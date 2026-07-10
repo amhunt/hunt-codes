@@ -4,7 +4,7 @@ import * as THREE from "three";
 
 import { EARTH, moonPosition, planetPosition, rigState } from "./constants";
 import { starPanState } from "../starPan";
-import { scrollTransitionState } from "../../scrollTransition";
+import { JOURNEY_STOPS, scrollTransitionState } from "../../scrollTransition";
 import { journeyState } from "../../rocketJourney";
 import { SYNTH_CAM_HEIGHT, SYNTH_ORIGIN } from "../../synthSpec";
 
@@ -207,9 +207,23 @@ export default function CameraRig({ view }: { view: SolarView }) {
   const fromQuat = useRef(new THREE.Quaternion());
   const prevQuat = useRef<THREE.Quaternion | null>(null);
   const journeyHandoff = useRef(false);
+  const journeyAdopted = useRef(false);
 
   useFrame(({ camera, clock, size }, delta) => {
     const t = clock.elapsedTime;
+    const scrub = scrollTransitionState;
+    // The synth system sits outside the scroll journey — no stop to
+    // adopt or scrub toward; its view changes always take the timed swoop
+    const stop = view === "synth" ? null : JOURNEY_STOPS[view];
+
+    // First frame: adopt the mounted view as the journey position (fresh
+    // page loads start with the module's stale zeros)
+    if (!journeyAdopted.current && stop !== null) {
+      journeyAdopted.current = true;
+      scrub.target = stop;
+      scrub.progress = stop;
+      scrub.initialized = true;
+    }
 
     // The rocket joyride (RocketJourney, mounted before this so it runs
     // earlier in the frame) owns the camera while active. Track the view
@@ -221,6 +235,9 @@ export default function CameraRig({ view }: { view: SolarView }) {
       activeView.current = view;
       journeyHandoff.current = true;
       rigState.settled = false;
+      // The ride owns the camera — useScrollJourney must ignore wheel
+      // input until the post-ride swoop settles
+      scrub.rigSettled = false;
       prevQuat.current = null;
       return;
     }
@@ -232,38 +249,61 @@ export default function CameraRig({ view }: { view: SolarView }) {
     }
 
     if (view !== activeView.current) {
-      // view changed: swoop from wherever the camera is right now
+      // A hop to or from the synth system never comes from the scrub —
+      // the journey's parked progress says nothing about the camera there
+      const fromSynth = activeView.current === "synth";
       activeView.current = view;
-      transitionStart.current = t;
-      fromPos.current.copy(camera.position);
-      fromQuat.current.copy(camera.quaternion);
+      if (
+        stop !== null &&
+        !fromSynth &&
+        Math.abs(scrub.progress - stop) < 0.35
+      ) {
+        // Scroll-committed arrival: the scrub carried the camera here.
+        // Starting the timed swoop too would replay the transition from
+        // wherever the eased progress happened to be — the "full
+        // re-animation on arrival" bug — so let the scrub glide in (or
+        // ride straight through, if the target is already past this stop).
+      } else {
+        // Link navigation (ENTER, Home, ABOUT ME, synth): timed swoop from
+        // the current pose; the journey teleports to the destination stop
+        transitionStart.current = t;
+        fromPos.current.copy(camera.position);
+        fromQuat.current.copy(camera.quaternion);
+        if (stop !== null) {
+          scrub.target = stop;
+          scrub.progress = stop;
+        }
+      }
     }
 
     const p = Math.min(1, (t - transitionStart.current) / TRANSITION_SECONDS);
+    scrub.rigSettled = p >= 1;
 
-    // Scroll scrub (Landing writes scrollTransitionState): once settled on
-    // the landing view, wheel progress poses the camera part-way along the
-    // landing→home swoop — chase the target so it glides, and park wherever
-    // the user stops. The timed transition still owns arrival swoops (the
-    // scrub only engages after it settles), and when the scrub completes
-    // Landing navigates, making the ordinary home transition a no-op.
-    const scrub = scrollTransitionState;
-    if (view === "landing" && p >= 1) {
+    // Scroll journey (useScrollJourney writes the target): once no timed
+    // swoop owns the camera, chase the wheel target so the scrub glides,
+    // parking wherever the visitor stops.
+    if (p >= 1) {
       scrub.progress +=
         (scrub.target - scrub.progress) * Math.min(1, delta * SCRUB_EASE_RATE);
-      if (scrub.target === 0 && scrub.progress < 0.001) scrub.progress = 0;
+      if (Math.abs(scrub.target - scrub.progress) < 0.001) {
+        scrub.progress = scrub.target;
+      }
     }
-    const scrubbing = view === "landing" && p >= 1 && scrub.progress > 0;
+    const scrubbing =
+      p >= 1 && stop !== null && Math.abs(scrub.progress - stop) > 1e-4;
 
     if (scrubbing) {
-      // Pose between the two view goals by the eased scrub progress —
-      // same lerp+slerp pairing as the timed transition below
-      const e = easeInOutCubic(scrub.progress);
-      computeGoal("landing", t, camera, size);
+      // Pose along the journey: progress 0..1 blends landing→home, 1..2
+      // blends home→about — same eased lerp+slerp pairing as the timed
+      // transition below, applied per segment
+      const j = THREE.MathUtils.clamp(scrub.progress, 0, 2);
+      const seg = Math.min(Math.floor(j), 1);
+      const e = easeInOutCubic(j - seg);
+      computeGoal(seg === 0 ? "landing" : "home", t, camera, size);
       scrubFromPos.copy(goalPos);
       lookMatrix.lookAt(goalPos, goalLook, UP);
       scrubFromQuat.setFromRotationMatrix(lookMatrix);
-      computeGoal("home", t, camera, size);
+      computeGoal(seg === 0 ? "home" : "about", t, camera, size);
       lookMatrix.lookAt(goalPos, goalLook, UP);
       scrubToQuat.setFromRotationMatrix(lookMatrix);
       camera.position.lerpVectors(scrubFromPos, goalPos, e);

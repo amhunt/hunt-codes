@@ -165,6 +165,24 @@ export function createSunGlowTexture(): THREE.CanvasTexture {
   return asTexture(canvas);
 }
 
+/** Soft purple halo marking a body as clickable (InteractiveGlow) — the
+ *  site's accent color, distinct from the bodies' natural palette. */
+export function createInteractiveGlowTexture(): THREE.CanvasTexture {
+  const size = 128;
+  const canvas = createCanvas(size, size);
+  const ctx = canvas.getContext("2d");
+  if (!ctx) return asTexture(canvas);
+
+  const c = size / 2;
+  const gradient = ctx.createRadialGradient(c, c, 0, c, c, c);
+  gradient.addColorStop(0, "rgba(158, 128, 249, 0.6)");
+  gradient.addColorStop(0.45, "rgba(158, 128, 249, 0.22)");
+  gradient.addColorStop(1, "rgba(158, 128, 249, 0)");
+  ctx.fillStyle = gradient;
+  ctx.fillRect(0, 0, size, size);
+  return asTexture(canvas);
+}
+
 /** The GitHub mark (Octocat silhouette), from simple-icons (CC0), in a
  *  24x24 viewBox. */
 const GITHUB_MARK_PATH =

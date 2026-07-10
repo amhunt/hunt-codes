@@ -9,6 +9,7 @@ import { MOON_VIDEO_OUTLINE_ID } from "./BodyAnchors";
 import { writeSilhouette } from "./outline";
 import { createLogoBadgeTexture } from "../textures";
 import { hoverState } from "../../solarHover";
+import InteractiveGlow from "./InteractiveGlow";
 import moonMapUrl from "../../assets/moon.jpg";
 
 /**
@@ -40,11 +41,14 @@ export default function Moon({
   orbitColor,
   orbitOpacity,
   revealed = true,
+  linkActive = false,
 }: {
   orbitColor: string;
   orbitOpacity: number;
   /** Fades the moon + its orbit ring in (landing intro) */
   revealed?: boolean;
+  /** The video link only exists on /about — gate the clickable halo */
+  linkActive?: boolean;
 }) {
   const earthGroup = useRef<THREE.Group>(null);
   const moonGroup = useRef<THREE.Group>(null);
@@ -199,6 +203,12 @@ export default function Moon({
         />
       </lineLoop>
       <group ref={moonGroup}>
+        {/* clickable-body affordance halo (video link, /about only) */}
+        <InteractiveGlow
+          radius={MOON.radius}
+          opacityRef={revealOpacity}
+          enabled={linkActive}
+        />
         <group ref={squashWrapper}>
           <group ref={squashCounterRotate}>
             <mesh ref={mesh} geometry={geometry}>

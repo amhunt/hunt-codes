@@ -113,6 +113,7 @@ const SolarScene = ({
         orbitColor={isNightMode ? "#ffffff" : "#141428"}
         orbitOpacity={isNightMode ? 0.28 : 0.2}
         revealed={planetsRevealed}
+        linkActive={view === "about"}
       />
       {/* Link bodies — home view only: on landing they'd read as clutter
           around the sun, and on /about their DOM overlays don't exist, so

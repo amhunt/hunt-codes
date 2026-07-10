@@ -9,6 +9,7 @@ import { hoverState } from "../../solarHover";
 import { EARTH_ABOUT_OUTLINE_ID } from "./BodyAnchors";
 import { writeSilhouette } from "./outline";
 import AboutRing from "./AboutRing";
+import InteractiveGlow from "./InteractiveGlow";
 import earthMapUrl from "../../assets/earth.jpg";
 
 /**
@@ -207,7 +208,17 @@ export default function Planet({
         {/* Curved "ABOUT ME" link label, billboarded around Earth. Lives in
             the group (not the squash wrapper) so it stays put over Earth. */}
         {config.kind === "earth" && (
-          <AboutRing active={aboutActive} isNightMode={isNightMode} />
+          <>
+            <AboutRing active={aboutActive} isNightMode={isNightMode} />
+            {/* clickable-body affordance halo (the /about link, home only;
+                a lighter touch than the small rocks — Earth is big) */}
+            <InteractiveGlow
+              radius={config.radius}
+              opacityRef={revealOpacity}
+              enabled={aboutActive}
+              strength={0.3}
+            />
+          </>
         )}
       </group>
     </>
