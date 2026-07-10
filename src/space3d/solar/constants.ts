@@ -116,7 +116,9 @@ export const ASTEROIDS: SolarPlanetConfig[] = [
     orbitSpeed: EARTH.orbitSpeed,
     orbitPhase: EARTH.orbitPhase + 0.35,
     spinSpeed: 0.2 * SPEED_SCALE,
-    yOffset: ASTEROID_Y,
+    // Floats lower than its siblings: on the home view it reads nestled
+    // down near the sun's limb instead of high among the other links
+    yOffset: ASTEROID_Y - 1.2,
     logo: "blog",
   },
   {
