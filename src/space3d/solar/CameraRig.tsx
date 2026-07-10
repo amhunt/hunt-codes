@@ -4,6 +4,7 @@ import * as THREE from "three";
 
 import { EARTH, moonPosition, planetPosition, rigState } from "./constants";
 import { starPanState } from "../starPan";
+import { scrollTransitionState } from "../../scrollTransition";
 
 /**
  * Camera choreography, ported from hunt-codes-3. Landing hovers straight
@@ -81,6 +82,12 @@ const goalQuat = new THREE.Quaternion();
 const lookMatrix = new THREE.Matrix4();
 const oldForward = new THREE.Vector3();
 const invQuat = new THREE.Quaternion();
+const scrubFromPos = new THREE.Vector3();
+const scrubFromQuat = new THREE.Quaternion();
+const scrubToQuat = new THREE.Quaternion();
+
+/** How fast the rendered scrub progress chases the wheel target (per s) */
+const SCRUB_EASE_RATE = 6;
 
 const easeInOutCubic = (x: number) =>
   x < 0.5 ? 4 * x * x * x : 1 - Math.pow(-2 * x + 2, 3) / 2;
@@ -172,7 +179,7 @@ export default function CameraRig({ view }: { view: SolarView }) {
   const fromQuat = useRef(new THREE.Quaternion());
   const prevQuat = useRef<THREE.Quaternion | null>(null);
 
-  useFrame(({ camera, clock, size }) => {
+  useFrame(({ camera, clock, size }, delta) => {
     const t = clock.elapsedTime;
 
     if (view !== activeView.current) {
@@ -183,25 +190,55 @@ export default function CameraRig({ view }: { view: SolarView }) {
       fromQuat.current.copy(camera.quaternion);
     }
 
-    computeGoal(view, t, camera, size);
-
     const p = Math.min(1, (t - transitionStart.current) / TRANSITION_SECONDS);
-    rigState.settled = p >= 1;
-    if (p < 1) {
-      // Movement and rotation ride the same eased progress: the position
-      // lerps to the perch while the orientation slerps to the arrival
-      // pose, so the whole spin is spread evenly across the transition
-      // (lerping a look POINT instead whipped the view around wherever
-      // the point's chord passed near the camera — spin first, then zoom)
-      const e = easeInOutCubic(p);
-      camera.position.lerpVectors(fromPos.current, goalPos, e);
+
+    // Scroll scrub (Landing writes scrollTransitionState): once settled on
+    // the landing view, wheel progress poses the camera part-way along the
+    // landing→home swoop — chase the target so it glides, and park wherever
+    // the user stops. The timed transition still owns arrival swoops (the
+    // scrub only engages after it settles), and when the scrub completes
+    // Landing navigates, making the ordinary home transition a no-op.
+    const scrub = scrollTransitionState;
+    if (view === "landing" && p >= 1) {
+      scrub.progress +=
+        (scrub.target - scrub.progress) * Math.min(1, delta * SCRUB_EASE_RATE);
+      if (scrub.target === 0 && scrub.progress < 0.001) scrub.progress = 0;
+    }
+    const scrubbing = view === "landing" && p >= 1 && scrub.progress > 0;
+
+    if (scrubbing) {
+      // Pose between the two view goals by the eased scrub progress —
+      // same lerp+slerp pairing as the timed transition below
+      const e = easeInOutCubic(scrub.progress);
+      computeGoal("landing", t, camera, size);
+      scrubFromPos.copy(goalPos);
       lookMatrix.lookAt(goalPos, goalLook, UP);
-      goalQuat.setFromRotationMatrix(lookMatrix);
-      camera.quaternion.slerpQuaternions(fromQuat.current, goalQuat, e);
+      scrubFromQuat.setFromRotationMatrix(lookMatrix);
+      computeGoal("home", t, camera, size);
+      lookMatrix.lookAt(goalPos, goalLook, UP);
+      scrubToQuat.setFromRotationMatrix(lookMatrix);
+      camera.position.lerpVectors(scrubFromPos, goalPos, e);
+      camera.quaternion.slerpQuaternions(scrubFromQuat, scrubToQuat, e);
+      rigState.settled = false;
     } else {
-      // fully arrived: track the (possibly moving) goal exactly
-      camera.position.copy(goalPos);
-      camera.lookAt(goalLook);
+      computeGoal(view, t, camera, size);
+      rigState.settled = p >= 1;
+      if (p < 1) {
+        // Movement and rotation ride the same eased progress: the position
+        // lerps to the perch while the orientation slerps to the arrival
+        // pose, so the whole spin is spread evenly across the transition
+        // (lerping a look POINT instead whipped the view around wherever
+        // the point's chord passed near the camera — spin first, then zoom)
+        const e = easeInOutCubic(p);
+        camera.position.lerpVectors(fromPos.current, goalPos, e);
+        lookMatrix.lookAt(goalPos, goalLook, UP);
+        goalQuat.setFromRotationMatrix(lookMatrix);
+        camera.quaternion.slerpQuaternions(fromQuat.current, goalQuat, e);
+      } else {
+        // fully arrived: track the (possibly moving) goal exactly
+        camera.position.copy(goalPos);
+        camera.lookAt(goalLook);
+      }
     }
 
     // Star parallax: fold this frame's camera rotation into a pixel-space

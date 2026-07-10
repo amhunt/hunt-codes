@@ -5,6 +5,7 @@ import * as THREE from "three";
 import { SUN_RADIUS, sunState } from "./constants";
 import { SUN_SIZE, SUN_SURFACE_RADIUS } from "../../landingScene";
 import { hoverState } from "../../solarHover";
+import { scrollTransitionState } from "../../scrollTransition";
 import { createSunGlowTexture } from "../textures";
 import {
   createSunCoronaMaterial,
@@ -153,12 +154,16 @@ function EnterRing({
       0,
       1,
     );
+    // Scroll-scrubbing toward /home: fade the label out over the first
+    // ~40% of the scrub so it doesn't hang mid-swoop (and fade it back
+    // if the visitor scrolls up)
+    const scrubFade = 1 - Math.min(1, scrollTransitionState.progress * 2.5);
     const base = isNightMode ? ENTER_TEXT_COLOR : ENTER_DAY_COLOR;
     const target = hoverState.sun ? ENTER_HOVER_COLOR : base;
     const ease = Math.min(1, delta * 10);
     for (const { material } of letters) {
       material.color.lerp(target, ease);
-      material.opacity = opacity.current;
+      material.opacity = opacity.current * scrubFade;
     }
   });
 
