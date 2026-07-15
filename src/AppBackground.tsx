@@ -1,5 +1,13 @@
-import React, { useState, useEffect, memo, lazy, Suspense } from "react";
-import { useLocation } from "react-router-dom";
+import React, {
+  useState,
+  useEffect,
+  useCallback,
+  useRef,
+  memo,
+  lazy,
+  Suspense,
+} from "react";
+import { useLocation, useNavigate } from "react-router-dom";
 import cx from "classnames";
 
 import GoldenGate from "./gg-bridge.png";
@@ -53,11 +61,21 @@ const AppBackground = ({
 }) => {
   const size = useWindowSize();
   const location = useLocation();
+  const navigate = useNavigate();
+  // Stable identity (Space3DBackground is memo'd against this component's
+  // 200ms ticker re-renders) that also swallows navigate's promise
+  const navigateRef = useRef(navigate);
+  navigateRef.current = navigate;
+  const journeyNavigate = useCallback((to: string) => {
+    void navigateRef.current(to);
+  }, []);
 
   const isHomePage = location.pathname.includes("home");
   // /draw shares the about-page background (Earth + moon in the 3D scene)
   const isAboutPage =
     location.pathname.includes("about") || location.pathname.includes("draw");
+  // The synth solar system (the 808-pad easter egg's destination)
+  const isSynthPage = location.pathname.includes("synth");
   const isLanding = location.pathname === "/" || location.pathname === "";
   const [musicEnabled, setMusicEnabled] = useState(false);
 
@@ -170,6 +188,8 @@ const AppBackground = ({
             isLanding={isLanding}
             isHomePage={isHomePage}
             isAboutPage={isAboutPage}
+            isSynthPage={isSynthPage}
+            onJourneyNavigate={journeyNavigate}
           />
         </Suspense>
       </BackgroundErrorBoundary>
