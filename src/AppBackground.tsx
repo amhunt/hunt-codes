@@ -13,6 +13,7 @@ import cx from "classnames";
 import GoldenGate from "./gg-bridge.png";
 import GoldenGateFog from "./GoldenGateFog";
 import useWindowSize from "useWindowSize";
+import { onSynthNote } from "./synthAudio";
 import { MusicIcon } from "lucide-react";
 // import RetroMac from "./RetroMac";
 
@@ -85,11 +86,20 @@ const AppBackground = ({
     // The nameTitle SVG this drives only renders off the landing page, so
     // don't fire a 5x/sec state update + re-render on the landing route.
     if (isLanding) return;
+    // On /synth the ticker keeps time with the music instead of the
+    // clock: every audible note — arp step or keyboard press — advances
+    // the highlighted letter (and silence holds it still). Everywhere
+    // else the plain 200ms march stays.
+    if (isSynthPage) {
+      return onSynthNote(() => {
+        setHighlightedCharIdx((idx) => (idx + 1) % nameArr.length);
+      });
+    }
     const interval = setInterval(() => {
       setHighlightedCharIdx((idx) => (idx + 1) % nameArr.length);
     }, 200);
     return () => clearInterval(interval);
-  }, [isLanding]);
+  }, [isLanding, isSynthPage]);
 
   // Start playback as soon as the player mounts — i.e. right after the
   // visitor clicks "Enable space jams". That click is the user gesture that

@@ -131,10 +131,36 @@ export const getParam = (param: SynthParam): number => params[param];
 
 const midiHz = (midi: number) => 440 * Math.pow(2, (midi - 69) / 12);
 
+// ── Note events ──
+// Fired once per audible note — arp steps and keyboard presses alike —
+// at the note's audible moment (the arp schedules notes up to ~160ms
+// ahead, so emission is deferred to match). The /synth page uses this
+// to march the "andrewhunt" letter highlight in time with the music.
+type NoteListener = () => void;
+const noteListeners = new Set<NoteListener>();
+
+/** Subscribe to every audible note; returns an unsubscribe. */
+export function onSynthNote(listener: NoteListener): () => void {
+  noteListeners.add(listener);
+  return () => {
+    noteListeners.delete(listener);
+  };
+}
+
+function emitNoteAt(when: number): void {
+  if (!ctx || noteListeners.size === 0) return;
+  const delayMs = Math.max(0, (when - ctx.currentTime) * 1000);
+  window.setTimeout(
+    () => noteListeners.forEach((listener) => listener()),
+    delayMs,
+  );
+}
+
 /** One synth voice: two slightly-detuned oscillators through an
  *  envelope gain into the shared bus. */
 function spawnVoice(midi: number, when: number, velocity: number) {
   if (!ctx) return null;
+  emitNoteAt(when);
   const env = ctx.createGain();
   env.gain.setValueAtTime(0.0001, when);
   env.gain.exponentialRampToValueAtTime(velocity, when + 0.015);
