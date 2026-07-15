@@ -1,5 +1,7 @@
 import React from "react";
 
+import { JOURNEY_CRAWL_SLOTS, journeyCrawlLineId } from "./rocketJourney";
+
 /**
  * The lightspeed journeys' cockpit dressing: a steel windshield frame
  * whose edges hug the viewport (so warp reads as seen from inside the
@@ -23,6 +25,22 @@ const OPENING_PATH =
 
 const RocketCockpit = () => (
   <>
+    {/* Star-Wars-style crawl: a perspective-tilted plane under the
+        windshield frame. The slots are empty shells — RocketJourney's
+        frame loop writes each ride's script (journeyState.crawl) into
+        them and scrolls them up and away, so the crawl stays in step
+        with the warp clock (and pauses with it in background tabs). */}
+    <div className="journey-crawl" aria-hidden>
+      <div className="journey-crawl-plane">
+        {Array.from({ length: JOURNEY_CRAWL_SLOTS }, (_, i) => (
+          <p
+            key={i}
+            id={journeyCrawlLineId(i)}
+            className="journey-crawl-line"
+          />
+        ))}
+      </div>
+    </div>
     <div id="rocket-cockpit" aria-hidden>
       <svg
         className="cockpit-frame"

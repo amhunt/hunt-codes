@@ -6,7 +6,14 @@ import { planetPosition, ROCKET, SYNTH_PAD } from "./constants";
 import { rocketNoseDirection } from "./Rocket";
 import { viewGoal, type SolarView } from "./CameraRig";
 import { ARTIFACT_BUILDERS, disposeArtifact } from "./warpArtifacts";
-import { endRocketJourney, flashWarp, journeyState } from "../../rocketJourney";
+import {
+  CRAWL_LINE_SECONDS,
+  endRocketJourney,
+  flashWarp,
+  JOURNEY_CRAWL_SLOTS,
+  journeyCrawlLineId,
+  journeyState,
+} from "../../rocketJourney";
 import { SYNTH_ORIGIN } from "../../synthSpec";
 
 /**
@@ -349,6 +356,28 @@ export default function RocketJourney({
     }
     streaks.positionAttr.needsUpdate = true;
     streaks.material.opacity = intensity;
+
+    // The crawl (joyride only): scroll each scripted line up the tilted
+    // DOM plane on the warp clock — enter big at the bottom, vanish
+    // small into the distance, fading at both ends. Driven here rather
+    // than by CSS animation so it pauses with the ride and can't drift.
+    if (state.crawl) {
+      for (let i = 0; i < JOURNEY_CRAWL_SLOTS; i++) {
+        const el = document.getElementById(journeyCrawlLineId(i));
+        if (!el) break;
+        const line = state.crawl[i];
+        const p = line ? (elapsed - line.at) / CRAWL_LINE_SECONDS : -1;
+        if (!line || p < 0 || p >= 1) {
+          el.style.visibility = "hidden";
+          continue;
+        }
+        if (el.textContent !== line.text) el.textContent = line.text;
+        const y = (0.55 - 1.5 * p) * size.height;
+        el.style.transform = `translateY(${y.toFixed(1)}px)`;
+        el.style.opacity = Math.min(p / 0.08, (1 - p) / 0.3, 1).toFixed(3);
+        el.style.visibility = "visible";
+      }
+    }
 
     // Flyby cameos (joyride only): each pops in far ahead, drifts
     // outward as it nears, and exits past the shoulder of the windshield

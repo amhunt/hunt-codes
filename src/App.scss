@@ -1171,6 +1171,46 @@ body.rocket-journey #rocket-cockpit {
     visibility 0s;
 }
 
+// Star-Wars-style crawl during the joyride's warp: a perspective-tilted
+// plane whose lines RocketJourney scrolls up and away on the warp clock
+// (no CSS animation — the scene drives the transforms). Sits under the
+// windshield frame (z 6000) so lines slide behind its edges, and over
+// the canvases. Lines start hidden; the frame loop reveals them.
+.journey-crawl {
+  position: fixed;
+  inset: 0;
+  z-index: 5999;
+  pointer-events: none;
+  overflow: hidden;
+  perspective: 420px;
+  perspective-origin: 50% 24%;
+}
+
+.journey-crawl-plane {
+  position: absolute;
+  inset: 0;
+  transform: rotateX(52deg);
+  transform-origin: 50% 100%;
+  transform-style: preserve-3d;
+}
+
+.journey-crawl-line {
+  position: absolute;
+  top: 50%;
+  left: 8%;
+  right: 8%;
+  visibility: hidden;
+  opacity: 0;
+  text-align: center;
+  // The homage yellow, glowing faintly against the streak field
+  color: #ffe81f;
+  font-weight: 700;
+  font-size: clamp(30px, 4.5vw, 46px);
+  letter-spacing: 0.04em;
+  text-shadow: 0 0 18px rgba(255, 232, 31, 0.45);
+  will-change: transform, opacity;
+}
+
 // One-shot white-out covering the lightspeed jump teleports (rocketJourney's
 // flashWarp() retriggers the animation). Sits above the cockpit frame and
 // outside it in the DOM, so the landing flash outlives the frame's fade.

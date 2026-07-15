@@ -31,6 +31,50 @@ const TRANSIT_BOARD_SECONDS = 1.3;
 const RETURN_TURN_SECONDS = 1;
 const TRANSIT_WARP_SECONDS = 4.2;
 
+// ─── The Star-Wars-style crawl ───
+// Lines of tilted yellow text that scroll up and away through the
+// windshield during the joyride's warp. Copy lives HERE: each script is
+// a list of lines with their entrance times (seconds into the warp; a
+// line stays on screen for CRAWL_LINE_SECONDS, so the last line should
+// enter no later than WARP_SECONDS - CRAWL_LINE_SECONDS to finish
+// before the landing flash). Add more scripts to the pool and each ride
+// picks one at random.
+
+export interface CrawlLine {
+  text: string;
+  /** Seconds into the warp when the line enters from the bottom */
+  at: number;
+}
+export type CrawlScript = CrawlLine[];
+
+/** How long each line takes to scroll from entrance to vanishing */
+export const CRAWL_LINE_SECONDS = 4.2;
+
+const JOYRIDE_CRAWLS: CrawlScript[] = [
+  [
+    { text: "Wow you're in space.... pretty cool", at: 0.8 },
+    { text: "It's giving Katy Perry - congrats!", at: 4 },
+    { text: "Ok time to come home now", at: 7.2 },
+  ],
+];
+
+/** One script per ride, picked at random from the pool. */
+const pickJoyrideCrawl = (): CrawlScript =>
+  JOYRIDE_CRAWLS[Math.floor(Math.random() * JOYRIDE_CRAWLS.length)];
+
+/** DOM slots the scene writes the crawl into (RocketCockpit renders
+ *  them; extra slots are headroom for longer scripts) */
+export const JOURNEY_CRAWL_SLOTS = 4;
+export const journeyCrawlLineId = (index: number) =>
+  `journey-crawl-line-${index}`;
+
+function resetCrawl(): void {
+  for (let i = 0; i < JOURNEY_CRAWL_SLOTS; i++) {
+    const el = document.getElementById(journeyCrawlLineId(i));
+    if (el) el.style.visibility = "hidden";
+  }
+}
+
 export const journeyState = {
   phase: "idle" as JourneyPhase,
   /** Seconds into the current phase; advanced by RocketJourney's frame loop */
@@ -51,6 +95,8 @@ export const journeyState = {
   warpSeconds: WARP_SECONDS,
   /** Flyby cameos only play on the joyride, not the synth transits */
   cameos: true,
+  /** The ride's crawl script (joyride only), or null for no crawl */
+  crawl: null as CrawlScript | null,
 };
 
 /** The `body` class that hides the page UI and reveals the windshield
@@ -63,6 +109,7 @@ function beginJourney(
   boardSeconds: number,
   warpSeconds: number,
   cameos: boolean,
+  crawl: CrawlScript | null,
 ): void {
   if (journeyState.phase !== "idle" || !journeyState.driverAlive) return;
   journeyState.vehicle = vehicle;
@@ -70,6 +117,7 @@ function beginJourney(
   journeyState.boardSeconds = boardSeconds;
   journeyState.warpSeconds = warpSeconds;
   journeyState.cameos = cameos;
+  journeyState.crawl = crawl;
   journeyState.phase = "boarding";
   journeyState.phaseElapsed = 0;
   // The pointer is parked on the clicked overlay while it boards; the
@@ -81,7 +129,14 @@ function beginJourney(
 
 /** The rocket joyride: there and back again, all on /home. */
 export const startRocketJourney = (): void =>
-  beginJourney("rocket", "home", BOARDING_SECONDS, WARP_SECONDS, true);
+  beginJourney(
+    "rocket",
+    "home",
+    BOARDING_SECONDS,
+    WARP_SECONDS,
+    true,
+    pickJoyrideCrawl(),
+  );
 
 /** The 808 pad: warp from /home to the synth solar system (/synth). */
 export const startSynthJourney = (): void =>
@@ -91,6 +146,7 @@ export const startSynthJourney = (): void =>
     TRANSIT_BOARD_SECONDS,
     TRANSIT_WARP_SECONDS,
     false,
+    null,
   );
 
 /** Back to Earth from the synth system (/synth -> /home). */
@@ -101,6 +157,7 @@ export const startSynthReturn = (): void =>
     RETURN_TURN_SECONDS,
     TRANSIT_WARP_SECONDS,
     false,
+    null,
   );
 
 /** Ends the ride (natural landing or an abort — route change, scene
@@ -109,6 +166,8 @@ export function endRocketJourney(): void {
   journeyState.phase = "idle";
   journeyState.phaseElapsed = 0;
   journeyState.starDim = 0;
+  journeyState.crawl = null;
+  resetCrawl();
   document.body.classList.remove(JOURNEY_BODY_CLASS);
 }
 
