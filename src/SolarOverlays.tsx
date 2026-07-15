@@ -14,6 +14,7 @@ import {
   EARTH_ABOUT_RING_ID,
 } from "./space3d/solar/BodyAnchors";
 import { hoverState } from "./solarHover";
+import { startRocketJourney } from "./rocketJourney";
 
 /**
  * DOM overlays for the home page's 3D bodies. The canvases never take
@@ -115,6 +116,35 @@ const SolarOverlays = () => {
           </Tooltip>
         </TooltipProvider>
       ))}
+      {/* The rocket easter egg: not a link — clicking it boards the ship
+          and plays the lightspeed joyride (rocketJourney.ts). Same anchor
+          plumbing as the asteroid links. */}
+      <TooltipProvider delayDuration={100}>
+        <Tooltip disableHoverableContent>
+          <TooltipTrigger asChild>
+            <button
+              type="button"
+              id={asteroidAnchorId("rocket")}
+              className="asteroid-link"
+              aria-label="So u wanna be astronaut?"
+              onClick={() => startRocketJourney()}
+              onPointerEnter={() => {
+                hoverState.asteroid = "rocket";
+              }}
+              onPointerLeave={() => {
+                if (hoverState.asteroid === "rocket") {
+                  hoverState.asteroid = null;
+                }
+              }}
+            >
+              <BodyOutline outlineId={asteroidOutlineId("rocket")} />
+            </button>
+          </TooltipTrigger>
+          <TooltipContent updatePositionStrategy="always">
+            <p>So u wanna be astronaut?</p>
+          </TooltipContent>
+        </Tooltip>
+      </TooltipProvider>
     </>
   );
 };

@@ -144,7 +144,23 @@ export const ASTEROIDS: SolarPlanetConfig[] = [
     logo: "linkedin",
     yOffset: ASTEROID_Y,
   },
+  {
+    // Rendered as the cartoon rocket (Rocket.tsx). Not a link: clicking
+    // it launches the lightspeed joyride (rocketJourney.ts). Floats a
+    // little above and outside the other links so it reads as its own
+    // thing parked in the sky.
+    name: "rocket",
+    kind: "mercury",
+    radius: 0.42,
+    orbitRadius: 6.2,
+    orbitSpeed: EARTH.orbitSpeed,
+    orbitPhase: EARTH.orbitPhase + 0.3,
+    spinSpeed: 0.2 * SPEED_SCALE,
+    yOffset: ASTEROID_Y + 1.4,
+  },
 ];
+
+export const ROCKET = ASTEROIDS.find((a) => a.name === "rocket")!;
 
 /** Earth's moon — orbits Earth (not the sun), in the same XZ plane. */
 export const MOON = {

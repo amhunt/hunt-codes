@@ -1,0 +1,361 @@
+import React, { useEffect, useMemo, useRef } from "react";
+import { useFrame } from "@react-three/fiber";
+import * as THREE from "three";
+
+import { planetPosition, ROCKET } from "./constants";
+import { rocketNoseDirection } from "./Rocket";
+import { homeViewGoal, type SolarView } from "./CameraRig";
+import { ARTIFACT_BUILDERS, disposeArtifact } from "./warpArtifacts";
+import {
+  BOARDING_SECONDS,
+  endRocketJourney,
+  flashWarp,
+  journeyState,
+  WARP_SECONDS,
+} from "../../rocketJourney";
+
+/**
+ * Drives the rocket joyride (the /home "surprise me" easter egg). While
+ * journeyState is active this component owns the camera — CameraRig
+ * stands down — and plays three beats:
+ *
+ * 1. Boarding: the camera swoops from the home perch to just behind the
+ *    rocket, lining up with its nose, while the stars fade and the DOM
+ *    windshield frame fades in (App.scss, keyed off body.rocket-journey).
+ * 2. Warp: a flash covers a teleport to a "warp zone" 900 units out
+ *    along the rocket's heading — far enough that the whole solar system
+ *    is a speck behind the camera. The rig (this component's group) is
+ *    parked there carrying the Star Wars streak field and the flyby
+ *    artifact cameos; the camera sways gently inside it.
+ * 3. Re-entry: a second flash covers a teleport onto the home view's
+ *    approach line, then the journey ends and CameraRig's ordinary
+ *    resume swoop glides the last stretch onto the perch — the landing.
+ *
+ * The streaks are one LineSegments whose head vertices march toward the
+ * camera and wrap; line length and material opacity ride the warp
+ * intensity envelope, so the field stretches out of nothing at the jump
+ * and collapses back to nothing before re-entry.
+ */
+
+const BOARD_CAM_BEHIND = 1.5;
+const BOARD_LOOK_AHEAD = 10;
+
+const WARP_DISTANCE = 900;
+/** Intensity envelope: streaks stretch in/out over these ramps */
+const WARP_RAMP_IN_SECONDS = 0.9;
+const WARP_RAMP_OUT_SECONDS = 1;
+/** Stars fade back in over the last stretch of warp (decelerating) */
+const STAR_RETURN_SECONDS = 1.2;
+
+const STREAK_COUNT = 340;
+/** Streak heads live at rig-local z in [-DEPTH+PAD, PAD); -z is ahead */
+const STREAK_DEPTH = 320;
+const STREAK_BEHIND_PAD = 20;
+const STREAK_RADIUS_MIN = 1.5;
+const STREAK_RADIUS_MAX = 60;
+const STREAK_SPEED = 300;
+const STREAK_LENGTH = 30;
+
+const ARTIFACT_Z_START = -170;
+const ARTIFACT_Z_EXIT = 25;
+const ARTIFACT_SPEED = 115;
+const ARTIFACT_FIRST_SPAWN = 1;
+const ARTIFACT_SPAWN_INTERVAL = 1.25;
+
+/** How far out on the home approach line re-entry drops the camera */
+const REENTRY_DISTANCE = 130;
+
+const UP = new THREE.Vector3(0, 1, 0);
+const Z_AXIS = new THREE.Vector3(0, 0, 1);
+
+const easeInOutCubic = (x: number) =>
+  x < 0.5 ? 4 * x * x * x : 1 - Math.pow(-2 * x + 2, 3) / 2;
+const clamp01 = (x: number) => THREE.MathUtils.clamp(x, 0, 1);
+
+// scratch values, reused every frame
+const rocketPos = new THREE.Vector3();
+const noseDir = new THREE.Vector3();
+const targetPos = new THREE.Vector3();
+const targetQuat = new THREE.Quaternion();
+const lookTarget = new THREE.Vector3();
+const lookMatrix = new THREE.Matrix4();
+const sway = new THREE.Vector3();
+const rollQuat = new THREE.Quaternion();
+const goalPos = new THREE.Vector3();
+const goalLook = new THREE.Vector3();
+const forward = new THREE.Vector3();
+
+interface FlybyArtifact {
+  group: THREE.Group;
+  spawnAt: number;
+  /** -1 flies past on the left, +1 on the right */
+  side: number;
+  y: number;
+  baseYaw: number;
+  tilt: number;
+  spin: number;
+}
+
+/** Lateral flyby heights, hand-varied so consecutive cameos don't trace
+ *  the same line across the window */
+const ARTIFACT_HEIGHTS = [-2, 3, -3.5, 2.5, 4.5, -2.5, 3.5, -3];
+const ARTIFACT_SCALES = [4.5, 3.8, 3.6, 3.4, 3.6, 3.8, 3.8, 3.2];
+
+export default function RocketJourney({ view }: { view: SolarView }) {
+  const rig = useRef<THREE.Group>(null);
+  const streakLines = useRef<THREE.LineSegments>(null);
+
+  const startPos = useRef(new THREE.Vector3());
+  const startQuat = useRef(new THREE.Quaternion());
+  const startCaptured = useRef(false);
+  const warpPos = useRef(new THREE.Vector3());
+  const warpQuat = useRef(new THREE.Quaternion());
+
+  // Streak field: per-streak cylindrical spots + speeds, plus the
+  // two-vertex-per-streak line buffers (head bright, tail dim)
+  const streaks = useMemo(() => {
+    const x = new Float32Array(STREAK_COUNT);
+    const y = new Float32Array(STREAK_COUNT);
+    const z = new Float32Array(STREAK_COUNT);
+    const speed = new Float32Array(STREAK_COUNT);
+    const colors = new Float32Array(STREAK_COUNT * 6);
+    const tint = new THREE.Color();
+    for (let i = 0; i < STREAK_COUNT; i++) {
+      const angle = Math.random() * Math.PI * 2;
+      // sqrt-distributed radius = uniform density over the disc
+      const radius =
+        STREAK_RADIUS_MIN +
+        Math.sqrt(Math.random()) * (STREAK_RADIUS_MAX - STREAK_RADIUS_MIN);
+      x[i] = Math.cos(angle) * radius;
+      y[i] = Math.sin(angle) * radius;
+      z[i] = -STREAK_DEPTH + Math.random() * (STREAK_DEPTH + STREAK_BEHIND_PAD);
+      speed[i] = STREAK_SPEED * (0.7 + Math.random() * 0.6);
+      const pick = Math.random();
+      tint.set(pick < 0.7 ? "#ffffff" : pick < 0.85 ? "#ab8ffd" : "#9ecbff");
+      colors[i * 6] = tint.r;
+      colors[i * 6 + 1] = tint.g;
+      colors[i * 6 + 2] = tint.b;
+      colors[i * 6 + 3] = tint.r * 0.05;
+      colors[i * 6 + 4] = tint.g * 0.05;
+      colors[i * 6 + 5] = tint.b * 0.05;
+    }
+    const geometry = new THREE.BufferGeometry();
+    const positionAttr = new THREE.BufferAttribute(
+      new Float32Array(STREAK_COUNT * 6),
+      3,
+    );
+    positionAttr.setUsage(THREE.DynamicDrawUsage);
+    geometry.setAttribute("position", positionAttr);
+    geometry.setAttribute("color", new THREE.BufferAttribute(colors, 3));
+    const material = new THREE.LineBasicMaterial({
+      vertexColors: true,
+      transparent: true,
+      opacity: 0,
+      blending: THREE.AdditiveBlending,
+      depthWrite: false,
+    });
+    return { x, y, z, speed, geometry, positionAttr, material };
+  }, []);
+  useEffect(
+    () => () => {
+      streaks.geometry.dispose();
+      streaks.material.dispose();
+    },
+    [streaks],
+  );
+
+  const artifacts: FlybyArtifact[] = useMemo(
+    () =>
+      ARTIFACT_BUILDERS.map((build, i) => {
+        const group = build();
+        group.scale.setScalar(ARTIFACT_SCALES[i]);
+        group.visible = false;
+        return {
+          group,
+          spawnAt: ARTIFACT_FIRST_SPAWN + i * ARTIFACT_SPAWN_INTERVAL,
+          side: i % 2 === 0 ? -1 : 1,
+          y: ARTIFACT_HEIGHTS[i],
+          baseYaw: (i * Math.PI) / 3,
+          tilt: (i % 2 === 0 ? 1 : -1) * (0.15 + (i % 3) * 0.12),
+          spin: 0.6 + (i % 3) * 0.35,
+        };
+      }),
+    [],
+  );
+  useEffect(
+    () => () => artifacts.forEach((a) => disposeArtifact(a.group)),
+    [artifacts],
+  );
+
+  // The overlay button only launches while this driver is mounted, and
+  // an abandoned ride (unmount mid-journey) must not leave the page UI
+  // hidden behind the body class
+  useEffect(() => {
+    journeyState.driverAlive = true;
+    return () => {
+      journeyState.driverAlive = false;
+      endRocketJourney();
+    };
+  }, []);
+
+  useFrame(({ camera, clock, size }, rawDelta) => {
+    const state = journeyState;
+    if (state.phase === "idle") {
+      if (rig.current?.visible) rig.current.visible = false;
+      startCaptured.current = false;
+      return;
+    }
+    // Route change mid-ride (browser back): abort and let CameraRig
+    // swoop to the new view from wherever the camera is
+    if (view !== "home") {
+      if (rig.current) rig.current.visible = false;
+      startCaptured.current = false;
+      endRocketJourney();
+      return;
+    }
+
+    const t = clock.elapsedTime;
+    // Clamped like StarField's fades: a backgrounded tab must pause the
+    // ride, not fast-forward it past the whole show on the first frame back
+    const delta = Math.min(rawDelta, 0.1);
+    state.phaseElapsed += delta;
+
+    if (state.phase === "boarding") {
+      if (!startCaptured.current) {
+        startCaptured.current = true;
+        startPos.current.copy(camera.position);
+        startQuat.current.copy(camera.quaternion);
+      }
+      // Chase pose: behind the rocket, sighted along its nose
+      planetPosition(ROCKET, t, rocketPos);
+      rocketNoseDirection(t, noseDir);
+      targetPos.copy(rocketPos).addScaledVector(noseDir, -BOARD_CAM_BEHIND);
+      lookTarget.copy(rocketPos).addScaledVector(noseDir, BOARD_LOOK_AHEAD);
+      lookMatrix.lookAt(targetPos, lookTarget, UP);
+      targetQuat.setFromRotationMatrix(lookMatrix);
+
+      const p = clamp01(state.phaseElapsed / BOARDING_SECONDS);
+      const e = easeInOutCubic(p);
+      camera.position.lerpVectors(startPos.current, targetPos, e);
+      camera.quaternion.slerpQuaternions(startQuat.current, targetQuat, e);
+      // Stars fade with the approach; the flash + streaks take over
+      state.starDim = e;
+
+      if (p >= 1) {
+        state.phase = "warp";
+        state.phaseElapsed = 0;
+        startCaptured.current = false;
+        flashWarp();
+        // Jump along the current heading: same orientation, new spot —
+        // the flash covers the position cut, the view direction doesn't
+        // change, and the solar system ends up a speck behind us
+        warpPos.current.copy(noseDir).multiplyScalar(WARP_DISTANCE);
+        warpQuat.current.copy(targetQuat);
+        camera.position.copy(warpPos.current);
+        camera.quaternion.copy(warpQuat.current);
+        if (rig.current) {
+          rig.current.position.copy(warpPos.current);
+          rig.current.quaternion.copy(warpQuat.current);
+          rig.current.visible = true;
+        }
+      }
+      return;
+    }
+
+    // ── warp ──
+    const elapsed = state.phaseElapsed;
+    const intensity = THREE.MathUtils.smoothstep(
+      Math.min(
+        clamp01(elapsed / WARP_RAMP_IN_SECONDS),
+        clamp01((WARP_SECONDS - elapsed) / WARP_RAMP_OUT_SECONDS),
+      ),
+      0,
+      1,
+    );
+    state.starDim = clamp01((WARP_SECONDS - elapsed) / STAR_RETURN_SECONDS);
+
+    // Gentle sway + roll inside the rig so the ride breathes without
+    // moving the streak field itself
+    sway
+      .set(Math.sin(t * 0.9) * 0.5, Math.sin(t * 1.31) * 0.35, 0)
+      .applyQuaternion(warpQuat.current);
+    camera.position.copy(warpPos.current).add(sway);
+    rollQuat.setFromAxisAngle(Z_AXIS, Math.sin(t * 0.7) * 0.035);
+    camera.quaternion.copy(warpQuat.current).multiply(rollQuat);
+
+    // March the streak heads toward the camera and wrap; tails trail
+    // "ahead" (where the streak came from) by the stretched length
+    const positions = streaks.positionAttr.array as Float32Array;
+    const length = STREAK_LENGTH * intensity + 0.2;
+    for (let i = 0; i < STREAK_COUNT; i++) {
+      let zHead = streaks.z[i] + streaks.speed[i] * intensity * delta;
+      if (zHead > STREAK_BEHIND_PAD) zHead -= STREAK_DEPTH + STREAK_BEHIND_PAD;
+      streaks.z[i] = zHead;
+      positions[i * 6] = streaks.x[i];
+      positions[i * 6 + 1] = streaks.y[i];
+      positions[i * 6 + 2] = zHead;
+      positions[i * 6 + 3] = streaks.x[i];
+      positions[i * 6 + 4] = streaks.y[i];
+      positions[i * 6 + 5] = zHead - length;
+    }
+    streaks.positionAttr.needsUpdate = true;
+    streaks.material.opacity = intensity;
+
+    // Flyby cameos: each pops in far ahead, drifts outward as it nears,
+    // and exits past the shoulder of the windshield
+    for (const artifact of artifacts) {
+      const local = elapsed - artifact.spawnAt;
+      const z = ARTIFACT_Z_START + local * ARTIFACT_SPEED;
+      if (local < 0 || z > ARTIFACT_Z_EXIT) {
+        artifact.group.visible = false;
+        continue;
+      }
+      artifact.group.visible = true;
+      const progress =
+        (z - ARTIFACT_Z_START) / (ARTIFACT_Z_EXIT - ARTIFACT_Z_START);
+      artifact.group.position.set(
+        artifact.side * (9 + progress * 14),
+        artifact.y,
+        z,
+      );
+      artifact.group.rotation.set(
+        artifact.tilt,
+        artifact.baseYaw + t * artifact.spin,
+        0,
+      );
+    }
+
+    if (elapsed >= WARP_SECONDS) {
+      // Drop out of lightspeed onto the home approach line; ending the
+      // journey hands the camera back to CameraRig, whose resume swoop
+      // glides it the rest of the way onto the perch
+      homeViewGoal(t, camera, size, goalPos, goalLook);
+      forward.copy(goalLook).sub(goalPos).normalize();
+      camera.position.copy(goalPos).addScaledVector(forward, -REENTRY_DISTANCE);
+      lookMatrix.lookAt(camera.position, goalLook, UP);
+      camera.quaternion.setFromRotationMatrix(lookMatrix);
+      if (rig.current) rig.current.visible = false;
+      flashWarp();
+      endRocketJourney();
+    }
+  });
+
+  return (
+    <group ref={rig} visible={false}>
+      {/* The warp zone brings its own light (the scene's ambient is
+          starlight-dim); parented here, it only exists while the rig is
+          visible */}
+      <ambientLight intensity={0.55} />
+      <pointLight position={[6, 14, 18]} intensity={2.2} decay={0} />
+      <lineSegments
+        ref={streakLines}
+        geometry={streaks.geometry}
+        material={streaks.material}
+        frustumCulled={false}
+      />
+      {artifacts.map((artifact, i) => (
+        <primitive key={i} object={artifact.group} />
+      ))}
+    </group>
+  );
+}

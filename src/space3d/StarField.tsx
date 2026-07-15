@@ -25,6 +25,7 @@ import {
 } from "./starSampling";
 import { domToWorldX, domToWorldY, Z_STARS } from "./SpaceCanvas";
 import { starPanState } from "./starPan";
+import { journeyState } from "../rocketJourney";
 
 /**
  * GPU star field. Replaces the legacy DOM/SVG stars (one element per star,
@@ -218,6 +219,9 @@ const useConfigureMaterial = (
   pansWithCamera = false,
 ) => {
   const gl = useThree((s) => s.gl);
+  // Chases journeyState.starDim so the stars ease back even when the
+  // ride ends abruptly (an aborted warp hard-resets the dim to 0)
+  const journeyDim = useRef(0);
   useEffect(() => {
     const ctx = gl.getContext();
     // eslint-disable-next-line -- TODO: rm this comment and fix the lint error
@@ -229,12 +233,17 @@ const useConfigureMaterial = (
     }
   }, [gl, material]);
 
-  useFrame((state) => {
+  useFrame((state, delta) => {
     material.uniforms.uTime.value = state.clock.elapsedTime;
     material.uniforms.uHue.value =
       ((state.clock.elapsedTime / HUE_ROTATION_PERIOD_S) % 1) * Math.PI * 2;
     material.uniforms.uPixelRatio.value = state.gl.getPixelRatio();
-    material.uniforms.uOpacity.value = opacityRef.current;
+    // The rocket joyride dims the point stars while its warp streaks
+    // play (static dots under a lightspeed jump would give the trick away)
+    journeyDim.current +=
+      (journeyState.starDim - journeyDim.current) * Math.min(1, delta * 5);
+    material.uniforms.uOpacity.value =
+      opacityRef.current * (1 - journeyDim.current);
     if (pansWithCamera) {
       (material.uniforms.uPan.value as THREE.Vector2).set(
         starPanState.x,

@@ -7,6 +7,8 @@ import Moon from "./Moon";
 import Sun from "./Sun";
 import Asteroid from "./Asteroid";
 import Satellite from "./Satellite";
+import Rocket from "./Rocket";
+import RocketJourney from "./RocketJourney";
 import SunSvgAnchor from "./SunSvgAnchor";
 import BodyAnchors from "./BodyAnchors";
 import { ASTEROIDS, PLANETS } from "./constants";
@@ -118,6 +120,12 @@ const SolarScene = ({
             config={asteroid}
             visible={view === "home"}
           />
+        ) : asteroid.name === "rocket" ? (
+          <Rocket
+            key={asteroid.name}
+            config={asteroid}
+            visible={view === "home"}
+          />
         ) : (
           <Asteroid
             key={asteroid.name}
@@ -126,6 +134,9 @@ const SolarScene = ({
           />
         ),
       )}
+      {/* Mounted before CameraRig: while the joyride is active it must
+          pose the camera first each frame (CameraRig stands down) */}
+      <RocketJourney view={view} />
       <CameraRig view={view} />
       <SunSvgAnchor />
       <BodyAnchors />
