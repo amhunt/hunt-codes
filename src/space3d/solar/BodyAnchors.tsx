@@ -57,7 +57,7 @@ const asteroidConfig = (asteroid: SolarPlanetConfig): BodyAnchorConfig => ({
   position: (t, out) => planetPosition(asteroid, t, out),
   radius: asteroid.radius,
   ringScale: 1.4,
-  minSizePx: 36,
+  minSizePx: 44,
 });
 
 const ANCHORS: BodyAnchorConfig[] = [
