@@ -3,7 +3,7 @@ import cx from "classnames";
 import { ArrowLeftCircle, Calendar } from "react-feather";
 import { useInView } from "react-intersection-observer";
 import { Link } from "react-router-dom";
-import useWindowSize from "useWindowSize";
+import useWindowSize from "./useWindowSize";
 import ZipVideoMoon from "./ZipVideoMoon";
 
 const experienceItems = [
@@ -25,7 +25,7 @@ const experienceItems = [
       "Developed, shipped, and iterated on new product features",
       "Led initiatives to standardize and improve shared components",
       {
-        item: "Dev infra – CI/Quality/Dev experience:",
+        item: "Dev infra — CI/Quality/Dev experience:",
         subbullets: [
           "TypeScript correctness + coverage CI checks",
           "Testing: Jest unit testing, Datadog Synthetic tests, and visual regression testing via Storybook/Chromatic",
@@ -34,7 +34,7 @@ const experienceItems = [
       },
       "Architected and managed build & deploy systems across Webpack, Jenkins, Docker, S3, Cloudflare, and Webflow",
       "Built & maintained frontend infrastructure: dev server, Storybook, testing, logging, sourcemaps, TS/React usage, third-party package usage/maintenance",
-      "TypeScript: enabled TypeScript and led migration of frontend code to 99% type safety",
+      "TypeScript: Enabled TypeScript and led migration of frontend code to 99% type safety",
       "Performance: Improved page load times by >50%, primarily via code splitting and routing optimizations",
     ],
   },
@@ -126,10 +126,11 @@ const Resume = () => {
             >
               Zip
             </a>{" "}
-            — most recently as a staff engineer — before striking out on my own
-            in 2025. Since then I’ve been contracting and consulting, helping
-            teams ship polished, AI-powered web products. For inquiries, reach
-            out to{" "}
+            — most recently as a staff engineer — before stepping away in 2025
+            for a proper sabbatical. A few months of recharging later, I eased
+            back in through consulting, helping teams ship polished, AI-powered
+            web products. Come fall 2026 I’m looking to go full-time again — for
+            consulting or full-time inquiries, reach out to{" "}
             <a
               className="inverse"
               href="mailto:andrew@hunt.codes?Subject=Hey%20Andrew"

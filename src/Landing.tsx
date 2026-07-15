@@ -91,6 +91,9 @@ const Landing = () => {
   // to the projected 3D sun each frame.
   return (
     <div className="landing-page">
+      {/* The page's only visible text is drawn in WebGL — give crawlers
+          and screen readers something to land on */}
+      <h1 className="sr-only">Andrew Hunt — Frontend Engineer in New York</h1>
       <svg
         id="solar-system"
         className={skipIntroDelay ? "no-intro-delay" : undefined}
@@ -99,6 +102,7 @@ const Landing = () => {
       >
         <Link
           to="/home"
+          aria-label="Enter Andrew Hunt's home page"
           onPointerEnter={() => {
             hoverState.sun = true;
           }}

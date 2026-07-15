@@ -58,6 +58,10 @@ const Home = () => {
   const [copyTooltipOpen, setCopyTooltipOpen] = useState(false);
   const copyTriggerRef = useRef<HTMLButtonElement>(null);
   const pinCopyTooltipOpen = useRef(false);
+  const copyResetTimer = useRef<ReturnType<typeof setTimeout> | undefined>(
+    undefined,
+  );
+  useEffect(() => () => clearTimeout(copyResetTimer.current), []);
 
   const pinCopyTooltip = useCallback(() => {
     pinCopyTooltipOpen.current = true;
@@ -74,7 +78,9 @@ const Home = () => {
     try {
       await navigator.clipboard.writeText("andrew+in@hunt.codes");
       setCopied(true);
-      setTimeout(() => {
+      // Rapid re-clicks must not let an older timer un-pin the fresh state
+      clearTimeout(copyResetTimer.current);
+      copyResetTimer.current = setTimeout(() => {
         setCopied(false);
         pinCopyTooltipOpen.current = false;
         const isHovering = copyTriggerRef.current?.matches(":hover") ?? false;
@@ -162,7 +168,7 @@ const Home = () => {
                   <button
                     type="button"
                     ref={copyTriggerRef}
-                    aria-label="Copy email address andrew@hunt.codes"
+                    aria-label="Copy email address andrew+in@hunt.codes"
                     onPointerDown={() => pinCopyTooltip()}
                     onClick={() => void handleCopy()}
                     className="flex size-11 items-center justify-center rounded-full p-1 transition-colors hover:bg-[#5efffc57]"

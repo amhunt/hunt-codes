@@ -224,11 +224,11 @@ const useConfigureMaterial = (
   const journeyDim = useRef(0);
   useEffect(() => {
     const ctx = gl.getContext();
-    // eslint-disable-next-line -- TODO: rm this comment and fix the lint error
-    const range = ctx.getParameter(ctx.ALIASED_POINT_SIZE_RANGE);
-    // eslint-disable-next-line -- TODO: rm this comment and fix the lint error
-    if (range && range[1]) {
-      // eslint-disable-next-line -- TODO: rm this comment and fix the lint error
+    // getParameter is untyped (any); ALIASED_POINT_SIZE_RANGE yields [min, max]
+    const range = ctx.getParameter(
+      ctx.ALIASED_POINT_SIZE_RANGE,
+    ) as Float32Array | null;
+    if (range?.[1]) {
       material.uniforms.uMaxPointSize.value = range[1];
     }
   }, [gl, material]);
