@@ -115,31 +115,46 @@ const animateSvg = (container: HTMLDivElement) => {
   });
 };
 
+// localStorage can throw (blocked cookies, some embedded webviews) —
+// treat persistence as best-effort
+const readStoredApiKey = () => {
+  try {
+    return localStorage.getItem("openai-api-key") || "";
+  } catch {
+    return "";
+  }
+};
+
 const SvgGenerator = () => {
   const [prompt, setPrompt] = useState("");
-  const [apiKey, setApiKey] = useState(
-    () => localStorage.getItem("openai-api-key") || "",
-  );
+  const [apiKey, setApiKey] = useState(readStoredApiKey);
   const [svgContent, setSvgContent] = useState("");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
   const [showApiKeyField, setShowApiKeyField] = useState(
-    () => !localStorage.getItem("openai-api-key"),
+    () => !readStoredApiKey(),
   );
 
   const svgContainerRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
 
-  // Persist API key
+  // Persist API key; clearing the field forgets the stored key
   useEffect(() => {
-    if (apiKey) {
-      localStorage.setItem("openai-api-key", apiKey);
+    try {
+      if (apiKey) {
+        localStorage.setItem("openai-api-key", apiKey);
+      } else {
+        localStorage.removeItem("openai-api-key");
+      }
+    } catch {
+      // storage unavailable — the key just won't persist
     }
   }, [apiKey]);
 
   // Focus input on mount
   useEffect(() => {
-    setTimeout(() => inputRef.current?.focus(), 500);
+    const timer = setTimeout(() => inputRef.current?.focus(), 500);
+    return () => clearTimeout(timer);
   }, []);
 
   const generateSvg = useCallback(async () => {
@@ -229,6 +244,7 @@ const SvgGenerator = () => {
     <div className="svg-generator-page">
       <div className="svg-generator-back-link">
         <Link
+          aria-label="Back to landing page"
           className="mt-4 flex items-center gap-1 transition-transform"
           to="/"
         >
@@ -262,6 +278,7 @@ const SvgGenerator = () => {
           {showApiKeyField && (
             <input
               type="password"
+              aria-label="OpenAI API key"
               className="svg-generator-api-key-input"
               placeholder="sk-..."
               value={apiKey}
@@ -276,6 +293,7 @@ const SvgGenerator = () => {
         <div className="svg-generator-input-row">
           <input
             ref={inputRef}
+            aria-label="Describe an image to draw"
             className="svg-generator-input"
             type="text"
             placeholder='Describe an image to draw, e.g. "saturn with rings"'

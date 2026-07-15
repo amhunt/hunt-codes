@@ -1,5 +1,10 @@
 import React, { useState, useEffect, useRef } from "react";
-import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
+import {
+  BrowserRouter as Router,
+  Routes,
+  Route,
+  useLocation,
+} from "react-router-dom";
 import cx from "classnames";
 import "./App.scss";
 
@@ -40,6 +45,30 @@ const usePauseAudioOnHideEventListener = () => {
   }, []);
 };
 
+const DEFAULT_TITLE = "Andrew Hunt - Frontend Engineer | New York";
+const ROUTE_TITLES: Record<string, string> = {
+  "/": DEFAULT_TITLE,
+  "/home": DEFAULT_TITLE,
+  "/about": "About Me | Andrew Hunt",
+  "/draw": "SVG Studio | Andrew Hunt",
+};
+
+// The static index.html head serves every route of the SPA; keep the tab
+// title and canonical URL in sync as the visitor navigates
+const RouteMeta = () => {
+  const { pathname } = useLocation();
+  useEffect(() => {
+    document.title = ROUTE_TITLES[pathname] ?? DEFAULT_TITLE;
+    document
+      .querySelector('link[rel="canonical"]')
+      ?.setAttribute(
+        "href",
+        `https://www.hunt.codes${pathname === "/" ? "/" : pathname}`,
+      );
+  }, [pathname]);
+  return null;
+};
+
 const App = () => {
   const [showBridge, setShowBridge] = useState(false);
   // The whole app is night until the visitor flips the moon/sun switch
@@ -49,7 +78,7 @@ const App = () => {
 
   // fade home content in once mounted
   useEffect(() => {
-    // eslint-disable-next-line -- TODO: rm this comment and fix the lint error
+    // eslint-disable-next-line no-console -- intentional easter egg
     console.log("bro what r u doing in the console...");
     const timer = setTimeout(() => setShowBridge(true), 1500);
     return () => clearTimeout(timer);
@@ -58,6 +87,7 @@ const App = () => {
   return (
     <div className={cx("App", isNightMode ? "night" : "day")}>
       <Router>
+        <RouteMeta />
         <AppBackground showBridge={showBridge} isNightMode={isNightMode} />
         <DayNightSwitch
           isNightMode={isNightMode}

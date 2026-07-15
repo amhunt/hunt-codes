@@ -1,3 +1,8 @@
+// Only compiled when RetroMac.tsx (intentionally kept, currently unused)
+// is re-enabled; keep in sync with the App.scss breakpoints
+$breakpoint-sm: 768px;
+$breakpoint-lg: 1280px;
+
 body {
   background-color: #eee9e6;
 }

@@ -212,14 +212,14 @@ const LOGO_MARKS: Record<
   { path: string; color: string; scale: number }
 > = {
   github: { path: GITHUB_MARK_PATH, color: "#5000f0", scale: 0.72 },
-  // The square marks are scaled down so their corners stay inside the disc
+  // The square marks are scaled down so they don't overwhelm the asteroid
   linkedin: { path: LINKEDIN_MARK_PATH, color: "#0a66c2", scale: 0.6 },
   blog: { path: RSS_MARK_PATH, color: "#f26522", scale: 0.6 },
   play: { path: PLAY_MARK_PATH, color: "#412596", scale: 0.85 },
 };
 
-/** White badge disc with a brand mark, transparent outside the disc —
- *  a "sticker" decal for the link asteroids. */
+/** Brand mark on a transparent canvas — a "sticker" decal for the link
+ *  asteroids (no background disc: the mark sits directly on the rock). */
 export function createLogoBadgeTexture(
   logo: AsteroidLogo,
 ): THREE.CanvasTexture {

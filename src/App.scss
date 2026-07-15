@@ -54,6 +54,37 @@ $breakpoint-lg: 1280px;
     background: rgba(0, 0, 0, 0.05);
     border-color: rgba(0, 0, 0, 0.15);
   }
+
+  .svg-generator-input::placeholder {
+    color: rgba(20, 20, 40, 0.4);
+  }
+
+  // These are styled for the night sky only — keep them legible by day
+  .svg-generator-api-key-toggle {
+    color: rgba(20, 20, 40, 0.6) !important;
+
+    &:hover {
+      color: $purp !important;
+    }
+  }
+
+  .svg-generator-api-key-input {
+    color: #222;
+    background: rgba(0, 0, 0, 0.05);
+    border-color: rgba(0, 0, 0, 0.15);
+  }
+
+  // White pill text washes out on the frosted-white day panel
+  .tool-pill {
+    color: $purp;
+  }
+
+  // Rainbow keyframes composite to pale pastels over the white panel —
+  // dark text stays legible through the whole cycle
+  .interest-pill {
+    color: #24203a;
+    background-color: #cdbcff;
+  }
 }
 
 .landing-page {
@@ -132,8 +163,10 @@ audio {
     position: relative;
 
     // Provides a slight glow to the text in the cards
+    // (No backdrop-filter here — blurring over the animated canvases
+    // forces a backdrop re-capture every frame; the box-shadow alone
+    // carries the glow)
     ::before {
-      backdrop-filter: blur(2px);
       border-radius: 8px;
       opacity: 0.5;
       padding: 16px;
@@ -357,8 +390,9 @@ p {
   .gg-fog-drift,
   .interest-pill,
   .App-background_day,
-  .star_disco,
+  .body-outline-pulse,
   .svg-generator-spinner,
+  .svg-generator-loading-dots span,
   .svg-generator-svg-wrapper svg {
     animation: none !important;
   }
@@ -788,50 +822,6 @@ a:hover {
     -moz-transform: rotateY(-360deg);
     -ms-transform: rotateY(-360deg);
     transform: rotateY(-360deg);
-  }
-}
-
-@keyframes backgroundAnim {
-  0% {
-    filter: hue-rotate(45deg);
-  }
-  100% {
-    filter: hue-rotate(210deg);
-  }
-}
-
-.star {
-  position: absolute;
-  background-color: white;
-  box-shadow: 0 0 1px 1px $purp-light-transparent-25;
-  border-radius: 50%;
-
-  &.star_background {
-    background-color: rgba(
-      255,
-      255,
-      255,
-      0.5
-    ); // Very dim for background-color stars
-    box-shadow: 0 0 4px 1.5px rgba(210, 99, 99, 0.8); // Glow effect for text stars
-    // box-shadow: none;
-    // filter: hue-rotate(45deg);
-  }
-
-  &.star_disco {
-    box-shadow: 0 0 1px 5px $purp-light-transparent-25 !important;
-    animation: 4s ease-in-out infinite alternate star-disco;
-  }
-}
-
-@keyframes star-disco {
-  0% {
-    transform: scale(1);
-    filter: hue-rotate(0deg);
-  }
-  100% {
-    transform: scale(2.2);
-    filter: hue-rotate(360deg);
   }
 }
 
@@ -1349,9 +1339,14 @@ $dns-ease: cubic-bezier(0.45, 0.05, 0.25, 1.2);
     // navigating back to space doesn't leave it lingering
     opacity: 0;
     pointer-events: none;
+    // Leave the tab order once the fade completes — an invisible toggle
+    // shouldn't take keyboard focus (unhide flips back instantly, so the
+    // base rule's delayed fade-in is unaffected)
+    visibility: hidden;
     transition:
       background 500ms ease,
-      opacity 200ms ease;
+      opacity 200ms ease,
+      visibility 0s linear 200ms;
   }
 
   &[data-state="checked"] {
@@ -1795,10 +1790,11 @@ $dns-ease: cubic-bezier(0.45, 0.05, 0.25, 1.2);
   align-items: center;
   justify-content: center;
   padding: 24px;
-  background: rgba(0, 0, 0, 0.3);
+  // Higher-opacity background instead of backdrop-filter — blurring over
+  // the animated star canvas forces a backdrop re-capture every frame
+  background: rgba(0, 0, 0, 0.45);
   border: 1px solid rgba(255, 255, 255, 0.06);
   border-radius: 16px;
-  backdrop-filter: blur(8px);
   animation: svgGenResultIn 0.5s ease both;
 
   svg {

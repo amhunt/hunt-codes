@@ -102,7 +102,7 @@ const AppBackground = ({
             )}
             controls
           >
-            <source src="analog.wav" />
+            <source src="/analog.wav" />
           </audio>
         ) : (
           <button
