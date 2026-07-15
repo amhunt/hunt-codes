@@ -1244,6 +1244,13 @@ body.rocket-journey #rocket-cockpit {
   }
 }
 
+// Stepper planets (the wave selector) click through their options
+// rather than dragging a scale
+.synth-knob--stepper,
+.synth-knob--stepper:active {
+  cursor: pointer;
+}
+
 .synth-knob-arc {
   position: absolute;
   inset: 0;

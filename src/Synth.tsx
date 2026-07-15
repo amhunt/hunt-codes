@@ -28,9 +28,12 @@ import {
  * system. The canvases never take pointer input, so each knob planet
  * gets a fixed-position button here that SynthSystem glues to the
  * planet's projection each frame — drag one vertically (or scroll, or
- * arrow-key it) to turn the knob. The sun's overlay toggles the
- * arpeggiator, the keyboard plays notes, and "back to Earth" rides the
- * lightspeed warp home.
+ * arrow-key it) to turn the knob. Stepper planets (the wave selector)
+ * are a different instrument: clicking cycles to the next option, and
+ * the planet itself wears the selected waveform (SynthSystem's
+ * oscilloscope texture), so they carry no value arc. The sun's overlay
+ * toggles the arpeggiator, the keyboard plays notes, and "back to
+ * Earth" rides the lightspeed warp home.
  */
 
 // Piano-style key map (ableton layout), semitones up from A3
@@ -125,6 +128,18 @@ const Synth = () => {
     setActiveParam(param);
   }, []);
 
+  // Stepper planets cycle through their options (wrapping) instead of
+  // sweeping a scale
+  const cycleStep = useCallback(
+    (knob: SynthKnobSpec, direction: 1 | -1) => {
+      const count = knob.stepNames!.length;
+      const step = Math.round(getParam(knob.param) * (count - 1));
+      const next = (step + direction + count) % count;
+      commitParam(knob.param, next / (count - 1));
+    },
+    [commitParam],
+  );
+
   return (
     <>
       <RocketCockpit />
@@ -153,6 +168,42 @@ const Synth = () => {
       {SYNTH_KNOBS.map((knob) => {
         const value = params[knob.param];
         const isActive = activeParam === knob.param;
+        if (knob.stepNames) {
+          // Click-to-cycle stepper: the planet displays the selection
+          // (no sliding scale), the label names it, a click advances it
+          return (
+            <button
+              key={knob.param}
+              type="button"
+              id={synthKnobAnchorId(knob.param)}
+              className="synth-knob synth-knob--stepper"
+              aria-label={`${knob.label}: ${knobDisplay(knob, value)} — click for next`}
+              onClick={() => {
+                ensureAudio();
+                cycleStep(knob, 1);
+              }}
+              onKeyDown={(e) => {
+                if (e.key === "ArrowUp" || e.key === "ArrowRight") {
+                  e.preventDefault();
+                  ensureAudio();
+                  cycleStep(knob, 1);
+                } else if (e.key === "ArrowDown" || e.key === "ArrowLeft") {
+                  e.preventDefault();
+                  ensureAudio();
+                  cycleStep(knob, -1);
+                }
+              }}
+              onPointerEnter={() => setActive(knob.param)}
+              onPointerLeave={() => setActive(null)}
+              onFocus={() => setActive(knob.param)}
+              onBlur={() => setActive(null)}
+            >
+              <span className="synth-knob-label">
+                {knob.label} · {knobDisplay(knob, value)}
+              </span>
+            </button>
+          );
+        }
         return (
           <button
             key={knob.param}
@@ -196,15 +247,14 @@ const Synth = () => {
               commitParam(knob.param, value - e.deltaY * 0.0012);
             }}
             onKeyDown={(e) => {
-              const step = knob.steps ? 1 / (knob.steps - 1) : 0.05;
               if (e.key === "ArrowUp" || e.key === "ArrowRight") {
                 e.preventDefault();
                 ensureAudio();
-                commitParam(knob.param, value + step);
+                commitParam(knob.param, value + 0.05);
               } else if (e.key === "ArrowDown" || e.key === "ArrowLeft") {
                 e.preventDefault();
                 ensureAudio();
-                commitParam(knob.param, value - step);
+                commitParam(knob.param, value - 0.05);
               }
             }}
             onFocus={() => setActive(knob.param)}

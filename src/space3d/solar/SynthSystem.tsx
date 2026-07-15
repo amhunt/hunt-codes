@@ -35,6 +35,79 @@ const REVEAL_SECONDS = 1.2;
 const SWAY_RADIANS = 0.06;
 const SWAY_RATE = 0.13;
 
+/**
+ * Stepper planets (the wave selector) wear their current option: the
+ * waveform is drawn as a glowing oscilloscope trace wrapping the
+ * equator, so the planet itself displays the shape it's set to. One
+ * texture per step, index-aligned with the spec's stepNames.
+ */
+const WAVE_TEXTURE_W = 512;
+const WAVE_TEXTURE_H = 256;
+const WAVE_CYCLES = 4;
+
+function createWaveTexture(shape: string): THREE.CanvasTexture {
+  const canvas = document.createElement("canvas");
+  canvas.width = WAVE_TEXTURE_W;
+  canvas.height = WAVE_TEXTURE_H;
+  const ctx = canvas.getContext("2d")!;
+  const midY = WAVE_TEXTURE_H / 2;
+  const amp = WAVE_TEXTURE_H * 0.2;
+  const period = WAVE_TEXTURE_W / WAVE_CYCLES;
+
+  // Oscilloscope face: near-black screen with a faint axis line
+  ctx.fillStyle = "#141b2a";
+  ctx.fillRect(0, 0, WAVE_TEXTURE_W, WAVE_TEXTURE_H);
+  ctx.strokeStyle = "rgba(255, 255, 255, 0.12)";
+  ctx.lineWidth = 2;
+  ctx.beginPath();
+  ctx.moveTo(0, midY);
+  ctx.lineTo(WAVE_TEXTURE_W, midY);
+  ctx.stroke();
+
+  ctx.strokeStyle = "#dff1ff";
+  ctx.lineWidth = 8;
+  ctx.lineJoin = "round";
+  ctx.lineCap = "round";
+  ctx.beginPath();
+  if (shape === "sine") {
+    for (let x = 0; x <= WAVE_TEXTURE_W; x += 2) {
+      const y = midY - amp * Math.sin((x / period) * Math.PI * 2);
+      if (x === 0) ctx.moveTo(x, y);
+      else ctx.lineTo(x, y);
+    }
+  } else {
+    for (let c = 0; c < WAVE_CYCLES; c++) {
+      const x0 = c * period;
+      if (shape === "triangle") {
+        // 0 -> +amp -> -amp -> 0, tiling cleanly across cycles
+        if (c === 0) ctx.moveTo(x0, midY);
+        ctx.lineTo(x0 + period * 0.25, midY - amp);
+        ctx.lineTo(x0 + period * 0.75, midY + amp);
+        ctx.lineTo(x0 + period, midY);
+      } else if (shape === "saw") {
+        // Ramp up, vertical drop
+        if (c === 0) ctx.moveTo(x0, midY + amp);
+        ctx.lineTo(x0 + period, midY - amp);
+        ctx.lineTo(x0 + period, midY + amp);
+      } else {
+        // square: high half, low half, hard edges
+        if (c === 0) ctx.moveTo(x0, midY - amp);
+        ctx.lineTo(x0 + period * 0.5, midY - amp);
+        ctx.lineTo(x0 + period * 0.5, midY + amp);
+        ctx.lineTo(x0 + period, midY + amp);
+        if (c < WAVE_CYCLES - 1) ctx.lineTo(x0 + period, midY - amp);
+      }
+    }
+  }
+  ctx.stroke();
+
+  const texture = new THREE.CanvasTexture(canvas);
+  texture.wrapS = THREE.RepeatWrapping;
+  texture.colorSpace = THREE.SRGBColorSpace;
+  texture.anisotropy = 4;
+  return texture;
+}
+
 const ORIGIN = new THREE.Vector3(
   SYNTH_ORIGIN.x,
   SYNTH_ORIGIN.y,
@@ -87,6 +160,18 @@ function KnobPlanet({
   const orbitMaterial = useRef<THREE.LineBasicMaterial>(null);
   const glow = useRef(0);
 
+  // Stepper planets carry one oscilloscope texture per option; the
+  // frame loop swaps the active one in as the value changes
+  const stepTextures = useMemo(
+    () => spec.stepNames?.map((name) => createWaveTexture(name)) ?? null,
+    [spec.stepNames],
+  );
+  useEffect(
+    () => () => stepTextures?.forEach((texture) => texture.dispose()),
+    [stepTextures],
+  );
+  const appliedStep = useRef(-1);
+
   const orbitLine = useMemo(() => {
     const points: THREE.Vector3[] = [];
     for (let i = 0; i <= 128; i++) {
@@ -116,17 +201,32 @@ function KnobPlanet({
         Math.sin(phase) * spec.orbitRadius,
       );
     }
-    // The knob's value is legible from orbit: higher = faster spin
+    // The knob's value is legible from orbit: higher = faster spin.
+    // Steppers scroll at a steady readable pace instead — their spin
+    // is a ticker for the oscilloscope trace, not a value display.
     if (mesh.current) {
-      mesh.current.rotation.y += delta * (0.3 + value * 2.2);
+      mesh.current.rotation.y +=
+        delta * (stepTextures ? 0.55 : 0.3 + value * 2.2);
     }
     if (surface.current) {
       const active = synthUiState.activeKnob === spec.param;
       glow.current +=
         ((active ? 1 : 0) - glow.current) * Math.min(delta * 6, 1);
-      surface.current.emissiveIntensity =
-        (0.22 + value * 0.25 + glow.current * 0.5) * reveal.current;
+      // Steppers glow bright and flat — the texture IS the display
+      surface.current.emissiveIntensity = stepTextures
+        ? (0.8 + glow.current * 0.4) * reveal.current
+        : (0.22 + value * 0.25 + glow.current * 0.5) * reveal.current;
       surface.current.opacity = reveal.current;
+      // Show the currently selected waveform on the planet's face
+      if (stepTextures) {
+        const step = Math.round(value * (stepTextures.length - 1));
+        if (step !== appliedStep.current) {
+          appliedStep.current = step;
+          surface.current.map = stepTextures[step];
+          surface.current.emissiveMap = stepTextures[step];
+          surface.current.needsUpdate = true;
+        }
+      }
     }
     if (orbitMaterial.current) {
       orbitMaterial.current.opacity = 0.22 * reveal.current;
@@ -144,19 +244,29 @@ function KnobPlanet({
         />
       </lineLoop>
       <group ref={group}>
-        <mesh ref={mesh}>
-          <sphereGeometry args={[spec.radius, 32, 24]} />
-          <meshStandardMaterial
-            ref={surface}
-            color={spec.color}
-            roughness={0.45}
-            metalness={0.1}
-            emissive={spec.color}
-            emissiveIntensity={0}
-            transparent
-            opacity={0}
-          />
-        </mesh>
+        {/* Steppers are tipped 90° so the equator — where the trace is
+            drawn — faces the top-down camera instead of the blank pole;
+            the mesh's own spin then scrolls the trace like a ticker */}
+        <group rotation={stepTextures ? [Math.PI / 2, 0, 0] : [0, 0, 0]}>
+          <mesh ref={mesh}>
+            <sphereGeometry args={[spec.radius, 32, 24]} />
+            {/* Steppers show their oscilloscope texture true-color (white
+              base, white emissive so the trace glows); plain knobs get
+              the spec's flat color treatment */}
+            <meshStandardMaterial
+              ref={surface}
+              color={stepTextures ? "#ffffff" : spec.color}
+              map={stepTextures ? stepTextures[0] : null}
+              roughness={0.45}
+              metalness={0.1}
+              emissive={stepTextures ? "#ffffff" : spec.color}
+              emissiveMap={stepTextures ? stepTextures[0] : null}
+              emissiveIntensity={0}
+              transparent
+              opacity={0}
+            />
+          </mesh>
+        </group>
       </group>
     </>
   );

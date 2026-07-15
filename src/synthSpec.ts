@@ -47,10 +47,13 @@ export const SYNTH_CAM_HEIGHT = 32;
  */
 export const SYNTH_KNOBS: SynthKnobSpec[] = [
   {
+    // Stepper: click cycles the waveform, and the planet wears the
+    // selected shape as an oscilloscope trace (bigger radius so the
+    // trace stays legible from the top-down camera)
     param: "wave",
     label: "wave",
     color: "#cfd6dd",
-    radius: 0.8,
+    radius: 1.15,
     orbitRadius: 4.2,
     orbitPhase: 5.9,
     steps: 4,
