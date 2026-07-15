@@ -143,7 +143,7 @@ const AppBackground = ({
             )}
           >
             <MusicIcon size={16} />
-            <span>Enable space jams</span>
+            <span>Listen to my space music (real analog synths! no ai)</span>
           </button>
         ))}
       {!isLanding && (
