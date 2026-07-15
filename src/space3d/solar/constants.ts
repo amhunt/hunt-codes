@@ -158,9 +158,23 @@ export const ASTEROIDS: SolarPlanetConfig[] = [
     spinSpeed: 0.2 * SPEED_SCALE,
     yOffset: ASTEROID_Y + 1.4,
   },
+  {
+    // Rendered as the floating 808 drum pad (DrumPad.tsx). Clicking it
+    // warps to the synth solar system (/synth). High in the sky on the
+    // other flank of the sun from the rocket.
+    name: "synthpad",
+    kind: "mercury",
+    radius: 0.4,
+    orbitRadius: 4.9,
+    orbitSpeed: EARTH.orbitSpeed,
+    orbitPhase: EARTH.orbitPhase - 0.42,
+    spinSpeed: 0.2 * SPEED_SCALE,
+    yOffset: ASTEROID_Y + 1.15,
+  },
 ];
 
 export const ROCKET = ASTEROIDS.find((a) => a.name === "rocket")!;
+export const SYNTH_PAD = ASTEROIDS.find((a) => a.name === "synthpad")!;
 
 /** Earth's moon — orbits Earth (not the sun), in the same XZ plane. */
 export const MOON = {

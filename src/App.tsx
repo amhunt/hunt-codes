@@ -10,6 +10,7 @@ import "./App.scss";
 
 import Home from "./Home";
 import Resume from "./Resume";
+import Synth from "./Synth";
 import SvgGenerator from "./SvgGenerator";
 import AppBackground from "AppBackground";
 import DayNightSwitch from "DayNightSwitch";
@@ -106,6 +107,7 @@ const App = () => {
           <Route path="/" element={<Landing />} />
           <Route path="/home" element={<Home />} />
           <Route path="/about" element={<Resume />} />
+          <Route path="/synth" element={<Synth />} />
           <Route path="/draw" element={<SvgGenerator />} />
         </Routes>
       </Router>

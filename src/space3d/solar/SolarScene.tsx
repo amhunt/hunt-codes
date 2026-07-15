@@ -8,7 +8,9 @@ import Sun from "./Sun";
 import Asteroid from "./Asteroid";
 import Satellite from "./Satellite";
 import Rocket from "./Rocket";
+import DrumPad from "./DrumPad";
 import RocketJourney from "./RocketJourney";
+import SynthSystem from "./SynthSystem";
 import SunSvgAnchor from "./SunSvgAnchor";
 import BodyAnchors from "./BodyAnchors";
 import { ASTEROIDS, PLANETS } from "./constants";
@@ -34,9 +36,13 @@ let hasPlayedLandingIntro = false;
 const SolarScene = ({
   view,
   isNightMode,
+  onNavigate,
 }: {
   view: SolarView;
   isNightMode: boolean;
+  /** Router navigation for the lightspeed journeys (threaded through the
+   *  canvas boundary — router context doesn't cross into R3F) */
+  onNavigate: (to: string) => void;
 }) => {
   const isLanding = view === "landing";
   const [planetsRevealed, setPlanetsRevealed] = useState(
@@ -126,6 +132,12 @@ const SolarScene = ({
             config={asteroid}
             visible={view === "home"}
           />
+        ) : asteroid.name === "synthpad" ? (
+          <DrumPad
+            key={asteroid.name}
+            config={asteroid}
+            visible={view === "home"}
+          />
         ) : (
           <Asteroid
             key={asteroid.name}
@@ -134,9 +146,12 @@ const SolarScene = ({
           />
         ),
       )}
-      {/* Mounted before CameraRig: while the joyride is active it must
+      {/* The second solar system, far below this one: six knob-planets
+          around a beat-pulsing sun (the space synth) */}
+      {view === "synth" && <SynthSystem isNightMode={isNightMode} />}
+      {/* Mounted before CameraRig: while a journey is active it must
           pose the camera first each frame (CameraRig stands down) */}
-      <RocketJourney view={view} />
+      <RocketJourney view={view} navigate={onNavigate} />
       <CameraRig view={view} />
       <SunSvgAnchor />
       <BodyAnchors />

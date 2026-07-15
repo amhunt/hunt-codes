@@ -6,6 +6,7 @@ import { EARTH, moonPosition, planetPosition, rigState } from "./constants";
 import { starPanState } from "../starPan";
 import { scrollTransitionState } from "../../scrollTransition";
 import { journeyState } from "../../rocketJourney";
+import { SYNTH_CAM_HEIGHT, SYNTH_ORIGIN } from "../../synthSpec";
 
 /**
  * Camera choreography, ported from hunt-codes-3. Landing hovers straight
@@ -19,7 +20,7 @@ import { journeyState } from "../../rocketJourney";
  * a few seconds; once arrived the camera rides the moving goal.
  */
 
-export type SolarView = "landing" | "home" | "about";
+export type SolarView = "landing" | "home" | "about" | "synth";
 
 // Height tuned so Earth's orbit (r 17.5) nearly reaches the bottom edge
 // (~16px margin on a laptop): visible half-height = tan(fov/2)·y ≈ .52·35.
@@ -100,7 +101,17 @@ function computeGoal(
   camera: THREE.Camera,
   viewport: { width: number; height: number },
 ) {
-  if (view === "landing") {
+  if (view === "synth") {
+    // Straight down over the synth sun, like the landing view's orbital
+    // diagram — the knob planets read as a control panel. Same 0.01 z
+    // nudge to keep the lookAt out of the exact-degenerate pole case.
+    goalPos.set(
+      SYNTH_ORIGIN.x,
+      SYNTH_ORIGIN.y + SYNTH_CAM_HEIGHT,
+      SYNTH_ORIGIN.z + 0.01,
+    );
+    goalLook.set(SYNTH_ORIGIN.x, SYNTH_ORIGIN.y, SYNTH_ORIGIN.z);
+  } else if (view === "landing") {
     if (viewport.width >= LG_BREAKPOINT_PX) {
       // Drop the sun below center by panning the camera + look target the
       // same amount in −Z (screen-down), so the view stays straight-down.
@@ -173,17 +184,18 @@ function computeGoal(
   }
 }
 
-/** The home view's camera goal at time t, written into the caller's
- *  vectors — the rocket journey uses it to drop the camera onto the
- *  home approach line before handing control back. */
-export function homeViewGoal(
+/** A view's camera goal at time t, written into the caller's vectors —
+ *  the lightspeed journeys use it to drop the camera onto the
+ *  destination's approach line before handing control back. */
+export function viewGoal(
+  view: SolarView,
   t: number,
   camera: THREE.Camera,
   viewport: { width: number; height: number },
   outPos: THREE.Vector3,
   outLook: THREE.Vector3,
 ): void {
-  computeGoal("home", t, camera, viewport);
+  computeGoal(view, t, camera, viewport);
   outPos.copy(goalPos);
   outLook.copy(goalLook);
 }

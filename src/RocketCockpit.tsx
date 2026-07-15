@@ -1,11 +1,12 @@
 import React from "react";
 
 /**
- * The rocket joyride's cockpit dressing: a steel windshield frame whose
- * edges hug the viewport (so warp reads as seen from inside the ship)
- * and the white flash that covers the lightspeed jumps. Pure DOM/SVG —
- * always mounted on /home, revealed by `body.rocket-journey` (App.scss),
- * and never takes pointer input.
+ * The lightspeed journeys' cockpit dressing: a steel windshield frame
+ * whose edges hug the viewport (so warp reads as seen from inside the
+ * ship) and the white flash that covers the jumps. Pure DOM/SVG —
+ * mounted by every page a journey can start or end on (/home, /synth),
+ * revealed by `body.rocket-journey` (App.scss), never takes pointer
+ * input.
  *
  * The frame SVG stretches non-uniformly (preserveAspectRatio="none"):
  * corner curves become gentle ellipses on wide screens, which reads as

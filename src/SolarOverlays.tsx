@@ -14,7 +14,8 @@ import {
   EARTH_ABOUT_RING_ID,
 } from "./space3d/solar/BodyAnchors";
 import { hoverState } from "./solarHover";
-import { startRocketJourney } from "./rocketJourney";
+import { startRocketJourney, startSynthJourney } from "./rocketJourney";
+import { ensureAudio } from "./synthAudio";
 
 /**
  * DOM overlays for the home page's 3D bodies. The canvases never take
@@ -142,6 +143,38 @@ const SolarOverlays = () => {
           </TooltipTrigger>
           <TooltipContent updatePositionStrategy="always">
             <p>So u wanna be astronaut?</p>
+          </TooltipContent>
+        </Tooltip>
+      </TooltipProvider>
+      {/* The floating 808 pad: warps to the synth solar system (/synth).
+          Unlocking the AudioContext inside this click is what lets the
+          beat start playing the moment you land. */}
+      <TooltipProvider delayDuration={100}>
+        <Tooltip disableHoverableContent>
+          <TooltipTrigger asChild>
+            <button
+              type="button"
+              id={asteroidAnchorId("synthpad")}
+              className="asteroid-link"
+              aria-label="Space jam studio"
+              onClick={() => {
+                ensureAudio();
+                startSynthJourney();
+              }}
+              onPointerEnter={() => {
+                hoverState.asteroid = "synthpad";
+              }}
+              onPointerLeave={() => {
+                if (hoverState.asteroid === "synthpad") {
+                  hoverState.asteroid = null;
+                }
+              }}
+            >
+              <BodyOutline outlineId={asteroidOutlineId("synthpad")} />
+            </button>
+          </TooltipTrigger>
+          <TooltipContent updatePositionStrategy="always">
+            <p>space jam studio</p>
           </TooltipContent>
         </Tooltip>
       </TooltipProvider>

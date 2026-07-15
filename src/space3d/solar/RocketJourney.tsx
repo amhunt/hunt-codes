@@ -2,34 +2,33 @@ import React, { useEffect, useMemo, useRef } from "react";
 import { useFrame } from "@react-three/fiber";
 import * as THREE from "three";
 
-import { planetPosition, ROCKET } from "./constants";
+import { planetPosition, ROCKET, SYNTH_PAD } from "./constants";
 import { rocketNoseDirection } from "./Rocket";
-import { homeViewGoal, type SolarView } from "./CameraRig";
+import { viewGoal, type SolarView } from "./CameraRig";
 import { ARTIFACT_BUILDERS, disposeArtifact } from "./warpArtifacts";
-import {
-  BOARDING_SECONDS,
-  endRocketJourney,
-  flashWarp,
-  journeyState,
-  WARP_SECONDS,
-} from "../../rocketJourney";
+import { endRocketJourney, flashWarp, journeyState } from "../../rocketJourney";
+import { SYNTH_ORIGIN } from "../../synthSpec";
 
 /**
- * Drives the rocket joyride (the /home "surprise me" easter egg). While
- * journeyState is active this component owns the camera — CameraRig
- * stands down — and plays three beats:
+ * Drives every lightspeed journey: the rocket joyride (the /home
+ * "So u wanna be astronaut?" easter egg) and the 808-pad transits to
+ * the synth solar system and back. While journeyState is active this
+ * component owns the camera — CameraRig stands down — and plays three
+ * beats:
  *
- * 1. Boarding: the camera swoops from the home perch to just behind the
- *    rocket, lining up with its nose, while the stars fade and the DOM
- *    windshield frame fades in (App.scss, keyed off body.rocket-journey).
- * 2. Warp: a flash covers a teleport to a "warp zone" 900 units out
- *    along the rocket's heading — far enough that the whole solar system
- *    is a speck behind the camera. The rig (this component's group) is
- *    parked there carrying the Star Wars streak field and the flyby
- *    artifact cameos; the camera sways gently inside it.
- * 3. Re-entry: a second flash covers a teleport onto the home view's
- *    approach line, then the journey ends and CameraRig's ordinary
- *    resume swoop glides the last stretch onto the perch — the landing.
+ * 1. Boarding: the camera swoops toward the journey's vehicle (behind
+ *    the rocket's nose, or down over the 808 pad; the synth return just
+ *    swings the nose around toward home) while the stars fade and the
+ *    DOM windshield frame fades in (App.scss, `body.rocket-journey`).
+ * 2. Warp: a flash covers a teleport to a "warp zone" hundreds of units
+ *    along the travel heading — far enough that no solar system is more
+ *    than a speck. The rig (this component's group) is parked there
+ *    carrying the Star Wars streak field — plus the flyby artifact
+ *    cameos on the joyride — and the camera sways gently inside it.
+ * 3. Re-entry: a second flash covers a teleport onto the destination
+ *    view's approach line (navigating to its route if needed), then the
+ *    journey ends and CameraRig's ordinary resume swoop glides the last
+ *    stretch onto the perch — the landing.
  *
  * The streaks are one LineSegments whose head vertices march toward the
  * camera and wrap; line length and material opacity ride the warp
@@ -38,9 +37,15 @@ import {
  */
 
 const BOARD_CAM_BEHIND = 1.5;
+/** The pad boarding parks a bit further back — it's flat and wide */
+const BOARD_PAD_BEHIND = 2.2;
 const BOARD_LOOK_AHEAD = 10;
 
+/** Joyride warp zone: this far from the origin along the rocket's nose */
 const WARP_DISTANCE = 900;
+/** Transit warp zone: this far past the boarding spot along the heading
+ *  (roughly a quarter of the way to the other system) */
+const TRANSIT_WARP_AHEAD = 450;
 /** Intensity envelope: streaks stretch in/out over these ramps */
 const WARP_RAMP_IN_SECONDS = 0.9;
 const WARP_RAMP_OUT_SECONDS = 1;
@@ -62,19 +67,26 @@ const ARTIFACT_SPEED = 115;
 const ARTIFACT_FIRST_SPAWN = 1;
 const ARTIFACT_SPAWN_INTERVAL = 1.25;
 
-/** How far out on the home approach line re-entry drops the camera */
+/** How far out on the destination's approach line re-entry drops the
+ *  camera (the synth view sits closer, so its approach is shorter) */
 const REENTRY_DISTANCE = 130;
+const SYNTH_REENTRY_DISTANCE = 90;
 
 const UP = new THREE.Vector3(0, 1, 0);
 const Z_AXIS = new THREE.Vector3(0, 0, 1);
+const SYNTH_ORIGIN_VEC = new THREE.Vector3(
+  SYNTH_ORIGIN.x,
+  SYNTH_ORIGIN.y,
+  SYNTH_ORIGIN.z,
+);
 
 const easeInOutCubic = (x: number) =>
   x < 0.5 ? 4 * x * x * x : 1 - Math.pow(-2 * x + 2, 3) / 2;
 const clamp01 = (x: number) => THREE.MathUtils.clamp(x, 0, 1);
 
 // scratch values, reused every frame
-const rocketPos = new THREE.Vector3();
-const noseDir = new THREE.Vector3();
+const refPos = new THREE.Vector3();
+const travelDir = new THREE.Vector3();
 const targetPos = new THREE.Vector3();
 const targetQuat = new THREE.Quaternion();
 const lookTarget = new THREE.Vector3();
@@ -101,13 +113,23 @@ interface FlybyArtifact {
 const ARTIFACT_HEIGHTS = [-2, 3, -3.5, 2.5, 4.5, -2.5, 3.5, -3];
 const ARTIFACT_SCALES = [4.5, 3.8, 3.6, 3.4, 3.6, 3.8, 3.8, 3.2];
 
-export default function RocketJourney({ view }: { view: SolarView }) {
+export default function RocketJourney({
+  view,
+  navigate,
+}: {
+  view: SolarView;
+  /** Router navigation, threaded in from outside the canvas (context
+   *  doesn't cross the R3F reconciler boundary) — re-entry uses it when
+   *  the destination lives on another route */
+  navigate: (to: string) => void;
+}) {
   const rig = useRef<THREE.Group>(null);
   const streakLines = useRef<THREE.LineSegments>(null);
 
   const startPos = useRef(new THREE.Vector3());
   const startQuat = useRef(new THREE.Quaternion());
   const startCaptured = useRef(false);
+  const originView = useRef<SolarView>(view);
   const warpPos = useRef(new THREE.Vector3());
   const warpQuat = useRef(new THREE.Quaternion());
 
@@ -206,8 +228,10 @@ export default function RocketJourney({ view }: { view: SolarView }) {
       return;
     }
     // Route change mid-ride (browser back): abort and let CameraRig
-    // swoop to the new view from wherever the camera is
-    if (view !== "home") {
+    // swoop to the new view from wherever the camera is. Only a change
+    // AWAY from the journey's origin view counts — arrival navigation
+    // happens after the journey has already ended.
+    if (startCaptured.current && view !== originView.current) {
       if (rig.current) rig.current.visible = false;
       startCaptured.current = false;
       endRocketJourney();
@@ -223,18 +247,32 @@ export default function RocketJourney({ view }: { view: SolarView }) {
     if (state.phase === "boarding") {
       if (!startCaptured.current) {
         startCaptured.current = true;
+        originView.current = view;
         startPos.current.copy(camera.position);
         startQuat.current.copy(camera.quaternion);
       }
-      // Chase pose: behind the rocket, sighted along its nose
-      planetPosition(ROCKET, t, rocketPos);
-      rocketNoseDirection(t, noseDir);
-      targetPos.copy(rocketPos).addScaledVector(noseDir, -BOARD_CAM_BEHIND);
-      lookTarget.copy(rocketPos).addScaledVector(noseDir, BOARD_LOOK_AHEAD);
+      // Chase pose + travel heading, per vehicle
+      if (state.vehicle === "rocket") {
+        // Behind the rocket, sighted along its nose
+        planetPosition(ROCKET, t, refPos);
+        rocketNoseDirection(t, travelDir);
+        targetPos.copy(refPos).addScaledVector(travelDir, -BOARD_CAM_BEHIND);
+      } else if (state.vehicle === "pad") {
+        // Over the 808 pad, sighted through it toward the synth system
+        planetPosition(SYNTH_PAD, t, refPos);
+        travelDir.copy(SYNTH_ORIGIN_VEC).sub(refPos).normalize();
+        targetPos.copy(refPos).addScaledVector(travelDir, -BOARD_PAD_BEHIND);
+      } else {
+        // Return trip: no vehicle — hold position and swing the nose
+        // around toward the home system
+        targetPos.copy(startPos.current);
+        travelDir.copy(startPos.current).multiplyScalar(-1).normalize();
+      }
+      lookTarget.copy(targetPos).addScaledVector(travelDir, BOARD_LOOK_AHEAD);
       lookMatrix.lookAt(targetPos, lookTarget, UP);
       targetQuat.setFromRotationMatrix(lookMatrix);
 
-      const p = clamp01(state.phaseElapsed / BOARDING_SECONDS);
+      const p = clamp01(state.phaseElapsed / state.boardSeconds);
       const e = easeInOutCubic(p);
       camera.position.lerpVectors(startPos.current, targetPos, e);
       camera.quaternion.slerpQuaternions(startQuat.current, targetQuat, e);
@@ -244,12 +282,17 @@ export default function RocketJourney({ view }: { view: SolarView }) {
       if (p >= 1) {
         state.phase = "warp";
         state.phaseElapsed = 0;
-        startCaptured.current = false;
         flashWarp();
         // Jump along the current heading: same orientation, new spot —
         // the flash covers the position cut, the view direction doesn't
-        // change, and the solar system ends up a speck behind us
-        warpPos.current.copy(noseDir).multiplyScalar(WARP_DISTANCE);
+        // change, and every solar system ends up a speck
+        if (state.vehicle === "rocket") {
+          warpPos.current.copy(travelDir).multiplyScalar(WARP_DISTANCE);
+        } else {
+          warpPos.current
+            .copy(targetPos)
+            .addScaledVector(travelDir, TRANSIT_WARP_AHEAD);
+        }
         warpQuat.current.copy(targetQuat);
         camera.position.copy(warpPos.current);
         camera.quaternion.copy(warpQuat.current);
@@ -257,6 +300,10 @@ export default function RocketJourney({ view }: { view: SolarView }) {
           rig.current.position.copy(warpPos.current);
           rig.current.quaternion.copy(warpQuat.current);
           rig.current.visible = true;
+        }
+        // A transit must not inherit a frozen cameo from an aborted joyride
+        if (!state.cameos) {
+          artifacts.forEach((artifact) => (artifact.group.visible = false));
         }
       }
       return;
@@ -267,12 +314,14 @@ export default function RocketJourney({ view }: { view: SolarView }) {
     const intensity = THREE.MathUtils.smoothstep(
       Math.min(
         clamp01(elapsed / WARP_RAMP_IN_SECONDS),
-        clamp01((WARP_SECONDS - elapsed) / WARP_RAMP_OUT_SECONDS),
+        clamp01((state.warpSeconds - elapsed) / WARP_RAMP_OUT_SECONDS),
       ),
       0,
       1,
     );
-    state.starDim = clamp01((WARP_SECONDS - elapsed) / STAR_RETURN_SECONDS);
+    state.starDim = clamp01(
+      (state.warpSeconds - elapsed) / STAR_RETURN_SECONDS,
+    );
 
     // Gentle sway + roll inside the rig so the ride breathes without
     // moving the streak field itself
@@ -301,41 +350,55 @@ export default function RocketJourney({ view }: { view: SolarView }) {
     streaks.positionAttr.needsUpdate = true;
     streaks.material.opacity = intensity;
 
-    // Flyby cameos: each pops in far ahead, drifts outward as it nears,
-    // and exits past the shoulder of the windshield
-    for (const artifact of artifacts) {
-      const local = elapsed - artifact.spawnAt;
-      const z = ARTIFACT_Z_START + local * ARTIFACT_SPEED;
-      if (local < 0 || z > ARTIFACT_Z_EXIT) {
-        artifact.group.visible = false;
-        continue;
+    // Flyby cameos (joyride only): each pops in far ahead, drifts
+    // outward as it nears, and exits past the shoulder of the windshield
+    if (state.cameos) {
+      for (const artifact of artifacts) {
+        const local = elapsed - artifact.spawnAt;
+        const z = ARTIFACT_Z_START + local * ARTIFACT_SPEED;
+        if (local < 0 || z > ARTIFACT_Z_EXIT) {
+          artifact.group.visible = false;
+          continue;
+        }
+        artifact.group.visible = true;
+        const progress =
+          (z - ARTIFACT_Z_START) / (ARTIFACT_Z_EXIT - ARTIFACT_Z_START);
+        artifact.group.position.set(
+          artifact.side * (9 + progress * 14),
+          artifact.y,
+          z,
+        );
+        artifact.group.rotation.set(
+          artifact.tilt,
+          artifact.baseYaw + t * artifact.spin,
+          0,
+        );
       }
-      artifact.group.visible = true;
-      const progress =
-        (z - ARTIFACT_Z_START) / (ARTIFACT_Z_EXIT - ARTIFACT_Z_START);
-      artifact.group.position.set(
-        artifact.side * (9 + progress * 14),
-        artifact.y,
-        z,
-      );
-      artifact.group.rotation.set(
-        artifact.tilt,
-        artifact.baseYaw + t * artifact.spin,
-        0,
-      );
     }
 
-    if (elapsed >= WARP_SECONDS) {
-      // Drop out of lightspeed onto the home approach line; ending the
+    if (elapsed >= state.warpSeconds) {
+      // Drop out of lightspeed onto the destination's approach line
+      // (hopping routes if the destination lives elsewhere); ending the
       // journey hands the camera back to CameraRig, whose resume swoop
       // glides it the rest of the way onto the perch
-      homeViewGoal(t, camera, size, goalPos, goalLook);
+      const destView: SolarView =
+        state.destination === "synth" ? "synth" : "home";
+      viewGoal(destView, t, camera, size, goalPos, goalLook);
       forward.copy(goalLook).sub(goalPos).normalize();
-      camera.position.copy(goalPos).addScaledVector(forward, -REENTRY_DISTANCE);
+      camera.position
+        .copy(goalPos)
+        .addScaledVector(
+          forward,
+          destView === "synth" ? -SYNTH_REENTRY_DISTANCE : -REENTRY_DISTANCE,
+        );
       lookMatrix.lookAt(camera.position, goalLook, UP);
       camera.quaternion.setFromRotationMatrix(lookMatrix);
       if (rig.current) rig.current.visible = false;
+      startCaptured.current = false;
       flashWarp();
+      if (view !== destView) {
+        navigate(destView === "synth" ? "/synth" : "/home");
+      }
       endRocketJourney();
     }
   });

@@ -1,10 +1,19 @@
-import React, { useState, useEffect, memo, lazy, Suspense } from "react";
-import { useLocation } from "react-router-dom";
+import React, {
+  useState,
+  useEffect,
+  useCallback,
+  useRef,
+  memo,
+  lazy,
+  Suspense,
+} from "react";
+import { useLocation, useNavigate } from "react-router-dom";
 import cx from "classnames";
 
 import GoldenGate from "./gg-bridge.png";
 import GoldenGateFog from "./GoldenGateFog";
 import useWindowSize from "useWindowSize";
+import { onSynthNote } from "./synthAudio";
 import { MusicIcon } from "lucide-react";
 // import RetroMac from "./RetroMac";
 
@@ -53,11 +62,21 @@ const AppBackground = ({
 }) => {
   const size = useWindowSize();
   const location = useLocation();
+  const navigate = useNavigate();
+  // Stable identity (Space3DBackground is memo'd against this component's
+  // 200ms ticker re-renders) that also swallows navigate's promise
+  const navigateRef = useRef(navigate);
+  navigateRef.current = navigate;
+  const journeyNavigate = useCallback((to: string) => {
+    void navigateRef.current(to);
+  }, []);
 
   const isHomePage = location.pathname.includes("home");
   // /draw shares the about-page background (Earth + moon in the 3D scene)
   const isAboutPage =
     location.pathname.includes("about") || location.pathname.includes("draw");
+  // The synth solar system (the 808-pad easter egg's destination)
+  const isSynthPage = location.pathname.includes("synth");
   const isLanding = location.pathname === "/" || location.pathname === "";
   const [musicEnabled, setMusicEnabled] = useState(false);
 
@@ -67,11 +86,20 @@ const AppBackground = ({
     // The nameTitle SVG this drives only renders off the landing page, so
     // don't fire a 5x/sec state update + re-render on the landing route.
     if (isLanding) return;
+    // On /synth the ticker keeps time with the music instead of the
+    // clock: every audible note — arp step or keyboard press — advances
+    // the highlighted letter (and silence holds it still). Everywhere
+    // else the plain 200ms march stays.
+    if (isSynthPage) {
+      return onSynthNote(() => {
+        setHighlightedCharIdx((idx) => (idx + 1) % nameArr.length);
+      });
+    }
     const interval = setInterval(() => {
       setHighlightedCharIdx((idx) => (idx + 1) % nameArr.length);
     }, 200);
     return () => clearInterval(interval);
-  }, [isLanding]);
+  }, [isLanding, isSynthPage]);
 
   // Start playback as soon as the player mounts — i.e. right after the
   // visitor clicks "Enable space jams". That click is the user gesture that
@@ -170,6 +198,8 @@ const AppBackground = ({
             isLanding={isLanding}
             isHomePage={isHomePage}
             isAboutPage={isAboutPage}
+            isSynthPage={isSynthPage}
+            onJourneyNavigate={journeyNavigate}
           />
         </Suspense>
       </BackgroundErrorBoundary>

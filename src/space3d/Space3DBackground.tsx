@@ -26,21 +26,36 @@ const Space3DBackground = ({
   isLanding,
   isHomePage,
   isAboutPage,
+  isSynthPage,
+  onJourneyNavigate,
 }: {
   isNightMode: boolean;
   isLanding: boolean;
   isHomePage: boolean;
   isAboutPage: boolean;
+  isSynthPage: boolean;
+  /** Router navigation for the lightspeed journeys (passed down into the
+   *  canvas, where router context can't reach) */
+  onJourneyNavigate: (to: string) => void;
 }) => {
   return (
     <>
       <SpaceCanvas>
         <StarField isLanding={isLanding} opacityTarget={isNightMode ? 1 : 0} />
       </SpaceCanvas>
-      {(isLanding || isHomePage || isAboutPage) && (
+      {(isLanding || isHomePage || isAboutPage || isSynthPage) && (
         <SolarScene
-          view={isLanding ? "landing" : isAboutPage ? "about" : "home"}
+          view={
+            isLanding
+              ? "landing"
+              : isSynthPage
+                ? "synth"
+                : isAboutPage
+                  ? "about"
+                  : "home"
+          }
           isNightMode={isNightMode}
+          onNavigate={onJourneyNavigate}
         />
       )}
     </>
