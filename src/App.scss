@@ -163,9 +163,6 @@ audio {
     position: relative;
 
     // Provides a slight glow to the text in the cards
-    // (No backdrop-filter here — blurring over the animated canvases
-    // forces a backdrop re-capture every frame; the box-shadow alone
-    // carries the glow)
     ::before {
       border-radius: 8px;
       opacity: 0.5;
@@ -707,8 +704,6 @@ li > ul > li {
 
   .back-to-home-link {
     // A slight background behind the link so that it's always legible.
-    // (No backdrop-filter — blurring over the animating WebGL canvas
-    // costs a backdrop re-capture every frame; see .resume-panel.)
     border-radius: 16px;
     padding: 8px;
     // The link sits outside the padded .resume-panel now, so it needs its

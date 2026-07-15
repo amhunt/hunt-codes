@@ -126,10 +126,11 @@ const Resume = () => {
             >
               Zip
             </a>{" "}
-            — most recently as a staff engineer — before striking out on my own
-            in 2025. Since then I’ve been contracting and consulting, helping
-            teams ship polished, AI-powered web products. For inquiries, reach
-            out to{" "}
+            — most recently as a staff engineer — before stepping away in 2025
+            for a proper sabbatical. A few months of recharging later, I eased
+            back in through consulting, helping teams ship polished, AI-powered
+            web products. Come fall 2026 I’m looking to go full-time again — for
+            consulting or full-time inquiries, reach out to{" "}
             <a
               className="inverse"
               href="mailto:andrew@hunt.codes?Subject=Hey%20Andrew"
