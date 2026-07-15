@@ -1003,6 +1003,114 @@ body.video-mode {
   transition: opacity 0.5s ease;
 }
 
+// ─── Rocket joyride ("surprise me") ────────────────
+// While the ride plays, `rocket-journey` on <body> (rocketJourney.ts)
+// hides the page chrome — same pattern as video-mode — and reveals the
+// cockpit windshield frame. It also forces the night backdrop: the warp
+// streaks are additive light and need a black sky, even in day mode.
+body.rocket-journey {
+  .homeInfoContainer,
+  .homePageBackLink,
+  .nameTitle,
+  .day-night-switch,
+  audio,
+  .music-toggle,
+  .asteroid-link,
+  .earth-about-ring {
+    opacity: 0 !important;
+    pointer-events: none !important;
+    // visibility (delayed past the fade) also pulls the hidden controls
+    // out of tab order and the accessibility tree for the ride
+    visibility: hidden !important;
+    transition:
+      opacity 0.5s ease,
+      visibility 0s linear 0.5s;
+  }
+
+  .App-background_day,
+  .App-gg-bridge,
+  .gg-fog-layer {
+    opacity: 0 !important;
+  }
+
+  // Same rule as .App-background_day.off below: a fullscreen filter
+  // animation must not keep running on an invisible layer — and the ride
+  // is the heaviest GPU load on the site
+  .App-background_day,
+  .gg-fog-drift {
+    animation: none !important;
+  }
+
+  .App-background_night {
+    opacity: 1 !important;
+  }
+}
+
+// The windshield frame: fixed steel edges hugging the viewport, over the
+// canvases and under nothing (all interactive chrome is hidden during
+// the ride). Fades in late in the boarding swoop — timed so the frame
+// "arrives" as the camera reaches the ship — and back out on landing.
+// z 6000: above the Radix tooltip portals (z 50) and the day/night
+// switch (z 5000) so no chrome pokes through the windshield mid-ride
+#rocket-cockpit {
+  position: fixed;
+  inset: 0;
+  z-index: 6000;
+  pointer-events: none;
+  opacity: 0;
+  visibility: hidden;
+  transition:
+    opacity 0.6s ease,
+    visibility 0s linear 0.6s;
+
+  .cockpit-frame {
+    display: block;
+    width: 100%;
+    height: 100%;
+  }
+}
+
+body.rocket-journey #rocket-cockpit {
+  opacity: 1;
+  visibility: visible;
+  transition:
+    opacity 0.9s ease 0.7s,
+    visibility 0s;
+}
+
+// One-shot white-out covering the lightspeed jump teleports (rocketJourney's
+// flashWarp() retriggers the animation). Sits above the cockpit frame and
+// outside it in the DOM, so the landing flash outlives the frame's fade.
+#warp-flash {
+  position: fixed;
+  inset: 0;
+  z-index: 6001;
+  pointer-events: none;
+  opacity: 0;
+  background: radial-gradient(
+    circle at 50% 45%,
+    #ffffff 0%,
+    #e7defc 35%,
+    rgba(158, 128, 249, 0) 75%
+  );
+
+  &.is-flashing {
+    animation: warp-flash 0.65s ease-out;
+  }
+}
+
+@keyframes warp-flash {
+  0% {
+    opacity: 0;
+  }
+  12% {
+    opacity: 1;
+  }
+  100% {
+    opacity: 0;
+  }
+}
+
 .resume-inner-container {
   transition: opacity 0.4s ease;
 

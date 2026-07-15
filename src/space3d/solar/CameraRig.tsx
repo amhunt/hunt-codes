@@ -5,6 +5,7 @@ import * as THREE from "three";
 import { EARTH, moonPosition, planetPosition, rigState } from "./constants";
 import { starPanState } from "../starPan";
 import { scrollTransitionState } from "../../scrollTransition";
+import { journeyState } from "../../rocketJourney";
 
 /**
  * Camera choreography, ported from hunt-codes-3. Landing hovers straight
@@ -172,15 +173,51 @@ function computeGoal(
   }
 }
 
+/** The home view's camera goal at time t, written into the caller's
+ *  vectors — the rocket journey uses it to drop the camera onto the
+ *  home approach line before handing control back. */
+export function homeViewGoal(
+  t: number,
+  camera: THREE.Camera,
+  viewport: { width: number; height: number },
+  outPos: THREE.Vector3,
+  outLook: THREE.Vector3,
+): void {
+  computeGoal("home", t, camera, viewport);
+  outPos.copy(goalPos);
+  outLook.copy(goalLook);
+}
+
 export default function CameraRig({ view }: { view: SolarView }) {
   const activeView = useRef(view);
   const transitionStart = useRef(-Infinity);
   const fromPos = useRef(LANDING_POS.clone());
   const fromQuat = useRef(new THREE.Quaternion());
   const prevQuat = useRef<THREE.Quaternion | null>(null);
+  const journeyHandoff = useRef(false);
 
   useFrame(({ camera, clock, size }, delta) => {
     const t = clock.elapsedTime;
+
+    // The rocket joyride (RocketJourney, mounted before this so it runs
+    // earlier in the frame) owns the camera while active. Track the view
+    // so no stale swoop fires afterwards, and note the handoff so the
+    // ride's end resumes as a fresh swoop from wherever it dropped the
+    // camera. Star pan pauses too — the ride's teleports must not fold
+    // into the background-star parallax.
+    if (journeyState.phase !== "idle") {
+      activeView.current = view;
+      journeyHandoff.current = true;
+      rigState.settled = false;
+      prevQuat.current = null;
+      return;
+    }
+    if (journeyHandoff.current) {
+      journeyHandoff.current = false;
+      transitionStart.current = t;
+      fromPos.current.copy(camera.position);
+      fromQuat.current.copy(camera.quaternion);
+    }
 
     if (view !== activeView.current) {
       // view changed: swoop from wherever the camera is right now
