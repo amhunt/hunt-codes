@@ -47,6 +47,15 @@ const App = () => {
 
   usePauseAudioOnHideEventListener();
 
+  // Tint the mobile browser chrome (iOS Safari tab bar, Android status
+  // bar) to match the active palette; day matches the top of the
+  // App-background_day gradient
+  useEffect(() => {
+    document
+      .querySelector('meta[name="theme-color"]')
+      ?.setAttribute("content", isNightMode ? "#000000" : "#ffc2d9");
+  }, [isNightMode]);
+
   // fade home content in once mounted
   useEffect(() => {
     // eslint-disable-next-line -- TODO: rm this comment and fix the lint error
