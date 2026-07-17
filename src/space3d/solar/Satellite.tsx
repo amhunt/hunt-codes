@@ -8,6 +8,7 @@ import { asteroidOutlineId } from "./BodyAnchors";
 import { writeSilhouette } from "./outline";
 import { createLogoBadgeTexture } from "../textures";
 import { hoverState } from "../../solarHover";
+import InteractiveGlow from "./InteractiveGlow";
 
 /**
  * The GitHub link body: a Sputnik-style satellite — a polished metal
@@ -237,10 +238,12 @@ export default function Satellite({
 
   return (
     <group ref={group}>
+      {/* clickable-body affordance halo, riding the landing fade */}
+      <InteractiveGlow radius={config.radius} opacityRef={opacity} />
       <group ref={rig}>
         <group ref={body}>
           <mesh material={materials.body} geometry={bodyGeometry} />
-          {/* GitHub badge stickers, one per side, rolling with the body */}
+          {/* GitHub badge stickers, rolling with the body */}
           {badgeGeometries.map((badgeGeometry, i) => (
             <mesh key={i} geometry={badgeGeometry} material={materials.badge} />
           ))}

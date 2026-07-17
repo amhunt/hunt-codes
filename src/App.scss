@@ -413,10 +413,51 @@ p {
   .interest-pill,
   .App-background_day,
   .body-outline-pulse,
+  .landing-scroll-hint,
   .svg-generator-spinner,
   .svg-generator-loading-dots span,
   .svg-generator-svg-wrapper svg {
     animation: none !important;
+  }
+}
+
+// Bouncing "you can scroll" chevron on the landing page (Landing.tsx):
+// appears a beat after the intro choreography, disappears once the
+// visitor starts scrubbing
+.landing-scroll-hint {
+  position: fixed;
+  bottom: 18px;
+  left: 50%;
+  // The keyframes carry the same X-centering; this keeps it centered
+  // under prefers-reduced-motion (animation: none)
+  transform: translateX(-50%);
+  z-index: 5;
+  color: rgba(232, 230, 245, 0.75);
+  animation: hint-bounce 2.2s ease-in-out infinite;
+  transition: opacity 0.8s ease;
+  opacity: 1;
+
+  &:hover {
+    color: $purp-light;
+  }
+
+  &.hint-hidden {
+    opacity: 0;
+    pointer-events: none;
+  }
+}
+
+.App.day .landing-scroll-hint {
+  color: $purp;
+}
+
+@keyframes hint-bounce {
+  0%,
+  100% {
+    transform: translate(-50%, 0);
+  }
+  50% {
+    transform: translate(-50%, 9px);
   }
 }
 

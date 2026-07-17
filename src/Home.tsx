@@ -5,6 +5,7 @@ import cx from "classnames";
 import { GitHub, Linkedin, Mail } from "react-feather";
 import { ArrowLeftCircleIcon } from "lucide-react";
 import useWindowSize from "./useWindowSize";
+import useScrollJourney from "./useScrollJourney";
 import SolarOverlays from "./SolarOverlays";
 import RocketCockpit from "./RocketCockpit";
 
@@ -35,6 +36,10 @@ const isChromium = navigator.userAgent.includes("Chrome");
 
 const Home = () => {
   const [logoOpacity, setLogoOpacity] = useState(0);
+
+  // Scroll-scrubbed travel: up retreats toward the landing view, down
+  // continues out to /about (scrollTransition.ts)
+  useScrollJourney(1);
 
   const size = useWindowSize();
   const isSmall = size === "sm";

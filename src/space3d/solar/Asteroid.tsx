@@ -9,6 +9,7 @@ import { asteroidOutlineId } from "./BodyAnchors";
 import { writeSilhouette } from "./outline";
 import { createLogoBadgeTexture, createPlanetTexture } from "../textures";
 import { hoverState } from "../../solarHover";
+import InteractiveGlow from "./InteractiveGlow";
 
 /**
  * A small rocky link-asteroid: a smooth-shaded icosphere with gentle
@@ -180,6 +181,8 @@ export default function Asteroid({
 
   return (
     <group ref={group}>
+      {/* clickable-body affordance halo, riding the landing fade */}
+      <InteractiveGlow radius={config.radius} opacityRef={opacity} />
       <mesh ref={mesh} geometry={geometry}>
         {/* transparent so the landing->home fade-in can drive opacity;
             the white emissive is the hover brighten (intensity eased
