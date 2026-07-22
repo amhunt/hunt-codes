@@ -119,6 +119,191 @@ $breakpoint-lg: 1280px;
   }
 }
 
+// ─── /journey: the story crawl ────────────────
+// Deep space even in day mode — additive warp streaks and gold text
+// read as nothing on the pink sky. Same forced-night trick as
+// body.rocket-journey below; the palette toggle rests during the show.
+body.journey-mode {
+  .App-background_day,
+  .App-gg-bridge,
+  .gg-fog-layer {
+    opacity: 0 !important;
+  }
+
+  .App-background_day,
+  .gg-fog-drift {
+    animation: none !important;
+  }
+
+  .App-background_night {
+    opacity: 1 !important;
+  }
+
+  .day-night-switch {
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.5s ease;
+  }
+}
+
+// The perspective stage: the tilt lives on a wrapper, the per-frame
+// translate on the crawl itself (Journey.tsx writes the transform)
+.journey-page {
+  position: fixed;
+  inset: 0;
+  z-index: 4;
+  overflow: hidden;
+  pointer-events: none;
+  perspective: 400px;
+  perspective-origin: 50% 30%;
+  // The crawl dissolves into the distance instead of hitting the ceiling
+  mask-image: linear-gradient(
+    to bottom,
+    transparent 4%,
+    #000 30%,
+    #000 100%
+  );
+}
+
+.journey-tilt {
+  position: absolute;
+  inset: 0;
+  transform: rotateX(24deg);
+  transform-origin: 50% 100%;
+}
+
+.journey-crawl {
+  position: absolute;
+  top: 100%;
+  left: 50%;
+  width: min(640px, 86vw);
+  transform: translate3d(-50%, 0, 0);
+  will-change: transform;
+  text-align: center;
+  color: #ffd23f;
+  font-weight: 700;
+  font-size: 24px;
+  line-height: 1.55;
+
+  p {
+    margin: 0 0 1.1em;
+  }
+
+  @media (max-width: $breakpoint-sm) {
+    font-size: 19px;
+  }
+}
+
+.journey-overline {
+  color: $purp-light;
+  font-size: 18px;
+  font-weight: 400;
+  letter-spacing: 0.06em;
+}
+
+.journey-title {
+  font-family: "nova-mono", monospace;
+  font-size: 62px;
+  letter-spacing: 0.08em;
+  margin: 0.2em 0 0;
+
+  @media (max-width: $breakpoint-sm) {
+    font-size: 40px;
+  }
+}
+
+.journey-subtitle {
+  letter-spacing: 0.3em;
+  text-transform: uppercase;
+  font-size: 15px;
+  opacity: 0.8;
+}
+
+.journey-chapter {
+  margin-top: 4.5em;
+
+  h2 {
+    font-size: 34px;
+    margin: 0.25em 0 0.6em;
+
+    @media (max-width: $breakpoint-sm) {
+      font-size: 26px;
+    }
+  }
+}
+
+.journey-era {
+  color: $purp-light;
+  font-size: 15px;
+  font-weight: 400;
+  letter-spacing: 0.22em;
+  text-transform: uppercase;
+}
+
+.journey-end {
+  margin-top: 7em;
+  margin-bottom: 20vh;
+}
+
+// The résumé page's pointer to the cinematic version
+.journey-plug {
+  margin-top: 8px;
+  font-size: 15px;
+  opacity: 0.85;
+}
+
+// Post-credits chip row, revealed once the crawl's tail clears the fade
+.journey-credits {
+  position: fixed;
+  left: 50%;
+  bottom: calc(72px + env(safe-area-inset-bottom, 0px));
+  transform: translateX(-50%) translateY(12px);
+  display: flex;
+  gap: 28px;
+  align-items: center;
+  opacity: 0;
+  pointer-events: none;
+  transition:
+    opacity 0.8s ease,
+    transform 0.8s ease;
+  z-index: 10;
+
+  button,
+  a {
+    color: $purp-light;
+    background: none;
+    border: none;
+    font-size: 15px;
+  }
+
+  &.shown {
+    opacity: 1;
+    pointer-events: auto;
+    transform: translateX(-50%);
+  }
+
+  @media (max-width: $breakpoint-sm) {
+    flex-direction: column;
+    gap: 12px;
+  }
+}
+
+.journey-hint {
+  position: fixed;
+  left: 50%;
+  bottom: calc(16px + env(safe-area-inset-bottom, 0px));
+  transform: translateX(-50%);
+  color: rgba(255, 255, 255, 0.4);
+  font-size: 13px;
+  letter-spacing: 0.12em;
+  z-index: 5;
+  transition: opacity 1s ease;
+
+  &.hint-hidden {
+    opacity: 0;
+  }
+}
+
 // The corner "hunt.codes" medallion (space3d/BadgeMedallion — drawn in
 // the shared star canvas, which never takes pointer input). This is its
 // DOM hit target on every page but the landing: the coin doubles as the

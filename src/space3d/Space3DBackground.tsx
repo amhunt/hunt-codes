@@ -46,6 +46,7 @@ const Space3DBackground = ({
   isHomePage,
   isAboutPage,
   isSynthPage,
+  isJourneyPage,
   onJourneyNavigate,
 }: {
   isNightMode: boolean;
@@ -53,6 +54,7 @@ const Space3DBackground = ({
   isHomePage: boolean;
   isAboutPage: boolean;
   isSynthPage: boolean;
+  isJourneyPage: boolean;
   /** Router navigation for the lightspeed journeys (passed down into the
    *  canvas, where router context can't reach) */
   onJourneyNavigate: (to: string) => void;
@@ -74,16 +76,22 @@ const Space3DBackground = ({
           </BadgeBoundary>
         )}
       </SpaceCanvas>
-      {(isLanding || isHomePage || isAboutPage || isSynthPage) && (
+      {(isLanding ||
+        isHomePage ||
+        isAboutPage ||
+        isSynthPage ||
+        isJourneyPage) && (
         <SolarScene
           view={
             isLanding
               ? "landing"
               : isSynthPage
                 ? "synth"
-                : isAboutPage
-                  ? "about"
-                  : "home"
+                : isJourneyPage
+                  ? "journey"
+                  : isAboutPage
+                    ? "about"
+                    : "home"
           }
           isNightMode={isNightMode}
           onNavigate={onJourneyNavigate}
