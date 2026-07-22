@@ -1,5 +1,5 @@
 import React from "react";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 
 import {
   Tooltip,
@@ -14,7 +14,11 @@ import {
   EARTH_ABOUT_RING_ID,
 } from "./space3d/solar/BodyAnchors";
 import { hoverState } from "./solarHover";
-import { startRocketJourney, startSynthJourney } from "./rocketJourney";
+import {
+  journeyState,
+  startRocketJourney,
+  startSynthJourney,
+} from "./rocketJourney";
 import { ensureAudio } from "./synthAudio";
 
 /**
@@ -41,7 +45,7 @@ export const BodyOutline = ({ outlineId }: { outlineId: string }) => (
 const ASTEROID_LINKS = [
   {
     name: "recent",
-    label: "Recent blog post",
+    label: "A blog post I wrote at Zip",
     href: "https://engineering.ziphq.com/material-ui/",
   },
   {
@@ -57,6 +61,7 @@ const ASTEROID_LINKS = [
 ];
 
 const SolarOverlays = () => {
+  const navigate = useNavigate();
   // Navigating away doesn't fire pointerleave — don't leave a hover
   // glow stuck on
   React.useEffect(
@@ -160,6 +165,13 @@ const SolarOverlays = () => {
               onClick={() => {
                 ensureAudio();
                 startSynthJourney();
+                // The studio lives at /synth: flip the URL as the ride
+                // boards (shareable, back-button aborts the trip) rather
+                // than after the warp lands. Only if the journey actually
+                // launched — the 3D driver may be dead (crashed canvas).
+                if (journeyState.phase !== "idle") {
+                  void navigate("/synth");
+                }
               }}
               onPointerEnter={() => {
                 hoverState.asteroid = "synthpad";
@@ -174,7 +186,7 @@ const SolarOverlays = () => {
             </button>
           </TooltipTrigger>
           <TooltipContent updatePositionStrategy="always">
-            <p>space jam studio</p>
+            <p>Space jam studio</p>
           </TooltipContent>
         </Tooltip>
       </TooltipProvider>

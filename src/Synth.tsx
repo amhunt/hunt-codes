@@ -2,7 +2,7 @@ import React, { useCallback, useEffect, useRef, useState } from "react";
 import { ArrowLeftCircleIcon } from "lucide-react";
 
 import RocketCockpit from "./RocketCockpit";
-import { startSynthReturn } from "./rocketJourney";
+import { journeyState, startSynthReturn } from "./rocketJourney";
 import {
   SYNTH_KNOBS,
   SYNTH_SUN_ANCHOR_ID,
@@ -89,14 +89,28 @@ const Synth = () => {
   }, []);
 
   // Arriving by 808 pad: the click that launched the warp already
-  // unlocked the AudioContext, so the beat can greet the landing. A
+  // unlocked the AudioContext, so the beat can greet the landing. The
+  // route flips at boarding now, so this page mounts while the warp is
+  // still playing — hold the beat until the ride touches down. A
   // deep-linked visit stays silent until the first click on the sun.
   useEffect(() => {
+    let waitForLanding: ReturnType<typeof setInterval> | undefined;
     if (synthState.ready) {
-      startArp();
-      setPlaying(true);
+      if (journeyState.phase === "idle") {
+        startArp();
+        setPlaying(true);
+      } else {
+        waitForLanding = setInterval(() => {
+          if (journeyState.phase === "idle") {
+            clearInterval(waitForLanding);
+            startArp();
+            setPlaying(true);
+          }
+        }, 100);
+      }
     }
     return () => {
+      clearInterval(waitForLanding);
       synthUiState.activeKnob = null;
       silenceSynth();
     };
@@ -283,7 +297,7 @@ const Synth = () => {
         );
       })}
       <div className="synth-hint">
-        drag a planet to shape the sound · A–K plays notes · the sun runs the
+        drag a planet to shape the sound · A–L plays notes · the sun runs the
         beat
       </div>
     </>

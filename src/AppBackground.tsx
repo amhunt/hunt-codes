@@ -211,7 +211,7 @@ const AppBackground = ({
               showBridge && !isNightMode ? "App-gg-bridge-opaque" : ""
             }`}
             src={GoldenGate}
-            alt="golden gate bridge"
+            alt="Golden Gate Bridge"
           />
           <GoldenGateFog visible={showBridge && !isNightMode} />
         </>

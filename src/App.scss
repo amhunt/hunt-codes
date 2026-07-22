@@ -119,6 +119,31 @@ $breakpoint-lg: 1280px;
   }
 }
 
+// The corner "hunt.codes" medallion (space3d/BadgeMedallion — drawn in
+// the shared star canvas, which never takes pointer input). This is its
+// DOM hit target on every page but the landing: the coin doubles as the
+// site's wordmark, and clicking it flies you back to the solar system.
+// Keep the box in sync with the slot constants in BadgeMedallion.tsx.
+.badge-link {
+  position: fixed;
+  right: calc(0.5rem + env(safe-area-inset-right, 0px));
+  bottom: calc(0.5rem + env(safe-area-inset-bottom, 0px));
+  width: 140px;
+  height: 140px;
+  z-index: 4000;
+  border-radius: 50%;
+
+  &:focus-visible {
+    outline: 2px solid #ab8ffd;
+    outline-offset: 4px;
+  }
+
+  @media (max-width: $breakpoint-sm) {
+    width: 96px;
+    height: 96px;
+  }
+}
+
 .card-title {
   margin-bottom: 4px;
   font-weight: 700;
@@ -510,8 +535,10 @@ p {
   right: 24px;
   top: calc(40px + env(safe-area-inset-top, 0px));
   width: calc(100% - 48px);
+  // fill matches opacity so the letters finish recoloring alongside the
+  // ~1s day/night background crossfade instead of trailing it by 2s
   transition:
-    fill 3s ease,
+    fill 1s ease,
     opacity 1s ease;
   z-index: 2;
   mix-blend-mode: multiply;
@@ -930,10 +957,12 @@ button {
 button:hover,
 a:hover {
   text-decoration: underline;
-  // cursor:
-  //   url(./cursor_pointer.png) 16 0,
-  //   auto;
-  cursor: pointer;
+  // Hover keeps the space cursor, recolored to the interactive palette
+  // (cyan→purple, same family as the hover halos) instead of dropping to
+  // the stock OS pointer; `pointer` stays as the fallback keyword
+  cursor:
+    url(./cursor_pointer.svg) 0 6,
+    pointer;
 }
 
 // Planet ring links ("ENTER", "ABOUT ME"): no underline — the planet
@@ -1150,7 +1179,8 @@ body.rocket-journey {
   .synthBackLink,
   .synth-knob,
   .synth-sun-button,
-  .synth-hint {
+  .synth-hint,
+  .badge-link {
     opacity: 0 !important;
     pointer-events: none !important;
     // visibility (delayed past the fade) also pulls the hidden controls
@@ -1279,6 +1309,10 @@ body.rocket-journey #rocket-cockpit {
   background: transparent;
   border: none;
   padding: 0;
+  // Arrival fade: SynthSystem's glue sets inline opacity 1 once the
+  // camera swoop settles (mirrors BodyAnchors' reveal on /home)
+  opacity: 0;
+  transition: opacity 0.8s ease;
 
   &:active {
     cursor: grabbing;
@@ -1347,6 +1381,9 @@ body.rocket-journey #rocket-cockpit {
   display: flex;
   align-items: center;
   justify-content: center;
+  // Same arrival fade as the knobs (SynthSystem's glue reveals it)
+  opacity: 0;
+  transition: opacity 0.8s ease;
 }
 
 .synth-sun-glyph {

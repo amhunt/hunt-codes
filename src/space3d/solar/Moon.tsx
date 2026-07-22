@@ -1,5 +1,5 @@
 import React, { useEffect, useMemo, useRef } from "react";
-import { useFrame } from "@react-three/fiber";
+import { useFrame, useThree } from "@react-three/fiber";
 import * as THREE from "three";
 import { DecalGeometry } from "three/examples/jsm/geometries/DecalGeometry.js";
 
@@ -59,12 +59,15 @@ export default function Moon({
   const orbitMaterial = useRef<THREE.LineBasicMaterial>(null);
   const revealOpacity = useRef(revealed ? 1 : 0);
 
+  const gl = useThree((s) => s.gl);
   const texture = useMemo(() => {
     const tex = new THREE.TextureLoader().load(moonMapUrl);
     tex.colorSpace = THREE.SRGBColorSpace;
-    tex.anisotropy = 4;
+    // The /about perch sees the moon at a shallow angle — real
+    // anisotropic filtering keeps the maria crisp
+    tex.anisotropy = Math.min(16, gl.capabilities.getMaxAnisotropy());
     return tex;
-  }, []);
+  }, [gl]);
   useEffect(() => () => texture.dispose(), [texture]);
 
   const geometry = useMemo(

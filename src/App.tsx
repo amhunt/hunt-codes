@@ -13,6 +13,7 @@ import Resume from "./Resume";
 import Synth from "./Synth";
 import SvgGenerator from "./SvgGenerator";
 import AppBackground from "AppBackground";
+import BadgeLink from "BadgeLink";
 import DayNightSwitch from "DayNightSwitch";
 import Landing from "Landing";
 
@@ -51,6 +52,7 @@ const ROUTE_TITLES: Record<string, string> = {
   "/": DEFAULT_TITLE,
   "/home": DEFAULT_TITLE,
   "/about": "About Me | Andrew Hunt",
+  "/synth": "Space Jam Studio | Andrew Hunt",
   "/draw": "SVG Studio | Andrew Hunt",
 };
 
@@ -103,6 +105,7 @@ const App = () => {
           isNightMode={isNightMode}
           onCheckedChange={setIsNightMode}
         />
+        <BadgeLink isNightMode={isNightMode} />
         <Routes>
           <Route path="/" element={<Landing />} />
           <Route path="/home" element={<Home />} />

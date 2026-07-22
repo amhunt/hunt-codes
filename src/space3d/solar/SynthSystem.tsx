@@ -3,6 +3,7 @@ import { useFrame, useThree } from "@react-three/fiber";
 import * as THREE from "three";
 
 import { projectBody, type ProjectedBody } from "./projection";
+import { rigState } from "./constants";
 import { liveElementById } from "../svgTracking";
 import {
   SYNTH_KNOBS,
@@ -141,6 +142,11 @@ function glueOverlay(
   el.style.width = `${sizePx}px`;
   el.style.height = `${sizePx}px`;
   el.style.visibility = "visible";
+  // Arrival reveal (mirrors BodyAnchors on /home): the overlays fade in
+  // once the camera swoop settles — and can't be grabbed mid-swoop while
+  // their planets are still translucent
+  el.style.opacity = rigState.settled ? "1" : "0";
+  el.style.pointerEvents = rigState.settled ? "" : "none";
 }
 
 function KnobPlanet({

@@ -12,6 +12,7 @@ import {
   TooltipTrigger,
 } from "./ui/tooltip";
 import { SUN_RADIUS_OFFSET, SUN_SIZE } from "./landingScene";
+import { scrollTransitionState } from "./scrollTransition";
 
 // The solar system's 4s-delayed fadeIn is first-visit choreography (the
 // stars assemble first). Landing remounts on every visit, and replaying
@@ -47,6 +48,7 @@ const Landing = () => {
   const engaged = useScrollJourney(0);
 
   const [hintReady, setHintReady] = useState(false);
+  const [hintClicked, setHintClicked] = useState(false);
   useEffect(() => {
     const timer = setTimeout(
       () => setHintReady(true),
@@ -95,9 +97,20 @@ const Landing = () => {
               type="button"
               className={cx(
                 "landing-scroll-hint",
-                (!hintReady || engaged) && "hint-hidden",
+                (!hintReady || engaged || hintClicked) && "hint-hidden",
               )}
               aria-label={SCROLL_HINT_TEXT}
+              onClick={() => {
+                // A chevron that only *hints* at travel is a broken
+                // promise as a <button>: clicking it rides the same
+                // scroll journey a wheel scrub would, gliding down to
+                // /home (the progress watcher commits the route)
+                const s = scrollTransitionState;
+                if (s.initialized && s.rigSettled) {
+                  s.target = 1;
+                  setHintClicked(true);
+                }
+              }}
             >
               <ChevronDown size={30} />
             </button>

@@ -1,7 +1,8 @@
-import React, { memo } from "react";
+import React, { memo, Suspense } from "react";
 
 import SpaceCanvas from "./SpaceCanvas";
 import StarField from "./StarField";
+import BadgeMedallion from "./BadgeMedallion";
 import SolarScene from "./solar/SolarScene";
 
 /**
@@ -20,6 +21,24 @@ import SolarScene from "./solar/SolarScene";
  * gates its layers invisible once fully faded, so a day-mode canvas
  * draws almost nothing.
  */
+
+/**
+ * The medallion is decorative chrome: if its GLB fails to load or its
+ * subtree throws, drop just the coin — never the star field it shares a
+ * canvas with.
+ */
+class BadgeBoundary extends React.Component<
+  { children: React.ReactNode },
+  { failed: boolean }
+> {
+  state = { failed: false };
+  static getDerivedStateFromError() {
+    return { failed: true };
+  }
+  render() {
+    return this.state.failed ? null : this.props.children;
+  }
+}
 
 const Space3DBackground = ({
   isNightMode,
@@ -42,6 +61,18 @@ const Space3DBackground = ({
     <>
       <SpaceCanvas>
         <StarField isLanding={isLanding} opacityTarget={isNightMode ? 1 : 0} />
+        {/* The corner "hunt.codes" medallion rides the star canvas rather
+            than bringing its own WebGL context (three contexts tripped
+            Chrome's per-domain cap and strobed the stars). Hidden where
+            something else owns the corner: /about + /draw (page content)
+            and day-mode /home (the Golden Gate Bridge). */}
+        {!isAboutPage && !(isHomePage && !isNightMode) && (
+          <BadgeBoundary>
+            <Suspense fallback={null}>
+              <BadgeMedallion />
+            </Suspense>
+          </BadgeBoundary>
+        )}
       </SpaceCanvas>
       {(isLanding || isHomePage || isAboutPage || isSynthPage) && (
         <SolarScene

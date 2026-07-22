@@ -44,6 +44,14 @@ const MAX_PHRASE_TRANSITIONS = 3;
 const HUE_ROTATION_PERIOD_S = 20; // starsHueAnim: 20s per full rotation
 const DISCO_PERIOD_S = 8; // star-disco: 4s alternate = 8s round trip
 
+// The shader inherited the CSS stars' looping animations (hue rotation,
+// disco pulse) — and their prefers-reduced-motion coverage comes with
+// them (the App.scss reduced-motion block suppresses the CSS twins).
+// One-shot fades stay, twinkle is sub-pixel; the endless loops stop.
+const prefersReducedMotion =
+  typeof window !== "undefined" &&
+  window.matchMedia?.("(prefers-reduced-motion: reduce)").matches;
+
 const HALO_FACTOR = 3; // sprite is 3x the dot diameter, for the glow halo
 
 // Extra wrap range beyond the viewport so big sprites drift fully
@@ -235,8 +243,9 @@ const useConfigureMaterial = (
 
   useFrame((state, delta) => {
     material.uniforms.uTime.value = state.clock.elapsedTime;
-    material.uniforms.uHue.value =
-      ((state.clock.elapsedTime / HUE_ROTATION_PERIOD_S) % 1) * Math.PI * 2;
+    material.uniforms.uHue.value = prefersReducedMotion
+      ? 0
+      : ((state.clock.elapsedTime / HUE_ROTATION_PERIOD_S) % 1) * Math.PI * 2;
     material.uniforms.uPixelRatio.value = state.gl.getPixelRatio();
     // The rocket joyride dims the point stars while its warp streaks
     // play (static dots under a lightspeed jump would give the trick away)
@@ -285,7 +294,7 @@ const BackgroundStars = ({
       b.sizes[i] = star.widthPx / 2;
       b.phases[i] = Math.random();
       // Legacy: the smallest stars get the "disco" pulse animation
-      b.discos[i] = star.widthPx < 1.05 ? 1 : 0;
+      b.discos[i] = !prefersReducedMotion && star.widthPx < 1.05 ? 1 : 0;
     });
     return b;
   }, [width, height, isLanding]);
