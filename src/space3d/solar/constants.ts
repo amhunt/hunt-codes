@@ -124,16 +124,17 @@ const ASTEROID_Y = SUN_RADIUS;
 export const ASTEROIDS: SolarPlanetConfig[] = [
   {
     // The link trio (blog rock, GitHub Sputnik, LinkedIn rock) clusters
-    // in a shallow arc centered over the sun's apex: satellite on top,
-    // the rocks flanking a step lower.
+    // in a shallow arc low on the left: satellite crowning, the rocks
+    // flanking a step lower. Placements below are solved against the
+    // home camera's projection, so each lands on a chosen screen spot.
     name: "recent",
     kind: "mercury",
     radius: 0.28,
-    orbitRadius: 2.8,
+    orbitRadius: 3.36,
     orbitSpeed: EARTH.orbitSpeed,
-    orbitPhase: EARTH.orbitPhase - 0.24,
+    orbitPhase: EARTH.orbitPhase - 0.845,
     spinSpeed: 0.2 * SPEED_SCALE,
-    yOffset: ASTEROID_Y + 1.1,
+    yOffset: 2.1,
     logo: "blog",
     compact: {
       orbitRadius: 4.5,
@@ -143,16 +144,15 @@ export const ASTEROIDS: SolarPlanetConfig[] = [
   },
   {
     // Rendered as the Sputnik satellite (Satellite.tsx), which carries
-    // its own GitHub badge — no decal `logo` needed. Crowns the trio,
-    // directly above the sun's apex.
+    // its own GitHub badge — no decal `logo` needed. Crowns the trio.
     name: "github",
     kind: "mercury",
     radius: 0.32,
-    orbitRadius: 2.8,
+    orbitRadius: 3.17,
     orbitSpeed: EARTH.orbitSpeed,
-    orbitPhase: EARTH.orbitPhase - 0.56,
+    orbitPhase: EARTH.orbitPhase - 1.054,
     spinSpeed: -0.25 * SPEED_SCALE,
-    yOffset: ASTEROID_Y + 1.3,
+    yOffset: 2.67,
     compact: {
       orbitRadius: 4.5,
       orbitPhase: EARTH.orbitPhase + 0.01,
@@ -163,12 +163,12 @@ export const ASTEROIDS: SolarPlanetConfig[] = [
     name: "linkedin",
     kind: "mercury",
     radius: 0.22,
-    orbitRadius: 2.8,
+    orbitRadius: 2.76,
     orbitSpeed: EARTH.orbitSpeed,
-    orbitPhase: EARTH.orbitPhase - 0.88,
+    orbitPhase: EARTH.orbitPhase - 1.319,
     spinSpeed: 0.3 * SPEED_SCALE,
     logo: "linkedin",
-    yOffset: ASTEROID_Y + 1.1,
+    yOffset: 2.82,
     compact: {
       orbitRadius: 4.5,
       orbitPhase: EARTH.orbitPhase - 0.12,
@@ -177,17 +177,17 @@ export const ASTEROIDS: SolarPlanetConfig[] = [
   },
   {
     // Rendered as the cartoon rocket (Rocket.tsx). Not a link: clicking
-    // it launches the lightspeed joyride (rocketJourney.ts). Parked out
-    // past Earth, splitting the gap between Earth and the right edge of
-    // a wide viewport; pulls inward on phones so it stays in frame.
+    // it launches the lightspeed joyride (rocketJourney.ts). Sits below
+    // and right of Earth on wide screens; pulls inward and higher on
+    // smaller ones so it stays in frame.
     name: "rocket",
     kind: "mercury",
     radius: 0.42,
-    orbitRadius: 6.6,
+    orbitRadius: 6.42,
     orbitSpeed: EARTH.orbitSpeed,
-    orbitPhase: EARTH.orbitPhase + 0.42,
+    orbitPhase: EARTH.orbitPhase + 0.563,
     spinSpeed: 0.2 * SPEED_SCALE,
-    yOffset: ASTEROID_Y + 0.9,
+    yOffset: 1.36,
     compact: {
       orbitRadius: 5.6,
       orbitPhase: EARTH.orbitPhase + 0.29,
@@ -196,17 +196,17 @@ export const ASTEROIDS: SolarPlanetConfig[] = [
   },
   {
     // Rendered as the floating 808 drum pad (DrumPad.tsx). Clicking it
-    // warps to the synth solar system (/synth). Hovers just above the
-    // sun's shoulder, off to the right. Hidden entirely on phone-width
+    // warps to the synth solar system (/synth). Rides low between the
+    // sun and Earth on wide screens. Hidden entirely on phone-width
     // screens (SolarScene + SolarOverlays).
     name: "synthpad",
     kind: "mercury",
     radius: 0.4,
-    orbitRadius: 3.6,
+    orbitRadius: 5.31,
     orbitSpeed: EARTH.orbitSpeed,
-    orbitPhase: EARTH.orbitPhase - 0.12,
+    orbitPhase: EARTH.orbitPhase + 0.4,
     spinSpeed: 0.2 * SPEED_SCALE,
-    yOffset: ASTEROID_Y - 0.45,
+    yOffset: 0.54,
     // Tablet widths (compact layout, pad still shown): slide left so it
     // doesn't eclipse the LinkedIn rock, which shares its base bearing
     compact: {
