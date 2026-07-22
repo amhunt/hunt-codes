@@ -9,7 +9,7 @@ import ZipVideoMoon from "./ZipVideoMoon";
 const experienceItems = [
   {
     title: "Independent Software Consultant, Argos",
-    location: "Remote from NYC",
+    location: "San Francisco + Remote",
     date: "2025 - Present",
     description: [
       "Design, build, and ship production frontend features end to end for Argos, a legal tech AI product",
