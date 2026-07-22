@@ -19,7 +19,9 @@ const BadgeLink = ({ isNightMode }: { isNightMode: boolean }) => {
   // (Space3DBackground) — an invisible link over other content would
   // hijack clicks.
   const visible =
-    pathname === "/synth" || (pathname === "/home" && isNightMode);
+    pathname === "/synth" ||
+    pathname === "/journey" ||
+    (pathname === "/home" && isNightMode);
   if (!visible) return null;
 
   return (
