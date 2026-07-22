@@ -20,6 +20,7 @@ import {
   startSynthJourney,
 } from "./rocketJourney";
 import { ensureAudio } from "./synthAudio";
+import useWindowSize from "./useWindowSize";
 
 /**
  * DOM overlays for the home page's 3D bodies. The canvases never take
@@ -62,6 +63,9 @@ const ASTEROID_LINKS = [
 
 const SolarOverlays = () => {
   const navigate = useNavigate();
+  // The 808 pad sits out on phones (SolarScene hides the 3D pad; this
+  // hides its click target so no invisible button floats in the sky)
+  const isPhone = useWindowSize() === "sm";
   // Navigating away doesn't fire pointerleave — don't leave a hover
   // glow stuck on
   React.useEffect(
@@ -154,42 +158,44 @@ const SolarOverlays = () => {
       {/* The floating 808 pad: warps to the synth solar system (/synth).
           Unlocking the AudioContext inside this click is what lets the
           beat start playing the moment you land. */}
-      <TooltipProvider delayDuration={100}>
-        <Tooltip disableHoverableContent>
-          <TooltipTrigger asChild>
-            <button
-              type="button"
-              id={asteroidAnchorId("synthpad")}
-              className="asteroid-link"
-              aria-label="Space jam studio"
-              onClick={() => {
-                ensureAudio();
-                startSynthJourney();
-                // The studio lives at /synth: flip the URL as the ride
-                // boards (shareable, back-button aborts the trip) rather
-                // than after the warp lands. Only if the journey actually
-                // launched — the 3D driver may be dead (crashed canvas).
-                if (journeyState.phase !== "idle") {
-                  void navigate("/synth");
-                }
-              }}
-              onPointerEnter={() => {
-                hoverState.asteroid = "synthpad";
-              }}
-              onPointerLeave={() => {
-                if (hoverState.asteroid === "synthpad") {
-                  hoverState.asteroid = null;
-                }
-              }}
-            >
-              <BodyOutline outlineId={asteroidOutlineId("synthpad")} />
-            </button>
-          </TooltipTrigger>
-          <TooltipContent updatePositionStrategy="always">
-            <p>Space jam studio</p>
-          </TooltipContent>
-        </Tooltip>
-      </TooltipProvider>
+      {!isPhone && (
+        <TooltipProvider delayDuration={100}>
+          <Tooltip disableHoverableContent>
+            <TooltipTrigger asChild>
+              <button
+                type="button"
+                id={asteroidAnchorId("synthpad")}
+                className="asteroid-link"
+                aria-label="Space jam studio"
+                onClick={() => {
+                  ensureAudio();
+                  startSynthJourney();
+                  // The studio lives at /synth: flip the URL as the ride
+                  // boards (shareable, back-button aborts the trip) rather
+                  // than after the warp lands. Only if the journey actually
+                  // launched — the 3D driver may be dead (crashed canvas).
+                  if (journeyState.phase !== "idle") {
+                    void navigate("/synth");
+                  }
+                }}
+                onPointerEnter={() => {
+                  hoverState.asteroid = "synthpad";
+                }}
+                onPointerLeave={() => {
+                  if (hoverState.asteroid === "synthpad") {
+                    hoverState.asteroid = null;
+                  }
+                }}
+              >
+                <BodyOutline outlineId={asteroidOutlineId("synthpad")} />
+              </button>
+            </TooltipTrigger>
+            <TooltipContent updatePositionStrategy="always">
+              <p>Space jam studio</p>
+            </TooltipContent>
+          </Tooltip>
+        </TooltipProvider>
+      )}
     </>
   );
 };
