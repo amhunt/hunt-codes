@@ -1744,6 +1744,14 @@ $dns-ease: cubic-bezier(0.45, 0.05, 0.25, 1.2);
   // nudge the toggle inside the safe area on phones.
   top: calc(1rem + env(safe-area-inset-top, 0px));
   right: calc(3rem + env(safe-area-inset-right, 0px));
+  // lg+: the toggle joins the music button in a bottom-left control row
+  // instead of floating alone in the top-right corner
+  @media (min-width: $breakpoint-lg) {
+    top: auto;
+    right: auto;
+    left: calc(15rem + env(safe-area-inset-left, 0px));
+    bottom: calc(1rem + env(safe-area-inset-bottom, 0px));
+  }
   width: $dns-width;
   height: $dns-height;
   border-radius: $dns-height;
