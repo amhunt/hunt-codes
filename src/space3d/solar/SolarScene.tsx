@@ -13,7 +13,8 @@ import RocketJourney from "./RocketJourney";
 import SynthSystem from "./SynthSystem";
 import SunSvgAnchor from "./SunSvgAnchor";
 import BodyAnchors from "./BodyAnchors";
-import { ASTEROIDS, PLANETS } from "./constants";
+import { ASTEROIDS, layoutState, PLANETS } from "./constants";
+import useWindowWidth from "../../useWindowWidth";
 
 /**
  * The perspective solar-system canvas (hunt-codes-3's scene), layered
@@ -45,6 +46,16 @@ const SolarScene = ({
   onNavigate: (to: string) => void;
 }) => {
   const isLanding = view === "landing";
+  // Below the lg breakpoint the camera switches to its NDC-fraction
+  // framing (CameraRig) and the wide-screen body placement stops
+  // fitting — the link bodies pull inward (constants.ts `compact`
+  // overrides). On phone widths the 808 pad sits out entirely.
+  const { width } = useWindowWidth();
+  const isCompact = width < 1280;
+  const isPhone = width < 768;
+  useEffect(() => {
+    layoutState.compact = isCompact;
+  }, [isCompact]);
   const [planetsRevealed, setPlanetsRevealed] = useState(
     () => hasPlayedLandingIntro || !isLanding,
   );
@@ -138,7 +149,9 @@ const SolarScene = ({
           <DrumPad
             key={asteroid.name}
             config={asteroid}
-            visible={view === "home"}
+            // No pad on phones: the sky above the sun is too tight for a
+            // fourth clickable, and SolarOverlays hides its button too
+            visible={view === "home" && !isPhone}
           />
         ) : (
           <Asteroid

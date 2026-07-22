@@ -47,7 +47,17 @@ const Z_AXIS = new THREE.Vector3(0, 0, 1);
 const Y_AXIS = new THREE.Vector3(0, 1, 0);
 const UP = new THREE.Vector3(0, 1, 0);
 const earthPos = new THREE.Vector3();
+const sideDir = new THREE.Vector3();
 const legsDir = new THREE.Vector3();
+
+/** How far the leg cone swings off dead-away-from-camera: enough right
+ *  (+side) and down (-y) drift that the trailing legs still read as a
+ *  cone instead of hiding edge-on behind the sphere. */
+const LEGS_SIDE_DRIFT = 0.35;
+const LEGS_DOWN_DRIFT = 0.05;
+const legsMatrix = new THREE.Matrix4();
+const legsBack = new THREE.Vector3();
+const ZERO = new THREE.Vector3(0, 0, 0);
 
 export default function Satellite({
   config,
@@ -195,12 +205,25 @@ export default function Satellite({
       materials.badge.opacity = opacity.current;
     }
 
-    // Point the leg cone at the co-rotating frame's screen-right (the
-    // rotation Z->side is about +Y, so the beacon stays world-up)
+    // Point the leg cone mostly AWAY from the camera in the co-rotating
+    // frame (the home camera looks along the sun→Earth axis, so "away"
+    // is the Earth direction): the GitHub sphere leads, the legs trail
+    // behind it, drifted right + down so the cone reads as a shape
+    // instead of hiding dead-on behind the sphere.
     if (rig.current) {
       planetPosition(EARTH, t, earthPos);
-      legsDir.copy(earthPos).normalize().cross(UP).normalize();
-      rig.current.quaternion.setFromUnitVectors(Z_AXIS, legsDir);
+      earthPos.normalize(); // ≈ camera forward on the home perch
+      sideDir.copy(earthPos).cross(UP).normalize(); // screen-right
+      legsDir
+        .copy(earthPos)
+        .addScaledVector(sideDir, LEGS_SIDE_DRIFT)
+        .addScaledVector(UP, -LEGS_DOWN_DRIFT)
+        .normalize();
+      // lookAt aims local -Z, so sight down the NEGATED direction; this
+      // keeps local +Y world-up (the beacon stays on top of the head,
+      // which a minimal Z→dir rotation does not guarantee)
+      legsMatrix.lookAt(ZERO, legsBack.copy(legsDir).negate(), UP);
+      rig.current.quaternion.setFromRotationMatrix(legsMatrix);
     }
 
     // Slow roll about the leg axis — the cone spins in place, legs never
