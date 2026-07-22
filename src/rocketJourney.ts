@@ -26,10 +26,13 @@ export type JourneyVehicle = "rocket" | "pad" | "none";
 /** The full joyride (rocket): board, long warp with cameos, land home */
 const BOARDING_SECONDS = 1.8;
 const WARP_SECONDS = 11.4;
-/** The synth transit (808 pad, both directions): shorter, streaks only */
-const TRANSIT_BOARD_SECONDS = 1.3;
+/** The synth transit (808 pad, both directions): quick, streaks only —
+ *  it's navigation the visitor takes twice a session, not the joyride
+ *  show. The warp still fits its full 0.9s stretch-in + 1s collapse-out
+ *  envelope (RocketJourney) with a short cruise between. */
+const TRANSIT_BOARD_SECONDS = 1;
 const RETURN_TURN_SECONDS = 1;
-const TRANSIT_WARP_SECONDS = 4.2;
+const TRANSIT_WARP_SECONDS = 2.6;
 
 export const journeyState = {
   phase: "idle" as JourneyPhase,

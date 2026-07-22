@@ -107,6 +107,7 @@ const SolarScene = ({
           isNightMode={isNightMode}
           aboutActive={view === "home"}
           revealed={planetsRevealed}
+          closeUp={view === "about"}
         />
       ))}
       <Moon

@@ -37,12 +37,22 @@ export default function useScrollJourney(stop: 0 | 1) {
     // NOTE: no state reset on mount or unmount — the journey persists
     // across route hops so a continuous scroll rides straight through
     // (CameraRig adopts the view's stop on fresh page loads instead).
-    const committed = { current: null as number | null };
+    //
+    // Seed `committed` with wherever the rendered progress currently sits:
+    // on a link navigation the rig teleports progress to this page's stop
+    // on its NEXT frame, so at mount the value is still the previous
+    // page's. Committing on that stale reading bounced the visitor
+    // straight back (the "clicking the sun doesn't navigate" bug whenever
+    // the rig missed a beat — a lost WebGL context, a shader recompile).
+    // The seed is cleared the moment progress is observed near this
+    // page's own stop, after which scrub commits work as before.
+    const committed = { current: Math.round(s.progress) as number | null };
 
     let raf = 0;
     const watchProgress = () => {
       raf = requestAnimationFrame(watchProgress);
       if (!s.initialized) return;
+      if (Math.abs(s.progress - stop) < 0.25) committed.current = null;
       const near = Math.round(s.progress);
       if (
         near !== stop &&

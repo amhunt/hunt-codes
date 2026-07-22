@@ -1,5 +1,5 @@
 import React, { useEffect, useMemo, useRef } from "react";
-import { useFrame } from "@react-three/fiber";
+import { useFrame, useThree } from "@react-three/fiber";
 import * as THREE from "three";
 
 import { planetPosition, type SolarPlanetConfig } from "./constants";
@@ -34,6 +34,7 @@ export default function Planet({
   isNightMode = true,
   aboutActive = false,
   revealed = true,
+  closeUp = false,
 }: {
   config: SolarPlanetConfig;
   orbitColor: string;
@@ -44,6 +45,9 @@ export default function Planet({
   aboutActive?: boolean;
   /** Fades the planet + its orbit ring in (landing intro) */
   revealed?: boolean;
+  /** The camera is perched on this planet (/about): upgrade Earth to the
+   *  lazily-loaded 4K map the first time this goes true */
+  closeUp?: boolean;
 }) {
   const group = useRef<THREE.Group>(null);
   const squashWrapper = useRef<THREE.Group>(null);
@@ -57,21 +61,64 @@ export default function Planet({
   // fade-in and the hover swell compose instead of fighting each other
   const atmosphereBase = useRef(0.16);
 
+  const gl = useThree((s) => s.gl);
+  // Grazing views (the /about perch looks across Earth's limb) need real
+  // anisotropic filtering — the old hardcoded 4 smeared the surface
+  const maxAnisotropy = Math.min(16, gl.capabilities.getMaxAnisotropy());
+
   const texture = useMemo(() => {
     if (config.kind === "earth") {
-      // Real NASA Blue Marble (public domain), bundled locally so there's
-      // no runtime CORS dependency. The equirectangular map puts the
-      // Arctic at the north pole — exactly what the home camera looks down
-      // on — so the visible curve reads as the green, ice-capped northern
-      // hemisphere rather than a stylized blob.
+      // Real NASA Blue Marble Next Generation, July w/ topography +
+      // bathymetry (public domain), bundled locally so there's no runtime
+      // CORS dependency. The 4K upgrade below is cut from the SAME source
+      // image, so swapping it in sharpens without any color pop. The
+      // equirectangular map puts the Arctic at the north pole — exactly
+      // what the home camera looks down on — so the visible curve reads
+      // as the green, ice-capped northern hemisphere.
       const tex = new THREE.TextureLoader().load(earthMapUrl);
       tex.colorSpace = THREE.SRGBColorSpace;
-      tex.anisotropy = 4;
+      tex.anisotropy = maxAnisotropy;
       return tex;
     }
     return createPlanetTexture(config.kind);
-  }, [config]);
+  }, [config, maxAnisotropy]);
   useEffect(() => () => texture.dispose(), [texture]);
+
+  // The 2K map is ~5x under-resolved at the /about zoom. The first time
+  // the close-up view is active, swap in the 4K map — its own lazy chunk,
+  // so casual visits never download it.
+  const hiRes = useRef<THREE.Texture | null>(null);
+  const hiResRequested = useRef(false);
+  useEffect(() => {
+    if (!closeUp || hiResRequested.current || config.kind !== "earth") return;
+    hiResRequested.current = true;
+    let cancelled = false;
+    void import("../../assets/earth-4k.jpg").then(({ default: url }) => {
+      if (cancelled) return;
+      new THREE.TextureLoader().load(url, (tex) => {
+        const mat = surfaceMaterial.current;
+        if (cancelled || !mat) {
+          tex.dispose();
+          return;
+        }
+        tex.colorSpace = THREE.SRGBColorSpace;
+        tex.anisotropy = maxAnisotropy;
+        hiRes.current = tex;
+        mat.map = tex;
+        mat.emissiveMap = tex;
+        mat.needsUpdate = true;
+      });
+    });
+    return () => {
+      cancelled = true;
+    };
+  }, [closeUp, config.kind, maxAnisotropy]);
+  useEffect(
+    () => () => {
+      hiRes.current?.dispose();
+    },
+    [],
+  );
 
   const orbitLine = useMemo(() => {
     const points: THREE.Vector3[] = [];
@@ -162,7 +209,11 @@ export default function Planet({
         <group ref={squashWrapper}>
           <group ref={squashCounterRotate}>
             <mesh ref={mesh}>
-              <sphereGeometry args={[config.radius, 48, 48]} />
+              {/* Earth gets double the segments: the /about perch sits so
+                  close that 48 shows flat spots on the limb */}
+              <sphereGeometry
+                args={[config.radius, config.kind === "earth" ? 96 : 48, config.kind === "earth" ? 96 : 48]}
+              />
               {config.kind === "earth" ? (
                 // Earth self-illuminates faintly (its own map as the
                 // emissive map): the home view faces its night side, which
@@ -191,9 +242,10 @@ export default function Planet({
               )}
             </mesh>
             {config.kind === "earth" && (
-              // faint atmosphere shell
+              // faint atmosphere shell (same segment count as the surface
+              // so the rim facets can't mismatch the limb)
               <mesh scale={1.04}>
-                <sphereGeometry args={[config.radius, 48, 48]} />
+                <sphereGeometry args={[config.radius, 96, 96]} />
                 <meshBasicMaterial
                   ref={atmosphereMaterial}
                   color="#6ab0ff"

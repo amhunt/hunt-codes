@@ -6,6 +6,7 @@ import { planetPosition, type SolarPlanetConfig } from "./constants";
 import { asteroidOutlineId } from "./BodyAnchors";
 import { writeSilhouette } from "./outline";
 import { hoverState } from "../../solarHover";
+import InteractiveGlow from "./InteractiveGlow";
 
 /**
  * The synth easter egg's front door: a little TR-808-style drum machine
@@ -199,6 +200,10 @@ export default function DrumPad({
 
   return (
     <group ref={group}>
+      {/* Clickable-body halo, same as the link asteroids: the pad is the
+          only door to the synth studio, so it should read as clickable.
+          Outside the rig so config.radius isn't applied twice. */}
+      <InteractiveGlow radius={config.radius} opacityRef={opacity} />
       <group ref={rig} scale={config.radius}>
         <group ref={body}>
           <mesh ref={registerOutlineMesh} material={materials.chassis}>

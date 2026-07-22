@@ -29,6 +29,9 @@ export default defineConfig({
     entry: {
       index: "./src/index.js",
     },
+    // Binary 3D assets (the badge medallion GLB) ship as hashed static
+    // assets, so the deploy's 1-year immutable caching is safe for them
+    assetsInclude: /\.glb$/,
   },
   plugins: [
     pluginReact(),

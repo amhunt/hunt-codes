@@ -130,6 +130,10 @@ export default function RocketJourney({
   const startQuat = useRef(new THREE.Quaternion());
   const startCaptured = useRef(false);
   const originView = useRef<SolarView>(view);
+  /** True once the destination view's route has been seen this ride —
+   *  the 808 transit flips the URL at boarding, so the dest view arriving
+   *  mid-ride is expected, not an abort. */
+  const sawDestView = useRef(false);
   const warpPos = useRef(new THREE.Vector3());
   const warpQuat = useRef(new THREE.Quaternion());
 
@@ -228,14 +232,24 @@ export default function RocketJourney({
       return;
     }
     // Route change mid-ride (browser back): abort and let CameraRig
-    // swoop to the new view from wherever the camera is. Only a change
-    // AWAY from the journey's origin view counts — arrival navigation
-    // happens after the journey has already ended.
-    if (startCaptured.current && view !== originView.current) {
-      if (rig.current) rig.current.visible = false;
-      startCaptured.current = false;
-      endRocketJourney();
-      return;
+    // swoop to the new view from wherever the camera is. The journey's
+    // own routes don't count: the origin view is where it boarded, and
+    // the destination view arrives mid-ride by design (the 808 transit
+    // flips the URL at boarding). Once the destination view has been
+    // seen, leaving it again (back mid-warp) is a real abort.
+    const rideDestView: SolarView =
+      state.destination === "synth" ? "synth" : "home";
+    if (startCaptured.current) {
+      if (view === rideDestView) sawDestView.current = true;
+      const foreign = sawDestView.current
+        ? view !== rideDestView
+        : view !== originView.current && view !== rideDestView;
+      if (foreign) {
+        if (rig.current) rig.current.visible = false;
+        startCaptured.current = false;
+        endRocketJourney();
+        return;
+      }
     }
 
     const t = clock.elapsedTime;
@@ -248,6 +262,7 @@ export default function RocketJourney({
       if (!startCaptured.current) {
         startCaptured.current = true;
         originView.current = view;
+        sawDestView.current = view === rideDestView;
         startPos.current.copy(camera.position);
         startQuat.current.copy(camera.quaternion);
       }
@@ -378,26 +393,27 @@ export default function RocketJourney({
 
     if (elapsed >= state.warpSeconds) {
       // Drop out of lightspeed onto the destination's approach line
-      // (hopping routes if the destination lives elsewhere); ending the
-      // journey hands the camera back to CameraRig, whose resume swoop
-      // glides it the rest of the way onto the perch
-      const destView: SolarView =
-        state.destination === "synth" ? "synth" : "home";
-      viewGoal(destView, t, camera, size, goalPos, goalLook);
+      // (hopping routes if the destination lives elsewhere; the 808
+      // transit already navigated at boarding); ending the journey hands
+      // the camera back to CameraRig, whose resume swoop glides it the
+      // rest of the way onto the perch
+      viewGoal(rideDestView, t, camera, size, goalPos, goalLook);
       forward.copy(goalLook).sub(goalPos).normalize();
       camera.position
         .copy(goalPos)
         .addScaledVector(
           forward,
-          destView === "synth" ? -SYNTH_REENTRY_DISTANCE : -REENTRY_DISTANCE,
+          rideDestView === "synth"
+            ? -SYNTH_REENTRY_DISTANCE
+            : -REENTRY_DISTANCE,
         );
       lookMatrix.lookAt(camera.position, goalLook, UP);
       camera.quaternion.setFromRotationMatrix(lookMatrix);
       if (rig.current) rig.current.visible = false;
       startCaptured.current = false;
       flashWarp();
-      if (view !== destView) {
-        navigate(destView === "synth" ? "/synth" : "/home");
+      if (view !== rideDestView) {
+        navigate(rideDestView === "synth" ? "/synth" : "/home");
       }
       endRocketJourney();
     }

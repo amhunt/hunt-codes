@@ -18,7 +18,10 @@ import {
 import { Link } from "react-router-dom";
 
 const typedOptions = {
-  loop: true,
+  // The one-shot typing intro stays under reduced motion (it's a
+  // deliberate entrance, same policy as the CSS one-shots); only the
+  // infinite erase/retype cycle stops.
+  loop: !window.matchMedia?.("(prefers-reduced-motion: reduce)").matches,
   // This needs to be disabled if switching back to the Mac view
   showCursor: true,
   smartBackspace: true,
@@ -53,9 +56,11 @@ const Home = () => {
     };
   }, [isSmall]);
 
-  // show spinning logo after mount
+  // Reveal the page content as the 2s arrival swoop lands (the 1s fade
+  // starts right at touchdown; typed.js starts a beat later at 3s, once
+  // the container is fully opaque)
   useEffect(() => {
-    const timeout = setTimeout(() => setLogoOpacity(1), 3000);
+    const timeout = setTimeout(() => setLogoOpacity(1), 2000);
     return () => clearTimeout(timeout);
   }, []);
 
@@ -107,13 +112,15 @@ const Home = () => {
           to="/"
         >
           <ArrowLeftCircleIcon className="starIcon" size={16} />
-          <span>Landing page</span>
+          <span>Back to orbit</span>
         </Link>
       </div>
       <main className={cx("homeInfoContainer", logoOpacity === 1 && "show")}>
         {isSmall && (
-          <div className="sm-screen-summary-line max-w-[200px] text-center">
-            Frontend Engineer
+          <div className="sm-screen-summary-line max-w-[240px] text-center">
+            Frontend Engineer ·{" "}
+            <s className="opacity-70 decoration-[#ff6b6b] decoration-2">SF</s>{" "}
+            NYC
           </div>
         )}
         <div className="hoverableHomeItem justify-between gap-6">

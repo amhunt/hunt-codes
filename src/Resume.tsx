@@ -87,9 +87,11 @@ const Resume = () => {
   const size = useWindowSize();
   const isLarge = size === "lg";
   useEffect(() => {
+    // Overlap the tail of the 2s arrival swoop (the translucent panel
+    // tolerates it) and cut half a second of dead time on direct loads
     const timer = setTimeout(() => {
       setOpacity(true);
-    }, 1500);
+    }, 1000);
     return () => clearTimeout(timer);
   }, []);
 
@@ -129,8 +131,8 @@ const Resume = () => {
             — most recently as a staff engineer — before stepping away in 2025
             for a proper sabbatical. A few months of recharging later, I eased
             back in through consulting, helping teams ship polished, AI-powered
-            web products. Come fall 2026 I’m looking to go full-time again — for
-            consulting or full-time inquiries, reach out to{" "}
+            web products. Come fall 2026 I’m looking to go full-time again —
+            either way, reach out to{" "}
             <a
               className="inverse"
               href="mailto:andrew@hunt.codes?Subject=Hey%20Andrew"
