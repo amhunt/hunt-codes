@@ -9,7 +9,6 @@ import cx from "classnames";
 import "./App.scss";
 
 import Home from "./Home";
-import Journey from "./Journey";
 import Resume from "./Resume";
 import Synth from "./Synth";
 import SvgGenerator from "./SvgGenerator";
@@ -54,7 +53,6 @@ const ROUTE_TITLES: Record<string, string> = {
   "/home": DEFAULT_TITLE,
   "/about": "About Me | Andrew Hunt",
   "/synth": "Space Jam Studio | Andrew Hunt",
-  "/journey": "The Journey | Andrew Hunt",
   "/draw": "SVG Studio | Andrew Hunt",
 };
 
@@ -113,7 +111,6 @@ const App = () => {
           <Route path="/home" element={<Home />} />
           <Route path="/about" element={<Resume />} />
           <Route path="/synth" element={<Synth />} />
-          <Route path="/journey" element={<Journey />} />
           <Route path="/draw" element={<SvgGenerator />} />
         </Routes>
       </Router>

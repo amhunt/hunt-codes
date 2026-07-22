@@ -20,7 +20,7 @@ import { SYNTH_CAM_HEIGHT, SYNTH_ORIGIN } from "../../synthSpec";
  * a few seconds; once arrived the camera rides the moving goal.
  */
 
-export type SolarView = "landing" | "home" | "about" | "synth" | "journey";
+export type SolarView = "landing" | "home" | "about" | "synth";
 
 // Height tuned so Earth's orbit (r 17.5) nearly reaches the bottom edge
 // (~16px margin on a laptop): visible half-height = tan(fov/2)·y ≈ .52·35.
@@ -212,11 +212,9 @@ export default function CameraRig({ view }: { view: SolarView }) {
   useFrame(({ camera, clock, size }, delta) => {
     const t = clock.elapsedTime;
     const scrub = scrollTransitionState;
-    // The synth system and the /journey cruise sit outside the scroll
-    // journey — no stop to adopt or scrub toward; view changes to or
-    // from them always take the timed swoop
-    const stop =
-      view === "synth" || view === "journey" ? null : JOURNEY_STOPS[view];
+    // The synth system sits outside the scroll journey — no stop to
+    // adopt or scrub toward; its view changes always take the timed swoop
+    const stop = view === "synth" ? null : JOURNEY_STOPS[view];
 
     // First frame: adopt the mounted view as the journey position (fresh
     // page loads start with the module's stale zeros)
@@ -225,17 +223,6 @@ export default function CameraRig({ view }: { view: SolarView }) {
       scrub.target = stop;
       scrub.progress = stop;
       scrub.initialized = true;
-    }
-
-    // The /journey cruise (JourneyCruise) owns the camera while its view
-    // is up — same stand-down/handoff dance as the lightspeed rides below
-    if (view === "journey") {
-      activeView.current = view;
-      journeyHandoff.current = true;
-      rigState.settled = false;
-      scrub.rigSettled = false;
-      prevQuat.current = null;
-      return;
     }
 
     // The rocket joyride (RocketJourney, mounted before this so it runs
@@ -262,15 +249,13 @@ export default function CameraRig({ view }: { view: SolarView }) {
     }
 
     if (view !== activeView.current) {
-      // A hop from the synth system or the /journey cruise never comes
-      // from the scrub — the parked progress says nothing about the
-      // camera there
-      const fromDetached =
-        activeView.current === "synth" || activeView.current === "journey";
+      // A hop to or from the synth system never comes from the scrub —
+      // the journey's parked progress says nothing about the camera there
+      const fromSynth = activeView.current === "synth";
       activeView.current = view;
       if (
         stop !== null &&
-        !fromDetached &&
+        !fromSynth &&
         Math.abs(scrub.progress - stop) < 0.35
       ) {
         // Scroll-committed arrival: the scrub carried the camera here.
