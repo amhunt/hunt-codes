@@ -141,13 +141,6 @@ const Resume = () => {
             </a>
             .
           </p>
-          <p className="journey-plug">
-            Prefer the cinematic cut?{" "}
-            <Link className="inverse" to="/journey">
-              Watch the journey
-            </Link>{" "}
-            🚀
-          </p>
           <div className="resume-divider" />
           <h2>A few things I care about:</h2>
           <ul className="hor-list">

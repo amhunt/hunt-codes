@@ -77,8 +77,6 @@ const AppBackground = ({
     location.pathname.includes("about") || location.pathname.includes("draw");
   // The synth solar system (the 808-pad easter egg's destination)
   const isSynthPage = location.pathname.includes("synth");
-  // The /journey story crawl's open-space cruise
-  const isJourneyPage = location.pathname.includes("journey");
   const isLanding = location.pathname === "/" || location.pathname === "";
   const [musicEnabled, setMusicEnabled] = useState(false);
 
@@ -201,7 +199,6 @@ const AppBackground = ({
             isHomePage={isHomePage}
             isAboutPage={isAboutPage}
             isSynthPage={isSynthPage}
-            isJourneyPage={isJourneyPage}
             onJourneyNavigate={journeyNavigate}
           />
         </Suspense>

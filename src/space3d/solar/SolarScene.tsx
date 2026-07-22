@@ -10,7 +10,6 @@ import Satellite from "./Satellite";
 import Rocket from "./Rocket";
 import DrumPad from "./DrumPad";
 import RocketJourney from "./RocketJourney";
-import JourneyCruise from "./JourneyCruise";
 import SynthSystem from "./SynthSystem";
 import SunSvgAnchor from "./SunSvgAnchor";
 import BodyAnchors from "./BodyAnchors";
@@ -165,8 +164,6 @@ const SolarScene = ({
       {/* The second solar system, far below this one: six knob-planets
           around a beat-pulsing sun (the space synth) */}
       {view === "synth" && <SynthSystem isNightMode={isNightMode} />}
-      {/* The /journey cruise: open-space flight behind the story crawl */}
-      {view === "journey" && <JourneyCruise />}
       {/* Mounted before CameraRig: while a journey is active it must
           pose the camera first each frame (CameraRig stands down) */}
       <RocketJourney view={view} navigate={onNavigate} />
