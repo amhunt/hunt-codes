@@ -29,7 +29,7 @@ const experienceItems = [
         subbullets: [
           "TypeScript correctness + coverage gates in CI",
           "Jest unit tests, Datadog synthetics, and visual regression via Storybook/Chromatic",
-          "FE/BE logging pipeline with Segment",
+          "Built unified FE/BE logging pipeline with Segment",
         ],
       },
       "Owned build & deploy across Webpack, Jenkins, Docker, S3, Cloudflare, and Webflow",
