@@ -146,29 +146,64 @@ body.journey-mode {
   }
 }
 
+// The intro line, Star Wars-style: flat, centered, blue, fading up on
+// the black before the crawl begins (Journey.tsx renders it until the
+// fade completes). z above the crawl page, below the end credits.
+.journey-intro {
+  position: fixed;
+  inset: 0;
+  z-index: 6;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin: 0;
+  padding: 0 8vw;
+  pointer-events: none;
+  text-align: center;
+  color: #7cc5ff;
+  font-size: clamp(19px, 3.2vw, 33px);
+  font-weight: 400;
+  letter-spacing: 0.04em;
+  line-height: 1.5;
+  animation: journeyIntro 5.5s ease forwards;
+}
+
+// Fade up, hold, fade out — the classic opening-title beat
+@keyframes journeyIntro {
+  0% {
+    opacity: 0;
+  }
+  13% {
+    opacity: 1;
+  }
+  74% {
+    opacity: 1;
+  }
+  100% {
+    opacity: 0;
+  }
+}
+
 // The perspective stage: the tilt lives on a wrapper, the per-frame
-// translate on the crawl itself (Journey.tsx writes the transform)
+// translate on the crawl itself (Journey.tsx writes the transform). A
+// tight perspective + steep rake give the deep Star Wars recession.
 .journey-page {
   position: fixed;
   inset: 0;
   z-index: 4;
   overflow: hidden;
   pointer-events: none;
-  perspective: 400px;
-  perspective-origin: 50% 30%;
-  // The crawl dissolves into the distance instead of hitting the ceiling
-  mask-image: linear-gradient(
-    to bottom,
-    transparent 4%,
-    #000 30%,
-    #000 100%
-  );
+  perspective: 340px;
+  perspective-origin: 50% 34%;
+  // The crawl dissolves into the distance instead of hitting the ceiling;
+  // the steep rake vanishes higher, so the fade starts higher too
+  mask-image: linear-gradient(to bottom, transparent 2%, #000 22%, #000 100%);
 }
 
 .journey-tilt {
   position: absolute;
   inset: 0;
-  transform: rotateX(24deg);
+  transform: rotateX(58deg);
   transform-origin: 50% 100%;
 }
 

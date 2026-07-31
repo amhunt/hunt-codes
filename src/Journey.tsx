@@ -11,9 +11,13 @@ import {
 import { cruiseState } from "./journeyCruise";
 
 /**
- * The /journey page: Andrew's story as an opening crawl, gliding into
- * a vanishing point while the 3D scene (space3d/solar/JourneyCruise)
- * cruises through open space behind it.
+ * The /journey page: Andrew's story as a Star Wars-style opening crawl,
+ * gliding into a vanishing point while the 3D scene
+ * (space3d/solar/JourneyCruise) cruises through open space behind it.
+ *
+ * It opens the way the films do: the intro line ("30+ years ago…") fades
+ * up flat and centered on the black, holds, and fades out — THEN the
+ * steeply-raked crawl begins. Any scrub skips straight into the crawl.
  *
  * The crawl advances on its own at reading pace; wheel, touch drag, or
  * arrow keys scrub it (forward or back), and the scrub speed feeds the
@@ -21,8 +25,8 @@ import { cruiseState } from "./journeyCruise";
  * lightspeed (cruiseState.boost). All the words live in
  * journeyContent.ts; this file only drives the motion.
  *
- * Under prefers-reduced-motion the auto-play stops: the crawl moves
- * only when the visitor scrolls it.
+ * Under prefers-reduced-motion the intro is skipped and the auto-play
+ * stops: the crawl moves only when the visitor scrolls it.
  */
 
 /** Reading-pace auto-advance */
@@ -47,6 +51,19 @@ const Journey = () => {
   const velocity = useRef(0);
   const [ended, setEnded] = useState(false);
   const endedRef = useRef(false);
+  // Reduced motion skips the intro sequence and lands straight on the
+  // (non-auto-advancing) crawl
+  const [reduced] = useState(prefersReducedMotion);
+  // The intro line owns the screen first; the crawl holds at the start
+  // until it clears (fade-out done, or the visitor scrubs past it)
+  const [introDone, setIntroDone] = useState(reduced);
+  const introDoneRef = useRef(reduced);
+
+  const finishIntro = () => {
+    if (introDoneRef.current) return;
+    introDoneRef.current = true;
+    setIntroDone(true);
+  };
 
   // The crawl needs deep space even in day mode (additive streaks on a
   // pink sky read as nothing) — the same forced-night trick as the
@@ -60,7 +77,6 @@ const Journey = () => {
   }, []);
 
   useEffect(() => {
-    const reduced = prefersReducedMotion();
     let raf = 0;
     let last = performance.now();
 
@@ -76,7 +92,12 @@ const Journey = () => {
       const limit = el.offsetHeight + window.innerHeight * 0.35;
 
       velocity.current *= Math.exp(-dt * VELOCITY_DECAY);
-      const auto = reduced || endedRef.current ? 0 : BASE_SPEED_PX_S;
+      // Hold at the start until the intro clears; then reading-pace
+      // auto-advance (off under reduced motion, and once the story ends)
+      const auto =
+        reduced || endedRef.current || !introDoneRef.current
+          ? 0
+          : BASE_SPEED_PX_S;
       progress.current = Math.min(
         Math.max(progress.current + (auto + velocity.current) * dt, 0),
         limit,
@@ -98,6 +119,8 @@ const Journey = () => {
     raf = requestAnimationFrame(tick);
 
     const impulse = (amount: number) => {
+      // Scrubbing during the intro skips straight into the crawl
+      finishIntro();
       velocity.current = Math.min(
         Math.max(velocity.current + amount, -MAX_VELOCITY),
         MAX_VELOCITY,
@@ -140,7 +163,7 @@ const Journey = () => {
       window.removeEventListener("touchmove", onTouchMove);
       window.removeEventListener("keydown", onKeyDown);
     };
-  }, []);
+  }, [reduced]);
 
   const replay = () => {
     progress.current = 0;
@@ -160,10 +183,17 @@ const Journey = () => {
           <span>Back to orbit</span>
         </Link>
       </div>
+      {/* Star Wars-style opener: the intro line fades up flat on the
+          black, holds, and fades out; when the fade completes the crawl
+          takes over (finishIntro also fires early if the visitor scrubs) */}
+      {!introDone && (
+        <p className="journey-intro" onAnimationEnd={finishIntro}>
+          {JOURNEY_INTRO.overline}
+        </p>
+      )}
       <main className="journey-page" aria-label="Andrew Hunt's journey">
         <div className="journey-tilt">
           <div ref={crawlRef} className="journey-crawl">
-            <p className="journey-overline">{JOURNEY_INTRO.overline}</p>
             <h1 className="journey-title">{JOURNEY_INTRO.title}</h1>
             <p className="journey-subtitle">{JOURNEY_INTRO.subtitle}</p>
             {JOURNEY_CHAPTERS.map((chapter) => (
@@ -185,12 +215,13 @@ const Journey = () => {
       {/* Post-credits: once the crawl clears the screen */}
       <div className={cx("journey-credits", ended && "shown")}>
         <button type="button" onClick={replay}>
-          ↺ Roll it again
+          ↺ Roll again
         </button>
-        <Link to="/about">Read the plain-text version</Link>
-        <Link to="/home">Back to orbit</Link>
+        <Link to="/about">Back to resume</Link>
       </div>
-      <div className={cx("journey-hint", ended && "hint-hidden")}>
+      <div
+        className={cx("journey-hint", (!introDone || ended) && "hint-hidden")}
+      >
         scroll to travel faster
       </div>
     </>

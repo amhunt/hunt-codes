@@ -17,9 +17,9 @@ export interface JourneyChapter {
 }
 
 export const JOURNEY_INTRO = {
-  overline: "A while ago, in a timezone three hours behind…",
+  overline: "30+ years ago, in a Rochester, NY far, far away…",
   title: "THE JOURNEY",
-  subtitle: "the andrew hunt story",
+  subtitle: "the andrew hunt story begins",
 };
 
 export const JOURNEY_CHAPTERS: JourneyChapter[] = [
