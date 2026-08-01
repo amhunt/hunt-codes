@@ -425,16 +425,13 @@ const handleDraw = async (event) => {
   const hourBucket = now.toISOString().slice(0, 13); // e.g. 2026-07-31T18
   const dayBucket = now.toISOString().slice(0, 10);
 
+  // The per-visitor counter deliberately counts ATTEMPTS, including ones
+  // that never reach a model — otherwise retrying junk is free and someone
+  // can hammer the endpoint all day. It only ever costs that one visitor.
   const ipCount = await bumpCounter(`ip#${ipHash}#${hourBucket}`, 2 * 3600);
   if (ipCount > PER_IP_HOURLY_LIMIT) {
     return json(429, {
       error: "easy there, space cadet — the robot needs a breather. try again in an hour.",
-    });
-  }
-  const dayCount = await bumpCounter(`budget#${dayBucket}`, 48 * 3600);
-  if (dayCount > DAILY_GLOBAL_LIMIT) {
-    return json(429, {
-      error: "the robot has drawn a lot today and its pen is out of ink — come back tomorrow.",
     });
   }
 
@@ -456,6 +453,20 @@ const handleDraw = async (event) => {
   if (!clean) {
     return json(400, {
       error: "that prompt strayed off the flight plan — try drawing something else",
+    });
+  }
+
+  // The global cap is claimed HERE — the last moment before the only
+  // billable call — so it tracks money actually at risk. Counting it at
+  // the top of the request instead meant rejected prompts, a missing key
+  // and moderation outages all ate the day's budget, which turned free
+  // moderation traffic into a way to take /draw offline for everyone at
+  // no cost to the attacker. Claiming it before the call rather than
+  // after keeps concurrent requests from overshooting the ceiling.
+  const dayCount = await bumpCounter(`budget#${dayBucket}`, 48 * 3600);
+  if (dayCount > DAILY_GLOBAL_LIMIT) {
+    return json(429, {
+      error: "the robot has drawn a lot today and its pen is out of ink — come back tomorrow.",
     });
   }
 

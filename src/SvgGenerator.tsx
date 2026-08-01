@@ -185,6 +185,13 @@ const SvgGenerator = () => {
   // waiting for it before it moves the page around.
   const mountedRef = useRef(true);
   const routeIdRef = useRef(routeId);
+  // True while the permalink effect has a request open. Generation checks it
+  // before clearing the spinner so it can't switch off a spinner that now
+  // belongs to somebody else's fetch.
+  const permalinkLoadingRef = useRef(false);
+  // Mirrors generatingRef for rendering — the ref is the synchronous lock,
+  // this drives the copy the visitor actually reads
+  const [generating, setGenerating] = useState(false);
 
   useEffect(() => {
     mountedRef.current = true;
@@ -247,6 +254,7 @@ const SvgGenerator = () => {
   useEffect(() => {
     if (!routeId || loadedIdRef.current === routeId) return;
     let cancelled = false;
+    permalinkLoadingRef.current = true;
     setLoading(true);
     setError("");
     // The ref tracks what's in `drawing`, so the two are always cleared
@@ -273,11 +281,13 @@ const SvgGenerator = () => {
           );
         }
       } finally {
+        permalinkLoadingRef.current = false;
         if (!cancelled) setLoading(false);
       }
     })();
     return () => {
       cancelled = true;
+      permalinkLoadingRef.current = false;
     };
   }, [routeId]);
 
@@ -304,7 +314,11 @@ const SvgGenerator = () => {
   const generateSvg = useCallback(async () => {
     const trimmedPrompt = prompt.trim();
     const trimmedName = name.trim();
-    if (!trimmedPrompt || loading) return;
+    // `loading` is state, so it lags the click that set it: a second Enter
+    // or click landing before React re-renders would still read false and
+    // fire a second billed generation. The ref flips synchronously, so it
+    // is the real lock and has to be checked first.
+    if (!trimmedPrompt || generatingRef.current || loading) return;
 
     if (!trimmedName) {
       setError("every artist signs their work — add your name first");
@@ -321,6 +335,7 @@ const SvgGenerator = () => {
       mountedRef.current && routeIdRef.current === startedOn;
 
     generatingRef.current = true;
+    setGenerating(true);
     setLoading(true);
     setError("");
     // Cleared together with `drawing` — leaving the ref set through a failed
@@ -367,7 +382,12 @@ const SvgGenerator = () => {
       }
     } finally {
       generatingRef.current = false;
-      if (mountedRef.current) setLoading(false);
+      if (mountedRef.current) {
+        setGenerating(false);
+        // Leave the spinner alone if a permalink fetch started mid-generation
+        // and now owns it — that fetch clears it when it settles
+        if (!permalinkLoadingRef.current) setLoading(false);
+      }
     }
   }, [prompt, name, loading, drawing, navigate]);
 
@@ -467,9 +487,12 @@ const SvgGenerator = () => {
                 <span />
               </div>
               <p>
-                {routeId && !drawing
-                  ? "Tuning into the transmission..."
-                  : "Generating your SVG..."}
+                {/* Not `routeId && !drawing` — regenerating from a permalink
+                    also clears the drawing while the id stays in the URL,
+                    which read as "tuning in" when we were really drawing */}
+                {generating
+                  ? "Generating your SVG..."
+                  : "Tuning into the transmission..."}
               </p>
             </div>
           )}
