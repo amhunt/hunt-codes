@@ -243,9 +243,9 @@ const Journey = () => {
             <h1 className="journey-title">{JOURNEY_INTRO.title}</h1>
             <p className="journey-subtitle">{JOURNEY_INTRO.subtitle}</p>
             {JOURNEY_CHAPTERS.map((chapter) => (
-              <section key={chapter.title} className="journey-chapter">
+              <section key={chapter.era} className="journey-chapter">
                 <p className="journey-era">{chapter.era}</p>
-                <h2>{chapter.title}</h2>
+                {chapter.title && <h2>{chapter.title}</h2>}
                 {chapter.lines.map((line) => (
                   <p key={line}>{line}</p>
                 ))}
