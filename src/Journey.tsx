@@ -49,6 +49,9 @@ const VELOCITY_DECAY = 3.2;
 const MAX_VELOCITY = 2600;
 /** Scrub speed that reads as "full burn" to the cruise (px/s) */
 const FULL_BURN_VELOCITY = 1000;
+/** Backward scrub accumulated while parked at the start before the ride
+ *  gives up and flies home — a firm flick, not a stray tick */
+const BACK_EXIT_PX = 300;
 
 const prefersReducedMotion = () =>
   typeof window !== "undefined" &&
@@ -64,6 +67,9 @@ const Journey = () => {
   const [muted, setMuted] = useState(false);
   const progress = useRef(0);
   const velocity = useRef(0);
+  // Backward scrub piled up against the start (see BACK_EXIT_PX)
+  const backOverscroll = useRef(0);
+  const exiting = useRef(false);
   const [ended, setEnded] = useState(false);
   const endedRef = useRef(false);
   // Reduced motion skips the intro sequence and lands straight on the
@@ -137,6 +143,24 @@ const Journey = () => {
         endedRef.current = atEnd;
         setEnded(atEnd);
       }
+
+      // Scrubbing back past the start flies the ship home: keep pulling
+      // against the parked crawl and the ride lands (same exit as the
+      // cockpit's "End trip" — or a plain route change if the 3D driver
+      // is dead)
+      if (progress.current <= 0 && velocity.current < 0) {
+        backOverscroll.current += -velocity.current * dt;
+        if (backOverscroll.current > BACK_EXIT_PX && !exiting.current) {
+          exiting.current = true;
+          if (journeyState.phase !== "idle") {
+            requestJourneyLanding();
+          } else {
+            void navigate("/home");
+          }
+        }
+      } else {
+        backOverscroll.current = 0;
+      }
     };
     raf = requestAnimationFrame(tick);
 
@@ -185,7 +209,7 @@ const Journey = () => {
       window.removeEventListener("touchmove", onTouchMove);
       window.removeEventListener("keydown", onKeyDown);
     };
-  }, [reduced]);
+  }, [reduced, navigate]);
 
   // The soundtrack fades up a beat after arrival. Autoplay is allowed
   // when the visitor rode the rocket here (the click was the gesture);
