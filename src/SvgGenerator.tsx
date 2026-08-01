@@ -180,6 +180,22 @@ const SvgGenerator = () => {
   const generatingRef = useRef(false);
   // Which drawing id is currently displayed — see the permalink effect
   const loadedIdRef = useRef<string | null>(null);
+  // Generation runs for up to 50s, which is plenty of time for the visitor
+  // to wander off. These let the response check whether anyone is still
+  // waiting for it before it moves the page around.
+  const mountedRef = useRef(true);
+  const routeIdRef = useRef(routeId);
+
+  useEffect(() => {
+    mountedRef.current = true;
+    return () => {
+      mountedRef.current = false;
+    };
+  }, []);
+
+  useEffect(() => {
+    routeIdRef.current = routeId;
+  }, [routeId]);
 
   // Persist the signature; clearing the field forgets it
   useEffect(() => {
@@ -222,10 +238,14 @@ const SvgGenerator = () => {
   // screen under the new URL — its caption naming one artist while the
   // copy-link button points at another — and a failed fetch would strand it
   // there for good.
+  // Deliberately does NOT bail while a generation is in flight: the visitor
+  // clicking a gallery card mid-generation means they want that drawing, and
+  // skipping the fetch left the URL pointing at artwork that never loaded.
+  // Generation no longer collides with this — it checks the route before
+  // touching `drawing`, and on success it sets loadedIdRef before navigating,
+  // so the id check below already short-circuits the redundant refetch.
   useEffect(() => {
-    if (!routeId || loadedIdRef.current === routeId || generatingRef.current) {
-      return;
-    }
+    if (!routeId || loadedIdRef.current === routeId) return;
     let cancelled = false;
     setLoading(true);
     setError("");
@@ -292,9 +312,21 @@ const SvgGenerator = () => {
       return;
     }
 
+    // What was on screen when we started, so a failure can put it back, and
+    // where we started, so a slow response can tell whether the visitor is
+    // still on the page it was meant for
+    const previous = drawing;
+    const startedOn = routeIdRef.current;
+    const stillHere = () =>
+      mountedRef.current && routeIdRef.current === startedOn;
+
     generatingRef.current = true;
     setLoading(true);
     setError("");
+    // Cleared together with `drawing` — leaving the ref set through a failed
+    // generation made the permalink look loaded when it wasn't, and the
+    // drawing at that URL could never come back
+    loadedIdRef.current = null;
     setDrawing(null);
     setCopied(false);
 
@@ -311,20 +343,33 @@ const SvgGenerator = () => {
       if (!response.ok) throw new Error(await readApiError(response));
 
       const data = (await response.json()) as Drawing;
-      loadedIdRef.current = data.id;
-      setDrawing(data);
-      setGallery((prev) =>
-        [data, ...prev.filter((d) => d.id !== data.id)].slice(0, 12),
-      );
-      // Give the fresh drawing its shareable home
-      void navigate(`/draw/${data.id}`);
+      // The drawing exists either way, so let it into the gallery even if
+      // the visitor has moved on — it just isn't worth yanking them back
+      if (mountedRef.current) {
+        setGallery((prev) =>
+          [data, ...prev.filter((d) => d.id !== data.id)].slice(0, 12),
+        );
+      }
+      if (stillHere()) {
+        loadedIdRef.current = data.id;
+        setDrawing(data);
+        // Give the fresh drawing its shareable home
+        void navigate(`/draw/${data.id}`);
+      }
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Failed to generate SVG");
+      if (stillHere()) {
+        setError(err instanceof Error ? err.message : "Failed to generate SVG");
+        // Put back whatever the URL is still pointing at
+        if (previous) {
+          loadedIdRef.current = previous.id;
+          setDrawing(previous);
+        }
+      }
     } finally {
       generatingRef.current = false;
-      setLoading(false);
+      if (mountedRef.current) setLoading(false);
     }
-  }, [prompt, name, loading, navigate]);
+  }, [prompt, name, loading, drawing, navigate]);
 
   const copyLink = useCallback(async () => {
     try {
