@@ -58,7 +58,9 @@
     "knip": "knip",
     "serve": "serve -s build/",
     "deploy": "aws s3 sync build/ s3://hunt.codes --acl public-read --delete --exclude \"*.html\" --exclude \"robots.txt\" --exclude \"sitemap.xml\" --exclude \"site.webmanifest\" --exclude \"asset-manifest.json\" --cache-control \"public,max-age=31536000,immutable\" --profile andrew && aws s3 sync build/ s3://hunt.codes --acl public-read --exclude \"*\" --include \"*.html\" --include \"robots.txt\" --include \"sitemap.xml\" --include \"site.webmanifest\" --include \"asset-manifest.json\" --cache-control \"public,max-age=0,must-revalidate\" --profile andrew",
-    "test": "jest"
+    "test": "jest",
+    "storybook": "storybook dev -p 6006",
+    "build-storybook": "storybook build"
   },
   "browserslist": [
     ">0.5%",
@@ -73,6 +75,7 @@
     "@rsbuild/plugin-react": "^2.1.0",
     "@rsbuild/plugin-sass": "^2.0.1",
     "@rsbuild/plugin-svgr": "^2.0.5",
+    "@storybook/react": "^10.5.5",
     "@tailwindcss/postcss": "^4.3.2",
     "@types/bun": "^1.3.14",
     "@types/react": "^19.2.17",
@@ -90,6 +93,8 @@
     "globals": "^17.7.0",
     "jest-environment-jsdom": "^30.4.1",
     "knip": "^6.25.0",
+    "storybook": "^10.5.5",
+    "storybook-react-rsbuild": "^3.3.4",
     "tailwindcss": "^4.3.2",
     "typescript-eslint": "^8.63.0"
   },
