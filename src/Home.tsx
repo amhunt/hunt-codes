@@ -8,6 +8,8 @@ import useWindowSize from "./useWindowSize";
 import useScrollJourney from "./useScrollJourney";
 import SolarOverlays from "./SolarOverlays";
 import RocketCockpit from "./RocketCockpit";
+import ScrollHint from "./ScrollHint";
+import { JOURNEY_STOPS } from "./scrollTransition";
 
 import {
   Tooltip,
@@ -37,12 +39,16 @@ const typedOptions = {
 // in their UA, so this matches the whole family
 const isChromium = navigator.userAgent.includes("Chrome");
 
+// The arrival swoop lands at 2s and the content fade runs a beat past it;
+// the hint follows once the page has settled
+const HINT_DELAY_MS = 3800;
+
 const Home = () => {
   const [logoOpacity, setLogoOpacity] = useState(0);
 
   // Scroll-scrubbed travel: up retreats toward the landing view, down
   // continues out to /about (scrollTransition.ts)
-  useScrollJourney(1);
+  const engaged = useScrollJourney(1);
 
   const size = useWindowSize();
   const isSmall = size === "sm";
@@ -117,10 +123,15 @@ const Home = () => {
       </div>
       <main className={cx("homeInfoContainer", logoOpacity === 1 && "show")}>
         {isSmall && (
-          <div className="sm-screen-summary-line max-w-[240px] text-center">
+          <div className="sm-screen-summary-line max-w-[300px] text-center">
             Frontend Engineer ·{" "}
-            <s className="opacity-70 decoration-[#ff6b6b] decoration-2">SF</s>{" "}
-            NYC
+            {/* Keep the city pair together — at 240px this broke after the
+                strikethrough and orphaned "NYC" onto its own line, which
+                doubled the block's height and pushed it into the icons */}
+            <span className="whitespace-nowrap">
+              <s className="opacity-70 decoration-[#ff6b6b] decoration-2">SF</s>{" "}
+              NYC
+            </span>
           </div>
         )}
         <div className="hoverableHomeItem justify-between gap-6">
@@ -234,6 +245,16 @@ const Home = () => {
           </>
         )}
       </main>
+      {/* Home is a waypoint, not the end of the line — the résumé is one
+          more scroll further out, and nothing else says so. Waits for the
+          arrival swoop and the content fade (~2s) to finish first. */}
+      <ScrollHint
+        target={JOURNEY_STOPS.about}
+        delayMs={HINT_DELAY_MS}
+        hidden={engaged}
+        // /home renders the "Enable space jams" pill; the landing page doesn't
+        clearsBottomLeftControl
+      />
     </>
   );
 };

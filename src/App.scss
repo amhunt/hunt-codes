@@ -673,7 +673,7 @@ p {
   .interest-pill,
   .App-background_day,
   .body-outline-pulse,
-  .landing-scroll-hint,
+  .scroll-hint-chevron,
   .svg-generator-spinner,
   .svg-generator-loading-dots span,
   // The hue cycle on the drawing itself. The per-element wobble lives
@@ -684,19 +684,21 @@ p {
   }
 }
 
-// Bouncing "you can scroll" chevron on the landing page (Landing.tsx):
-// appears a beat after the intro choreography, disappears once the
-// visitor starts scrubbing
-.landing-scroll-hint {
+// Bouncing "you can scroll" nudge (ScrollHint.tsx), shown on the landing
+// page and home — both have somewhere further along the journey to go.
+// Appears a beat after each page's own choreography, disappears once the
+// visitor starts scrubbing.
+.scroll-hint {
   position: fixed;
   bottom: 18px;
   left: 50%;
-  // The keyframes carry the same X-centering; this keeps it centered
-  // under prefers-reduced-motion (animation: none)
   transform: translateX(-50%);
   z-index: 5;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 7px;
   color: rgba(232, 230, 245, 0.75);
-  animation: hint-bounce 2.2s ease-in-out infinite;
   transition: opacity 0.8s ease;
   opacity: 1;
 
@@ -710,17 +712,79 @@ p {
   }
 }
 
-.App.day .landing-scroll-hint {
-  color: $purp;
+// Only the chevron bounces — the caption stays put so it stays readable
+.scroll-hint-chevron {
+  animation: hint-bounce 2.2s ease-in-out infinite;
+}
+
+.scroll-hint-label {
+  font-family: "Inconsolata", monospace;
+  font-size: 9px;
+  font-weight: 500;
+  letter-spacing: 0.32em;
+  // The tracking adds a trailing gap on the last letter; nudge it back so
+  // the caption reads as centered over the chevron
+  text-indent: 0.32em;
+  text-transform: uppercase;
+  white-space: nowrap;
+  color: rgba(255, 255, 255, 0.5);
+  // Arrives after the chevron has settled, so the motion is noticed first
+  // and the words explain it second
+  transition:
+    opacity 0.9s ease 0.75s,
+    color 0.2s ease;
+  opacity: 1;
+}
+
+// On the way out the caption leaves with the chevron rather than lingering
+.scroll-hint.hint-hidden .scroll-hint-label {
+  opacity: 0;
+  transition-delay: 0s;
+}
+
+.scroll-hint:hover .scroll-hint-label {
+  color: $purp-light;
+}
+
+// White-on-pink washes out over the day gradient
+.App.day {
+  .scroll-hint {
+    color: $purp;
+  }
+
+  .scroll-hint-label {
+    color: rgba(60, 40, 90, 0.65);
+  }
+
+  .scroll-hint:hover .scroll-hint-label {
+    color: $purp;
+  }
+}
+
+// On a phone the "Enable space jams" pill (fixed bottom-4 left-4) runs
+// almost the full width, so a centred caption at the same height lands on
+// top of it. Only pages that actually show the pill get lifted — it is
+// gated on `!isLanding`, so lifting the landing hint too would just leave
+// a gap under it.
+@media (max-width: 767px) {
+  .scroll-hint--above-controls {
+    bottom: 76px;
+  }
+
+  .scroll-hint-label {
+    font-size: 8px;
+    letter-spacing: 0.22em;
+    text-indent: 0.22em;
+  }
 }
 
 @keyframes hint-bounce {
   0%,
   100% {
-    transform: translate(-50%, 0);
+    transform: translateY(0);
   }
   50% {
-    transform: translate(-50%, 9px);
+    transform: translateY(9px);
   }
 }
 
@@ -1070,6 +1134,21 @@ li > ul > li {
     font-size: 20px;
     left: 50%;
     transform: translateX(-50%);
+
+    // Pinning the summary to the top while .homeInfoContainer is anchored
+    // to the bottom means the two grow toward each other: on a short
+    // viewport (a phone in landscape) the panel rises into the summary and
+    // the icon row lands on top of the text — measured 34px of overlap at
+    // 667x470, and fully inverted at 375px tall. The summary is already a
+    // child of the panel in the DOM, so dropping it back into normal flow
+    // removes the collision by construction and restores reading order.
+    @media (max-height: 560px) {
+      position: static;
+      transform: none;
+      width: auto;
+      max-width: none;
+      margin-bottom: 6px;
+    }
   }
 
   .nameTitle {
@@ -1418,6 +1497,9 @@ body.rocket-journey {
   .synth-knob,
   .synth-sun-button,
   .synth-hint,
+  // /home mounts the scroll hint too — without this it kept bouncing
+  // (and stayed focusable) through a ride that clears every other overlay
+  .scroll-hint,
   .badge-link {
     opacity: 0 !important;
     pointer-events: none !important;

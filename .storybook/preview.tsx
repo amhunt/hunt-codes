@@ -54,6 +54,14 @@ const SETTLED_ENTRANCES = `
     opacity: 1 !important;
     transition: none !important;
   }
+  .scroll-hint,
+  .scroll-hint-label {
+    opacity: 1 !important;
+    transition: none !important;
+  }
+  .scroll-hint-chevron {
+    animation: none !important;
+  }
 `;
 
 const preview: Preview = {

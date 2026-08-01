@@ -1,18 +1,11 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect } from "react";
 import { Link } from "react-router-dom";
-import { ChevronDown } from "react-feather";
-import cx from "classnames";
 import { SunInternals } from "SunSvg";
 import { hoverState } from "./solarHover";
 import useScrollJourney from "./useScrollJourney";
-import {
-  Tooltip,
-  TooltipContent,
-  TooltipProvider,
-  TooltipTrigger,
-} from "./ui/tooltip";
+import ScrollHint from "./ScrollHint";
 import { SUN_RADIUS_OFFSET, SUN_SIZE } from "./landingScene";
-import { scrollTransitionState } from "./scrollTransition";
+import { JOURNEY_STOPS } from "./scrollTransition";
 
 // The solar system's 4s-delayed fadeIn is first-visit choreography (the
 // stars assemble first). Landing remounts on every visit, and replaying
@@ -20,7 +13,6 @@ import { scrollTransitionState } from "./scrollTransition";
 // the sun flying back into it — for 5 seconds.
 let hasPlayedIntro = false;
 
-const SCROLL_HINT_TEXT = "Scroll or click around to explore the solar system";
 // The scroll hint appears a beat after the landing choreography finishes:
 // the first visit's intro runs ~5s (stars, then the 4s-delayed system
 // fade); return visits skip the delay
@@ -46,16 +38,6 @@ const Landing = () => {
   // poses the camera along the landing→home→about journey; `engaged`
   // flips once the visitor starts scrubbing (and hides the hint below)
   const engaged = useScrollJourney(0);
-
-  const [hintReady, setHintReady] = useState(false);
-  const [hintClicked, setHintClicked] = useState(false);
-  useEffect(() => {
-    const timer = setTimeout(
-      () => setHintReady(true),
-      skipIntroDelay ? HINT_DELAY_RETURN_MS : HINT_DELAY_FIRST_VISIT_MS,
-    );
-    return () => clearTimeout(timer);
-  }, [skipIntroDelay]);
 
   // The orbits and planets are the WebGL scene's (SolarScene); this SVG
   // only carries the clickable ENTER sun ring, which SunSvgAnchor glues
@@ -90,36 +72,13 @@ const Landing = () => {
       </div>
       {/* Gentle nudge that the page scrolls; disappears once it has done
           its job (the visitor scrubs) */}
-      <TooltipProvider delayDuration={100}>
-        <Tooltip disableHoverableContent>
-          <TooltipTrigger asChild>
-            <button
-              type="button"
-              className={cx(
-                "landing-scroll-hint",
-                (!hintReady || engaged || hintClicked) && "hint-hidden",
-              )}
-              aria-label={SCROLL_HINT_TEXT}
-              onClick={() => {
-                // A chevron that only *hints* at travel is a broken
-                // promise as a <button>: clicking it rides the same
-                // scroll journey a wheel scrub would, gliding down to
-                // /home (the progress watcher commits the route)
-                const s = scrollTransitionState;
-                if (s.initialized && s.rigSettled) {
-                  s.target = 1;
-                  setHintClicked(true);
-                }
-              }}
-            >
-              <ChevronDown size={30} />
-            </button>
-          </TooltipTrigger>
-          <TooltipContent>
-            <p>{SCROLL_HINT_TEXT}</p>
-          </TooltipContent>
-        </Tooltip>
-      </TooltipProvider>
+      <ScrollHint
+        target={JOURNEY_STOPS.home}
+        delayMs={
+          skipIntroDelay ? HINT_DELAY_RETURN_MS : HINT_DELAY_FIRST_VISIT_MS
+        }
+        hidden={engaged}
+      />
     </>
   );
 };
