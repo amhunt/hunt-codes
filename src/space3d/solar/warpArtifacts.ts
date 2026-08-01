@@ -2,7 +2,7 @@ import * as THREE from "three";
 
 /**
  * The lightspeed journey's flyby cameos: little primitive-built props
- * (a martian, a saucer, an Airbnb Bélo...) that drift past the
+ * (a plush tiger, a saucer, an Airbnb Bélo...) that drift past the
  * cockpit window as the /journey crawl rolls. Each builder returns a
  * group roughly 1.5 units tall, standing on +Y, "face" toward +Z;
  * JourneyCruise scales them, glues each to its own stretch of the
@@ -141,6 +141,133 @@ function martian(): THREE.Group {
       0.05,
     );
   }
+  return g;
+}
+
+function tigerPlush(): THREE.Group {
+  const g = new THREE.Group();
+  // Plush palette: soft toy orange, cream, cocoa stripes
+  const fur = mat("#f7963d", { roughness: 0.9 });
+  const cream = mat("#fff2dd", { roughness: 0.85 });
+  const cocoa = mat("#4a3225", { roughness: 0.8 });
+  const pink = mat("#ff9d9d", { roughness: 0.7 });
+  // Seated plush proportions: stubby body, oversized head
+  const body = add(g, new THREE.SphereGeometry(0.5, 18, 14), fur, 0, 0.45, 0);
+  body.scale.set(1, 0.95, 0.85);
+  const belly = add(
+    g,
+    new THREE.SphereGeometry(0.34, 14, 10),
+    cream,
+    0,
+    0.42,
+    0.26,
+  );
+  belly.scale.set(0.9, 1, 0.55);
+  add(g, new THREE.SphereGeometry(0.44, 18, 14), fur, 0, 1.08, 0.02);
+  const muzzle = add(
+    g,
+    new THREE.SphereGeometry(0.2, 12, 10),
+    cream,
+    0,
+    0.99,
+    0.38,
+  );
+  muzzle.scale.set(1.15, 0.85, 0.7);
+  add(g, new THREE.SphereGeometry(0.07, 8, 6), pink, 0, 1.06, 0.52);
+  for (const side of [-1, 1]) {
+    // Button eyes, plush ears with pink inners, front and back paws
+    add(
+      g,
+      new THREE.SphereGeometry(0.055, 8, 6),
+      cocoa,
+      side * 0.16,
+      1.18,
+      0.38,
+    );
+    add(g, new THREE.SphereGeometry(0.13, 10, 8), fur, side * 0.3, 1.44, 0.02);
+    add(g, new THREE.SphereGeometry(0.07, 8, 6), pink, side * 0.3, 1.45, 0.11);
+    add(g, new THREE.SphereGeometry(0.14, 10, 8), fur, side * 0.24, 0.13, 0.32);
+    add(
+      g,
+      new THREE.SphereGeometry(0.15, 10, 8),
+      fur,
+      side * 0.36,
+      0.14,
+      -0.08,
+    );
+  }
+  // Stripes: flattened cocoa pads hugging the head and back
+  const stripeSpots: Array<[number, number, number, number]> = [
+    [-0.2, 1.42, -0.08, 0.5],
+    [0.2, 1.42, -0.08, -0.5],
+    [0, 1.3, -0.28, 0],
+    [-0.3, 0.7, -0.25, 0.7],
+    [0.3, 0.7, -0.25, -0.7],
+    [0, 0.62, -0.38, 0],
+  ];
+  for (const [x, y, z, roll] of stripeSpots) {
+    const stripe = add(g, new THREE.SphereGeometry(0.12, 8, 6), cocoa, x, y, z);
+    stripe.scale.set(1.6, 0.35, 0.6);
+    stripe.rotation.z = roll;
+  }
+  // Tail: a curl of shrinking beads, cocoa at the tip
+  const tailBeads: Array<[number, number, number, number]> = [
+    [0.4, 0.32, -0.42, 0.1],
+    [0.54, 0.46, -0.5, 0.085],
+    [0.62, 0.62, -0.52, 0.07],
+  ];
+  for (const [x, y, z, r] of tailBeads) {
+    add(g, new THREE.SphereGeometry(r, 8, 6), r < 0.08 ? cocoa : fur, x, y, z);
+  }
+  return g;
+}
+
+function gavel(): THREE.Group {
+  const g = new THREE.Group();
+  const wood = mat("#8a5a2b", { roughness: 0.55 });
+  const darkWood = mat("#5c3a21", { roughness: 0.5 });
+  const brass = mat("#d9a441", { metalness: 0.6, roughness: 0.35 });
+  // Sound block underneath, mid-strike
+  add(
+    g,
+    new THREE.CylinderGeometry(0.42, 0.46, 0.14, 16),
+    darkWood,
+    0,
+    0.07,
+    0,
+  );
+  // Head: a barrel lying along X, brass bands at the faces
+  const head = add(
+    g,
+    new THREE.CylinderGeometry(0.26, 0.26, 0.78, 14),
+    wood,
+    0,
+    1.05,
+    0,
+  );
+  head.rotation.z = Math.PI / 2;
+  for (const side of [-1, 1]) {
+    const band = add(
+      g,
+      new THREE.CylinderGeometry(0.28, 0.28, 0.1, 14),
+      brass,
+      side * 0.34,
+      1.05,
+      0,
+    );
+    band.rotation.z = Math.PI / 2;
+  }
+  // Handle: socketed into the head's side, raked up and back (mid-swing)
+  const handle = add(
+    g,
+    new THREE.CylinderGeometry(0.055, 0.07, 0.95, 10),
+    wood,
+    0,
+    1.22,
+    -0.45,
+  );
+  handle.rotation.x = -1.21;
+  add(g, new THREE.SphereGeometry(0.09, 8, 6), darkWood, 0, 1.38, -0.89);
   return g;
 }
 
@@ -477,11 +604,11 @@ function coffeeCup(): THREE.Group {
  *  and hands each its own stretch of the crawl). */
 export const ARTIFACT_BUILDERS: Array<() => THREE.Group> = [
   saucer,
-  martian,
+  tigerPlush,
   beloRausch,
   discoBall,
   rubberDuck,
-  coffeeCup,
+  gavel,
   pizzaSlice,
 ];
 
@@ -491,6 +618,8 @@ export const BENCHED_ARTIFACT_BUILDERS = {
   cheeseburger,
   trafficCone,
   beloBabu,
+  martian,
+  coffeeCup,
 };
 
 /** Free every geometry/material under the group (builders never share
