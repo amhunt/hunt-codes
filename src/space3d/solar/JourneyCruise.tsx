@@ -121,6 +121,9 @@ export default function JourneyCruise({
   const captured = useRef(false);
   const entry = useRef(0);
   const intensity = useRef(0);
+  /** Signed streak direction, eased toward the scrub's sign: +1 cruising
+   *  forward, -1 while the story is being rewound */
+  const flow = useRef(1);
   /** Latched by the landing so the frames before unmount stay put */
   const landed = useRef(false);
 
@@ -206,12 +209,16 @@ export default function JourneyCruise({
     camera.quaternion.slerpQuaternions(fromQuat.current, targetQuat, e);
 
     // Throttle: idle drift plus however hard the crawl is being scrubbed
+    // (boost is signed — magnitude revs the burn, sign steers the flow:
+    // scrub the story backwards and the star field streams backwards)
     const target = Math.min(
       1,
-      BASE_INTENSITY + cruiseState.boost * BOOST_INTENSITY,
+      BASE_INTENSITY + Math.abs(cruiseState.boost) * BOOST_INTENSITY,
     );
     intensity.current +=
       (target * e - intensity.current) * Math.min(1, delta * 3);
+    const flowTarget = cruiseState.boost < 0 ? -1 : 1;
+    flow.current += (flowTarget - flow.current) * Math.min(1, delta * 3);
 
     // Chase the cruise's star dim rather than assigning it: a rocket
     // arrival comes in fully dimmed (boarding drove starDim to 1) and
@@ -256,6 +263,7 @@ export default function JourneyCruise({
       <pointLight position={[6, 14, 18]} intensity={2.2} decay={0} />
       <WarpStreaks
         getIntensity={() => intensity.current}
+        getFlow={() => flow.current}
         speedScale={CRUISE_SPEED_SCALE}
       />
       {artifacts.map((artifact, i) => (

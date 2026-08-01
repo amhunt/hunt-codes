@@ -117,11 +117,12 @@ const Journey = () => {
       );
       el.style.transform = `translate3d(-50%, ${-progress.current}px, 0)`;
 
-      // Feed the flight: hard scrubbing (either direction) revs the ship,
-      // and the crawl's position places the flyby cameos (JourneyCruise)
+      // Feed the flight: hard scrubbing revs the ship, signed so a
+      // backwards scrub flies the stars backwards too; the crawl's
+      // position places the flyby cameos (JourneyCruise)
       cruiseState.boost = Math.min(
+        Math.max(velocity.current / FULL_BURN_VELOCITY, -1),
         1,
-        Math.abs(velocity.current) / FULL_BURN_VELOCITY,
       );
       cruiseState.progressPx = progress.current;
       cruiseState.totalPx = limit;

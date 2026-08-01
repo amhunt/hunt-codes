@@ -9,8 +9,10 @@
  * lazy chunk.
  */
 export const cruiseState = {
-  /** 0..1 — extra flight intensity from crawl scroll velocity (decays
-   *  back to 0 in the crawl's frame loop) */
+  /** -1..1 — signed flight throttle from crawl scroll velocity (decays
+   *  back to 0 in the crawl's frame loop): magnitude revs the streaks,
+   *  sign steers them — scrub the story backwards and the ship flies
+   *  backwards too */
   boost: 0,
   /** Crawl position in px (0 = story start), written every crawl frame */
   progressPx: 0,
