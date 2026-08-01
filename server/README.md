@@ -29,8 +29,37 @@ see `sha256Hex` in `src/SvgGenerator.tsx`) or the origin signature fails.
   attributes any abuse to the end user, not the account.
 - **Rate limits** (env-tunable): `PER_IP_HOURLY_LIMIT` (default 10) and
   `DAILY_GLOBAL_LIMIT` (default 150 — the hard daily spend ceiling).
-  DynamoDB atomic counters with TTL, keyed off the *viewer's* IP (the last
-  `x-forwarded-for` hop — `sourceIp` is always a CloudFront POP here).
+  DynamoDB atomic counters with TTL. `DAILY_GLOBAL_LIMIT` is the one that
+  actually bounds spend, and it is not per-caller, so it holds regardless
+  of how the per-visitor key is derived.
+
+### Why the per-visitor key isn't `x-forwarded-for`
+
+Behind a Function URL, Lambda passes through only the **leftmost** XFF
+value, and CloudFront's appended real viewer IP is dropped before the
+handler runs. Measured against this stack:
+
+| request sends | handler sees |
+| --- | --- |
+| `X-Forwarded-For: 9.9.9.9` | `9.9.9.9` |
+| `X-Forwarded-For: 1.1.1.1, 2.2.2.2` | `1.1.1.1` |
+| *(no XFF)* | the genuine viewer IP |
+
+So any part of that header is caller-chosen whenever the caller wants it
+to be — varying it per request would mint a fresh hourly bucket and a
+fresh OpenAI `user` identifier every time.
+
+`viewerIp()` therefore prefers `CloudFront-Viewer-Address` (CloudFront
+generates it and overwrites any viewer-supplied copy) and falls back to
+`sourceIp`, which behind OAC is the edge POP — coarser than per-visitor,
+but unforgeable. **Optional upgrade:** forward `CloudFront-Viewer-Address`
+via the origin request policy and the fallback stops being used. That
+means replacing the managed `AllViewerExceptHostHeader` policy with a
+custom one, and the replacement must still exclude `Host` (forwarding it
+breaks OAC signing against the Lambda URL host) while still forwarding
+`x-amz-content-sha256` (POSTs fail to sign without it). Left undone
+deliberately — the code is safe either way and the global daily cap is
+the real spend ceiling.
 - **Deadline budget**: both OpenAI calls share one 50s deadline, under
   CloudFront's 60s origin read timeout. Past that CloudFront returns its
   own HTML 504 and the visitor never receives a drawing that was billed.

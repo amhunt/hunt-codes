@@ -69,7 +69,7 @@ const buildAnimationCSS = () => {
       }
       :is(${DRAWABLE_SELECTORS}):nth-of-type(${NUM_WAVE_VARIANTS}n + ${v + 1}) {
         animation:
-          svg-entrance 0.7s ease ${entranceDelay.toFixed(2)}s forwards,
+          svg-entrance 0.7s ease ${entranceDelay.toFixed(2)}s both,
           svg-wave-${v} ${waveDuration.toFixed(1)}s ease-in-out ${(-waveDuration * (v / NUM_WAVE_VARIANTS)).toFixed(1)}s infinite;
       }
     `;
@@ -178,6 +178,8 @@ const SvgGenerator = () => {
   // the OLD drawing, drop it on screen mid-generation, and clear the
   // spinner, inviting a second click and a second billed generation.
   const generatingRef = useRef(false);
+  // Which drawing id is currently displayed — see the permalink effect
+  const loadedIdRef = useRef<string | null>(null);
 
   // Persist the signature; clearing the field forgets it
   useEffect(() => {
@@ -205,24 +207,43 @@ const SvgGenerator = () => {
   // that fetch's own cleanup marks itself cancelled and never resets it.
   useEffect(() => {
     if (!routeId && !generatingRef.current) {
+      loadedIdRef.current = null;
       setDrawing(null);
       setError("");
       setLoading(false);
     }
   }, [routeId]);
 
-  // Load a permalinked drawing (skipped when we just generated it ourselves)
+  // Load a permalinked drawing (skipped when we just generated it ourselves).
+  // Which drawing is already loaded is tracked in a ref rather than read off
+  // `drawing`, so the effect can clear the previous artwork without listing
+  // it as a dependency and re-triggering itself. Clearing matters: hopping
+  // between gallery permalinks would otherwise leave the old drawing on
+  // screen under the new URL — its caption naming one artist while the
+  // copy-link button points at another — and a failed fetch would strand it
+  // there for good.
   useEffect(() => {
-    if (!routeId || drawing?.id === routeId || generatingRef.current) return;
+    if (!routeId || loadedIdRef.current === routeId || generatingRef.current) {
+      return;
+    }
     let cancelled = false;
     setLoading(true);
     setError("");
+    // The ref tracks what's in `drawing`, so the two are always cleared
+    // together — leaving it set here would make a failed load look like a
+    // successful one, and navigating back to that id would skip the fetch
+    // and render nothing.
+    loadedIdRef.current = null;
+    setDrawing(null);
     void (async () => {
       try {
         const response = await fetch(`/api/drawings/${routeId}`);
         if (!response.ok) throw new Error(await readApiError(response));
         const data = (await response.json()) as Drawing;
-        if (!cancelled) setDrawing(data);
+        if (!cancelled) {
+          loadedIdRef.current = routeId;
+          setDrawing(data);
+        }
       } catch (err) {
         if (!cancelled) {
           setError(
@@ -238,7 +259,7 @@ const SvgGenerator = () => {
     return () => {
       cancelled = true;
     };
-  }, [routeId, drawing?.id]);
+  }, [routeId]);
 
   // The gallery of recent transmissions — decoration, so it fails quietly
   useEffect(() => {
@@ -290,6 +311,7 @@ const SvgGenerator = () => {
       if (!response.ok) throw new Error(await readApiError(response));
 
       const data = (await response.json()) as Drawing;
+      loadedIdRef.current = data.id;
       setDrawing(data);
       setGallery((prev) =>
         [data, ...prev.filter((d) => d.id !== data.id)].slice(0, 12),
