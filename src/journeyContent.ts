@@ -17,7 +17,8 @@ export interface JourneyChapter {
 }
 
 export const JOURNEY_INTRO = {
-  overline: "30+ years ago, in a Rochester, NY far, far away…",
+  overline:
+    "A long time ago, on the remote ice world of Rochester, New York, far, far away…",
   title: "THE JOURNEY",
   subtitle: "the andrew hunt story begins",
 };
@@ -27,8 +28,9 @@ export const JOURNEY_CHAPTERS: JourneyChapter[] = [
     era: "the early years",
     title: "Grew up in Oregon",
     lines: [
-      "Born in Rochester, NY; raised in Oregon — evergreens, drizzle, and a family computer that was asking for it.",
-      "Lego robotics kid, later captain of the high-school robotics team — with a middle-school magnum opus in between: a website called “Andy and David: A place for fun.” It was.",
+      "Born in Rochester, grew up outside of Portland, OR.",
+      "Nerdy kid, nerdy adult — attempted football briefly in between.",
+      "The evidence: Lego robotics, a high-school robotics captaincy, and a middle-school website called “Andy and David: A place for fun.” It was.",
     ],
   },
   {
@@ -36,7 +38,7 @@ export const JOURNEY_CHAPTERS: JourneyChapter[] = [
     title: "Princeton University",
     lines: [
       "Studied computer science at Princeton.",
-      "Four years of problem sets and late nights, with an eye drifting steadily toward the West Coast.",
+      "Learned how to… color graphs?",
     ],
   },
   {
@@ -44,7 +46,7 @@ export const JOURNEY_CHAPTERS: JourneyChapter[] = [
     title: "Airbnb — the internship",
     lines: [
       "First taste of San Francisco: shipped landing pages for new features and contributed components to the company frontend framework.",
-      "Liked it enough to come back.",
+      "Came for a summer; stayed for four more years ❤️",
     ],
   },
   {
@@ -67,7 +69,7 @@ export const JOURNEY_CHAPTERS: JourneyChapter[] = [
     era: "2021 – 2025 · San Francisco",
     title: "Zip — Staff Software Engineer",
     lines: [
-      "Four years, zero to staff: new product features, shared component systems, and the frontend infrastructure underneath all of it.",
+      "A startup speedrun — four years, zero to staff: product features, component systems, and the infrastructure underneath.",
       "Type-safety gates in CI, testing three layers deep, and the build-and-deploy machinery under everything.",
       "TypeScript to 99% coverage; page loads cut by more than half.",
     ],
@@ -77,7 +79,7 @@ export const JOURNEY_CHAPTERS: JourneyChapter[] = [
     title: "The sabbatical",
     lines: [
       "Stepped away for a proper recharge — and a move across the country to New York City.",
-      "Somewhere in there, got thoroughly addicted to 3D printing.",
+      "Then a 3D printer got involved, and the recharge got very specific.",
     ],
   },
   {
@@ -92,7 +94,7 @@ export const JOURNEY_CHAPTERS: JourneyChapter[] = [
     era: "fall 2026 →",
     title: "The next chapter",
     lines: [
-      "Looking to go full-time again.",
+      "After a year attempting to take a break, he searches the galaxy for a job once more…",
       "This entry could be about your team — andrew@hunt.codes.",
     ],
   },

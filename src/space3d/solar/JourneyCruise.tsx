@@ -68,8 +68,11 @@ const ARTIFACT_SPAN = 0.9;
 
 /** Lateral flyby heights, hand-varied so consecutive cameos don't trace
  *  the same line across the window */
-const ARTIFACT_HEIGHTS = [-2, 3, -3.5, 2.5, 4.5, -2.5, 3.5, -3];
-const ARTIFACT_SCALES = [4.5, 3.8, 3.6, 3.4, 3.6, 3.8, 3.8, 3.2];
+const ARTIFACT_HEIGHTS = [-2, 3, -3.5, 2, 4.5, -2.5, 3.5, -3];
+/** Slot 3 is the Babu Bélo — it flies oversized (and pirouettes, below) */
+const ARTIFACT_SCALES = [4.5, 3.8, 3.6, 5.6, 3.6, 3.8, 3.8, 3.2];
+/** Per-slot spin overrides (rad/s) on top of the default slow tumble */
+const ARTIFACT_SPINS: Record<number, number> = { 3: 2.6 };
 
 const UP = new THREE.Vector3(0, 1, 0);
 const Z_AXIS = new THREE.Vector3(0, 0, 1);
@@ -140,7 +143,7 @@ export default function JourneyCruise({
           y: ARTIFACT_HEIGHTS[i],
           baseYaw: (i * Math.PI) / 3,
           tilt: (i % 2 === 0 ? 1 : -1) * (0.15 + (i % 3) * 0.12),
-          spin: 0.6 + (i % 3) * 0.35,
+          spin: ARTIFACT_SPINS[i] ?? 0.6 + (i % 3) * 0.35,
         };
       }),
     [],
