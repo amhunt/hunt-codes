@@ -27,11 +27,17 @@ const STREAK_LENGTH = 30;
 
 export default function WarpStreaks({
   getIntensity,
+  getFlow = () => 1,
   speedScale = 1,
 }: {
   /** Read per frame (a ref accessor, not React state): 0 = no streaks,
    *  1 = full lightspeed */
   getIntensity: () => number;
+  /** Signed march direction, -1..1 (default full ahead): the /journey
+   *  cruise eases it negative while the crawl is scrubbed backwards, so
+   *  the field streams the other way. Passing through 0 the streaks
+   *  collapse to points and regrow reversed — no pop. */
+  getFlow?: () => number;
   /** Scales the march speed and stretch — the cruise ambles, the warp
    *  sprints */
   speedScale?: number;
@@ -96,22 +102,25 @@ export default function WarpStreaks({
     // flight, not fast-forward it on the first frame back
     const delta = Math.min(rawDelta, 0.1);
     const intensity = THREE.MathUtils.clamp(getIntensity(), 0, 1);
+    const flow = THREE.MathUtils.clamp(getFlow(), -1, 1);
 
-    // March the streak heads toward the camera and wrap; tails trail
-    // "ahead" (where the streak came from) by the stretched length
+    // March the streak heads toward the camera (or away, on a reversed
+    // flow) and wrap; tails trail where the streak came from, so the
+    // signed flow flips them along with the motion
     const positions = streaks.positionAttr.array as Float32Array;
     const length = STREAK_LENGTH * speedScale * intensity + 0.2;
     for (let i = 0; i < STREAK_COUNT; i++) {
       let zHead =
-        streaks.z[i] + streaks.speed[i] * speedScale * intensity * delta;
+        streaks.z[i] + streaks.speed[i] * speedScale * intensity * flow * delta;
       if (zHead > STREAK_BEHIND_PAD) zHead -= STREAK_DEPTH + STREAK_BEHIND_PAD;
+      else if (zHead < -STREAK_DEPTH) zHead += STREAK_DEPTH + STREAK_BEHIND_PAD;
       streaks.z[i] = zHead;
       positions[i * 6] = streaks.x[i];
       positions[i * 6 + 1] = streaks.y[i];
       positions[i * 6 + 2] = zHead;
       positions[i * 6 + 3] = streaks.x[i];
       positions[i * 6 + 4] = streaks.y[i];
-      positions[i * 6 + 5] = zHead - length;
+      positions[i * 6 + 5] = zHead - length * flow;
     }
     streaks.positionAttr.needsUpdate = true;
     streaks.material.opacity = intensity;

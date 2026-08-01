@@ -11,6 +11,7 @@ import "./App.scss";
 import Home from "./Home";
 import Journey from "./Journey";
 import Resume from "./Resume";
+import RocketCockpit from "./RocketCockpit";
 import Synth from "./Synth";
 import SvgGenerator from "./SvgGenerator";
 import AppBackground from "AppBackground";
@@ -120,6 +121,10 @@ const App = () => {
           <Route path="/draw" element={<SvgGenerator />} />
           <Route path="/draw/:id" element={<SvgGenerator />} />
         </Routes>
+        {/* App-level so the windshield frame and warp flash survive the
+            rides' mid-flight route hops (/home → /journey → /home) —
+            per-page mounts cut the flash short at every navigation */}
+        <RocketCockpit />
       </Router>
     </div>
   );

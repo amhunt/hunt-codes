@@ -126,9 +126,9 @@ const SolarOverlays = () => {
           </Tooltip>
         </TooltipProvider>
       ))}
-      {/* The rocket easter egg: not a link — clicking it boards the ship
-          and plays the lightspeed joyride (rocketJourney.ts). Same anchor
-          plumbing as the asteroid links. */}
+      {/* The rocket easter egg: clicking it boards the ship and warps to
+          the /journey story crawl (rocketJourney.ts flips the route under
+          the warp flash). Same anchor plumbing as the asteroid links. */}
       <TooltipProvider delayDuration={100}>
         <Tooltip disableHoverableContent>
           <TooltipTrigger asChild>
@@ -137,7 +137,15 @@ const SolarOverlays = () => {
               id={asteroidAnchorId("rocket")}
               className="asteroid-link"
               aria-label="So u wanna be astronaut?"
-              onClick={() => startRocketJourney()}
+              onClick={() => {
+                startRocketJourney();
+                // The ride flips the URL itself under its warp flash; if
+                // the 3D driver is dead (crashed canvas) fall through to
+                // the plain crawl page so the click still goes somewhere
+                if (journeyState.phase === "idle") {
+                  void navigate("/journey");
+                }
+              }}
               onPointerEnter={() => {
                 hoverState.asteroid = "rocket";
               }}

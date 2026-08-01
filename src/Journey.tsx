@@ -1,5 +1,5 @@
 import React, { useEffect, useRef, useState } from "react";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import { ArrowLeftCircleIcon } from "lucide-react";
 import cx from "classnames";
 
@@ -9,21 +9,30 @@ import {
   JOURNEY_OUTRO,
 } from "./journeyContent";
 import { cruiseState } from "./journeyCruise";
+import { journeyState, requestJourneyLanding } from "./rocketJourney";
 
 /**
  * The /journey page: Andrew's story as a Star Wars-style opening crawl,
- * gliding into a vanishing point while the 3D scene
- * (space3d/solar/JourneyCruise) cruises through open space behind it.
+ * seen from inside the rocket's cockpit — the 3D scene
+ * (space3d/solar/JourneyCruise) flies through the lightspeed streaks
+ * behind the text, and the windshield frame (RocketCockpit, revealed by
+ * body.rocket-journey) wraps the whole show. Clicking the rocket on
+ * /home warps here; deep links board mid-flight.
  *
  * It opens the way the films do: the intro line ("30+ years ago…") fades
  * up flat and centered on the black, holds, and fades out — THEN the
  * steeply-raked crawl begins. Any scrub skips straight into the crawl.
  *
  * The crawl advances on its own at reading pace; wheel, touch drag, or
- * arrow keys scrub it (forward or back), and the scrub speed feeds the
- * flight — push the story hard and the star field kicks toward
- * lightspeed (cruiseState.boost). All the words live in
- * journeyContent.ts; this file only drives the motion.
+ * arrow keys scrub it (forward or back), and the scrub feeds the flight
+ * two ways: speed revs the star field toward lightspeed
+ * (cruiseState.boost), and position places the flyby cameos
+ * (cruiseState.progressPx — the 3D objects pass exactly as the story
+ * does). All the words live in journeyContent.ts; this file only drives
+ * the motion.
+ *
+ * The cockpit's "End trip" button lands the ride: the 3D loop plays the
+ * re-entry flash and drops the ship back onto /home.
  *
  * Under prefers-reduced-motion the intro is skipped and the auto-play
  * stops: the crawl moves only when the visitor scrolls it.
@@ -46,6 +55,7 @@ const prefersReducedMotion = () =>
   Boolean(window.matchMedia?.("(prefers-reduced-motion: reduce)").matches);
 
 const Journey = () => {
+  const navigate = useNavigate();
   const crawlRef = useRef<HTMLDivElement>(null);
   const progress = useRef(0);
   const velocity = useRef(0);
@@ -73,6 +83,9 @@ const Journey = () => {
     return () => {
       document.body.classList.remove("journey-mode");
       cruiseState.boost = 0;
+      // Stale crawl coordinates must not place cameos on the next visit
+      cruiseState.progressPx = 0;
+      cruiseState.totalPx = 0;
     };
   }, []);
 
@@ -104,11 +117,15 @@ const Journey = () => {
       );
       el.style.transform = `translate3d(-50%, ${-progress.current}px, 0)`;
 
-      // Feed the flight: hard scrubbing (either direction) revs the ship
+      // Feed the flight: hard scrubbing revs the ship, signed so a
+      // backwards scrub flies the stars backwards too; the crawl's
+      // position places the flyby cameos (JourneyCruise)
       cruiseState.boost = Math.min(
+        Math.max(velocity.current / FULL_BURN_VELOCITY, -1),
         1,
-        Math.abs(velocity.current) / FULL_BURN_VELOCITY,
       );
+      cruiseState.progressPx = progress.current;
+      cruiseState.totalPx = limit;
 
       const atEnd = progress.current >= limit - 1;
       if (atEnd !== endedRef.current) {
@@ -224,6 +241,26 @@ const Journey = () => {
       >
         scroll to travel faster
       </div>
+      {/* Sits on the cockpit dashboard (App.scss shows it only while
+          body.rocket-journey is up — i.e. whenever the 3D ride is
+          actually flying; with a dead canvas the plain back link above
+          stays instead) */}
+      <button
+        type="button"
+        className="end-trip"
+        onClick={() => {
+          // The 3D loop plays the landing (flash, drop onto home's
+          // approach line, route change); without a ride in flight
+          // there's nothing to land — just leave
+          if (journeyState.phase !== "idle") {
+            requestJourneyLanding();
+          } else {
+            void navigate("/home");
+          }
+        }}
+      >
+        End trip
+      </button>
     </>
   );
 };
