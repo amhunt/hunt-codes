@@ -921,7 +921,9 @@ p {
 }
 
 .highlightedChar_night {
-  fill: #6cfc9e;
+  // Halfway between the old green (#6cfc9e) and the white base letters,
+  // so the roving highlight reads as a shimmer rather than a blink
+  fill: #b6fdcf;
   z-index: 100;
 }
 
