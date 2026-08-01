@@ -27,16 +27,16 @@ export const JOURNEY_CHAPTERS: JourneyChapter[] = [
     era: "the early years",
     title: "Grew up in Oregon",
     lines: [
-      "Raised in [to fill in: hometown], Oregon — evergreens, drizzle, and a family computer that was asking for it.",
-      "[to fill in: first computer / first thing ever built]",
+      "Born in Rochester, NY; raised in Oregon — evergreens, drizzle, and a family computer that was asking for it.",
+      "Lego robotics kid, later captain of the high-school robotics team — with a middle-school magnum opus in between: a website called “Andy and David: A place for fun.” It was.",
     ],
   },
   {
-    era: "[to fill in: years] · New Jersey",
+    era: "2013 – 2017 · New Jersey",
     title: "Princeton University",
     lines: [
-      "Studied [to fill in: major] at Princeton.",
-      "[to fill in: a story — the class, the club, the thesis, the all-nighter]",
+      "Studied computer science at Princeton.",
+      "Four years of problem sets and late nights, with an eye drifting steadily toward the West Coast.",
     ],
   },
   {
@@ -68,7 +68,7 @@ export const JOURNEY_CHAPTERS: JourneyChapter[] = [
     title: "Zip — Staff Software Engineer",
     lines: [
       "Four years, zero to staff: new product features, shared component systems, and the frontend infrastructure underneath all of it.",
-      "CI type-safety gates, testing across Jest, Datadog Synthetics, and Chromatic, logging with Segment, and build & deploy spanning Webpack, Jenkins, Docker, S3, Cloudflare, and Webflow.",
+      "Type-safety gates in CI, testing three layers deep, and the build-and-deploy machinery under everything.",
       "TypeScript to 99% coverage; page loads cut by more than half.",
     ],
   },
@@ -77,7 +77,7 @@ export const JOURNEY_CHAPTERS: JourneyChapter[] = [
     title: "The sabbatical",
     lines: [
       "Stepped away for a proper recharge — and a move across the country to New York City.",
-      "[to fill in: the best thing you did with the time off]",
+      "Somewhere in there, got thoroughly addicted to 3D printing.",
     ],
   },
   {
