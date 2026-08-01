@@ -76,7 +76,7 @@ export const JOURNEY_CHAPTERS: JourneyChapter[] = [
     era: "2025 – present · NYC",
     title: "Argos",
     lines: [
-      "Consulting from NYC: production frontend for Argos, a legal-tech AI product.",
+      "Consulting remotely and in SF: production frontend for Argos, a legal-tech AI product.",
       "An LLM-powered chatbot, document management, data viz, and advice on the architecture underneath.",
     ],
   },
