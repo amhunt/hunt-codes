@@ -2,7 +2,7 @@ import * as THREE from "three";
 
 /**
  * The lightspeed journey's flyby cameos: little primitive-built props
- * (a martian, a saucer, a pair of Airbnb Bélos...) that drift past the
+ * (a martian, a saucer, an Airbnb Bélo...) that drift past the
  * cockpit window as the /journey crawl rolls. Each builder returns a
  * group roughly 1.5 units tall, standing on +Y, "face" toward +Z;
  * JourneyCruise scales them, glues each to its own stretch of the
@@ -218,18 +218,19 @@ function trafficCone(): THREE.Group {
 /** The Airbnb Bélo as bent wire, not a flat extrusion: two tubes swept
  *  along hand-fit centerlines in the glyph's 24×24 space (y-down,
  *  landmarks eyeballed off the official outline). The open "shell"
- *  sweep runs from one foot-curl tip up over the apex and down into the
- *  other curl; the closed teardrop ring floats between the legs. */
+ *  sweep starts welded into one side of the teardrop ring, swings out
+ *  around the foot loop, runs up over the apex, and lands welded into
+ *  the ring's other side — one connected wire. */
 const WIRE_RADIUS = 0.85;
 
 /** Right half of the shell centerline, apex last; the left half is its
  *  mirror (x -> 24 - x), so the two stay symmetric by construction. */
 const SHELL_RIGHT: Array<[number, number]> = [
-  [16.4, 20.4], // foot-curl tip, tucked under the leg
-  [17.6, 22],
-  [19.4, 22.6], // bottom of the foot loop
-  [21, 21.4],
-  [21.6, 19.3], // outer edge of the loop, turning up the side
+  [12.8, 18], // welds into the teardrop ring's lower side
+  [15.4, 21.6],
+  [18.4, 22.7], // bottom of the foot loop
+  [21, 21.3],
+  [21.7, 19], // outer edge of the loop, turning up the side
   [20.2, 14.8],
   [17.4, 8.6],
   [14.8, 4],
@@ -302,10 +303,9 @@ function belo(color: string): THREE.Group {
   return g;
 }
 
-/** Rausch, the brand salmon — the Airbnb chapters' cameo */
+/** Rausch, the brand salmon — the Airbnb chapter's cameo */
 const beloRausch = (): THREE.Group => belo("#FF5A5F");
-/** Babu, the brand teal — flies bigger and pirouetting (JourneyCruise
- *  gives its slot an oversized scale and spin) */
+/** Babu, the brand teal — benched along with the second Airbnb chapter */
 const beloBabu = (): THREE.Group => belo("#00A699");
 
 function discoBall(): THREE.Group {
@@ -479,16 +479,19 @@ export const ARTIFACT_BUILDERS: Array<() => THREE.Group> = [
   saucer,
   martian,
   beloRausch,
-  beloBabu,
   discoBall,
   rubberDuck,
   coffeeCup,
   pizzaSlice,
 ];
 
-/** Benched cameos (the Bélos took their slots), kept around in case the
- *  lineup rotates again — knip: intentionally unused. */
-export const BENCHED_ARTIFACT_BUILDERS = { cheeseburger, trafficCone };
+/** Benched cameos, kept around in case the lineup rotates again —
+ *  knip: intentionally unused. */
+export const BENCHED_ARTIFACT_BUILDERS = {
+  cheeseburger,
+  trafficCone,
+  beloBabu,
+};
 
 /** Free every geometry/material under the group (builders never share
  *  resources across groups, so a plain traverse is safe). */

@@ -42,19 +42,12 @@ export const JOURNEY_CHAPTERS: JourneyChapter[] = [
     ],
   },
   {
-    era: "Summer 2016 · San Francisco",
-    title: "The internship",
-    lines: [
-      "A summer at Airbnb, a first taste of San Francisco and of shipping real code.",
-      "Came for a summer, stayed for four more years ❤️",
-    ],
-  },
-  {
-    era: "2017 – 2020 · San Francisco",
+    era: "2016 – 2020 · San Francisco",
     title: "Airbnb",
     lines: [
-      "Four years on Experiences, building pricing tools for hosts and faster pages for guests.",
-      "Led the TypeScript migration and never looked back.",
+      "A summer internship, a first taste of San Francisco and of shipping real code.",
+      "Came for a summer, stayed for four more years ❤️",
+      "Four years on Experiences, building pricing tools for hosts and faster pages for guests. Led the TypeScript migration and never looked back.",
     ],
   },
   {
