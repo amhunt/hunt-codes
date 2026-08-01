@@ -6,6 +6,15 @@ import { pluginSvgr } from "@rsbuild/plugin-svgr";
 export default defineConfig({
   server: {
     port: process.env.PORT ? Number(process.env.PORT) : 3000,
+    // The /api Lambda (see server/) only exists in prod — point local
+    // /draw at the live API so dev works end to end. Must be www: the
+    // apex is a Squarespace 302 to www, which a proxied fetch can't follow
+    proxy: {
+      "/api": {
+        target: "https://www.hunt.codes",
+        changeOrigin: true,
+      },
+    },
   },
   output: {
     distPath: {
