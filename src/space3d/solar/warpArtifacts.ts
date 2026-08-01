@@ -1,5 +1,4 @@
 import * as THREE from "three";
-import { SVGLoader } from "three/examples/jsm/loaders/SVGLoader.js";
 
 /**
  * The lightspeed journey's flyby cameos: little primitive-built props
@@ -216,36 +215,90 @@ function trafficCone(): THREE.Group {
   return g;
 }
 
-/** The Airbnb Bélo, extruded from the official glyph outline
- *  (simple-icons' 24×24 path — subpaths carry the counter-holes). */
-const BELO_PATH =
-  "M12.001 18.275c-1.353-1.697-2.148-3.184-2.413-4.457-.263-1.027-.16-1.848.291-2.465.477-.71 1.188-1.056 2.121-1.056s1.643.345 2.12 1.063c.446.61.558 1.432.286 2.465-.291 1.298-1.085 2.785-2.412 4.458zm9.601 1.14c-.185 1.246-1.034 2.28-2.2 2.783-2.253.98-4.483-.583-6.392-2.704 3.157-3.951 3.74-7.028 2.385-9.018-.795-1.14-1.933-1.695-3.394-1.695-2.944 0-4.563 2.49-3.927 5.382.37 1.565 1.352 3.343 2.917 5.332-.98 1.085-1.91 1.856-2.732 2.333-.636.344-1.245.558-1.828.609-2.679.399-4.778-2.2-3.825-4.88.132-.345.395-.98.845-1.961l.025-.053c1.464-3.178 3.242-6.79 5.285-10.795l.053-.132.58-1.116c.45-.822.635-1.19 1.351-1.643.346-.21.77-.315 1.246-.315.954 0 1.698.558 2.016 1.007.158.239.345.557.582.953l.558 1.089.08.159c2.041 4.004 3.821 7.608 5.279 10.794l.026.025.533 1.22.318.764c.243.613.294 1.222.213 1.858zm1.22-2.39c-.186-.583-.505-1.271-.9-2.094v-.03c-1.889-4.006-3.642-7.608-5.307-10.844l-.111-.163C15.317 1.461 14.468 0 12.001 0c-2.44 0-3.476 1.695-4.535 3.898l-.081.16c-1.669 3.236-3.421 6.843-5.303 10.847v.053l-.559 1.22c-.21.504-.317.768-.345.847C-.172 20.74 2.611 24 5.98 24c.027 0 .132 0 .265-.027h.372c1.75-.213 3.554-1.325 5.384-3.317 1.829 1.989 3.635 3.104 5.382 3.317h.372c.133.027.239.027.265.027 3.37.003 6.152-3.261 4.802-6.975z";
+/** The Airbnb Bélo as bent wire, not a flat extrusion: two tubes swept
+ *  along hand-fit centerlines in the glyph's 24×24 space (y-down,
+ *  landmarks eyeballed off the official outline). The open "shell"
+ *  sweep runs from one foot-curl tip up over the apex and down into the
+ *  other curl; the closed teardrop ring floats between the legs. */
+const WIRE_RADIUS = 0.85;
+
+/** Right half of the shell centerline, apex last; the left half is its
+ *  mirror (x -> 24 - x), so the two stay symmetric by construction. */
+const SHELL_RIGHT: Array<[number, number]> = [
+  [16.4, 20.4], // foot-curl tip, tucked under the leg
+  [17.6, 22],
+  [19.4, 22.6], // bottom of the foot loop
+  [21, 21.4],
+  [21.6, 19.3], // outer edge of the loop, turning up the side
+  [20.2, 14.8],
+  [17.4, 8.6],
+  [14.8, 4],
+  [12, 1.7], // apex
+];
+
+/** The teardrop ring's centerline, clockwise from its top */
+const TEARDROP: Array<[number, number]> = [
+  [12, 9.4],
+  [13.9, 11.4],
+  [14.55, 13.6],
+  [13.6, 16.6],
+  [12, 19.2],
+  [10.4, 16.6],
+  [9.45, 13.6],
+  [10.1, 11.4],
+];
 
 function belo(color: string): THREE.Group {
   const g = new THREE.Group();
-  const [path] = new SVGLoader().parse(
-    `<svg xmlns="http://www.w3.org/2000/svg"><path d="${BELO_PATH}"/></svg>`,
-  ).paths;
-  const geometry = new THREE.ExtrudeGeometry(SVGLoader.createShapes(path), {
-    depth: 4,
-    bevelEnabled: true,
-    bevelThickness: 0.3,
-    bevelSize: 0.3,
-    bevelSegments: 2,
-    curveSegments: 10,
-  });
-  geometry.center();
-  const mesh = new THREE.Mesh(
-    geometry,
-    mat(color, { roughness: 0.35, metalness: 0.1 }),
+  const material = mat(color, { roughness: 0.35, metalness: 0.1 });
+  // Centered so the flip/scale below pivot on the glyph's middle
+  const toVec = ([x, y]: [number, number]) =>
+    new THREE.Vector3(x - 12, y - 12, 0);
+  const shellPoints = [
+    ...SHELL_RIGHT,
+    ...[...SHELL_RIGHT].reverse().slice(1),
+  ].map(toVec);
+  const mirrored = shellPoints.slice(SHELL_RIGHT.length);
+  mirrored.forEach((v) => (v.x = -v.x));
+  const wire = new THREE.Group();
+  wire.add(
+    new THREE.Mesh(
+      new THREE.TubeGeometry(
+        new THREE.CatmullRomCurve3(shellPoints),
+        120,
+        WIRE_RADIUS,
+        12,
+      ),
+      material,
+    ),
   );
-  // SVG space is y-down: a half-turn about X rights the glyph (the Bélo
-  // is left/right symmetric, so no mirror to worry about); scale the
-  // 24-unit viewBox down to the builders' ~1.5-unit convention
-  mesh.rotation.x = Math.PI;
-  mesh.scale.setScalar(1.5 / 24);
-  mesh.position.y = 0.75;
-  g.add(mesh);
+  wire.add(
+    new THREE.Mesh(
+      new THREE.TubeGeometry(
+        new THREE.CatmullRomCurve3(TEARDROP.map(toVec), true),
+        64,
+        WIRE_RADIUS,
+        12,
+      ),
+      material,
+    ),
+  );
+  // Round off the sweep's two open ends (the curl tips)
+  for (const tip of [shellPoints[0], shellPoints[shellPoints.length - 1]]) {
+    const cap = new THREE.Mesh(
+      new THREE.SphereGeometry(WIRE_RADIUS, 10, 8),
+      material,
+    );
+    cap.position.copy(tip);
+    wire.add(cap);
+  }
+  // Glyph space is y-down: a half-turn about X rights it (the Bélo is
+  // left/right symmetric, so no mirror to worry about); scale the
+  // 24-unit box down to the builders' ~1.5-unit convention
+  wire.rotation.x = Math.PI;
+  wire.scale.setScalar(1.5 / 24);
+  wire.position.y = 0.75;
+  g.add(wire);
   return g;
 }
 

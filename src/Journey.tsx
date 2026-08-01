@@ -1,6 +1,6 @@
 import React, { useEffect, useRef, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
-import { ArrowLeftCircleIcon } from "lucide-react";
+import { ArrowLeftCircleIcon, Volume2Icon, VolumeXIcon } from "lucide-react";
 import cx from "classnames";
 
 import {
@@ -54,9 +54,14 @@ const prefersReducedMotion = () =>
   typeof window !== "undefined" &&
   Boolean(window.matchMedia?.("(prefers-reduced-motion: reduce)").matches);
 
+/** The soundtrack waits out the boarding flash / intro fade-up */
+const SOUNDTRACK_DELAY_MS = 2000;
+
 const Journey = () => {
   const navigate = useNavigate();
   const crawlRef = useRef<HTMLDivElement>(null);
+  const audioRef = useRef<HTMLAudioElement>(null);
+  const [muted, setMuted] = useState(false);
   const progress = useRef(0);
   const velocity = useRef(0);
   const [ended, setEnded] = useState(false);
@@ -182,6 +187,30 @@ const Journey = () => {
     };
   }, [reduced]);
 
+  // The soundtrack fades up a beat after arrival. Autoplay is allowed
+  // when the visitor rode the rocket here (the click was the gesture);
+  // on a cold deep link the browser may refuse — the play() rejection is
+  // swallowed and the cockpit's volume toggle (a real click) starts it.
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      void audioRef.current?.play().catch(() => {});
+    }, SOUNDTRACK_DELAY_MS);
+    const audio = audioRef.current;
+    return () => {
+      clearTimeout(timer);
+      audio?.pause();
+    };
+  }, []);
+
+  const toggleMute = () => {
+    const next = !muted;
+    setMuted(next);
+    // Unmuting is also the rescue for a blocked autoplay: this click is
+    // the user gesture the browser wanted
+    const audio = audioRef.current;
+    if (!next && audio?.paused) void audio.play().catch(() => {});
+  };
+
   const replay = () => {
     progress.current = 0;
     velocity.current = 0;
@@ -241,26 +270,43 @@ const Journey = () => {
       >
         scroll to travel faster
       </div>
-      {/* Sits on the cockpit dashboard (App.scss shows it only while
+      {/* The ship's soundtrack: starts on its own shortly after arrival
+          (see the effect above), muted via the console toggle */}
+      <audio
+        ref={audioRef}
+        src="/ethereal-funeral-march.mp3"
+        loop
+        preload="auto"
+        muted={muted}
+      />
+      {/* The dashboard console cluster (App.scss shows it only while
           body.rocket-journey is up — i.e. whenever the 3D ride is
           actually flying; with a dead canvas the plain back link above
           stays instead) */}
-      <button
-        type="button"
-        className="end-trip"
-        onClick={() => {
-          // The 3D loop plays the landing (flash, drop onto home's
-          // approach line, route change); without a ride in flight
-          // there's nothing to land — just leave
-          if (journeyState.phase !== "idle") {
-            requestJourneyLanding();
-          } else {
-            void navigate("/home");
-          }
-        }}
-      >
-        End trip
-      </button>
+      <div className="cockpit-controls">
+        <button
+          type="button"
+          aria-label={muted ? "Unmute the soundtrack" : "Mute the soundtrack"}
+          onClick={toggleMute}
+        >
+          {muted ? <VolumeXIcon size={14} /> : <Volume2Icon size={14} />}
+        </button>
+        <button
+          type="button"
+          onClick={() => {
+            // The 3D loop plays the landing (flash, drop onto home's
+            // approach line, route change); without a ride in flight
+            // there's nothing to land — just leave
+            if (journeyState.phase !== "idle") {
+              requestJourneyLanding();
+            } else {
+              void navigate("/home");
+            }
+          }}
+        >
+          End trip
+        </button>
+      </div>
     </>
   );
 };
