@@ -9,6 +9,7 @@ import cx from "classnames";
 import "./App.scss";
 
 import Home from "./Home";
+import Journey from "./Journey";
 import Resume from "./Resume";
 import Synth from "./Synth";
 import SvgGenerator from "./SvgGenerator";
@@ -53,6 +54,7 @@ const ROUTE_TITLES: Record<string, string> = {
   "/home": DEFAULT_TITLE,
   "/about": "About Me | Andrew Hunt",
   "/synth": "Space jam studio | Andrew Hunt",
+  "/journey": "The Journey | Andrew Hunt",
   "/draw": "SVG Studio | Andrew Hunt",
 };
 
@@ -61,7 +63,10 @@ const ROUTE_TITLES: Record<string, string> = {
 const RouteMeta = () => {
   const { pathname } = useLocation();
   useEffect(() => {
-    document.title = ROUTE_TITLES[pathname] ?? DEFAULT_TITLE;
+    document.title =
+      ROUTE_TITLES[pathname] ??
+      // Drawing permalinks (/draw/:id) share the studio's title
+      (pathname.startsWith("/draw/") ? ROUTE_TITLES["/draw"] : DEFAULT_TITLE);
     document
       .querySelector('link[rel="canonical"]')
       ?.setAttribute(
@@ -111,7 +116,9 @@ const App = () => {
           <Route path="/home" element={<Home />} />
           <Route path="/about" element={<Resume />} />
           <Route path="/synth" element={<Synth />} />
+          <Route path="/journey" element={<Journey />} />
           <Route path="/draw" element={<SvgGenerator />} />
+          <Route path="/draw/:id" element={<SvgGenerator />} />
         </Routes>
       </Router>
     </div>

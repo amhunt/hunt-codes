@@ -6,6 +6,7 @@ import { planetPosition, ROCKET, SYNTH_PAD } from "./constants";
 import { rocketNoseDirection } from "./Rocket";
 import { viewGoal, type SolarView } from "./CameraRig";
 import { ARTIFACT_BUILDERS, disposeArtifact } from "./warpArtifacts";
+import WarpStreaks from "./WarpStreaks";
 import { endRocketJourney, flashWarp, journeyState } from "../../rocketJourney";
 import { SYNTH_ORIGIN } from "../../synthSpec";
 
@@ -51,15 +52,6 @@ const WARP_RAMP_IN_SECONDS = 0.9;
 const WARP_RAMP_OUT_SECONDS = 1;
 /** Stars fade back in over the last stretch of warp (decelerating) */
 const STAR_RETURN_SECONDS = 1.2;
-
-const STREAK_COUNT = 340;
-/** Streak heads live at rig-local z in [-DEPTH+PAD, PAD); -z is ahead */
-const STREAK_DEPTH = 320;
-const STREAK_BEHIND_PAD = 20;
-const STREAK_RADIUS_MIN = 1.5;
-const STREAK_RADIUS_MAX = 60;
-const STREAK_SPEED = 300;
-const STREAK_LENGTH = 30;
 
 const ARTIFACT_Z_START = -170;
 const ARTIFACT_Z_EXIT = 25;
@@ -124,7 +116,8 @@ export default function RocketJourney({
   navigate: (to: string) => void;
 }) {
   const rig = useRef<THREE.Group>(null);
-  const streakLines = useRef<THREE.LineSegments>(null);
+  /** Warp intensity envelope, read by the shared streak field per frame */
+  const warpIntensity = useRef(0);
 
   const startPos = useRef(new THREE.Vector3());
   const startQuat = useRef(new THREE.Quaternion());
@@ -136,59 +129,6 @@ export default function RocketJourney({
   const sawDestView = useRef(false);
   const warpPos = useRef(new THREE.Vector3());
   const warpQuat = useRef(new THREE.Quaternion());
-
-  // Streak field: per-streak cylindrical spots + speeds, plus the
-  // two-vertex-per-streak line buffers (head bright, tail dim)
-  const streaks = useMemo(() => {
-    const x = new Float32Array(STREAK_COUNT);
-    const y = new Float32Array(STREAK_COUNT);
-    const z = new Float32Array(STREAK_COUNT);
-    const speed = new Float32Array(STREAK_COUNT);
-    const colors = new Float32Array(STREAK_COUNT * 6);
-    const tint = new THREE.Color();
-    for (let i = 0; i < STREAK_COUNT; i++) {
-      const angle = Math.random() * Math.PI * 2;
-      // sqrt-distributed radius = uniform density over the disc
-      const radius =
-        STREAK_RADIUS_MIN +
-        Math.sqrt(Math.random()) * (STREAK_RADIUS_MAX - STREAK_RADIUS_MIN);
-      x[i] = Math.cos(angle) * radius;
-      y[i] = Math.sin(angle) * radius;
-      z[i] = -STREAK_DEPTH + Math.random() * (STREAK_DEPTH + STREAK_BEHIND_PAD);
-      speed[i] = STREAK_SPEED * (0.7 + Math.random() * 0.6);
-      const pick = Math.random();
-      tint.set(pick < 0.7 ? "#ffffff" : pick < 0.85 ? "#ab8ffd" : "#9ecbff");
-      colors[i * 6] = tint.r;
-      colors[i * 6 + 1] = tint.g;
-      colors[i * 6 + 2] = tint.b;
-      colors[i * 6 + 3] = tint.r * 0.05;
-      colors[i * 6 + 4] = tint.g * 0.05;
-      colors[i * 6 + 5] = tint.b * 0.05;
-    }
-    const geometry = new THREE.BufferGeometry();
-    const positionAttr = new THREE.BufferAttribute(
-      new Float32Array(STREAK_COUNT * 6),
-      3,
-    );
-    positionAttr.setUsage(THREE.DynamicDrawUsage);
-    geometry.setAttribute("position", positionAttr);
-    geometry.setAttribute("color", new THREE.BufferAttribute(colors, 3));
-    const material = new THREE.LineBasicMaterial({
-      vertexColors: true,
-      transparent: true,
-      opacity: 0,
-      blending: THREE.AdditiveBlending,
-      depthWrite: false,
-    });
-    return { x, y, z, speed, geometry, positionAttr, material };
-  }, []);
-  useEffect(
-    () => () => {
-      streaks.geometry.dispose();
-      streaks.material.dispose();
-    },
-    [streaks],
-  );
 
   const artifacts: FlybyArtifact[] = useMemo(
     () =>
@@ -229,6 +169,7 @@ export default function RocketJourney({
     if (state.phase === "idle") {
       if (rig.current?.visible) rig.current.visible = false;
       startCaptured.current = false;
+      warpIntensity.current = 0;
       return;
     }
     // Route change mid-ride (browser back): abort and let CameraRig
@@ -334,6 +275,7 @@ export default function RocketJourney({
       0,
       1,
     );
+    warpIntensity.current = intensity;
     state.starDim = clamp01(
       (state.warpSeconds - elapsed) / STAR_RETURN_SECONDS,
     );
@@ -346,24 +288,6 @@ export default function RocketJourney({
     camera.position.copy(warpPos.current).add(sway);
     rollQuat.setFromAxisAngle(Z_AXIS, Math.sin(t * 0.7) * 0.035);
     camera.quaternion.copy(warpQuat.current).multiply(rollQuat);
-
-    // March the streak heads toward the camera and wrap; tails trail
-    // "ahead" (where the streak came from) by the stretched length
-    const positions = streaks.positionAttr.array as Float32Array;
-    const length = STREAK_LENGTH * intensity + 0.2;
-    for (let i = 0; i < STREAK_COUNT; i++) {
-      let zHead = streaks.z[i] + streaks.speed[i] * intensity * delta;
-      if (zHead > STREAK_BEHIND_PAD) zHead -= STREAK_DEPTH + STREAK_BEHIND_PAD;
-      streaks.z[i] = zHead;
-      positions[i * 6] = streaks.x[i];
-      positions[i * 6 + 1] = streaks.y[i];
-      positions[i * 6 + 2] = zHead;
-      positions[i * 6 + 3] = streaks.x[i];
-      positions[i * 6 + 4] = streaks.y[i];
-      positions[i * 6 + 5] = zHead - length;
-    }
-    streaks.positionAttr.needsUpdate = true;
-    streaks.material.opacity = intensity;
 
     // Flyby cameos (joyride only): each pops in far ahead, drifts
     // outward as it nears, and exits past the shoulder of the windshield
@@ -426,12 +350,7 @@ export default function RocketJourney({
           visible */}
       <ambientLight intensity={0.55} />
       <pointLight position={[6, 14, 18]} intensity={2.2} decay={0} />
-      <lineSegments
-        ref={streakLines}
-        geometry={streaks.geometry}
-        material={streaks.material}
-        frustumCulled={false}
-      />
+      <WarpStreaks getIntensity={() => warpIntensity.current} />
       {artifacts.map((artifact, i) => (
         <primitive key={i} object={artifact.group} />
       ))}
