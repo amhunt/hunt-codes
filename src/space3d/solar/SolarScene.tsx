@@ -165,8 +165,9 @@ const SolarScene = ({
       {/* The second solar system, far below this one: six knob-planets
           around a beat-pulsing sun (the space synth) */}
       {view === "synth" && <SynthSystem isNightMode={isNightMode} />}
-      {/* The /journey cruise: open-space flight behind the story crawl */}
-      {view === "journey" && <JourneyCruise />}
+      {/* The /journey cruise: the rocket ride's warp — open-space flight
+          behind the story crawl, ended by the cockpit's "End trip" */}
+      {view === "journey" && <JourneyCruise navigate={onNavigate} />}
       {/* Mounted before CameraRig: while a journey is active it must
           pose the camera first each frame (CameraRig stands down) */}
       <RocketJourney view={view} navigate={onNavigate} />

@@ -4,7 +4,8 @@ import React from "react";
  * The lightspeed journeys' cockpit dressing: a steel windshield frame
  * whose edges hug the viewport (so warp reads as seen from inside the
  * ship) and the white flash that covers the jumps. Pure DOM/SVG —
- * mounted by every page a journey can start or end on (/home, /synth),
+ * mounted once at App level (the rides hop routes mid-flight, and a
+ * per-page mount would cut the covering flash short at each hop),
  * revealed by `body.rocket-journey` (App.scss), never takes pointer
  * input.
  *

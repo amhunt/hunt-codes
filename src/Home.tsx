@@ -7,7 +7,6 @@ import { ArrowLeftCircleIcon } from "lucide-react";
 import useWindowSize from "./useWindowSize";
 import useScrollJourney from "./useScrollJourney";
 import SolarOverlays from "./SolarOverlays";
-import RocketCockpit from "./RocketCockpit";
 import ScrollHint from "./ScrollHint";
 import { JOURNEY_STOPS } from "./scrollTransition";
 
@@ -111,7 +110,6 @@ const Home = () => {
   return (
     <>
       <SolarOverlays />
-      <RocketCockpit />
       <div className="homePageBackLink">
         <Link
           className={cx("mt-4 flex items-center gap-1 transition-transform")}

@@ -1,7 +1,6 @@
 import React, { useCallback, useEffect, useRef, useState } from "react";
 import { ArrowLeftCircleIcon } from "lucide-react";
 
-import RocketCockpit from "./RocketCockpit";
 import { journeyState, startSynthReturn } from "./rocketJourney";
 import {
   SYNTH_KNOBS,
@@ -156,7 +155,6 @@ const Synth = () => {
 
   return (
     <>
-      <RocketCockpit />
       <div className="synthBackLink">
         <button type="button" onClick={() => startSynthReturn()}>
           <ArrowLeftCircleIcon className="starIcon" size={16} />

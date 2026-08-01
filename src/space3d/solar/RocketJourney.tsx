@@ -1,35 +1,38 @@
-import React, { useEffect, useMemo, useRef } from "react";
+import React, { useEffect, useRef } from "react";
 import { useFrame } from "@react-three/fiber";
 import * as THREE from "three";
 
 import { planetPosition, ROCKET, SYNTH_PAD } from "./constants";
 import { rocketNoseDirection } from "./Rocket";
 import { viewGoal, type SolarView } from "./CameraRig";
-import { ARTIFACT_BUILDERS, disposeArtifact } from "./warpArtifacts";
+import { CRUISE_POS, CRUISE_QUAT } from "./JourneyCruise";
 import WarpStreaks from "./WarpStreaks";
 import { endRocketJourney, flashWarp, journeyState } from "../../rocketJourney";
 import { SYNTH_ORIGIN } from "../../synthSpec";
 
 /**
- * Drives every lightspeed journey: the rocket joyride (the /home
- * "So u wanna be astronaut?" easter egg) and the 808-pad transits to
- * the synth solar system and back. While journeyState is active this
- * component owns the camera — CameraRig stands down — and plays three
- * beats:
+ * Drives the lightspeed journeys' boarding beats and the 808-pad
+ * transits to the synth solar system and back. While journeyState is
+ * active this component owns the camera (CameraRig stands down) — with
+ * one handoff: the rocket ride's warp is the /journey cruise, owned by
+ * JourneyCruise, so once that ride reaches warp this driver goes quiet.
+ *
+ * The beats:
  *
  * 1. Boarding: the camera swoops toward the journey's vehicle (behind
  *    the rocket's nose, or down over the 808 pad; the synth return just
  *    swings the nose around toward home) while the stars fade and the
  *    DOM windshield frame fades in (App.scss, `body.rocket-journey`).
- * 2. Warp: a flash covers a teleport to a "warp zone" hundreds of units
- *    along the travel heading — far enough that no solar system is more
- *    than a speck. The rig (this component's group) is parked there
- *    carrying the Star Wars streak field — plus the flyby artifact
- *    cameos on the joyride — and the camera sways gently inside it.
- * 3. Re-entry: a second flash covers a teleport onto the destination
- *    view's approach line (navigating to its route if needed), then the
- *    journey ends and CameraRig's ordinary resume swoop glides the last
- *    stretch onto the perch — the landing.
+ * 2. Warp: a flash covers a teleport along the travel heading. For the
+ *    rocket ride the teleport is straight to the /journey cruise pose —
+ *    the route flips under the flash and JourneyCruise takes the camera
+ *    (the story crawl decides when that warp ends). The synth transits
+ *    stay here: parked in a "warp zone" far from every system, inside
+ *    the Star Wars streak field, while the camera sways gently.
+ * 3. Re-entry (synth transits only): a second flash covers a teleport
+ *    onto the destination view's approach line (navigating to its route
+ *    if needed), then the journey ends and CameraRig's ordinary resume
+ *    swoop glides the last stretch onto the perch — the landing.
  *
  * The streaks are one LineSegments whose head vertices march toward the
  * camera and wrap; line length and material opacity ride the warp
@@ -42,8 +45,6 @@ const BOARD_CAM_BEHIND = 1.5;
 const BOARD_PAD_BEHIND = 2.2;
 const BOARD_LOOK_AHEAD = 10;
 
-/** Joyride warp zone: this far from the origin along the rocket's nose */
-const WARP_DISTANCE = 900;
 /** Transit warp zone: this far past the boarding spot along the heading
  *  (roughly a quarter of the way to the other system) */
 const TRANSIT_WARP_AHEAD = 450;
@@ -52,12 +53,6 @@ const WARP_RAMP_IN_SECONDS = 0.9;
 const WARP_RAMP_OUT_SECONDS = 1;
 /** Stars fade back in over the last stretch of warp (decelerating) */
 const STAR_RETURN_SECONDS = 1.2;
-
-const ARTIFACT_Z_START = -170;
-const ARTIFACT_Z_EXIT = 25;
-const ARTIFACT_SPEED = 115;
-const ARTIFACT_FIRST_SPAWN = 1;
-const ARTIFACT_SPAWN_INTERVAL = 1.25;
 
 /** How far out on the destination's approach line re-entry drops the
  *  camera (the synth view sits closer, so its approach is shorter) */
@@ -89,30 +84,15 @@ const goalPos = new THREE.Vector3();
 const goalLook = new THREE.Vector3();
 const forward = new THREE.Vector3();
 
-interface FlybyArtifact {
-  group: THREE.Group;
-  spawnAt: number;
-  /** -1 flies past on the left, +1 on the right */
-  side: number;
-  y: number;
-  baseYaw: number;
-  tilt: number;
-  spin: number;
-}
-
-/** Lateral flyby heights, hand-varied so consecutive cameos don't trace
- *  the same line across the window */
-const ARTIFACT_HEIGHTS = [-2, 3, -3.5, 2.5, 4.5, -2.5, 3.5, -3];
-const ARTIFACT_SCALES = [4.5, 3.8, 3.6, 3.4, 3.6, 3.8, 3.8, 3.2];
-
 export default function RocketJourney({
   view,
   navigate,
 }: {
   view: SolarView;
   /** Router navigation, threaded in from outside the canvas (context
-   *  doesn't cross the R3F reconciler boundary) — re-entry uses it when
-   *  the destination lives on another route */
+   *  doesn't cross the R3F reconciler boundary) — the rocket ride hops
+   *  to /journey at its warp flash; re-entry uses it when the
+   *  destination lives on another route */
   navigate: (to: string) => void;
 }) {
   const rig = useRef<THREE.Group>(null);
@@ -129,29 +109,6 @@ export default function RocketJourney({
   const sawDestView = useRef(false);
   const warpPos = useRef(new THREE.Vector3());
   const warpQuat = useRef(new THREE.Quaternion());
-
-  const artifacts: FlybyArtifact[] = useMemo(
-    () =>
-      ARTIFACT_BUILDERS.map((build, i) => {
-        const group = build();
-        group.scale.setScalar(ARTIFACT_SCALES[i]);
-        group.visible = false;
-        return {
-          group,
-          spawnAt: ARTIFACT_FIRST_SPAWN + i * ARTIFACT_SPAWN_INTERVAL,
-          side: i % 2 === 0 ? -1 : 1,
-          y: ARTIFACT_HEIGHTS[i],
-          baseYaw: (i * Math.PI) / 3,
-          tilt: (i % 2 === 0 ? 1 : -1) * (0.15 + (i % 3) * 0.12),
-          spin: 0.6 + (i % 3) * 0.35,
-        };
-      }),
-    [],
-  );
-  useEffect(
-    () => () => artifacts.forEach((a) => disposeArtifact(a.group)),
-    [artifacts],
-  );
 
   // The overlay button only launches while this driver is mounted, and
   // an abandoned ride (unmount mid-journey) must not leave the page UI
@@ -172,6 +129,14 @@ export default function RocketJourney({
       warpIntensity.current = 0;
       return;
     }
+    // The rocket ride's warp lives on /journey — JourneyCruise owns the
+    // camera (and the show) from the flash on; this driver stands down
+    if (state.destination === "journey" && state.phase === "warp") {
+      if (rig.current?.visible) rig.current.visible = false;
+      startCaptured.current = false;
+      warpIntensity.current = 0;
+      return;
+    }
     // Route change mid-ride (browser back): abort and let CameraRig
     // swoop to the new view from wherever the camera is. The journey's
     // own routes don't count: the origin view is where it boarded, and
@@ -179,7 +144,11 @@ export default function RocketJourney({
     // flips the URL at boarding). Once the destination view has been
     // seen, leaving it again (back mid-warp) is a real abort.
     const rideDestView: SolarView =
-      state.destination === "synth" ? "synth" : "home";
+      state.destination === "synth"
+        ? "synth"
+        : state.destination === "journey"
+          ? "journey"
+          : "home";
     if (startCaptured.current) {
       if (view === rideDestView) sawDestView.current = true;
       const foreign = sawDestView.current
@@ -228,7 +197,12 @@ export default function RocketJourney({
       lookMatrix.lookAt(targetPos, lookTarget, UP);
       targetQuat.setFromRotationMatrix(lookMatrix);
 
-      const p = clamp01(state.phaseElapsed / state.boardSeconds);
+      // Boarding for /journey while already ON /journey (a mid-boarding
+      // manual navigation) has no rocket to chase — jump straight to warp
+      const p =
+        state.destination === "journey" && view === "journey"
+          ? 1
+          : clamp01(state.phaseElapsed / state.boardSeconds);
       const e = easeInOutCubic(p);
       camera.position.lerpVectors(startPos.current, targetPos, e);
       camera.quaternion.slerpQuaternions(startQuat.current, targetQuat, e);
@@ -239,16 +213,22 @@ export default function RocketJourney({
         state.phase = "warp";
         state.phaseElapsed = 0;
         flashWarp();
+        if (state.destination === "journey") {
+          // The rocket ride: teleport straight to the /journey cruise
+          // pose and flip the route — both cuts hide under the flash,
+          // and JourneyCruise picks the camera up from exactly here
+          camera.position.copy(CRUISE_POS);
+          camera.quaternion.copy(CRUISE_QUAT);
+          startCaptured.current = false;
+          if (view !== "journey") navigate("/journey");
+          return;
+        }
         // Jump along the current heading: same orientation, new spot —
         // the flash covers the position cut, the view direction doesn't
         // change, and every solar system ends up a speck
-        if (state.vehicle === "rocket") {
-          warpPos.current.copy(travelDir).multiplyScalar(WARP_DISTANCE);
-        } else {
-          warpPos.current
-            .copy(targetPos)
-            .addScaledVector(travelDir, TRANSIT_WARP_AHEAD);
-        }
+        warpPos.current
+          .copy(targetPos)
+          .addScaledVector(travelDir, TRANSIT_WARP_AHEAD);
         warpQuat.current.copy(targetQuat);
         camera.position.copy(warpPos.current);
         camera.quaternion.copy(warpQuat.current);
@@ -257,15 +237,11 @@ export default function RocketJourney({
           rig.current.quaternion.copy(warpQuat.current);
           rig.current.visible = true;
         }
-        // A transit must not inherit a frozen cameo from an aborted joyride
-        if (!state.cameos) {
-          artifacts.forEach((artifact) => (artifact.group.visible = false));
-        }
       }
       return;
     }
 
-    // ── warp ──
+    // ── warp (synth transits only) ──
     const elapsed = state.phaseElapsed;
     const intensity = THREE.MathUtils.smoothstep(
       Math.min(
@@ -288,32 +264,6 @@ export default function RocketJourney({
     camera.position.copy(warpPos.current).add(sway);
     rollQuat.setFromAxisAngle(Z_AXIS, Math.sin(t * 0.7) * 0.035);
     camera.quaternion.copy(warpQuat.current).multiply(rollQuat);
-
-    // Flyby cameos (joyride only): each pops in far ahead, drifts
-    // outward as it nears, and exits past the shoulder of the windshield
-    if (state.cameos) {
-      for (const artifact of artifacts) {
-        const local = elapsed - artifact.spawnAt;
-        const z = ARTIFACT_Z_START + local * ARTIFACT_SPEED;
-        if (local < 0 || z > ARTIFACT_Z_EXIT) {
-          artifact.group.visible = false;
-          continue;
-        }
-        artifact.group.visible = true;
-        const progress =
-          (z - ARTIFACT_Z_START) / (ARTIFACT_Z_EXIT - ARTIFACT_Z_START);
-        artifact.group.position.set(
-          artifact.side * (9 + progress * 14),
-          artifact.y,
-          z,
-        );
-        artifact.group.rotation.set(
-          artifact.tilt,
-          artifact.baseYaw + t * artifact.spin,
-          0,
-        );
-      }
-    }
 
     if (elapsed >= state.warpSeconds) {
       // Drop out of lightspeed onto the destination's approach line
@@ -351,9 +301,6 @@ export default function RocketJourney({
       <ambientLight intensity={0.55} />
       <pointLight position={[6, 14, 18]} intensity={2.2} decay={0} />
       <WarpStreaks getIntensity={() => warpIntensity.current} />
-      {artifacts.map((artifact, i) => (
-        <primitive key={i} object={artifact.group} />
-      ))}
     </group>
   );
 }
