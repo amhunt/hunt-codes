@@ -63,7 +63,10 @@ const ROUTE_TITLES: Record<string, string> = {
 const RouteMeta = () => {
   const { pathname } = useLocation();
   useEffect(() => {
-    document.title = ROUTE_TITLES[pathname] ?? DEFAULT_TITLE;
+    document.title =
+      ROUTE_TITLES[pathname] ??
+      // Drawing permalinks (/draw/:id) share the studio's title
+      (pathname.startsWith("/draw/") ? ROUTE_TITLES["/draw"] : DEFAULT_TITLE);
     document
       .querySelector('link[rel="canonical"]')
       ?.setAttribute(
@@ -115,6 +118,7 @@ const App = () => {
           <Route path="/synth" element={<Synth />} />
           <Route path="/journey" element={<Journey />} />
           <Route path="/draw" element={<SvgGenerator />} />
+          <Route path="/draw/:id" element={<SvgGenerator />} />
         </Routes>
       </Router>
     </div>

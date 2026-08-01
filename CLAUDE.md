@@ -31,6 +31,8 @@ the preview tool.
   exports. Don't chase these.
 - `yarn deploy` — S3 sync with `--profile andrew` (hashed assets immutable,
   HTML/manifest no-cache). Never deploy unprompted.
+- `./server/deploy.sh` — redeploy the `/api` Lambda after editing
+  `server/handler.mjs` (no bundling; AWS SDK ships in the runtime)
 
 ## Routes & structure
 
@@ -38,7 +40,12 @@ the preview tool.
 - `/home` → `Home.tsx` — social links; Earth = "ABOUT ME" link; asteroids +
   Sputnik satellite = blog/LinkedIn/GitHub links (home view only)
 - `/about` → `Resume.tsx` — the résumé page (frosted panel over the scene)
-- `/draw` → `SvgGenerator.tsx` — AI SVG generator (OpenAI, browser-side key)
+- `/draw` → `SvgGenerator.tsx` — AI SVG generator; `/draw/:id` are
+  shareable permalinks. Backed by the `/api` Lambda (see `server/`), not a
+  browser-side key. **Other people's drawings render as inert
+  `data:image/svg+xml` `<img>` — never inline them as markup** (a review
+  broke the server-side regex allowlist three ways; the `<img>` isolation
+  is the real XSS gate). See `server/README.md`.
 
 Day/night is a user toggle in `App.tsx` (night default); every page must
 stay legible in both palettes (`.App.night` / `.App.day` overrides).
