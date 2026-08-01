@@ -358,33 +358,42 @@ body.journey-mode {
   }
 }
 
-// The cockpit's "End trip" control, parked on the right of the dashboard
-// console. Only tangible while the ride is actually flying
-// (body.rocket-journey) — with a dead 3D canvas the crawl page's plain
-// back link serves instead. Same reveal timing as the windshield frame.
-.end-trip {
+// The cockpit's dashboard controls (soundtrack mute + "End trip"),
+// parked on the right of the console. Only tangible while the ride is
+// actually flying (body.rocket-journey) — with a dead 3D canvas the
+// crawl page's plain back link serves instead. Same reveal timing as
+// the windshield frame.
+.cockpit-controls {
   position: fixed;
   right: 5vw;
   bottom: calc(14px + env(safe-area-inset-bottom, 0px));
   z-index: 6002;
-  padding: 6px 14px;
-  border: 1px solid #ff5252;
-  border-radius: 4px;
-  background: rgba(18, 21, 26, 0.85);
-  color: #ff5252;
-  font-family: "nova-mono", monospace;
-  font-size: 13px;
-  letter-spacing: 0.14em;
-  text-transform: uppercase;
+  display: flex;
+  gap: 10px;
   opacity: 0;
   visibility: hidden;
   pointer-events: none;
   transition:
     opacity 0.6s ease,
     visibility 0s linear 0.6s;
+
+  button {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    padding: 6px 14px;
+    border: 1px solid #ff5252;
+    border-radius: 4px;
+    background: rgba(18, 21, 26, 0.85);
+    color: #ff5252;
+    font-family: "nova-mono", monospace;
+    font-size: 13px;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+  }
 }
 
-body.rocket-journey .end-trip {
+body.rocket-journey .cockpit-controls {
   opacity: 1;
   visibility: visible;
   pointer-events: auto;
@@ -392,7 +401,7 @@ body.rocket-journey .end-trip {
     opacity 0.9s ease 0.7s,
     visibility 0s;
 
-  &:hover {
+  button:hover {
     background: rgba(255, 82, 82, 0.22);
   }
 }

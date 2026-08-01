@@ -11,13 +11,15 @@
 export interface JourneyChapter {
   /** Small overline above the title: a year, range, or era */
   era: string;
+  /** Empty string skips the heading (the era + lines carry the chapter) */
   title: string;
   /** Body copy; each entry renders as its own paragraph */
   lines: string[];
 }
 
 export const JOURNEY_INTRO = {
-  overline: "30+ years ago, in a Rochester, NY far, far away…",
+  overline:
+    "A long time ago, on the remote ice world of Rochester, NY, far, far away…",
   title: "THE JOURNEY",
   subtitle: "the andrew hunt story begins",
 };
@@ -25,75 +27,65 @@ export const JOURNEY_INTRO = {
 export const JOURNEY_CHAPTERS: JourneyChapter[] = [
   {
     era: "the early years",
-    title: "Grew up in Oregon",
+    title: "",
     lines: [
-      "Born in Rochester, NY; raised in Oregon — evergreens, drizzle, and a family computer that was asking for it.",
-      "Lego robotics kid, later captain of the high-school robotics team — with a middle-school magnum opus in between: a website called “Andy and David: A place for fun.” It was.",
+      "Born in Rochester, grew up outside of Portland, OR.",
+      "Nerdy kid, nerdy adult, attempted football briefly in between.",
     ],
   },
   {
     era: "2013 – 2017 · New Jersey",
     title: "Princeton University",
     lines: [
-      "Studied computer science at Princeton.",
-      "Four years of problem sets and late nights, with an eye drifting steadily toward the West Coast.",
+      "Studied Computer Science, learning useful skills like… coloring graphs?",
     ],
   },
   {
-    era: "Summer 2016 · San Francisco",
-    title: "Airbnb — the internship",
+    era: "2016 – 2020 · San Francisco",
+    title: "Airbnb",
     lines: [
-      "First taste of San Francisco: shipped landing pages for new features and contributed components to the company frontend framework.",
-      "Liked it enough to come back.",
-    ],
-  },
-  {
-    era: "2017 – 2020 · San Francisco",
-    title: "Airbnb — Software Engineer",
-    lines: [
-      "Built dozens of pricing and availability features across the Experiences host and guest products.",
-      "Ran 20+ A/B tests that compounded into >10% more bookings, cut load times by >30% on 10+ pages, and led the TypeScript migration.",
+      "A summer internship, a first taste of San Francisco and of shipping real code.",
+      "Came for a summer, stayed for four more years.",
+      "Four years on Experiences, building pricing tools for hosts and faster pages for guests. Led the TypeScript migration and never looked back.",
     ],
   },
   {
     era: "2020 – 2021 · San Francisco",
-    title: "Untapped — Software Engineer",
+    title: "Untapped",
     lines: [
-      "Launched the Recruiter Analytics platform at Untapped (fka Jumpstart).",
-      "Introduced TypeScript, led the frontend platform group, and made the core app 40% faster.",
+      "A much smaller ship: launched the Recruiter Analytics platform and brought TypeScript along.",
     ],
   },
   {
     era: "2021 – 2025 · San Francisco",
-    title: "Zip — Staff Software Engineer",
+    title: "Zip",
     lines: [
-      "Four years, zero to staff: new product features, shared component systems, and the frontend infrastructure underneath all of it.",
-      "Type-safety gates in CI, testing three layers deep, and the build-and-deploy machinery under everything.",
-      "TypeScript to 99% coverage; page loads cut by more than half.",
+      "A startup speedrun. Four years, from 4 to 100 engineers.",
+      "Product features, then component systems, then the platform underneath everything. Page loads fell by half along the way.",
     ],
   },
   {
     era: "2025",
     title: "The sabbatical",
     lines: [
-      "Stepped away for a proper recharge — and a move across the country to New York City.",
-      "Somewhere in there, got thoroughly addicted to 3D printing.",
+      "Stepped away for a proper recharge and a move across the country to NYC.",
+      "Then a 3D printer got involved, and the recharge got very specific.",
     ],
   },
   {
     era: "2025 – present · NYC",
-    title: "Independent Consultant — Argos",
+    title: "Argos",
     lines: [
-      "Consulting from New York: designing, building, and shipping production frontend for Argos, a legal-tech AI product.",
-      "An LLM-powered agentic chatbot, legal document management, data visualization — plus advising on architecture, performance, and DevX.",
+      "Consulting remotely and in SF: production frontend for Argos, a legal-tech AI product.",
+      "An LLM-powered chatbot, document management, data viz, and advice on the architecture underneath.",
     ],
   },
   {
     era: "fall 2026 →",
     title: "The next chapter",
     lines: [
-      "Looking to go full-time again.",
-      "This entry could be about your team — andrew@hunt.codes.",
+      "After a year attempting to take a break, he searches the galaxy for a job once more…",
+      "This entry could be about your team: andrew@hunt.codes.",
     ],
   },
 ];
