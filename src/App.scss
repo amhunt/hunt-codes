@@ -1497,6 +1497,9 @@ body.rocket-journey {
   .synth-knob,
   .synth-sun-button,
   .synth-hint,
+  // /home mounts the scroll hint too — without this it kept bouncing
+  // (and stayed focusable) through a ride that clears every other overlay
+  .scroll-hint,
   .badge-link {
     opacity: 0 !important;
     pointer-events: none !important;
