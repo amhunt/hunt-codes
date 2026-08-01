@@ -927,6 +927,18 @@ p {
   z-index: 100;
 }
 
+// Circular icon buttons in the home link row. Plain CSS rather than
+// Tailwind bg-* utilities: the global unlayered `button` reset further
+// down beats utility-layer backgrounds on the copy-email <button>
+.icon-pill {
+  background: rgba(94, 255, 252, 0.1);
+  transition: background-color 150ms ease;
+
+  &:hover {
+    background: rgba(94, 255, 252, 0.34);
+  }
+}
+
 .hoverableHomeItem {
   display: flex;
   min-height: 16px;

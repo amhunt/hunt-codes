@@ -3,6 +3,8 @@ import * as Switch from "@radix-ui/react-switch";
 import { useLocation } from "react-router-dom";
 import cx from "classnames";
 
+import useWindowSize from "useWindowSize";
+
 // Sun/moon mode switch, after the classic light/dark toggle design
 // (dribbble.com/shots/14431115): a sky pill with drifting clouds and a
 // glowing sun thumb by day; a starry navy pill with a cratered moon
@@ -17,12 +19,16 @@ const DayNightSwitch = ({
   onCheckedChange: (isNight: boolean) => void;
 }) => {
   const { pathname } = useLocation();
+  const size = useWindowSize();
   const onLanding = pathname === "/";
+  // /home below lg gives its corner back to the scene (part of the
+  // small-screen declutter alongside the moon and link-trio bodies)
+  const onNarrowHome = pathname === "/home" && size !== "lg";
   return (
     <Switch.Root
       className={cx(
         "day-night-switch fixed right-12 top-4 z-[5000]",
-        onLanding && "dns-hidden",
+        (onLanding || onNarrowHome) && "dns-hidden",
       )}
       checked={isNightMode}
       onCheckedChange={onCheckedChange}
