@@ -340,8 +340,8 @@ body.journey-mode {
   }
 }
 
-// z above the cockpit frame: the hint sits right on the dashboard
-// console, doubling as a cockpit readout
+// z above the cockpit frame: during a ride the hint floats just inside
+// the windshield glass; without the cockpit it rests near the bottom edge
 .journey-hint {
   position: fixed;
   left: 50%;
@@ -358,6 +358,13 @@ body.journey-mode {
   }
 }
 
+// The windshield opening's bottom edge sits at 86% of the viewport
+// (cockpit SVG y=86 with preserveAspectRatio="none"), so 14vh up from
+// the bottom puts the hint just inside the glass
+body.rocket-journey .journey-hint {
+  bottom: calc(14vh + 10px);
+}
+
 // The cockpit's dashboard controls (soundtrack mute + "End trip"),
 // parked on the right of the console. Only tangible while the ride is
 // actually flying (body.rocket-journey) — with a dead 3D canvas the
@@ -366,7 +373,10 @@ body.journey-mode {
 .cockpit-controls {
   position: fixed;
   right: 5vw;
-  bottom: calc(14px + env(safe-area-inset-bottom, 0px));
+  // Center on the dashboard's fake buttons: the console's controls all
+  // sit at y=94 in the cockpit SVG, i.e. 6vh up from the viewport bottom
+  bottom: 6vh;
+  transform: translateY(50%);
   z-index: 6002;
   display: flex;
   gap: 10px;
