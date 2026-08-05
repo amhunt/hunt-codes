@@ -52,9 +52,9 @@ module.exports = {
     // Animation utilities now come from tw-animate-css, imported in index.css.
     plugin(function ({ addBase, theme }) {
       addBase({
-        h1: { fontSize: theme("fontSize.3xl") },
-        h2: { fontSize: theme("fontSize.2xl") },
-        h3: { fontSize: theme("fontSize.xl") },
+        h1: { "font-size": theme("fontSize.3xl") },
+        h2: { "font-size": theme("fontSize.2xl") },
+        h3: { "font-size": theme("fontSize.xl") },
       });
     }),
   ],
