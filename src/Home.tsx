@@ -3,7 +3,7 @@ import Typed from "typed.js";
 import cx from "classnames";
 
 import { GitHub, Linkedin, Mail } from "react-feather";
-import { ArrowLeftCircleIcon } from "lucide-react";
+import { ArrowLeftCircleIcon, PenLine } from "lucide-react";
 import useWindowSize from "./useWindowSize";
 import useScrollJourney from "./useScrollJourney";
 import SolarOverlays from "./SolarOverlays";
@@ -27,7 +27,7 @@ const typedOptions = {
   showCursor: true,
   smartBackspace: true,
   fadeOut: true,
-  startDelay: 3000,
+  startDelay: 1000,
   fadeOutDelay: 5000,
   stringsElement: "#typed-strings",
   typeSpeed: 50,
@@ -62,8 +62,8 @@ const Home = () => {
   }, [isSmall]);
 
   // Reveal the page content as the 2s arrival swoop lands (the 1s fade
-  // starts right at touchdown; typed.js starts a beat later at 3s, once
-  // the container is fully opaque)
+  // starts right at touchdown; typed.js starts at 1s so the greeting is
+  // already mid-type as the container fades in)
   useEffect(() => {
     const timeout = setTimeout(() => setLogoOpacity(1), 2000);
     return () => clearTimeout(timeout);
@@ -91,7 +91,7 @@ const Home = () => {
   const handleCopy = useCallback(async () => {
     pinCopyTooltip();
     try {
-      await navigator.clipboard.writeText("andrew+in@hunt.codes");
+      await navigator.clipboard.writeText("andrew@hunt.codes");
       setCopied(true);
       // Rapid re-clicks must not let an older timer un-pin the fresh state
       clearTimeout(copyResetTimer.current);
@@ -130,14 +130,24 @@ const Home = () => {
               <s className="opacity-70 decoration-[#ff6b6b] decoration-2">SF</s>{" "}
               NYC
             </span>
+            <div className="availability-line">
+              consulting now · open to full-time, fall 2026
+            </div>
           </div>
         )}
         <div className="hoverableHomeItem justify-between gap-6">
           {!isSmall && (
-            <div className="max-w-[300px] text-left text-lg font-bold">
-              Frontend Engineer based in{" "}
-              <s className="opacity-70 decoration-[#ff6b6b] decoration-2">SF</s>{" "}
-              NYC
+            <div className="max-w-[300px] text-left">
+              <div className="font-bold">
+                Frontend Engineer based in{" "}
+                <s className="opacity-70 decoration-[#ff6b6b] decoration-2">
+                  SF
+                </s>{" "}
+                NYC
+              </div>
+              <div className="availability-line">
+                consulting now · open to full-time, fall 2026
+              </div>
             </div>
           )}
           <div className="flex items-center gap-1">
@@ -159,6 +169,20 @@ const Home = () => {
             >
               <GitHub size={22} />
             </a>
+            {/* Below lg the blog-post asteroid sits out (SolarOverlays hides
+                the link trio), so the site's one work sample needs a home in
+                the icon row instead */}
+            {size !== "lg" && (
+              <a
+                aria-label="A blog post I wrote at Zip"
+                target="_blank"
+                rel="noopener noreferrer"
+                href="https://engineering.ziphq.com/material-ui/"
+                className="icon-pill flex size-12 items-center justify-center rounded-full p-1"
+              >
+                <PenLine size={20} />
+              </a>
+            )}
             {/* <TooltipProvider>
               <Tooltip disableHoverableContent>
                 <TooltipTrigger asChild>
@@ -189,7 +213,7 @@ const Home = () => {
                   <button
                     type="button"
                     ref={copyTriggerRef}
-                    aria-label="Copy email address andrew+in@hunt.codes"
+                    aria-label="Copy email address andrew@hunt.codes"
                     onPointerDown={() => pinCopyTooltip()}
                     onClick={() => void handleCopy()}
                     className="icon-pill flex size-12 items-center justify-center rounded-full p-1"
@@ -203,7 +227,7 @@ const Home = () => {
                   <p>
                     {copied
                       ? "Email copied!"
-                      : "andrew+in@hunt.codes — click to copy"}
+                      : "andrew@hunt.codes — click to copy"}
                   </p>
                 </TooltipContent>
               </Tooltip>
@@ -213,21 +237,20 @@ const Home = () => {
         {/* Moved to computer for large screens */}
         {/* {isMdOrLess && ( */}
         <div className="hoverableHomeItem h-20 gap-0">
-          <div>
+          <div className="typed-greeting">
             <span
               ref={typedEl}
               id="typed-js"
-              className="font-bold"
               aria-description="Animated intro message"
             />
           </div>
           <div id="typed-strings">
-            <p>hey there!</p>
             <p>interested in working together?</p>
             <p>
               reach out to{" "}
               <a href="mailto:andrew+contact@hunt.codes">andrew@hunt.codes</a>
             </p>
+            <p>hey there!</p>
           </div>
         </div>
         {/* )} */}
