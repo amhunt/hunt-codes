@@ -17,9 +17,13 @@ export interface JourneyChapter {
   lines: string[];
 }
 
+const BIRTH_YEAR = 1995;
+const CURRENT_YEAR = new Date().getFullYear();
+const AGE = CURRENT_YEAR - BIRTH_YEAR;
+
 export const JOURNEY_INTRO = {
   overline:
-    "A long time ago, on the remote ice world of Rochester, NY, far, far away…",
+    `A long time (${AGE} years) ago, on a remote, forrest Planet of Øregon far, far away…`,
   title: "THE JOURNEY",
   subtitle: "the andrew hunt story begins",
 };
@@ -44,16 +48,16 @@ export const JOURNEY_CHAPTERS: JourneyChapter[] = [
     era: "2016 – 2020 · San Francisco",
     title: "Airbnb",
     lines: [
-      "A summer internship, a taste of San Francisco and of shipping real code.",
-      "Came for a summer, stayed for four more years.",
-      "Four years on Experiences, building pricing tools for hosts and faster pages for guests. Led the TypeScript migration and never looked back.",
+      "A summer internship contributing to, frankly, almost nothing.",
+      "Developed a love of design and building delightful user experiences.",
+      "Started on the new Lux product, then worked on the Experiences host platform",
     ],
   },
   {
     era: "2020 – 2021 · San Francisco",
-    title: "Untapped",
+    title: "Jumpstart / Canvas / Untapped",
     lines: [
-      "A much smaller ship: launched the Recruiter Analytics platform and brought TypeScript along.",
+      "A much smaller ship: launched the Recruiter Analytics platform, brought the gospel of TypeScript.",
     ],
   },
   {
@@ -61,7 +65,7 @@ export const JOURNEY_CHAPTERS: JourneyChapter[] = [
     title: "Zip",
     lines: [
       "A startup speedrun. Four years, from 4 to 100 engineers.",
-      "Product features, then component systems, then the platform underneath everything. Page loads fell by half along the way.",
+      "Product features, then component systems, then the platform underneath everything.",
     ],
   },
   {
