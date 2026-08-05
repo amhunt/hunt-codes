@@ -62,15 +62,36 @@ const ABOUT_CAM_ABOVE = 2.6;
 const ABOUT_CAM_SIDE = 0.5;
 const ABOUT_LOOK_HEIGHT = 0.45; // aim slightly above the moon's plane
 /** Moon's horizontal screen spot on wide screens: NDC -0.5 = 25vw from
- *  the left edge. Below the lg breakpoint the camera drops its side
- *  offset instead, putting itself on the Earth-moon line so the moon
- *  reads dead-center, directly above Earth. */
+ *  the left edge, well inside the 600px gutter .resume-container reserves
+ *  there. */
 const ABOUT_MOON_NDC_X = -0.5;
+/** Below lg the résumé panel keeps its 680px width and the gutter takes
+ *  whatever is left (min 200px) — .resume-container's `padding-left`. The
+ *  moon rides the center of that gutter, so these two numbers must match
+ *  the stylesheet's. */
+const ABOUT_PANEL_PX = 680;
+const ABOUT_GUTTER_MIN_PX = 200;
+const SM_BREAKPOINT_PX = 768;
 /** Extra downward aim, as an NDC fraction at the moon's distance: rotating
  *  the view down lifts the whole scene — the moon rides ~20vh higher and
  *  more of Earth's limb clears the bottom edge. */
 const ABOUT_MOON_NDC_Y_LIFT = 0.4;
 const LG_BREAKPOINT_PX = 1280;
+
+/**
+ * Where the moon should sit horizontally (NDC) for a viewport width —
+ * always the middle of the gutter the résumé panel leaves it. Returns
+ * null on phone widths, where the panel is full-bleed: there's no gutter
+ * to aim for, so the camera sits on the Earth-moon line instead and the
+ * moon reads dead-center, directly above Earth.
+ */
+function aboutMoonNdcX(width: number): number | null {
+  if (width < SM_BREAKPOINT_PX) return null;
+  if (width >= LG_BREAKPOINT_PX) return ABOUT_MOON_NDC_X;
+  const gutter = Math.max(ABOUT_GUTTER_MIN_PX, width - ABOUT_PANEL_PX);
+  // gutter center in px -> NDC: 2 * (gutter / 2) / width - 1
+  return gutter / width - 1;
+}
 
 // scratch values, reused every frame
 const goalPos = new THREE.Vector3();
@@ -132,13 +153,13 @@ function computeGoal(
     moonPosition(t, moonPos);
     moonDir.copy(moonPos).sub(earthPos).normalize();
     side.crossVectors(moonDir, UP).normalize();
-    const centered = viewport.width < LG_BREAKPOINT_PX;
+    const moonNdcX = aboutMoonNdcX(viewport.width);
     goalPos
       .copy(earthPos)
       .addScaledVector(moonDir, -ABOUT_CAM_BEHIND)
-      // Centered (sm/md): sit right on the Earth-moon line so the moon
-      // reads directly above Earth
-      .addScaledVector(side, centered ? 0 : ABOUT_CAM_SIDE);
+      // Phone widths: sit right on the Earth-moon line so the moon reads
+      // directly above Earth
+      .addScaledVector(side, moonNdcX === null ? 0 : ABOUT_CAM_SIDE);
     goalPos.y += ABOUT_CAM_ABOVE;
     const persp = camera as THREE.PerspectiveCamera;
     const tanHalfV = Math.tan((persp.fov * Math.PI) / 360);
@@ -147,11 +168,11 @@ function computeGoal(
       moonPos.y +
       ABOUT_LOOK_HEIGHT -
       goalPos.distanceTo(moonPos) * ABOUT_MOON_NDC_Y_LIFT * tanHalfV;
-    if (!centered) {
-      // Aim sideways of the moon by the angle that lands it at
-      // ABOUT_MOON_NDC_X for the current aspect (~25vw from the left)
+    if (moonNdcX !== null) {
+      // Aim sideways of the moon by the angle that lands it at moonNdcX
+      // for the current aspect (the middle of the panel's left gutter)
       const tanHalfH = tanHalfV * (persp.aspect || 1);
-      const lateral = goalPos.distanceTo(moonPos) * ABOUT_MOON_NDC_X * tanHalfH;
+      const lateral = goalPos.distanceTo(moonPos) * moonNdcX * tanHalfH;
       goalLook.addScaledVector(side, -lateral);
     }
   } else {
