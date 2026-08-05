@@ -250,7 +250,7 @@ const Journey = () => {
           to="/home"
         >
           <ArrowLeftCircleIcon className="starIcon" size={16} />
-          <span>Back to orbit</span>
+          <span>Home</span>
         </Link>
       </div>
       {/* Star Wars-style opener: the intro line fades up flat on the

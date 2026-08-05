@@ -3,7 +3,7 @@ import Typed from "typed.js";
 import cx from "classnames";
 
 import { GitHub, Linkedin, Mail } from "react-feather";
-import { ArrowLeftCircleIcon, PenLine } from "lucide-react";
+import { ArrowLeftCircleIcon, PenLine, Wand2 } from "lucide-react";
 import useWindowSize from "./useWindowSize";
 import useScrollJourney from "./useScrollJourney";
 import SolarOverlays from "./SolarOverlays";
@@ -184,7 +184,7 @@ const Home = () => {
                 <PenLine size={20} />
               </a>
             )}
-            {/* <TooltipProvider>
+            <TooltipProvider>
               <Tooltip disableHoverableContent>
                 <TooltipTrigger asChild>
                   <Link
@@ -199,7 +199,7 @@ const Home = () => {
                   <p>SVG Studio</p>
                 </TooltipContent>
               </Tooltip>
-            </TooltipProvider> */}
+            </TooltipProvider>
             <TooltipProvider
               skipDelayDuration={0}
               delayDuration={0}
