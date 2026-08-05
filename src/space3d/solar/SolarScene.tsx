@@ -54,6 +54,12 @@ const SolarScene = ({
   const { width } = useWindowWidth();
   const isCompact = width < 1280;
   const isPhone = width < 768;
+  // Below the lg breakpoint (useWindowSize's 1000px) the home view drops
+  // its redundant chrome — the link trio duplicates the icon buttons and
+  // the moon crowds Earth — so the perch keeps some breathing room.
+  // SolarOverlays hides the trio's click targets to match.
+  const isNarrow = width < 1000;
+  const hideHomeExtras = view === "home" && isNarrow;
   useEffect(() => {
     layoutState.compact = isCompact;
   }, [isCompact]);
@@ -125,7 +131,7 @@ const SolarScene = ({
       <Moon
         orbitColor={isNightMode ? "#ffffff" : "#141428"}
         orbitOpacity={isNightMode ? 0.28 : 0.2}
-        revealed={planetsRevealed}
+        revealed={planetsRevealed && !hideHomeExtras}
         linkActive={view === "about"}
       />
       {/* Link bodies — home view only: on landing they'd read as clutter
@@ -138,7 +144,7 @@ const SolarScene = ({
           <Satellite
             key={asteroid.name}
             config={asteroid}
-            visible={view === "home"}
+            visible={view === "home" && !isNarrow}
           />
         ) : asteroid.name === "rocket" ? (
           <Rocket
@@ -158,7 +164,7 @@ const SolarScene = ({
           <Asteroid
             key={asteroid.name}
             config={asteroid}
-            visible={view === "home"}
+            visible={view === "home" && !isNarrow}
           />
         ),
       )}

@@ -65,7 +65,12 @@ const SolarOverlays = () => {
   const navigate = useNavigate();
   // The 808 pad sits out on phones (SolarScene hides the 3D pad; this
   // hides its click target so no invisible button floats in the sky)
-  const isPhone = useWindowSize() === "sm";
+  const size = useWindowSize();
+  const isPhone = size === "sm";
+  // Below lg the link trio (blog rock, GitHub Sputnik, LinkedIn rock)
+  // sits out too — the icon buttons cover those links, and SolarScene
+  // hides the 3D bodies to match
+  const isNarrow = size !== "lg";
   // Navigating away doesn't fire pointerleave — don't leave a hover
   // glow stuck on
   React.useEffect(
@@ -97,35 +102,36 @@ const SolarOverlays = () => {
       >
         <BodyOutline outlineId={EARTH_ABOUT_OUTLINE_ID} />
       </Link>
-      {ASTEROID_LINKS.map((link) => (
-        <TooltipProvider key={link.name} delayDuration={100}>
-          <Tooltip disableHoverableContent>
-            <TooltipTrigger asChild>
-              <a
-                id={asteroidAnchorId(link.name)}
-                className="asteroid-link"
-                href={link.href}
-                target="_blank"
-                rel="noopener noreferrer"
-                aria-label={link.label}
-                onPointerEnter={() => {
-                  hoverState.asteroid = link.name;
-                }}
-                onPointerLeave={() => {
-                  if (hoverState.asteroid === link.name) {
-                    hoverState.asteroid = null;
-                  }
-                }}
-              >
-                <BodyOutline outlineId={asteroidOutlineId(link.name)} />
-              </a>
-            </TooltipTrigger>
-            <TooltipContent updatePositionStrategy="always">
-              <p>{link.label}</p>
-            </TooltipContent>
-          </Tooltip>
-        </TooltipProvider>
-      ))}
+      {!isNarrow &&
+        ASTEROID_LINKS.map((link) => (
+          <TooltipProvider key={link.name} delayDuration={100}>
+            <Tooltip disableHoverableContent>
+              <TooltipTrigger asChild>
+                <a
+                  id={asteroidAnchorId(link.name)}
+                  className="asteroid-link"
+                  href={link.href}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  aria-label={link.label}
+                  onPointerEnter={() => {
+                    hoverState.asteroid = link.name;
+                  }}
+                  onPointerLeave={() => {
+                    if (hoverState.asteroid === link.name) {
+                      hoverState.asteroid = null;
+                    }
+                  }}
+                >
+                  <BodyOutline outlineId={asteroidOutlineId(link.name)} />
+                </a>
+              </TooltipTrigger>
+              <TooltipContent updatePositionStrategy="always">
+                <p>{link.label}</p>
+              </TooltipContent>
+            </Tooltip>
+          </TooltipProvider>
+        ))}
       {/* The rocket easter egg: clicking it boards the ship and warps to
           the /journey story crawl (rocketJourney.ts flips the route under
           the warp flash). Same anchor plumbing as the asteroid links. */}

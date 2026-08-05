@@ -146,18 +146,18 @@ const Home = () => {
               target="_blank"
               rel="noopener noreferrer"
               href="https://www.linkedin.com/in/andrewmhunt/"
-              className="flex size-11 items-center justify-center rounded-full p-1 transition-colors hover:bg-[#5efffc57]"
+              className="icon-pill flex size-12 items-center justify-center rounded-full p-1"
             >
-              <Linkedin size={20} />
+              <Linkedin size={22} />
             </a>
             <a
               aria-label="GitHub"
               target="_blank"
               rel="noopener noreferrer"
               href="https://www.github.com/amhunt"
-              className="flex size-11 items-center justify-center rounded-full p-1 transition-colors hover:bg-[#5efffc57]"
+              className="icon-pill flex size-12 items-center justify-center rounded-full p-1"
             >
-              <GitHub size={20} />
+              <GitHub size={22} />
             </a>
             {/* <TooltipProvider>
               <Tooltip disableHoverableContent>
@@ -165,7 +165,7 @@ const Home = () => {
                   <Link
                     aria-label="SVG Studio"
                     to="/draw"
-                    className="flex size-11 items-center justify-center rounded-full p-1 transition-colors hover:bg-[#5efffc57]"
+                    className="icon-pill flex size-12 items-center justify-center rounded-full p-1"
                   >
                     <Wand2 size={20} />
                   </Link>
@@ -192,9 +192,9 @@ const Home = () => {
                     aria-label="Copy email address andrew+in@hunt.codes"
                     onPointerDown={() => pinCopyTooltip()}
                     onClick={() => void handleCopy()}
-                    className="flex size-11 items-center justify-center rounded-full p-1 transition-colors hover:bg-[#5efffc57]"
+                    className="icon-pill flex size-12 items-center justify-center rounded-full p-1"
                   >
-                    <Mail size={20} />
+                    <Mail size={22} />
                   </button>
                 </TooltipTrigger>
                 <TooltipContent

@@ -308,10 +308,10 @@ body.journey-mode {
 .journey-credits {
   position: fixed;
   left: 50%;
-  bottom: calc(72px + env(safe-area-inset-bottom, 0px));
-  transform: translateX(-50%) translateY(12px);
+  top: 50%;
+  transform: translate(-50%, calc(-50% + 12px));
   display: flex;
-  gap: 28px;
+  gap: 16px;
   align-items: center;
   opacity: 0;
   pointer-events: none;
@@ -322,16 +322,23 @@ body.journey-mode {
 
   button,
   a {
-    color: $purp-light;
-    background: none;
+    color: #fff;
+    background: rgba($purp-light, 0.5);
     border: none;
+    border-radius: 8px;
+    padding: 10px 18px;
     font-size: 15px;
+    transition: background-color 150ms ease;
+
+    &:hover {
+      background: rgba($purp-light, 0.7);
+    }
   }
 
   &.shown {
     opacity: 1;
     pointer-events: auto;
-    transform: translateX(-50%);
+    transform: translate(-50%, -50%);
   }
 
   @media (max-width: $breakpoint-sm) {
@@ -340,8 +347,8 @@ body.journey-mode {
   }
 }
 
-// z above the cockpit frame: the hint sits right on the dashboard
-// console, doubling as a cockpit readout
+// z above the cockpit frame: during a ride the hint floats just inside
+// the windshield glass; without the cockpit it rests near the bottom edge
 .journey-hint {
   position: fixed;
   left: 50%;
@@ -358,6 +365,13 @@ body.journey-mode {
   }
 }
 
+// The windshield opening's bottom edge sits at 86% of the viewport
+// (cockpit SVG y=86 with preserveAspectRatio="none"), so 14vh up from
+// the bottom puts the hint just inside the glass
+body.rocket-journey .journey-hint {
+  bottom: calc(14vh + 10px);
+}
+
 // The cockpit's dashboard controls (soundtrack mute + "End trip"),
 // parked on the right of the console. Only tangible while the ride is
 // actually flying (body.rocket-journey) — with a dead 3D canvas the
@@ -366,7 +380,10 @@ body.journey-mode {
 .cockpit-controls {
   position: fixed;
   right: 5vw;
-  bottom: calc(14px + env(safe-area-inset-bottom, 0px));
+  // Center on the dashboard's fake buttons: the console's controls all
+  // sit at y=94 in the cockpit SVG, i.e. 6vh up from the viewport bottom
+  bottom: 6vh;
+  transform: translateY(50%);
   z-index: 6002;
   display: flex;
   gap: 10px;
@@ -911,8 +928,22 @@ p {
 }
 
 .highlightedChar_night {
-  fill: #6cfc9e;
+  // Halfway between the old green (#6cfc9e) and the white base letters,
+  // so the roving highlight reads as a shimmer rather than a blink
+  fill: #b6fdcf;
   z-index: 100;
+}
+
+// Circular icon buttons in the home link row. Plain CSS rather than
+// Tailwind bg-* utilities: the global unlayered `button` reset further
+// down beats utility-layer backgrounds on the copy-email <button>
+.icon-pill {
+  background: rgba(94, 255, 252, 0.1);
+  transition: background-color 150ms ease;
+
+  &:hover {
+    background: rgba(94, 255, 252, 0.34);
+  }
 }
 
 .hoverableHomeItem {
