@@ -120,6 +120,7 @@ const Home = () => {
         </Link>
       </div>
       <main className={cx("homeInfoContainer", logoOpacity === 1 && "show")}>
+        <h1 className="sr-only">Andrew Hunt — home</h1>
         {isSmall && (
           <div className="sm-screen-summary-line max-w-[300px] text-center">
             Frontend Engineer ·{" "}

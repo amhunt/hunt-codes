@@ -154,7 +154,8 @@ const Synth = () => {
   );
 
   return (
-    <>
+    <div role="main" aria-label="Space jam studio">
+      <h1 className="sr-only">Space jam studio</h1>
       <div className="synthBackLink">
         <button type="button" onClick={() => startSynthReturn()}>
           <ArrowLeftCircleIcon className="starIcon" size={16} />
@@ -298,7 +299,7 @@ const Synth = () => {
         drag a planet to shape the sound · A–L plays notes · the sun runs the
         beat
       </div>
-    </>
+    </div>
   );
 };
 

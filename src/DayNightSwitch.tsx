@@ -32,7 +32,7 @@ const DayNightSwitch = ({
       )}
       checked={isNightMode}
       onCheckedChange={onCheckedChange}
-      aria-label={isNightMode ? "Switch to day mode" : "Switch to night mode"}
+      aria-label="Night mode"
     >
       <span aria-hidden className="dns-scene dns-scene-day">
         <span className="dns-cloud dns-cloud-1" />

@@ -463,11 +463,12 @@ const SvgGenerator = () => {
             onClick={() => void generateSvg()}
             disabled={loading || !prompt.trim()}
             type="button"
+            aria-label={loading ? "Generating…" : "Generate drawing"}
           >
             {loading ? (
-              <span className="svg-generator-spinner" />
+              <span className="svg-generator-spinner" aria-hidden="true" />
             ) : (
-              <Wand2 size={20} />
+              <Wand2 size={20} aria-hidden="true" />
             )}
           </button>
         </div>
