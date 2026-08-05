@@ -22,20 +22,19 @@ const experienceItems = [
     location: "San Francisco",
     date: "2021 - 2025",
     description: [
-      "Developed, shipped, and iterated on new product features",
-      "Led initiatives to standardize and improve shared components",
+      "Shipped product features end to end across Zip's procurement platform",
+      "Led shared-component standardization — tighter UX consistency, less design/eng thrash",
       {
-        item: "Dev infra — CI/Quality/Dev experience:",
+        item: "Dev infra — CI, quality, and DevX:",
         subbullets: [
-          "TypeScript correctness + coverage CI checks",
-          "Testing: Jest unit testing, Datadog Synthetic tests, and visual regression testing via Storybook/Chromatic",
-          "Built FE/BE logging system with Segment",
+          "TypeScript correctness + coverage gates in CI",
+          "Jest unit tests, Datadog synthetics, and visual regression via Storybook/Chromatic",
+          "Built unified FE/BE logging pipeline with Segment",
         ],
       },
-      "Architected and managed build & deploy systems across Webpack, Jenkins, Docker, S3, Cloudflare, and Webflow",
-      "Built & maintained frontend infrastructure: dev server, Storybook, testing, logging, sourcemaps, TS/React usage, third-party package usage/maintenance",
-      "TypeScript: Enabled TypeScript and led migration of frontend code to 99% type safety",
-      "Performance: Improved page load times by >50%, primarily via code splitting and routing optimizations",
+      "Owned build & deploy across Webpack, Jenkins, Docker, S3, Cloudflare, and Webflow",
+      "Enabled TypeScript and led the frontend migration to 99% type safety",
+      "Cut page load times by >50% via code splitting and routing optimizations",
     ],
   },
   {
@@ -132,7 +131,7 @@ const Resume = () => {
             for a proper sabbatical. A few months of recharging later, I eased
             back in through consulting, helping teams ship polished, AI-powered
             web products. Come fall 2026 I’m looking to go full-time again —
-            either way, reach out to{" "}
+            reach out to{" "}
             <a
               className="inverse"
               href="mailto:andrew@hunt.codes?Subject=Hey%20Andrew"
@@ -149,7 +148,7 @@ const Resume = () => {
             🚀
           </p>
           <div className="resume-divider" />
-          <h2>A few things I care about:</h2>
+          <h2>How I like to work</h2>
           <ul className="hor-list">
             <li>
               <div className="card-title">Dev infrastructure</div>I believe it’s
@@ -167,9 +166,10 @@ const Resume = () => {
               user experience.
             </li>
             <li>
-              <div className="card-title">Product collaboration</div>I excel
-              when collaborating closely with designers + researchers to build
-              delightful, engaging web products.
+              <div className="card-title">Product collaboration</div>
+              The best products come from designers, researchers, and engineers
+              building in the same room — tight feedback loops, shared taste,
+              and a bias toward shipping the delightful details.
             </li>
             <li>
               <div className="card-title">Performance</div>
@@ -179,9 +179,7 @@ const Resume = () => {
             </li>
           </ul>
           <div>
-            <div className="card-title">
-              Tools and frameworks I know fairly well:
-            </div>
+            <div className="card-title">Tools & Frameworks in my orbit</div>
             <div className="flex flex-wrap gap-2 mt-2">
               {tools.map((t) => (
                 <span className="pill tool-pill" key={t}>
@@ -276,7 +274,6 @@ const interests = [
   "Music Production",
   "Politics 😬",
   "Crosswords",
-  "Web3",
 ];
 
 export default Resume;

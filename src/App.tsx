@@ -54,7 +54,7 @@ const ROUTE_TITLES: Record<string, string> = {
   "/": DEFAULT_TITLE,
   "/home": DEFAULT_TITLE,
   "/about": "About Me | Andrew Hunt",
-  "/synth": "Space Jam Studio | Andrew Hunt",
+  "/synth": "Space jam studio | Andrew Hunt",
   "/journey": "The Journey | Andrew Hunt",
   "/draw": "SVG Studio | Andrew Hunt",
 };
