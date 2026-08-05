@@ -5,7 +5,7 @@ import { DecalGeometry } from "three/examples/jsm/geometries/DecalGeometry.js";
 import { mergeVertices } from "three/examples/jsm/utils/BufferGeometryUtils.js";
 
 import { planetPosition, type SolarPlanetConfig } from "./constants";
-import { asteroidOutlineId } from "./BodyAnchors";
+import { asteroidOutlineId } from "../../solarAnchorIds";
 import { writeSilhouette } from "./outline";
 import { createLogoBadgeTexture, createPlanetTexture } from "../textures";
 import { hoverState } from "../../solarHover";

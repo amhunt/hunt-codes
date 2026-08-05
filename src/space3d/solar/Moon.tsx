@@ -5,7 +5,7 @@ import { DecalGeometry } from "three/examples/jsm/geometries/DecalGeometry.js";
 
 import { EARTH, MOON, planetPosition } from "./constants";
 import { applyOffAxisSquash } from "./offAxisSquash";
-import { MOON_VIDEO_OUTLINE_ID } from "./BodyAnchors";
+import { MOON_VIDEO_OUTLINE_ID } from "../../solarAnchorIds";
 import { writeSilhouette } from "./outline";
 import { createLogoBadgeTexture } from "../textures";
 import { hoverState } from "../../solarHover";

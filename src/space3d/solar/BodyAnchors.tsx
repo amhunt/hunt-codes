@@ -12,6 +12,11 @@ import {
 } from "./constants";
 import { projectBody, type ProjectedBody } from "./projection";
 import { liveElementById } from "../svgTracking";
+import {
+  asteroidAnchorId,
+  EARTH_ABOUT_RING_ID,
+  MOON_VIDEO_LINK_ID,
+} from "../../solarAnchorIds";
 
 /**
  * Glues DOM overlay elements to projected 3D bodies (the inverse-gluing
@@ -24,20 +29,10 @@ import { liveElementById } from "../svgTracking";
  * Overlays should default to `visibility: hidden` in CSS; the anchor
  * reveals them once positioned (and hides them again while the body is
  * behind the camera mid-swoop).
+ *
+ * The overlay ids live in solarAnchorIds.ts (three-free) so main-chunk
+ * components can import them without pulling three.js along.
  */
-
-export const EARTH_ABOUT_RING_ID = "earth-about-ring";
-/** Group inside the /about ring holding Earth's hover-outline paths;
- *  Planet writes Earth's projected silhouette into every path under it. */
-export const EARTH_ABOUT_OUTLINE_ID = "earth-about-outline";
-/** The moon's video-link overlay on /about (rendered by Resume) and the
- *  group holding its hover-outline paths (written by Moon). */
-export const MOON_VIDEO_LINK_ID = "moon-video-link";
-export const MOON_VIDEO_OUTLINE_ID = "moon-video-outline";
-export const asteroidAnchorId = (name: string) => `asteroid-link-${name}`;
-/** Group inside the anchor holding the hover-outline paths; Asteroid
- *  writes the projected silhouette into every path under it. */
-export const asteroidOutlineId = (name: string) => `asteroid-outline-${name}`;
 
 interface BodyAnchorConfig {
   domId: string;

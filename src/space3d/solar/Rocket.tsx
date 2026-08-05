@@ -3,7 +3,7 @@ import { useFrame } from "@react-three/fiber";
 import * as THREE from "three";
 
 import { EARTH, planetPosition, type SolarPlanetConfig } from "./constants";
-import { asteroidOutlineId } from "./BodyAnchors";
+import { asteroidOutlineId } from "../../solarAnchorIds";
 import { writeSilhouette } from "./outline";
 import { hoverState } from "../../solarHover";
 
