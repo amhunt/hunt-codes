@@ -10,21 +10,16 @@
     "@radix-ui/react-switch": "^1.3.3",
     "@radix-ui/react-tooltip": "^1.2.12",
     "@react-three/fiber": "^9.0.0",
-    "@types/jest": "^29.5.14",
     "@types/node": "^24.13.3",
     "@types/react-dom": "^19.2.3",
     "classnames": "^2.5.1",
     "clsx": "^2.1.1",
     "husky": "^9.1.7",
-    "identity-obj-proxy": "^3.0.0",
-    "jest": "^30.4.2",
-    "jest-watch-typeahead": "^3.0.1",
     "lint-staged": "^17.0.8",
     "lucide-react": "^0.473.0",
     "postcss": "^8.5.25",
     "prettier": "^3.9.4",
     "react": "^19.2.8",
-    "react-app-polyfill": "^3.0.0",
     "react-dom": "^19.2.8",
     "react-feather": "^2.0.10",
     "react-intersection-observer": "^9.16.0",
@@ -58,7 +53,7 @@
     "knip": "knip",
     "serve": "serve -s build/",
     "deploy": "aws s3 sync build/ s3://hunt.codes --acl public-read --delete --exclude \"*.html\" --exclude \"robots.txt\" --exclude \"sitemap.xml\" --exclude \"site.webmanifest\" --exclude \"asset-manifest.json\" --cache-control \"public,max-age=31536000,immutable\" --profile andrew && aws s3 sync build/ s3://hunt.codes --acl public-read --exclude \"*\" --include \"*.html\" --include \"robots.txt\" --include \"sitemap.xml\" --include \"site.webmanifest\" --include \"asset-manifest.json\" --cache-control \"public,max-age=0,must-revalidate\" --profile andrew",
-    "test": "jest",
+    "test": "bun test",
     "storybook": "storybook dev -p 6006",
     "build-storybook": "storybook build"
   },
@@ -91,62 +86,11 @@
     "eslint-plugin-unicorn": "^71.1.0",
     "eslint-plugin-unused-imports": "^4.4.1",
     "globals": "^17.7.0",
-    "jest-environment-jsdom": "^30.4.1",
     "knip": "^6.25.0",
     "storybook": "^10.5.5",
     "storybook-react-rsbuild": "^3.3.4",
     "tailwindcss": "^4.3.2",
     "typescript-eslint": "^8.63.0"
   },
-  "packageManager": "yarn@4.6.0",
-  "jest": {
-    "roots": [
-      "<rootDir>/src"
-    ],
-    "collectCoverageFrom": [
-      "src/**/*.{js,jsx,ts,tsx}",
-      "!src/**/*.d.ts"
-    ],
-    "setupFiles": [
-      "react-app-polyfill/jsdom"
-    ],
-    "setupFilesAfterEnv": [],
-    "testMatch": [
-      "<rootDir>/src/**/__tests__/**/*.{js,jsx,ts,tsx}",
-      "<rootDir>/src/**/*.{spec,test}.{js,jsx,ts,tsx}"
-    ],
-    "testEnvironment": "jsdom",
-    "transform": {
-      "^.+\\.(js|jsx|mjs|cjs|ts|tsx)$": "<rootDir>/config/jest/babelTransform.js",
-      "^.+\\.(scss|css|png)$": "<rootDir>/config/jest/cssTransform.js"
-    },
-    "transformIgnorePatterns": [
-      "[/\\\\]node_modules[/\\\\].+\\.(js|jsx|mjs|cjs|ts|tsx)$",
-      "^.+\\.module\\.(css|sass|scss)$"
-    ],
-    "modulePaths": [
-      "<rootDir>/src"
-    ],
-    "moduleNameMapper": {
-      "^react-native$": "react-native-web",
-      "^.+\\.module\\.(css|sass|scss)$": "identity-obj-proxy"
-    },
-    "moduleFileExtensions": [
-      "web.js",
-      "js",
-      "web.ts",
-      "ts",
-      "web.tsx",
-      "tsx",
-      "json",
-      "web.jsx",
-      "jsx",
-      "node"
-    ],
-    "watchPlugins": [
-      "jest-watch-typeahead/filename",
-      "jest-watch-typeahead/testname"
-    ],
-    "resetMocks": true
-  }
+  "packageManager": "yarn@4.6.0"
 }
