@@ -195,14 +195,14 @@ const Resume = () => {
           {experienceItems.map((item) => (
             <React.Fragment key={item.title}>
               <div className="splitRow">
-                <h4 className="flex items-center">
+                <h3 className="flex items-center">
                   {item.title}{" "}
                   <span className="pill location-pill">{item.location}</span>
-                </h4>
-                <h4 className="flex items-center gap-2">
+                </h3>
+                <span className="resume-date flex items-center gap-2">
                   {item.date}
                   <Calendar size={12} />
-                </h4>
+                </span>
               </div>
               <ul>
                 {item.description.map((d, idx) => (
@@ -227,12 +227,12 @@ const Resume = () => {
           <div className="resume-divider" />
           <h2>Education</h2>
           <div className="splitRow">
-            <h4 className="flex items-center">
+            <h3 className="flex items-center">
               Princeton University
               <span className="pill location-pill">BSE</span>
               <span className="pill location-pill">Computer Science</span>
-            </h4>
-            <h4>September 2013 — June 2017</h4>
+            </h3>
+            <span className="resume-date">September 2013 — June 2017</span>
           </div>
           <div className="resume-divider" />
           <h2>Other interests</h2>

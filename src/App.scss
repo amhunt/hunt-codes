@@ -1002,6 +1002,14 @@ li > ul > li {
   padding: 24px 32px 64px;
   background: rgba(8, 6, 28, 0.82);
   border-radius: 16px;
+
+  // Cap the measure of running text — the monospace body ran 92–114
+  // characters per line at full panel width. Headings, pill rows, and the
+  // .hor-list card grid keep the full width.
+  p,
+  > ul:not(.hor-list) {
+    max-width: 72ch;
+  }
 }
 
 .App.day .resume-panel {
@@ -1017,10 +1025,17 @@ li > ul > li {
   align-items: center;
 }
 
+// Dates in the experience/education rows: metadata, not headings
+.resume-date {
+  font-size: 14px;
+  font-weight: 400;
+  opacity: 0.75;
+}
+
 .pill {
   border-radius: 16px;
-  padding: 3px 8px;
-  font-size: 10px;
+  padding: 3px 10px;
+  font-size: 12px;
   color: white;
   font-weight: 500;
   text-transform: uppercase;
