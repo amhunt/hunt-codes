@@ -26,9 +26,10 @@ the preview tool.
 - `corepack yarn start` — rsbuild dev server (port 3000, HMR)
 - `corepack yarn tsc --noEmit` / `corepack yarn lint` / `corepack yarn build`
   — run all three to verify changes
+- `corepack yarn test` — runs `bun test` (see "Testing preferences")
 - `corepack yarn knip` — known false positives: `postcss`, `tw-animate-css`
-  (used via CSS), `serve`, jest config paths, and a few intentionally-kept
-  exports. Don't chase these.
+  (used via CSS), `serve`, and a few intentionally-kept exports. Don't chase
+  these.
 - `yarn deploy` — S3 sync with `--profile andrew` (hashed assets immutable,
   HTML/manifest no-cache). Never deploy unprompted.
 - `./server/deploy.sh` — redeploy the `/api` Lambda after editing
@@ -114,6 +115,9 @@ Invariants worth knowing:
 - Verify with `tsc` + `lint` + `build`; keep browser/visual checking under
   ~2 minutes — Andrew tests visually himself. Screenshots are optional
   confirmation, not proof.
+- The test runner is **Bun**, not jest: `bunfig.toml` preloads `happydom.ts`,
+  specs import from `bun:test`, and CI runs `bun test`. `yarn test` is wired
+  to it. There is exactly one smoke test (`src/App.test.js`).
 - The preview tool throttles rAF while hidden: frame-driven intros (star
   fade-in, camera swoops) advance ~5 frames per screenshot, so "missing"
   stars/labels are usually just a starved clock, not a bug. If a
