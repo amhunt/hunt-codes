@@ -6065,7 +6065,7 @@ __metadata:
     husky: "npm:^9.1.7"
     knip: "npm:^6.25.0"
     lint-staged: "npm:^17.0.8"
-    lucide-react: "npm:^0.473.0"
+    lucide-react: "npm:^1.28.0"
     postcss: "npm:^8.5.25"
     prettier: "npm:^3.9.4"
     react: "npm:^19.2.8"
@@ -6076,7 +6076,7 @@ __metadata:
     sass: "npm:^1.101.0"
     storybook: "npm:^10.5.5"
     storybook-react-rsbuild: "npm:^3.3.4"
-    tailwind-merge: "npm:^2.6.0"
+    tailwind-merge: "npm:^3.6.0"
     tailwindcss: "npm:^4.3.2"
     three: "npm:^0.185.1"
     tinycolor2: "npm:^1.6.0"
@@ -6998,12 +6998,12 @@ __metadata:
   languageName: node
   linkType: hard
 
-"lucide-react@npm:^0.473.0":
-  version: 0.473.0
-  resolution: "lucide-react@npm:0.473.0"
+"lucide-react@npm:^1.28.0":
+  version: 1.28.0
+  resolution: "lucide-react@npm:1.28.0"
   peerDependencies:
     react: ^16.5.1 || ^17.0.0 || ^18.0.0 || ^19.0.0
-  checksum: 10c0/0e6911eb2b5332165bdbca6f951a49e9f1162502a9641edea8bae29c0307d720b86bbbcc17fa909c3d0748fbcb8088eb33bb6f627a1cab1118a259b63ee7a38c
+  checksum: 10c0/7a18911a68d6227865ca03120e3423665478131648ffbd47d62b242ef25a5982c6312ca7041b5a4d60cf0d8ea66d0f97f50dbe848ae60ab0143471da41ef057e
   languageName: node
   linkType: hard
 
@@ -9305,10 +9305,10 @@ __metadata:
   languageName: node
   linkType: hard
 
-"tailwind-merge@npm:^2.6.0":
-  version: 2.6.0
-  resolution: "tailwind-merge@npm:2.6.0"
-  checksum: 10c0/fc8a5535524de9f4dacf1c16ab298581c7bb757d68a95faaf28942b1c555a619bba9d4c6726fe83986e44973b315410c1a5226e5354c30ba82353bd6d2288fa5
+"tailwind-merge@npm:^3.6.0":
+  version: 3.6.0
+  resolution: "tailwind-merge@npm:3.6.0"
+  checksum: 10c0/a728d929f4786bcb48641db4228cc8c006a7545491783a658fb4d24d177dab960620991d17805a047309228de50ab949ca8d9e112c30183da0432367796ae186
   languageName: node
   linkType: hard
 
