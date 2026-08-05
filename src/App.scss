@@ -26,7 +26,8 @@ $breakpoint-lg: 1280px;
     color: #e8e6f5;
   }
 
-  .homeInfoContainer a {
+  .homeInfoContainer a,
+  .homeInfoContainer button {
     color: $purp-light;
   }
 
@@ -56,7 +57,7 @@ $breakpoint-lg: 1280px;
   }
 
   .svg-generator-input::placeholder {
-    color: rgba(20, 20, 40, 0.4);
+    color: rgba(20, 20, 40, 0.65);
   }
 
   // These are styled for the night sky only — keep them legible by day
@@ -66,13 +67,18 @@ $breakpoint-lg: 1280px;
     border-color: rgba(0, 0, 0, 0.15);
 
     &::placeholder {
-      color: rgba(20, 20, 40, 0.4);
+      color: rgba(20, 20, 40, 0.65);
     }
   }
 
-  .svg-generator-caption-text,
-  .svg-generator-gallery-name {
+  .svg-generator-caption-text {
     color: rgba(20, 20, 40, 0.7);
+  }
+
+  // The cards stay dark in both palettes, but 0.45 black composites to a
+  // mid-gray over the day gradient — deepen it so the white names hold up
+  .svg-generator-gallery-card {
+    background: rgba(0, 0, 0, 0.8);
   }
 
   .svg-generator-gallery-title {
@@ -99,6 +105,25 @@ $breakpoint-lg: 1280px;
   .interest-pill {
     color: #24203a;
     background-color: #cdbcff;
+  }
+
+  // .inverse links are tuned for the night sky — swap back to the standard
+  // day link colors on the white panel
+  .inverse {
+    color: $purp;
+
+    &:hover {
+      color: #010c73;
+    }
+  }
+
+  // The cyan icon-circle fill is invisible over the cream gradient
+  .icon-pill {
+    background: rgba(65, 37, 150, 0.12);
+
+    &:hover {
+      background: rgba(65, 37, 150, 0.24);
+    }
   }
 }
 
@@ -788,15 +813,15 @@ p {
 
 .scroll-hint-label {
   font-family: "Inconsolata", monospace;
-  font-size: 9px;
+  font-size: 12px;
   font-weight: 500;
-  letter-spacing: 0.32em;
+  letter-spacing: 0.18em;
   // The tracking adds a trailing gap on the last letter; nudge it back so
   // the caption reads as centered over the chevron
-  text-indent: 0.32em;
+  text-indent: 0.18em;
   text-transform: uppercase;
   white-space: nowrap;
-  color: rgba(255, 255, 255, 0.5);
+  color: rgba(255, 255, 255, 0.75);
   // Arrives after the chevron has settled, so the motion is noticed first
   // and the words explain it second
   transition:
@@ -822,7 +847,7 @@ p {
   }
 
   .scroll-hint-label {
-    color: rgba(60, 40, 90, 0.65);
+    color: rgba(36, 32, 58, 0.9);
   }
 
   .scroll-hint:hover .scroll-hint-label {
@@ -841,9 +866,7 @@ p {
   }
 
   .scroll-hint-label {
-    font-size: 8px;
-    letter-spacing: 0.22em;
-    text-indent: 0.22em;
+    font-size: 11px;
   }
 }
 
@@ -2439,7 +2462,7 @@ $dns-ease: cubic-bezier(0.45, 0.05, 0.25, 1.2);
   box-sizing: border-box;
 
   &::placeholder {
-    color: rgba(255, 255, 255, 0.3);
+    color: rgba(255, 255, 255, 0.55);
   }
 
   &:focus {
@@ -2474,7 +2497,7 @@ $dns-ease: cubic-bezier(0.45, 0.05, 0.25, 1.2);
   box-sizing: border-box;
 
   &::placeholder {
-    color: rgba(255, 255, 255, 0.3);
+    color: rgba(255, 255, 255, 0.55);
   }
 
   &:focus {
@@ -2717,7 +2740,7 @@ $dns-ease: cubic-bezier(0.45, 0.05, 0.25, 1.2);
   font-weight: 400;
   letter-spacing: 2px;
   text-transform: uppercase;
-  color: rgba(255, 255, 255, 0.45);
+  color: rgba(255, 255, 255, 0.6);
   margin: 0 0 12px;
 }
 
