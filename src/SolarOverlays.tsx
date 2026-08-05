@@ -12,7 +12,7 @@ import {
   asteroidOutlineId,
   EARTH_ABOUT_OUTLINE_ID,
   EARTH_ABOUT_RING_ID,
-} from "./space3d/solar/BodyAnchors";
+} from "./solarAnchorIds";
 import { hoverState } from "./solarHover";
 import {
   journeyState,

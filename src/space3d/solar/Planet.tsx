@@ -6,7 +6,7 @@ import { planetPosition, type SolarPlanetConfig } from "./constants";
 import { applyOffAxisSquash } from "./offAxisSquash";
 import { createPlanetTexture } from "../textures";
 import { hoverState } from "../../solarHover";
-import { EARTH_ABOUT_OUTLINE_ID } from "./BodyAnchors";
+import { EARTH_ABOUT_OUTLINE_ID } from "../../solarAnchorIds";
 import { writeSilhouette } from "./outline";
 import AboutRing from "./AboutRing";
 import InteractiveGlow from "./InteractiveGlow";

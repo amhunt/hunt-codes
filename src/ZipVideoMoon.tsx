@@ -10,7 +10,7 @@ import {
 import {
   MOON_VIDEO_LINK_ID,
   MOON_VIDEO_OUTLINE_ID,
-} from "./space3d/solar/BodyAnchors";
+} from "./solarAnchorIds";
 import { BodyOutline } from "./SolarOverlays";
 import { hoverState } from "./solarHover";
 
