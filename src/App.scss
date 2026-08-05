@@ -904,6 +904,22 @@ p {
   }
 }
 
+// The identity line carries the container's full size; the typed greeting
+// plays second fiddle
+.typed-greeting {
+  font-size: 16px;
+
+  @media (min-width: $breakpoint-lg) {
+    font-size: 18px;
+  }
+}
+
+.availability-line {
+  font-size: 14px;
+  opacity: 0.75;
+  margin-top: 2px;
+}
+
 .homePageBackLink {
   position: absolute;
   top: env(safe-area-inset-top, 0px);
