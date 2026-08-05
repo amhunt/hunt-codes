@@ -1012,6 +1012,18 @@ li > ul > li {
   color: #eeeeee;
   transition-delay: 500ms;
 
+  // Left gutter for the moon (the Zip-video link): without it the panel
+  // runs under the moon and the link reads as a dead spot over the text.
+  // Below lg the gutter shrinks with the viewport but keeps the panel at
+  // the same 680px the lg rule below yields at 1280 — so the layout is
+  // continuous across the breakpoint — and never drops under 200px, which
+  // is the moon's widest projection on a portrait tablet. Paired with
+  // aboutMoonNdcX() in CameraRig, which parks the moon at this gutter's
+  // center: change one, change the other.
+  @media (min-width: $breakpoint-sm) {
+    padding-left: max(200px, calc(100vw - 680px));
+  }
+
   @media (min-width: 1280px) {
     padding-left: 600px;
   }
