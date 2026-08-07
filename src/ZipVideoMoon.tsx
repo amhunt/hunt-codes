@@ -73,6 +73,11 @@ const ZipVideoMoon = ({
           {/* The click that opened the popover is the user gesture that
               allows autoplay with sound */}
           <video src="/zip-brand-launch.mp4" controls autoPlay playsInline />
+          <p className="zip-video-caption">
+            A promo video I made for the UI changes we shipped as part of
+            Zip&rsquo;s brand redesign in 2023 — built in After Effects and
+            Premiere.
+          </p>
         </div>
       </div>
     );

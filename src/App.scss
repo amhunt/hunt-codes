@@ -1929,12 +1929,31 @@ body.rocket-journey #rocket-cockpit {
   video {
     display: block;
     width: 100%;
-    max-height: 82vh;
+    // Was 82vh before the caption existed; the popover is centred in the
+    // viewport and the close button sits 44px above it, so the video gives
+    // back enough height for two caption lines to stay on screen
+    max-height: 72vh;
     object-fit: contain;
     background: #000;
     border-radius: 12px;
     box-shadow: 0 12px 48px rgba(0, 0, 0, 0.65);
   }
+}
+
+// What the reel actually is. Sits over the bare starfield (video-mode
+// cleared everything else), so it takes the same day/night treatment as
+// the close button rather than assuming a dark backdrop.
+.zip-video-caption {
+  margin: 14px auto 0;
+  max-width: 62ch;
+  text-align: center;
+  font-size: 0.9rem;
+  line-height: 1.5;
+  color: #cfcbe4;
+}
+
+.App.day .zip-video-caption {
+  color: #3a3454;
 }
 
 .zip-video-close {
