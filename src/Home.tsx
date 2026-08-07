@@ -122,7 +122,7 @@ const Home = () => {
       <main className={cx("homeInfoContainer", logoOpacity === 1 && "show")}>
         <h1 className="sr-only">Andrew Hunt — home</h1>
         {isSmall && (
-          <div className="sm-screen-summary-line max-w-[300px] text-center">
+          <div className="sm-screen-summary-line max-w-75 text-center">
             Frontend Engineer ·{" "}
             {/* Keep the city pair together — at 240px this broke after the
                 strikethrough and orphaned "NYC" onto its own line, which
@@ -138,7 +138,7 @@ const Home = () => {
         )}
         <div className="hoverableHomeItem justify-between gap-6">
           {!isSmall && (
-            <div className="max-w-[300px] text-left">
+            <div className="max-w-75 text-left">
               <div className="font-bold">
                 Frontend Engineer based in{" "}
                 <s className="opacity-70 decoration-[#ff6b6b] decoration-2">
