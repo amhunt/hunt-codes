@@ -5916,13 +5916,13 @@ __metadata:
     husky: "npm:^9.1.7"
     knip: "npm:^6.31.0"
     lint-staged: "npm:^17.3.0"
-    lucide-react: "npm:^1.28.0"
-    postcss: "npm:^8.5.25"
+    lucide-react: "npm:^1.30.0"
+    postcss: "npm:^8.5.26"
     prettier: "npm:^3.9.6"
     react: "npm:^19.2.8"
     react-dom: "npm:^19.2.8"
     react-feather: "npm:^2.0.10"
-    react-intersection-observer: "npm:^9.16.0"
+    react-intersection-observer: "npm:^11.0.0"
     react-router-dom: "npm:^7.18.2"
     sass: "npm:^1.102.0"
     storybook: "npm:^10.5.6"
@@ -6804,12 +6804,12 @@ __metadata:
   languageName: node
   linkType: hard
 
-"lucide-react@npm:^1.28.0":
-  version: 1.28.0
-  resolution: "lucide-react@npm:1.28.0"
+"lucide-react@npm:^1.30.0":
+  version: 1.30.0
+  resolution: "lucide-react@npm:1.30.0"
   peerDependencies:
     react: ^16.5.1 || ^17.0.0 || ^18.0.0 || ^19.0.0
-  checksum: 10c0/7a18911a68d6227865ca03120e3423665478131648ffbd47d62b242ef25a5982c6312ca7041b5a4d60cf0d8ea66d0f97f50dbe848ae60ab0143471da41ef057e
+  checksum: 10c0/9631a04f7873eca357b036c37be6b1b4da15e10c783b9f7de2d260d826d4c62591e2bb75c229fb6251d1b9998abbaa2d41bf8067d9c6cd8b51f442d7ed383c08
   languageName: node
   linkType: hard
 
@@ -7704,7 +7704,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"postcss@npm:^8.4.4, postcss@npm:^8.5.15, postcss@npm:^8.5.25":
+"postcss@npm:^8.4.4, postcss@npm:^8.5.15":
   version: 8.5.25
   resolution: "postcss@npm:8.5.25"
   dependencies:
@@ -7715,7 +7715,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"postcss@npm:^8.5.16":
+"postcss@npm:^8.5.16, postcss@npm:^8.5.26":
   version: 8.5.26
   resolution: "postcss@npm:8.5.26"
   dependencies:
@@ -7865,16 +7865,16 @@ __metadata:
   languageName: node
   linkType: hard
 
-"react-intersection-observer@npm:^9.16.0":
-  version: 9.16.0
-  resolution: "react-intersection-observer@npm:9.16.0"
+"react-intersection-observer@npm:^11.0.0":
+  version: 11.0.0
+  resolution: "react-intersection-observer@npm:11.0.0"
   peerDependencies:
     react: ^17.0.0 || ^18.0.0 || ^19.0.0
     react-dom: ^17.0.0 || ^18.0.0 || ^19.0.0
   peerDependenciesMeta:
     react-dom:
       optional: true
-  checksum: 10c0/2aee5103fb460c6e5a3ab5a4fdc8c69a5215e23699a12d7857f25ba765fed48eacbed94ca835d79edf00c0edcc9c4fbb5bb057a373402d0551718546810e0e48
+  checksum: 10c0/cecfdc1b2d939749d6fbc27ac0957515529bff5d0fbba751bb6b4473961636d9bb7f663e8d7d8afff476e06ac8d6627fd19bc022320916d286aae96017ea57e8
   languageName: node
   linkType: hard
 
