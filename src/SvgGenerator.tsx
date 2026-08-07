@@ -411,11 +411,11 @@ const SvgGenerator = () => {
     <div className="svg-generator-page">
       <div className="svg-generator-back-link">
         <Link
-          aria-label="Back to landing page"
           className="mt-4 flex items-center gap-1 transition-transform"
           to="/"
         >
-          <Star className="starIcon" size={16} />
+          <Star aria-hidden="true" className="starIcon" size={16} />
+          <span>back to orbit</span>
         </Link>
       </div>
 

@@ -10,6 +10,7 @@ import "./App.scss";
 
 import Home from "./Home";
 import Journey from "./Journey";
+import NotFound from "./NotFound";
 import Resume from "./Resume";
 import RocketCockpit from "./RocketCockpit";
 import Synth from "./Synth";
@@ -58,6 +59,8 @@ const ROUTE_TITLES: Record<string, string> = {
   "/journey": "The Journey | Andrew Hunt",
   "/draw": "SVG Studio | Andrew Hunt",
 };
+// Anything else lands on the catch-all 404 route
+const NOT_FOUND_TITLE = "Lost in space | Andrew Hunt";
 
 // The static index.html head serves every route of the SPA; keep the tab
 // title and canonical URL in sync as the visitor navigates
@@ -67,7 +70,7 @@ const RouteMeta = () => {
     document.title =
       ROUTE_TITLES[pathname] ??
       // Drawing permalinks (/draw/:id) share the studio's title
-      (pathname.startsWith("/draw/") ? ROUTE_TITLES["/draw"] : DEFAULT_TITLE);
+      (pathname.startsWith("/draw/") ? ROUTE_TITLES["/draw"] : NOT_FOUND_TITLE);
     document
       .querySelector('link[rel="canonical"]')
       ?.setAttribute(
@@ -120,6 +123,7 @@ const App = () => {
           <Route path="/journey" element={<Journey />} />
           <Route path="/draw" element={<SvgGenerator />} />
           <Route path="/draw/:id" element={<SvgGenerator />} />
+          <Route path="*" element={<NotFound />} />
         </Routes>
         {/* App-level so the windshield frame and warp flash survive the
             rides' mid-flight route hops (/home → /journey → /home) —

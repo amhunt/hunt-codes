@@ -13,14 +13,15 @@ import { badgeHoverState } from "./badgeState";
  */
 const BadgeLink = ({ isNightMode }: { isNightMode: boolean }) => {
   const { pathname } = useLocation();
-  // Landing: decorative only (you're already home). /about and /draw:
-  // page content flows over the corner. Day-mode /home: the Golden Gate
-  // Bridge owns the corner. The coin hides in the same cases
+  // Landing: decorative only (you're already home). Day-mode /home: the
+  // Golden Gate Bridge owns the corner. The coin hides in the same cases
   // (Space3DBackground) — an invisible link over other content would
   // hijack clicks.
   const visible =
     pathname === "/synth" ||
     pathname === "/journey" ||
+    pathname === "/about" ||
+    pathname.startsWith("/draw") ||
     (pathname === "/home" && isNightMode);
   if (!visible) return null;
 

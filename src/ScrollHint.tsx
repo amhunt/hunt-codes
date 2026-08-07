@@ -12,18 +12,24 @@ import { scrollTransitionState } from "./scrollTransition";
 
 /**
  * Where each stop actually goes, for the tooltip and the screen-reader
- * label. The visible caption stays generic, but these have to name the
- * real destination — telling someone on /home that the chevron explores
- * the solar system describes the trip they just finished, not the résumé
- * they are about to reach.
+ * label. These have to name the real destination — telling someone on
+ * /home that the chevron explores the solar system describes the trip
+ * they just finished, not the résumé they are about to reach.
  */
 const DESTINATION_TEXT: Record<1 | 2, string> = {
   1: "Scroll or click around to explore the solar system",
-  2: "Scroll or click to travel on to the résumé",
+  2: "Scroll on to the résumé — or click to travel there",
 };
 
-/** The wide-tracked caption above the chevron */
-const SCROLL_HINT_LABEL = "Scroll or click to explore";
+/**
+ * The wide-tracked caption above the chevron. Generic on the landing page
+ * (the whole solar system is next); on /home it names the résumé, the one
+ * stop left on the journey.
+ */
+const CAPTION_TEXT: Record<1 | 2, string> = {
+  1: "Scroll or click to explore",
+  2: "Scroll on to the résumé",
+};
 
 type ScrollHintProps = {
   /**
@@ -89,7 +95,7 @@ const ScrollHint = ({
             {/* aria-hidden: the button's own label already says this, and
                 more fully — this copy is the visible shorthand */}
             <span className="scroll-hint-label" aria-hidden="true">
-              {SCROLL_HINT_LABEL}
+              {CAPTION_TEXT[target]}
             </span>
             <ChevronDown className="scroll-hint-chevron" size={30} />
           </button>

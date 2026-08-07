@@ -1615,12 +1615,26 @@ a:hover {
 // While the video plays, `video-mode` on <body> hides everything except
 // the stars: the solar canvas, the name letters, the mode toggle, and
 // the music player/toggle. The résumé panel hides itself (.video-hidden).
+//
+// The moon is a video link on /home as well as /about, so the home chrome
+// joins the list — including the body overlays (.asteroid-link,
+// .earth-about-ring), which BodyAnchors keeps glued to projections that
+// are no longer drawn once .solar-canvas fades. Left visible they'd be
+// invisible-but-hoverable rings floating over the video. The backdrop is
+// deliberately transparent (the stars stay), so anything not listed here
+// really does show through.
 body.video-mode {
   .solar-canvas,
   .nameTitle,
   .day-night-switch,
   audio,
-  .music-toggle {
+  .music-toggle,
+  .homeInfoContainer,
+  .homePageBackLink,
+  .asteroid-link,
+  .earth-about-ring,
+  .scroll-hint,
+  .badge-link {
     opacity: 0 !important;
     pointer-events: none !important;
   }
@@ -1915,12 +1929,31 @@ body.rocket-journey #rocket-cockpit {
   video {
     display: block;
     width: 100%;
-    max-height: 82vh;
+    // Was 82vh before the caption existed; the popover is centred in the
+    // viewport and the close button sits 44px above it, so the video gives
+    // back enough height for two caption lines to stay on screen
+    max-height: 72vh;
     object-fit: contain;
     background: #000;
     border-radius: 12px;
     box-shadow: 0 12px 48px rgba(0, 0, 0, 0.65);
   }
+}
+
+// What the reel actually is. Sits over the bare starfield (video-mode
+// cleared everything else), so it takes the same day/night treatment as
+// the close button rather than assuming a dark backdrop.
+.zip-video-caption {
+  margin: 14px auto 0;
+  max-width: 62ch;
+  text-align: center;
+  font-size: 0.9rem;
+  line-height: 1.5;
+  color: #cfcbe4;
+}
+
+.App.day .zip-video-caption {
+  color: #3a3454;
 }
 
 .zip-video-close {
@@ -2438,8 +2471,8 @@ $dns-ease: cubic-bezier(0.45, 0.05, 0.25, 1.2);
 
   > a {
     color: $purp-light;
-    padding: 4px;
-    border-radius: 50%;
+    padding: 4px 10px 4px 4px;
+    border-radius: 999px;
 
     &:hover {
       background: $purp-light-transparent-25;
@@ -2837,4 +2870,55 @@ $dns-ease: cubic-bezier(0.45, 0.05, 0.25, 1.2);
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
+}
+
+// The catch-all 404 (NotFound.tsx) — a lone beacon in the starfield
+.not-found-page {
+  position: fixed;
+  inset: 0;
+  z-index: 5;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 4px;
+  padding: 0 24px;
+  text-align: center;
+  font-family: "Inconsolata", monospace;
+  color: #e8e6f5;
+
+  h1 {
+    margin: 0;
+    font-size: 32px;
+    font-weight: 700;
+    letter-spacing: 2px;
+    text-shadow: 0 0 24px $purp-light-transparent;
+  }
+
+  p {
+    margin: 0;
+    font-size: 14px;
+    letter-spacing: 0.5px;
+    opacity: 0.8;
+  }
+
+  a {
+    margin-top: 20px;
+    color: $purp-light;
+    letter-spacing: 1px;
+    padding: 6px 14px;
+    border-radius: 999px;
+
+    &:hover {
+      background: $purp-light-transparent-25;
+    }
+  }
+}
+
+.App.day .not-found-page {
+  color: #24203a;
+
+  a {
+    color: $purp;
+  }
 }
