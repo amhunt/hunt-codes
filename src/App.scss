@@ -1615,12 +1615,26 @@ a:hover {
 // While the video plays, `video-mode` on <body> hides everything except
 // the stars: the solar canvas, the name letters, the mode toggle, and
 // the music player/toggle. The résumé panel hides itself (.video-hidden).
+//
+// The moon is a video link on /home as well as /about, so the home chrome
+// joins the list — including the body overlays (.asteroid-link,
+// .earth-about-ring), which BodyAnchors keeps glued to projections that
+// are no longer drawn once .solar-canvas fades. Left visible they'd be
+// invisible-but-hoverable rings floating over the video. The backdrop is
+// deliberately transparent (the stars stay), so anything not listed here
+// really does show through.
 body.video-mode {
   .solar-canvas,
   .nameTitle,
   .day-night-switch,
   audio,
-  .music-toggle {
+  .music-toggle,
+  .homeInfoContainer,
+  .homePageBackLink,
+  .asteroid-link,
+  .earth-about-ring,
+  .scroll-hint,
+  .badge-link {
     opacity: 0 !important;
     pointer-events: none !important;
   }

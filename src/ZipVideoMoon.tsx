@@ -15,12 +15,14 @@ import { BodyOutline } from "./SolarOverlays";
 import { hoverState } from "./solarHover";
 
 /**
- * The /about moon as a video link: an invisible overlay that BodyAnchors
- * glues to the moon's projection (same plumbing as the asteroid links),
- * with a tooltip and the shared pulsing hover outline. Clicking it opens
- * the Zip brand-redesign launch reel in a ~80vw popover; `video-mode` on
- * <body> hides everything but the stars behind it (App.scss), and Resume
- * hides its own panel via the lifted `open` state.
+ * The moon as a video link, on /about and /home: an invisible overlay that
+ * BodyAnchors glues to the moon's projection (same plumbing as the
+ * asteroid links), with a tooltip and the shared pulsing hover outline.
+ * Clicking it opens the Zip brand-redesign launch reel in a ~80vw popover;
+ * `video-mode` on <body> hides everything but the stars behind it
+ * (App.scss), and Resume additionally hides its own panel via the lifted
+ * `open` state. Both routes own that state, so neither can mount this
+ * twice — and only one route is mounted at a time anyway.
  *
  * While the popover is open the overlay itself is unmounted — BodyAnchors
  * skips absent elements, so there's nothing left hovering over the video.

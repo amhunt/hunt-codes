@@ -128,11 +128,17 @@ const SolarScene = ({
           closeUp={view === "about"}
         />
       ))}
+      {/* No moon on the landing view: from the top-down framing it reads as
+          a stray speck beside Earth rather than a body, and its orbit ring
+          crosses Earth's. It fades in on the way to the home perch, where
+          there's room to read it — and where it becomes the video link. */}
       <Moon
         orbitColor={isNightMode ? "#ffffff" : "#141428"}
         orbitOpacity={isNightMode ? 0.28 : 0.2}
-        revealed={planetsRevealed && !hideHomeExtras}
-        linkActive={view === "about"}
+        revealed={planetsRevealed && !hideHomeExtras && !isLanding}
+        // The video link needs the moon actually on screen: /about always,
+        // /home only at the widths where hideHomeExtras keeps it
+        linkActive={view === "about" || (view === "home" && !hideHomeExtras)}
       />
       {/* Link bodies — home view only: on landing they'd read as clutter
           around the sun, and on /about their DOM overlays don't exist, so

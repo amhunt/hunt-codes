@@ -22,10 +22,11 @@ import moonMapUrl from "../../assets/moon.jpg";
  * emissive) so the /about camera — which perches over the moon's far side
  * — still reads it when that face is turned away from the sun.
  *
- * On /about the moon doubles as a video link (the Zip brand-launch reel —
- * see ZipVideoMoon): play-icon badges are decaled onto the surface, and
- * hovering the DOM overlay brightens the moon and pulses its silhouette
- * outline, matching the other link bodies.
+ * On /about and /home the moon doubles as a video link (the Zip
+ * brand-launch reel — see ZipVideoMoon): play-icon badges are decaled onto
+ * the surface, and hovering the DOM overlay brightens the moon and pulses
+ * its silhouette outline, matching the other link bodies. It is absent
+ * from the landing view entirely (SolarScene gates `revealed`).
  */
 /** Fade duration for the landing-intro reveal */
 const REVEAL_SECONDS = 0.8;
@@ -47,7 +48,8 @@ export default function Moon({
   orbitOpacity: number;
   /** Fades the moon + its orbit ring in (landing intro) */
   revealed?: boolean;
-  /** The video link only exists on /about — gate the clickable halo */
+  /** The video link only exists on /about and /home — gate the clickable
+   *  halo to the views whose overlay is mounted */
   linkActive?: boolean;
 }) {
   const earthGroup = useRef<THREE.Group>(null);
@@ -181,8 +183,8 @@ export default function Moon({
       orbitMaterial.current.opacity = orbitOpacity * revealOpacity.current;
     }
 
-    // Video-link hover (the /about overlay): brighten the moonshine and
-    // hand the silhouette to the overlay's pulsing outline paths
+    // Video-link hover (the /about and /home overlay): brighten the
+    // moonshine and hand the silhouette to the overlay's pulsing outline
     const hovered = hoverState.moon;
     if (surfaceMaterial.current) {
       const ease = Math.min(delta * 6, 1);

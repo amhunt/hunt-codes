@@ -8,6 +8,7 @@ import useWindowSize from "./useWindowSize";
 import useScrollJourney from "./useScrollJourney";
 import SolarOverlays from "./SolarOverlays";
 import ScrollHint from "./ScrollHint";
+import ZipVideoMoon from "./ZipVideoMoon";
 import { JOURNEY_STOPS } from "./scrollTransition";
 
 import {
@@ -51,6 +52,11 @@ const Home = () => {
 
   const size = useWindowSize();
   const isSmall = size === "sm";
+  // The moon's video popover (ZipVideoMoon), same as /about. Below lg the
+  // moon sits out of the home view entirely (SolarScene's hideHomeExtras),
+  // so there'd be nothing for the overlay to glue itself to.
+  const [videoOpen, setVideoOpen] = useState(false);
+  const moonLinkActive = size === "lg";
 
   const typedEl = useRef<HTMLSpanElement>(null);
 
@@ -110,6 +116,11 @@ const Home = () => {
   return (
     <>
       <SolarOverlays />
+      {/* The moon doubles as the Zip brand-video link here too (overlay +
+          popover); `video-mode` on <body> hides the rest of the page */}
+      {moonLinkActive && (
+        <ZipVideoMoon open={videoOpen} onOpenChange={setVideoOpen} />
+      )}
       <div className="homePageBackLink">
         <Link
           className={cx("mt-4 flex items-center gap-1 transition-transform")}

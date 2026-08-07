@@ -8,7 +8,7 @@
 export const hoverState = {
   sun: false,
   earth: false,
-  /** The moon's video-link overlay on /about */
+  /** The moon's video-link overlay on /about and /home */
   moon: false,
   /** Name of the hovered link asteroid (constants.ts ASTEROIDS), or null */
   asteroid: null as string | null,
