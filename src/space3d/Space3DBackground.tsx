@@ -65,10 +65,10 @@ const Space3DBackground = ({
         <StarField isLanding={isLanding} opacityTarget={isNightMode ? 1 : 0} />
         {/* The corner "hunt.codes" medallion rides the star canvas rather
             than bringing its own WebGL context (three contexts tripped
-            Chrome's per-domain cap and strobed the stars). Hidden where
-            something else owns the corner: /about + /draw (page content)
-            and day-mode /home (the Golden Gate Bridge). */}
-        {!isAboutPage && !(isHomePage && !isNightMode) && (
+            Chrome's per-domain cap and strobed the stars). Hidden only
+            where something else owns the corner: day-mode /home (the
+            Golden Gate Bridge). */}
+        {!(isHomePage && !isNightMode) && (
           <BadgeBoundary>
             <Suspense fallback={null}>
               <BadgeMedallion />

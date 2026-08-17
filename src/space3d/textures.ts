@@ -219,11 +219,17 @@ const RSS_MARK_PATH =
   "909 24h-4.665c0-6.169-5.075-11.245-11.244-11.245V8.09c8.727 0 15.909 " +
   "7.184 15.909 15.91z";
 
-/** A simple play triangle (Material Design play arrow), in a 24x24
- *  viewBox — the moon's "watch the video" badge. */
-const PLAY_MARK_PATH = "M8 5v14l11-7z";
+/** A movie camera (Material Design videocam), in a 24x24 viewBox — the
+ *  moon's "watch the video" badge. Chosen over a bare play triangle
+ *  because the moon links a film someone made, not a generic media
+ *  control; it also survives the decal better than a clapperboard or film
+ *  strip, whose sprocket holes and stripes mud together at moon scale.
+ *  Body and lens wedge are both solid, so it needs no even-odd fill. */
+const VIDEO_MARK_PATH =
+  "M17 10.5V7c0-.55-.45-1-1-1H4c-.55 0-1 .45-1 1v10c0 .55.45 1 1 1h12c.55 " +
+  "0 1-.45 1-1v-3.5l4 4v-11l-4 4z";
 
-export type AsteroidLogo = "github" | "linkedin" | "blog" | "play";
+export type AsteroidLogo = "github" | "linkedin" | "blog" | "video";
 
 const LOGO_MARKS: Record<
   AsteroidLogo,
@@ -233,7 +239,10 @@ const LOGO_MARKS: Record<
   // The square marks are scaled down so they don't overwhelm the asteroid
   linkedin: { path: LINKEDIN_MARK_PATH, color: "#0a66c2", scale: 0.6 },
   blog: { path: RSS_MARK_PATH, color: "#f26522", scale: 0.6 },
-  play: { path: PLAY_MARK_PATH, color: "#412596", scale: 0.85 },
+  // Wider than the play triangle it replaced (18 viewBox units vs 11), so
+  // it steps down a notch to keep the same visual weight on the moon and
+  // to stop the decal wrapping further around the limb
+  video: { path: VIDEO_MARK_PATH, color: "#412596", scale: 0.8 },
 };
 
 /** Brand mark on a transparent canvas — a "sticker" decal for the link

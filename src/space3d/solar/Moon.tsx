@@ -22,17 +22,18 @@ import moonMapUrl from "../../assets/moon.jpg";
  * emissive) so the /about camera — which perches over the moon's far side
  * — still reads it when that face is turned away from the sun.
  *
- * On /about the moon doubles as a video link (the Zip brand-launch reel —
- * see ZipVideoMoon): play-icon badges are decaled onto the surface, and
- * hovering the DOM overlay brightens the moon and pulses its silhouette
- * outline, matching the other link bodies.
+ * On /about and /home the moon doubles as a video link (the Zip
+ * brand-launch reel — see ZipVideoMoon): movie-camera badges are decaled
+ * onto the surface, and hovering the DOM overlay brightens the moon and
+ * pulses its silhouette outline, matching the other link bodies. It is
+ * absent from the landing view entirely (SolarScene gates `revealed`).
  */
 /** Fade duration for the landing-intro reveal */
 const REVEAL_SECONDS = 0.8;
 
-/** Play badges around the equator: 3 at 120° apart, so from any camera
- *  angle at least one is within 60° of facing the viewer (the moon's
- *  self-spin is glacial — a single badge could hide for minutes). */
+/** Movie-camera badges around the equator: 3 at 120° apart, so from any
+ *  camera angle at least one is within 60° of facing the viewer (the
+ *  moon's self-spin is glacial — a single badge could hide for minutes). */
 const BADGE_YAWS = [0, (2 * Math.PI) / 3, (4 * Math.PI) / 3];
 
 const moonWorldPos = new THREE.Vector3();
@@ -47,7 +48,8 @@ export default function Moon({
   orbitOpacity: number;
   /** Fades the moon + its orbit ring in (landing intro) */
   revealed?: boolean;
-  /** The video link only exists on /about — gate the clickable halo */
+  /** The video link only exists on /about and /home — gate the clickable
+   *  halo to the views whose overlay is mounted */
   linkActive?: boolean;
 }) {
   const earthGroup = useRef<THREE.Group>(null);
@@ -76,12 +78,12 @@ export default function Moon({
   );
   useEffect(() => () => geometry.dispose(), [geometry]);
 
-  // Play-icon stickers on the surface (same decal treatment as the
+  // Movie-camera stickers on the surface (same decal treatment as the
   // asteroid badges), riding the moon's slow self-spin
   const badgeMaterial = useMemo(
     () =>
       new THREE.MeshBasicMaterial({
-        map: createLogoBadgeTexture("play"),
+        map: createLogoBadgeTexture("video"),
         transparent: true,
         depthWrite: false,
         polygonOffset: true,
@@ -181,8 +183,8 @@ export default function Moon({
       orbitMaterial.current.opacity = orbitOpacity * revealOpacity.current;
     }
 
-    // Video-link hover (the /about overlay): brighten the moonshine and
-    // hand the silhouette to the overlay's pulsing outline paths
+    // Video-link hover (the /about and /home overlay): brighten the
+    // moonshine and hand the silhouette to the overlay's pulsing outline
     const hovered = hoverState.moon;
     if (surfaceMaterial.current) {
       const ease = Math.min(delta * 6, 1);
@@ -206,7 +208,7 @@ export default function Moon({
         />
       </lineLoop>
       <group ref={moonGroup}>
-        {/* clickable-body affordance halo (video link, /about only) */}
+        {/* clickable-body affordance halo (video link, /about and /home) */}
         <InteractiveGlow
           radius={MOON.radius}
           opacityRef={revealOpacity}
@@ -225,7 +227,7 @@ export default function Moon({
                 emissiveIntensity={0.22}
                 transparent
               />
-              {/* Play-icon stickers, riding the spin with the surface */}
+              {/* Movie-camera stickers, riding the spin with the surface */}
               {badgeGeometries.map((badgeGeometry, i) => (
                 <mesh
                   key={i}
