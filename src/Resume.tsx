@@ -96,16 +96,27 @@ const Resume = () => {
 
   return (
     <main className="resume-container" style={{ opacity: opacity ? 1 : 0 }}>
-      {/* The moon doubles as the Zip brand-video link (overlay + popover) */}
-      <ZipVideoMoon open={videoOpen} onOpenChange={setVideoOpen} />
+      {/* The moon doubles as the Zip brand-video link (overlay + popover).
+          Not on phones: the panel is full-bleed there and the moon sits
+          behind it (CameraRig's aboutMoonNdcX returns null), so the
+          invisible overlay would just be a 165px tap trap over the intro
+          paragraph and whatever scrolls under it. Home gates it the same
+          way (moonLinkActive); SolarScene drops the moon's link halo to
+          match. */}
+      {size !== "sm" && (
+        <ZipVideoMoon open={videoOpen} onOpenChange={setVideoOpen} />
+      )}
       {/* The link lives outside .resume-panel so the frosted background
-          starts above the "About Me" heading, not around the link */}
+          starts above the "About Me" heading, not around the link.
+          w-fit: as a flex row it would otherwise stretch to the panel's
+          full width, and once it goes sticky (xl) that invisible strip
+          rides over the résumé and steals clicks from the text under it. */}
       <div
         className={cx("resume-inner-container", videoOpen && "video-hidden")}
       >
         <Link
           className={cx(
-            "back-to-home-link flex transition-transform items-center gap-4 mb-6 inverse ml-8 xl:sticky xl:top-[200px] xl:-ml-8",
+            "back-to-home-link flex w-fit transition-transform items-center gap-4 mb-6 inverse ml-8 xl:sticky xl:top-[200px] xl:-ml-8",
             !inView && isLarge && "-translate-x-32",
           )}
           to="/home"

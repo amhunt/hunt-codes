@@ -136,9 +136,14 @@ const SolarScene = ({
         orbitColor={isNightMode ? "#ffffff" : "#141428"}
         orbitOpacity={isNightMode ? 0.28 : 0.2}
         revealed={planetsRevealed && !hideHomeExtras && !isLanding}
-        // The video link needs the moon actually on screen: /about always,
-        // /home only at the widths where hideHomeExtras keeps it
-        linkActive={view === "about" || (view === "home" && !hideHomeExtras)}
+        // The video link needs the moon actually on screen AND clickable:
+        // /about above phone widths (on phones the panel is full-bleed
+        // and Resume doesn't mount the overlay — the moon hides behind
+        // the résumé), /home only at the widths where hideHomeExtras
+        // keeps it
+        linkActive={
+          (view === "about" && !isPhone) || (view === "home" && !hideHomeExtras)
+        }
       />
       {/* Link bodies — home view only: on landing they'd read as clutter
           around the sun, and on /about their DOM overlays don't exist, so
