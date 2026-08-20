@@ -96,12 +96,12 @@ type SplitGeometry = {
   caret: THREE.BufferGeometry;
 };
 
-// Partition a non-indexed monogram geometry into the "A" and the caret bar
-// by each triangle's centroid x. Returns two fresh BufferGeometries.
-const splitMonogram = (
+// Partition a geometry's triangles by a predicate on each centroid
+// (geometry-local coords). Returns two fresh BufferGeometries.
+const partitionTriangles = (
   geo: THREE.BufferGeometry,
-  splitX: number,
-): SplitGeometry => {
+  test: (cx: number, cy: number, cz: number) => boolean,
+): { hit: THREE.BufferGeometry; miss: THREE.BufferGeometry } => {
   // Guard against an indexed re-export of the GLB: the per-triangle walk
   // below assumes triangle soup
   const soup = geo.index ? geo.toNonIndexed() : geo;
@@ -109,12 +109,17 @@ const splitMonogram = (
   const nor = soup.getAttribute("normal");
   const uv = soup.getAttribute("uv");
 
-  const letter = { p: [] as number[], n: [] as number[], u: [] as number[] };
-  const caret = { p: [] as number[], n: [] as number[], u: [] as number[] };
+  const hit = { p: [] as number[], n: [] as number[], u: [] as number[] };
+  const miss = { p: [] as number[], n: [] as number[], u: [] as number[] };
 
   for (let t = 0; t < pos.count; t += 3) {
-    const centroidX = (pos.getX(t) + pos.getX(t + 1) + pos.getX(t + 2)) / 3;
-    const target = centroidX > splitX ? caret : letter;
+    const target = test(
+      (pos.getX(t) + pos.getX(t + 1) + pos.getX(t + 2)) / 3,
+      (pos.getY(t) + pos.getY(t + 1) + pos.getY(t + 2)) / 3,
+      (pos.getZ(t) + pos.getZ(t + 1) + pos.getZ(t + 2)) / 3,
+    )
+      ? hit
+      : miss;
     for (let k = 0; k < 3; k++) {
       const i = t + k;
       target.p.push(pos.getX(i), pos.getY(i), pos.getZ(i));
@@ -133,7 +138,17 @@ const splitMonogram = (
     return g;
   };
 
-  return { letter: build(letter), caret: build(caret) };
+  return { hit: build(hit), miss: build(miss) };
+};
+
+// Split the monogram into the "A" and the caret bar by centroid x (the two
+// are cleanly separated in monogram-local space).
+const splitMonogram = (
+  geo: THREE.BufferGeometry,
+  splitX: number,
+): SplitGeometry => {
+  const parts = partitionTriangles(geo, (cx) => cx > splitX);
+  return { letter: parts.miss, caret: parts.hit };
 };
 
 const BadgeMedallion = () => {
@@ -169,6 +184,7 @@ const BadgeMedallion = () => {
     const gold: { material: THREE.MeshStandardMaterial | null } = {
       material: null,
     };
+    const disc: { mesh: THREE.Mesh | null } = { mesh: null };
     root.traverse((child) => {
       const mesh = child as THREE.Mesh;
       if (!mesh.isMesh) return;
@@ -177,6 +193,7 @@ const BadgeMedallion = () => {
         // The authored gold — the recolor pass borrows it for rim + bolts.
         gold.material = mesh.material as THREE.MeshStandardMaterial;
       }
+      if (mesh.name === "disc") disc.mesh = mesh;
       if ((mesh.material as THREE.MeshStandardMaterial)?.name === "lilac")
         lilacMeshes.push(mesh);
       if (mesh.name.startsWith("star_")) boltMeshes.push(mesh);
@@ -204,13 +221,12 @@ const BadgeMedallion = () => {
       mono.geometry = buildSignatureGeometry(
         parts.letter.boundingBox as THREE.Box3,
       );
-      // Light cerulean, with its own glow: the signature stroke is far
-      // thinner than the block "A", so it needs the lift to stay legible
-      // at 140px.
+      // White, with its own glow: the signature stroke is far thinner than
+      // the block "A", so it needs the lift to stay legible at 140px.
       const sigMat = (mono.material as THREE.MeshStandardMaterial).clone();
-      sigMat.color.set("#5bc2e7");
-      sigMat.emissive.set("#2286b8");
-      sigMat.emissiveIntensity = 0.55;
+      sigMat.color.set("#ffffff");
+      sigMat.emissive.set("#ffffff");
+      sigMat.emissiveIntensity = 0.35;
       mono.material = sigMat;
       // The caret is its own white, blinking material (a separate clone so
       // toggling its opacity leaves the "A" fully lit).
@@ -268,6 +284,43 @@ const BadgeMedallion = () => {
         slot.rotation.z = BOLT_SLOT_ANGLES[i % BOLT_SLOT_ANGLES.length];
         mesh.add(slot);
       });
+    }
+
+    // Blacken the coin face, keeping the indigo accent ring that peeks out
+    // past the gold rim. Face and accent are one authored mesh/material, so
+    // split the disc's triangles radially — the seam sits mid-rim, hidden
+    // under the gold ring. Both meshes are authored rotated (the disc's
+    // local axis is y), so measure radii in the coin's frame via each
+    // node's local matrix.
+    const rimFront = lilacMeshes.find((mesh) => mesh.name === "rim_front");
+    if (disc.mesh && rimFront) {
+      // .matrix can be stale until the first render — compose both now.
+      rimFront.updateMatrix();
+      disc.mesh.updateMatrix();
+      const v = new THREE.Vector3();
+      const rimPos = rimFront.geometry.getAttribute("position");
+      let rimInner = Infinity;
+      let rimOuter = 0;
+      for (let i = 0; i < rimPos.count; i++) {
+        v.fromBufferAttribute(rimPos, i).applyMatrix4(rimFront.matrix);
+        const r = Math.hypot(v.x, v.y);
+        rimInner = Math.min(rimInner, r);
+        rimOuter = Math.max(rimOuter, r);
+      }
+      const coreRadius = (rimInner + rimOuter) / 2;
+      const face = disc.mesh;
+      const parts = partitionTriangles(face.geometry, (cx, cy, cz) => {
+        v.set(cx, cy, cz).applyMatrix4(face.matrix);
+        return Math.hypot(v.x, v.y) < coreRadius;
+      });
+      const indigo = face.material as THREE.MeshStandardMaterial;
+      const blackMat = indigo.clone();
+      blackMat.color.set("#08080d");
+      face.geometry = parts.hit;
+      face.material = blackMat;
+      // The accent ring rides inside the disc node, keeping the authored
+      // indigo and inheriting the disc's transform.
+      face.add(new THREE.Mesh(parts.miss, indigo));
     }
 
     const bounds = new THREE.Box3().setFromObject(root);
