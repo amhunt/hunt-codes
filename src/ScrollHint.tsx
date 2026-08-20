@@ -7,6 +7,7 @@ import {
   TooltipContent,
   TooltipProvider,
   TooltipTrigger,
+  TOOLTIP_DELAY_MS,
 } from "./ui/tooltip";
 import { scrollTransitionState } from "./scrollTransition";
 
@@ -73,7 +74,7 @@ const ScrollHint = ({
   }, [delayMs]);
 
   return (
-    <TooltipProvider delayDuration={100}>
+    <TooltipProvider delayDuration={TOOLTIP_DELAY_MS}>
       <Tooltip disableHoverableContent>
         <TooltipTrigger asChild>
           <button
