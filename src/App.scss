@@ -1426,11 +1426,11 @@ button {
 button:hover,
 a:hover {
   text-decoration: underline;
-  // Hover keeps the space cursor, recolored to the interactive palette
-  // (cyan→purple, same family as the hover halos) instead of dropping to
-  // the stock OS pointer; `pointer` stays as the fallback keyword
+  // Hover swaps to the mac-style pointing hand, recolored to the
+  // interactive palette (cyan→purple, same family as the hover halos);
+  // `pointer` stays as the fallback keyword. Hotspot = the fingertip.
   cursor:
-    url(./cursor_pointer.svg) 0 6,
+    url(./cursor_pointer.svg) 6 1,
     pointer;
 }
 
