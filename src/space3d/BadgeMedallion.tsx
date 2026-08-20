@@ -30,13 +30,16 @@ import badgeUrl from "../assets/hunt-codes-badge.glb";
 
 // Monogram-local x: the "A" spans ~0–6.24, the caret bar ~6.97–8.33.
 const CARET_SPLIT_X = 6.5;
-// The signature-A mark (the favicon logo), traced from
-// a-signature-logo.svg; extruded in place of the authored block "A".
+// The signature-A mark (the favicon logo, "Asset 2" export); extruded in
+// place of the authored block "A".
+const SIGNATURE_VIEWBOX = "0 0 173.91 198.63";
 const SIGNATURE_D =
-  "M297.7,437l1.3.4,2.6.5,2.6.2h1.3c0,0,2.6-.4,2.6-.4l1.3-.3,2.5-.9,2.4-1.2,1.1-.7,2.1-1.6,1-.9,1.7-2,.8-1.1,1.3-2.3,1-2.5.6-2.6.2-1.3v-2.6c.1,0-2.4-113.1-2.4-113.1h70.2l19.1-19.7-20.4-17.1h-69.6l-4.7-212v-1.7c-.1,0-.5-2.2-.5-2.2l-.4-1.6-.8-2.1-.6-1.2-.8-1.5-1.3-1.8-1.1-1.3-.9-.9-1.7-1.4-1.1-.7-1.5-.8-2-.9-1.6-.5-2.2-.5-1.7-.2h-2.2c0,0-2.6.2-2.6.2l-2.6.6-1.6.5-2.4,1.1-2.2,1.4-2,1.7-1.8,1.9-1.3,1.8-135.6,222.3h-72.7s-2.4.4-2.4.4l-1.2.3-2.3.8-2.2,1.1-1,.6-1.9,1.5-1.7,1.7-1.5,1.9-1.2,2.1-.5,1.1-.8,2.3-.3,1.2-.2,1.2-.2,2.4.2,2.4.5,2.4.8,2.3.5,1.1,1.2,2.1,1.5,1.9,45.9,34.1-69.2,113.4-1.2,2.3-.9,2.4-.3,1.3-.2,1.3-.2,2.6v2.6c.1,0,.6,2.6.6,2.6l.8,2.5,1.1,2.4.7,1.1,1.6,2.1,1.8,1.9,2,1.6,2.2,1.4,2.4,1.1,2.5.7,2.6.4h2.6c0,0,2.6-.2,2.6-.2l2.6-.6,2.4-.9,2.3-1.2,2.1-1.5,1-.9,1.8-1.9,1.5-2.1,68.8-112.8,157.3,82.4,2.4,1ZM158.3,320.1l9.6-15.7h113.6l1.8,81.2-125-65.5ZM277.5,124.7l3.2,142.9h-90.3l87.2-142.9Z";
+  "M173.91,111.43l-13.26-11.12h-27.69l-1.95-87.93-.06-.9-.2-1.34-.27-1.08-.47-1.3-.88-1.72-.78-1.12-.73-.86-1.61-1.46-1.65-1.06-1.22-.58-1.08-.39-1.31-.33-1.11-.17-1.59-.08-1.38.12-1.63.33-1.1.34-1.44.64-1.41.85-1.3,1.04-1.14,1.19-.96,1.28-57.65,94.51-29.24.02-1.54.17-.89.19-1.39.45-1.4.65-.8.47-1.15.86-1.12,1.07-.99,1.23-.81,1.33-.87,2.17-.36,1.65-.13,1.71.08,1.29.27,1.55.48,1.5.35.82.71,1.27,1.26,1.7,17.41,12.92L1.86,179.31l-.66,1.24-.6,1.53-.43,1.76-.18,1.76.06,1.4.25,1.63.46,1.58.66,1.52.47.84.89,1.25,1.11,1.22,1.28,1.07,1.39.89,1.49.7,1.58.5,2.54.44,48.11-14.74,3.09-18.38-16.73-1.58-9.38,3.67,13.93-20.84,64.96,34.01,1.4.59.92.29,1.53.31,1.85.14.78-.04,1.51-.2.94-.21,1.47-.5,1.49-.72.85-.52,1.2-.92.72-.67,1.01-1.16.57-.79.76-1.32.64-1.54.44-1.62.16-.95.09-1.68-.99-45.05h28l12.43-12.82ZM106.64,56.17l.98,44.14h-27.9l26.93-44.14ZM64.36,125.49l.75-1.24h43.03l.54,24.49-44.33-23.26Z";
 
 /** How far past the authored "A" bbox the signature mark may spill */
 const SIGNATURE_OVERSIZE = 1.3;
+/** Per-bolt slot rotations — varied so the screws read as hand-driven */
+const BOLT_SLOT_ANGLES = [0.5, 1.4, 2.3, 3];
 
 // Extrude the signature mark and center it on the bbox the authored "A"
 // occupied (same depth, SIGNATURE_OVERSIZE× the footprint), so the coin
@@ -45,7 +48,7 @@ const buildSignatureGeometry = (
   letterBox: THREE.Box3,
 ): THREE.BufferGeometry => {
   const svg = new SVGLoader().parse(
-    `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><path fill="#000" fill-rule="evenodd" d="${SIGNATURE_D}"/></svg>`,
+    `<svg xmlns="http://www.w3.org/2000/svg" viewBox="${SIGNATURE_VIEWBOX}"><path fill="#000" fill-rule="evenodd" d="${SIGNATURE_D}"/></svg>`,
   );
   const shapes = svg.paths.flatMap((p) => SVGLoader.createShapes(p));
   const depth = letterBox.max.z - letterBox.min.z || 0.5;
@@ -155,12 +158,28 @@ const BadgeMedallion = () => {
   const { object, caretMaterial, coinDiameter } = useMemo(() => {
     const root = gltf.scene.clone(true);
 
-    // The monogram is authored only on the front face — find it, then
-    // process outside the traversal (we're about to graft new nodes on).
+    // The monogram is authored only on the front face — find it (plus the
+    // lilac rim pieces and the four rivet spheres for the recolor pass
+    // below), then process outside the traversal (we're about to graft new
+    // nodes on).
     let monogram: THREE.Mesh | null = null;
+    const lilacMeshes: THREE.Mesh[] = [];
+    const boltMeshes: THREE.Mesh[] = [];
+    // Same holder trick as `caret` below, so the type survives the closure.
+    const gold: { material: THREE.MeshStandardMaterial | null } = {
+      material: null,
+    };
     root.traverse((child) => {
       const mesh = child as THREE.Mesh;
-      if (mesh.isMesh && mesh.name === "monogram_A") monogram = mesh;
+      if (!mesh.isMesh) return;
+      if (mesh.name === "monogram_A") {
+        monogram = mesh;
+        // The authored gold — the recolor pass borrows it for rim + bolts.
+        gold.material = mesh.material as THREE.MeshStandardMaterial;
+      }
+      if ((mesh.material as THREE.MeshStandardMaterial)?.name === "lilac")
+        lilacMeshes.push(mesh);
+      if (mesh.name.startsWith("star_")) boltMeshes.push(mesh);
     });
 
     // A holder (not a bare `let`) so its type survives the closures above.
@@ -185,14 +204,16 @@ const BadgeMedallion = () => {
       mono.geometry = buildSignatureGeometry(
         parts.letter.boundingBox as THREE.Box3,
       );
-      // The signature stroke is far thinner than the block "A", so it needs
-      // its own glow to stay legible at 140px on the purple face.
+      // Light cerulean, with its own glow: the signature stroke is far
+      // thinner than the block "A", so it needs the lift to stay legible
+      // at 140px.
       const sigMat = (mono.material as THREE.MeshStandardMaterial).clone();
-      sigMat.emissive.set("#f0b429");
+      sigMat.color.set("#5bc2e7");
+      sigMat.emissive.set("#2286b8");
       sigMat.emissiveIntensity = 0.55;
       mono.material = sigMat;
       // The caret is its own white, blinking material (a separate clone so
-      // toggling its opacity leaves the gold "A" fully lit).
+      // toggling its opacity leaves the "A" fully lit).
       const caretMat = (mono.material as THREE.MeshStandardMaterial).clone();
       caretMat.color.set("#ffffff");
       caretMat.emissive.set("#ffffff");
@@ -205,12 +226,48 @@ const BadgeMedallion = () => {
       // Mirror the whole "A|" onto the back face: a 180°-about-Y pivot maps
       // the front monogram to the reverse side, reading correctly from
       // behind. The clone shares the caret material, so both bars blink in
-      // sync, and shares the gold "A" material.
+      // sync, and shares the "A" material.
       const back = mono.clone(true);
       const pivot = new THREE.Group();
       pivot.rotation.y = Math.PI;
       pivot.add(back);
       (mono.parent as THREE.Object3D).add(pivot);
+    }
+
+    // Recolor pass: the lilac rim/edge band goes gold (borrowing the
+    // authored monogram metal), and the four cyan rivets become gold
+    // flathead bolt-heads.
+    if (gold.material) {
+      const rimGold = gold.material.clone();
+      lilacMeshes.forEach((mesh) => {
+        mesh.material = rimGold;
+      });
+
+      const boltGold = gold.material.clone();
+      const slotMat = new THREE.MeshStandardMaterial({
+        color: "#2a1c05", // shadowed metal at the bottom of the groove
+        metalness: 0.5,
+        roughness: 0.65,
+      });
+      boltMeshes.forEach((mesh, i) => {
+        mesh.material = boltGold;
+        mesh.geometry.computeBoundingSphere();
+        const cap = mesh.geometry.boundingSphere as THREE.Sphere;
+        // A thin dark box sunk across the cap reads as the flathead slot;
+        // each bolt gets its own angle, like hand-driven screws.
+        const slot = new THREE.Mesh(
+          new THREE.BoxGeometry(
+            cap.radius * 1.5,
+            cap.radius * 0.3,
+            cap.radius * 0.5,
+          ),
+          slotMat,
+        );
+        slot.position.copy(cap.center);
+        slot.position.z += cap.radius * 0.82;
+        slot.rotation.z = BOLT_SLOT_ANGLES[i % BOLT_SLOT_ANGLES.length];
+        mesh.add(slot);
+      });
     }
 
     const bounds = new THREE.Box3().setFromObject(root);
