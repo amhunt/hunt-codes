@@ -2,7 +2,7 @@
   <!-- The macOS pointing-hand ("pointer") silhouette — index finger up,
        curled-finger knuckle bumps, thumb at the left — recolored to the
        site's interactive palette -->
-  <path d="M6.8 22 L6.8 5 C6.8 1.6 11.2 1.6 11.2 5 L11.2 12.8 C11.3 11.1 14.5 11.1 14.6 12.9 L14.6 13.5 C14.8 11.9 17.7 12 17.8 13.8 L17.8 14.4 C18 13 20.6 13.1 20.6 14.9 L20.6 23.5 C20.6 29.8 17.2 34 12.4 34 C9.7 34 7.5 33.2 5.9 31.2 L2.4 26.2 C1.1 24.2 1.7 22 3.8 21.6 C5.1 21.4 6 22.1 6.8 23.4 Z" fill="url(#paint0_angular_ptr)" stroke="white" stroke-width="2" stroke-linejoin="round" />
+  <path d="M6.8 17.6 L6.8 4.3 C6.8 1.7 11.2 1.7 11.2 4.3 L11.2 10.4 C11.3 9.1 14.5 9.1 14.6 10.5 L14.6 11 C14.8 9.7 17.7 9.8 17.8 11.2 L17.8 11.7 C18 10.6 20.6 10.7 20.6 12.1 L20.6 18.8 C20.6 23.7 17.2 27 12.4 27 C9.7 27 7.5 26.3 5.9 24.8 L2.4 20.9 C1.1 19.3 1.7 17.6 3.8 17.3 C5.1 17.1 6 17.7 6.8 18.7 Z" fill="url(#paint0_angular_ptr)" stroke="white" stroke-width="2" stroke-linejoin="round" />
   <defs>
     <radialGradient id="paint0_angular_ptr" cx="0" cy="0" r="1" gradientUnits="userSpaceOnUse" gradientTransform="translate(1 35.6179) rotate(-34.7306) scale(38.8153 38.6988)">
       <stop offset="0.0228442" stop-color="#5efffc" stop-opacity="0.8" />
