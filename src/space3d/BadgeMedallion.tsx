@@ -3,6 +3,8 @@ import * as THREE from "three";
 import { useFrame, useLoader } from "@react-three/fiber";
 import { GLTFLoader } from "three/examples/jsm/loaders/GLTFLoader.js";
 
+import { SVGLoader } from "three/examples/jsm/loaders/SVGLoader.js";
+
 import { badgeHoverState } from "../badgeState";
 import badgeUrl from "../assets/hunt-codes-badge.glb";
 
@@ -28,6 +30,49 @@ import badgeUrl from "../assets/hunt-codes-badge.glb";
 
 // Monogram-local x: the "A" spans ~0–6.24, the caret bar ~6.97–8.33.
 const CARET_SPLIT_X = 6.5;
+// The signature-A mark (the favicon logo), traced from
+// a-signature-logo.svg; extruded in place of the authored block "A".
+const SIGNATURE_D =
+  "M297.7,437l1.3.4,2.6.5,2.6.2h1.3c0,0,2.6-.4,2.6-.4l1.3-.3,2.5-.9,2.4-1.2,1.1-.7,2.1-1.6,1-.9,1.7-2,.8-1.1,1.3-2.3,1-2.5.6-2.6.2-1.3v-2.6c.1,0-2.4-113.1-2.4-113.1h70.2l19.1-19.7-20.4-17.1h-69.6l-4.7-212v-1.7c-.1,0-.5-2.2-.5-2.2l-.4-1.6-.8-2.1-.6-1.2-.8-1.5-1.3-1.8-1.1-1.3-.9-.9-1.7-1.4-1.1-.7-1.5-.8-2-.9-1.6-.5-2.2-.5-1.7-.2h-2.2c0,0-2.6.2-2.6.2l-2.6.6-1.6.5-2.4,1.1-2.2,1.4-2,1.7-1.8,1.9-1.3,1.8-135.6,222.3h-72.7s-2.4.4-2.4.4l-1.2.3-2.3.8-2.2,1.1-1,.6-1.9,1.5-1.7,1.7-1.5,1.9-1.2,2.1-.5,1.1-.8,2.3-.3,1.2-.2,1.2-.2,2.4.2,2.4.5,2.4.8,2.3.5,1.1,1.2,2.1,1.5,1.9,45.9,34.1-69.2,113.4-1.2,2.3-.9,2.4-.3,1.3-.2,1.3-.2,2.6v2.6c.1,0,.6,2.6.6,2.6l.8,2.5,1.1,2.4.7,1.1,1.6,2.1,1.8,1.9,2,1.6,2.2,1.4,2.4,1.1,2.5.7,2.6.4h2.6c0,0,2.6-.2,2.6-.2l2.6-.6,2.4-.9,2.3-1.2,2.1-1.5,1-.9,1.8-1.9,1.5-2.1,68.8-112.8,157.3,82.4,2.4,1ZM158.3,320.1l9.6-15.7h113.6l1.8,81.2-125-65.5ZM277.5,124.7l3.2,142.9h-90.3l87.2-142.9Z";
+
+/** How far past the authored "A" bbox the signature mark may spill */
+const SIGNATURE_OVERSIZE = 1.3;
+
+// Extrude the signature mark and center it on the bbox the authored "A"
+// occupied (same depth, SIGNATURE_OVERSIZE× the footprint), so the coin
+// layout, caret, and back-face mirror all keep working unchanged.
+const buildSignatureGeometry = (
+  letterBox: THREE.Box3,
+): THREE.BufferGeometry => {
+  const svg = new SVGLoader().parse(
+    `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><path fill="#000" fill-rule="evenodd" d="${SIGNATURE_D}"/></svg>`,
+  );
+  const shapes = svg.paths.flatMap((p) => SVGLoader.createShapes(p));
+  const depth = letterBox.max.z - letterBox.min.z || 0.5;
+  const geo = new THREE.ExtrudeGeometry(shapes, {
+    depth,
+    bevelEnabled: false,
+    curveSegments: 10,
+  });
+  // SVG y grows downward; flip via rotation, not a mirror scale, so the
+  // triangle winding survives (a negative scale gets backface-culled).
+  geo.rotateX(Math.PI);
+  geo.computeBoundingBox();
+  let box = geo.boundingBox as THREE.Box3;
+  const fit = Math.min(
+    (letterBox.max.x - letterBox.min.x) / (box.max.x - box.min.x),
+    (letterBox.max.y - letterBox.min.y) / (box.max.y - box.min.y),
+  );
+  // Oversize past the authored "A" footprint: the thin signature stroke
+  // needs the presence, and its tail drifting into the caret's lane is fine.
+  geo.scale(fit * SIGNATURE_OVERSIZE, fit * SIGNATURE_OVERSIZE, 1);
+  geo.computeBoundingBox();
+  box = geo.boundingBox as THREE.Box3;
+  const from = box.getCenter(new THREE.Vector3());
+  const to = letterBox.getCenter(new THREE.Vector3());
+  geo.translate(to.x - from.x, to.y - from.y, letterBox.min.z - box.min.z);
+  return geo;
+};
 // Match a text caret's cadence: ~530ms visible, ~530ms hidden.
 const CARET_HALF_PERIOD_S = 0.53;
 const SPIN_SPEED = 0.6; // rad/s → ~10s per revolution
@@ -43,11 +88,17 @@ const FILL = 0.88;
 /** Above the stars (z 0), well inside the ortho frustum (camera z 1000) */
 const BADGE_Z = 200;
 
-type SplitGeometry = { letter: THREE.BufferGeometry; caret: THREE.BufferGeometry };
+type SplitGeometry = {
+  letter: THREE.BufferGeometry;
+  caret: THREE.BufferGeometry;
+};
 
 // Partition a non-indexed monogram geometry into the "A" and the caret bar
 // by each triangle's centroid x. Returns two fresh BufferGeometries.
-const splitMonogram = (geo: THREE.BufferGeometry, splitX: number): SplitGeometry => {
+const splitMonogram = (
+  geo: THREE.BufferGeometry,
+  splitX: number,
+): SplitGeometry => {
   // Guard against an indexed re-export of the GLB: the per-triangle walk
   // below assumes triangle soup
   const soup = geo.index ? geo.toNonIndexed() : geo;
@@ -72,8 +123,10 @@ const splitMonogram = (geo: THREE.BufferGeometry, splitX: number): SplitGeometry
   const build = (part: { p: number[]; n: number[]; u: number[] }) => {
     const g = new THREE.BufferGeometry();
     g.setAttribute("position", new THREE.Float32BufferAttribute(part.p, 3));
-    if (part.n.length) g.setAttribute("normal", new THREE.Float32BufferAttribute(part.n, 3));
-    if (part.u.length) g.setAttribute("uv", new THREE.Float32BufferAttribute(part.u, 2));
+    if (part.n.length)
+      g.setAttribute("normal", new THREE.Float32BufferAttribute(part.n, 3));
+    if (part.u.length)
+      g.setAttribute("uv", new THREE.Float32BufferAttribute(part.u, 2));
     return g;
   };
 
@@ -111,17 +164,33 @@ const BadgeMedallion = () => {
     });
 
     // A holder (not a bare `let`) so its type survives the closures above.
-    const caret: { material: THREE.MeshStandardMaterial | null } = { material: null };
+    const caret: { material: THREE.MeshStandardMaterial | null } = {
+      material: null,
+    };
 
     if (monogram && (monogram as THREE.Mesh).parent) {
       const mono = monogram as THREE.Mesh;
       const parts = splitMonogram(mono.geometry, CARET_SPLIT_X);
-      if (process.env.NODE_ENV !== "production" && !parts.caret.getAttribute("position")?.count) {
+      if (
+        process.env.NODE_ENV !== "production" &&
+        !parts.caret.getAttribute("position")?.count
+      ) {
         console.warn(
           "BadgeMedallion: caret split found no caret triangles — did a GLB re-export move the monogram? Check CARET_SPLIT_X.",
         );
       }
-      mono.geometry = parts.letter;
+      // Swap the authored block "A" for the signature mark, fitted to the
+      // same footprint; the blinking caret bar stays as authored.
+      parts.letter.computeBoundingBox();
+      mono.geometry = buildSignatureGeometry(
+        parts.letter.boundingBox as THREE.Box3,
+      );
+      // The signature stroke is far thinner than the block "A", so it needs
+      // its own glow to stay legible at 140px on the purple face.
+      const sigMat = (mono.material as THREE.MeshStandardMaterial).clone();
+      sigMat.emissive.set("#f0b429");
+      sigMat.emissiveIntensity = 0.55;
+      mono.material = sigMat;
       // The caret is its own white, blinking material (a separate clone so
       // toggling its opacity leaves the gold "A" fully lit).
       const caretMat = (mono.material as THREE.MeshStandardMaterial).clone();
@@ -192,7 +261,8 @@ const BadgeMedallion = () => {
 
     if (!reducedMotion.current) {
       spin.rotation.y +=
-        delta * (SPIN_SPEED + (SPIN_SPEED_HOVER - SPIN_SPEED) * hoverEase.current);
+        delta *
+        (SPIN_SPEED + (SPIN_SPEED_HOVER - SPIN_SPEED) * hoverEase.current);
     }
     if (caretMaterial) {
       const visible = reducedMotion.current
