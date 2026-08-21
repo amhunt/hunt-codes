@@ -18,17 +18,18 @@ import { scrollTransitionState } from "./scrollTransition";
  * they just finished, not the resume they are about to reach.
  */
 const DESTINATION_TEXT: Record<1 | 2, string> = {
-  1: "Scroll or click around to explore the solar system",
+  1: "Scroll or click to explore",
   2: "Scroll on to the resume — or click to travel there",
 };
 
 /**
- * The wide-tracked caption above the chevron. Generic on the landing page
- * (the whole solar system is next); on /home it stays short — the tooltip
- * and screen-reader label (DESTINATION_TEXT) name the resume destination.
+ * The wide-tracked caption above the chevron. The landing page runs
+ * caption-less — the bouncing chevron carries it, and the tooltip says the
+ * rest on hover; on /home it stays short — the tooltip and screen-reader
+ * label (DESTINATION_TEXT) name the resume destination.
  */
-const CAPTION_TEXT: Record<1 | 2, string> = {
-  1: "Scroll or click to explore",
+const CAPTION_TEXT: Record<1 | 2, string | null> = {
+  1: null,
   2: "Scroll on",
 };
 
@@ -95,9 +96,11 @@ const ScrollHint = ({
           >
             {/* aria-hidden: the button's own label already says this, and
                 more fully — this copy is the visible shorthand */}
-            <span className="scroll-hint-label" aria-hidden="true">
-              {CAPTION_TEXT[target]}
-            </span>
+            {CAPTION_TEXT[target] && (
+              <span className="scroll-hint-label" aria-hidden="true">
+                {CAPTION_TEXT[target]}
+              </span>
+            )}
             <ChevronDown className="scroll-hint-chevron" size={30} />
           </button>
         </TooltipTrigger>

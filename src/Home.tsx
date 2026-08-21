@@ -53,6 +53,9 @@ const Home = () => {
 
   const size = useWindowSize();
   const isSmall = size === "sm";
+  // 768–999px: the five icon pills squeezed the headline to ~100px, so the
+  // row wraps there — contact links on top, the work samples underneath
+  const isMedium = size === "md";
   // The moon's video popover (ZipVideoMoon), same as /about. Below lg the
   // moon sits out of the home view entirely (SolarScene's hideHomeExtras),
   // so there'd be nothing for the overlay to glue itself to.
@@ -167,7 +170,16 @@ const Home = () => {
               slight hover delay, and sliding along the row skips it (Radix's
               default skip grace), like native toolbar tooltips */}
           <TooltipProvider delayDuration={TOOLTIP_DELAY_MS}>
-            <div className="flex items-center gap-1">
+            {/* On md the pills wrap into two rows: contact links (LinkedIn,
+                GitHub, mail) on top, the work samples (blog, SVG Studio)
+                pushed underneath via `order`; max-w-38 = three 48px pills +
+                gaps. Everywhere else it's one row in DOM order. */}
+            <div
+              className={cx(
+                "flex items-center justify-end gap-1",
+                isMedium && "flex-wrap max-w-38",
+              )}
+            >
               <Tooltip disableHoverableContent>
                 <TooltipTrigger asChild>
                   <a
@@ -211,7 +223,10 @@ const Home = () => {
                       target="_blank"
                       rel="noopener noreferrer"
                       href="https://engineering.ziphq.com/material-ui/"
-                      className="icon-pill flex size-12 items-center justify-center rounded-full p-1"
+                      className={cx(
+                        "icon-pill flex size-12 items-center justify-center rounded-full p-1",
+                        isMedium && "order-1",
+                      )}
                     >
                       <PenLine size={20} />
                     </a>
@@ -226,7 +241,10 @@ const Home = () => {
                   <Link
                     aria-label="SVG Studio"
                     to="/draw"
-                    className="icon-pill flex size-12 items-center justify-center rounded-full p-1"
+                    className={cx(
+                      "icon-pill flex size-12 items-center justify-center rounded-full p-1",
+                      isMedium && "order-1",
+                    )}
                   >
                     <Wand2 size={20} />
                   </Link>

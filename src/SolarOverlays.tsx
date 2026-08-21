@@ -14,11 +14,7 @@ import {
   EARTH_ABOUT_RING_ID,
 } from "./solarAnchorIds";
 import { hoverState } from "./solarHover";
-import {
-  journeyState,
-  startRocketJourney,
-  startSynthJourney,
-} from "./rocketJourney";
+import { journeyState, startSynthJourney } from "./rocketJourney";
 import { ensureAudio } from "./synthAudio";
 import useWindowSize from "./useWindowSize";
 
@@ -132,9 +128,12 @@ const SolarOverlays = () => {
             </Tooltip>
           </TooltipProvider>
         ))}
-      {/* The rocket easter egg: clicking it boards the ship and warps to
+      {/* The rocket (spaceship) link is parked until the /journey copy is
+          ready — the ship still flies in the scene, it just isn't clickable.
+          Restore this block (and the startRocketJourney import) to re-arm it.
+         The rocket easter egg: clicking it boards the ship and warps to
           the /journey story crawl (rocketJourney.ts flips the route under
-          the warp flash). Same anchor plumbing as the asteroid links. */}
+          the warp flash). Same anchor plumbing as the asteroid links.
       <TooltipProvider delayDuration={100}>
         <Tooltip disableHoverableContent>
           <TooltipTrigger asChild>
@@ -169,6 +168,7 @@ const SolarOverlays = () => {
           </TooltipContent>
         </Tooltip>
       </TooltipProvider>
+      */}
       {/* The floating 808 pad: warps to the synth solar system (/synth).
           Unlocking the AudioContext inside this click is what lets the
           beat start playing the moment you land. */}

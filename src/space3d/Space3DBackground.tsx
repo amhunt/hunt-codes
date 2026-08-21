@@ -5,6 +5,9 @@ import StarField from "./StarField";
 import BadgeMedallion from "./BadgeMedallion";
 import SolarScene from "./solar/SolarScene";
 
+// Night-mode star opacity on the landing page (home/about run at 1)
+const LANDING_STAR_OPACITY = 0.8;
+
 /**
  * Entry point for the WebGL background (lazy-loaded so three.js ships as
  * its own chunk). Two canvases:
@@ -62,7 +65,14 @@ const Space3DBackground = ({
   return (
     <>
       <SpaceCanvas>
-        <StarField isLanding={isLanding} opacityTarget={isNightMode ? 1 : 0} />
+        {/* The landing page runs its stars 20% dimmer — the glyph field is
+            the whole view there and read a touch loud at full strength */}
+        <StarField
+          isLanding={isLanding}
+          opacityTarget={
+            isNightMode ? (isLanding ? LANDING_STAR_OPACITY : 1) : 0
+          }
+        />
         {/* The corner "hunt.codes" medallion rides the star canvas rather
             than bringing its own WebGL context (three contexts tripped
             Chrome's per-domain cap and strobed the stars). Hidden only
