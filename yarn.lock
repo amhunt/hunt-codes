@@ -5922,7 +5922,6 @@ __metadata:
     react: "npm:^19.2.8"
     react-dom: "npm:^19.2.8"
     react-feather: "npm:^2.0.10"
-    react-intersection-observer: "npm:^11.0.0"
     react-router-dom: "npm:^7.18.2"
     sass: "npm:^1.102.0"
     storybook: "npm:^10.5.6"
@@ -7862,19 +7861,6 @@ __metadata:
   peerDependencies:
     react: ">=16.8.6"
   checksum: 10c0/bcc312ab39a710d8fa6fb611fde2affb38cf183fa5215d46c78577d88950ecb9181b59e4b57d7683f543d25725a39deb0c2ad9a9f29cab1a44bf4cbca46e6b8e
-  languageName: node
-  linkType: hard
-
-"react-intersection-observer@npm:^11.0.0":
-  version: 11.0.0
-  resolution: "react-intersection-observer@npm:11.0.0"
-  peerDependencies:
-    react: ^17.0.0 || ^18.0.0 || ^19.0.0
-    react-dom: ^17.0.0 || ^18.0.0 || ^19.0.0
-  peerDependenciesMeta:
-    react-dom:
-      optional: true
-  checksum: 10c0/cecfdc1b2d939749d6fbc27ac0957515529bff5d0fbba751bb6b4473961636d9bb7f663e8d7d8afff476e06ac8d6627fd19bc022320916d286aae96017ea57e8
   languageName: node
   linkType: hard
 

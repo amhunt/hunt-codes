@@ -320,7 +320,7 @@ body.journey-mode {
   margin-bottom: 20vh;
 }
 
-// The résumé page's pointer to the cinematic version
+// The resume page's pointer to the cinematic version
 .journey-plug {
   margin-top: 8px;
   font-size: 15px;
@@ -501,7 +501,7 @@ audio {
   left: calc(1rem + env(safe-area-inset-left, 0px));
 }
 
-// On narrow screens the résumé panel scrolls right under the toggle, so
+// On narrow screens the resume panel scrolls right under the toggle, so
 // it needs its own scrim to stay legible (no backdrop-filter — same rule
 // as everything else over the canvases). Over the plain backgrounds the
 // pill all but disappears; padding + negative margin also grow the tap
@@ -1119,8 +1119,8 @@ li > ul > li {
 
 // Lead paragraph on the About page (was an <h4> used as body copy)
 .resume-intro {
-  font-size: 1.15rem;
-  line-height: 1.7;
+  font-size: 1rem;
+  line-height: 1.55;
   margin: 0;
 }
 
@@ -1334,23 +1334,9 @@ li > ul > li {
     }
   }
 
-  .back-to-home-link {
-    // A slight background behind the link so that it's always legible.
-    border-radius: 16px;
-    padding: 8px;
-    // The link sits outside the padded .resume-panel now, so it needs its
-    // own left inset (this unlayered margin overrides the Tailwind ml-8)
-    margin: -8px;
-    margin-left: 24px;
-    width: min-content;
-    background: linear-gradient(
-      to bottom,
-      transparent,
-      #002d19a6 30%,
-      #002d19a6 70%,
-      transparent
-    );
-  }
+  // (No .back-to-home-link rules here: on phones the /about Home link
+  // renders in the .homePageBackLink corner slot instead, like /home's
+  // "Back to orbit")
 }
 
 button {
@@ -1374,15 +1360,8 @@ button {
   transition: color 50ms ease-in-out;
   font-weight: 600;
 
-  // The about page's Home link slides in/out on scroll (Tailwind toggles
-  // -translate-x-32). Tailwind's transition-transform utility lives in a
-  // cascade layer, so the unlayered `transition: color` above would
-  // clobber it and make the slide jump — re-declare both here instead.
-  &.back-to-home-link {
-    transition:
-      color 50ms ease-in-out,
-      translate 300ms ease;
-  }
+  // (The about page's Home link scrubs its `translate` directly from
+  // scroll position — no transition on it, or it would lag the scroll.)
 
   &:hover {
     color: #010c73;
@@ -1419,18 +1398,18 @@ li {
 a,
 button {
   cursor:
-    url(./cursor.svg) 0 6,
+    url(./cursor.svg) 0 5,
     auto;
 }
 
 button:hover,
 a:hover {
   text-decoration: underline;
-  // Hover keeps the space cursor, recolored to the interactive palette
-  // (cyan→purple, same family as the hover halos) instead of dropping to
-  // the stock OS pointer; `pointer` stays as the fallback keyword
+  // Hover swaps to the mac-style pointing hand, recolored to the
+  // interactive palette (cyan→purple, same family as the hover halos);
+  // `pointer` stays as the fallback keyword. Hotspot = the fingertip.
   cursor:
-    url(./cursor_pointer.svg) 0 6,
+    url(./cursor_pointer.svg) 7 1,
     pointer;
 }
 
@@ -1598,7 +1577,7 @@ a:hover {
 }
 
 // The moon's video link on /about (ZipVideoMoon), glued to the moon by
-// BodyAnchors like the rest; z 5 lifts it above the résumé scroll
+// BodyAnchors like the rest; z 5 lifts it above the resume scroll
 // container (z 4) so it stays hoverable. That only works because the
 // panel leaves the moon a gutter — on phones there is no gutter, so
 // Resume doesn't mount the overlay at all (it would sit over the text).
@@ -1616,7 +1595,7 @@ a:hover {
 // ─── Zip brand-video popover (ZipVideoMoon) ────────────────
 // While the video plays, `video-mode` on <body> hides everything except
 // the stars: the solar canvas, the name letters, the mode toggle, and
-// the music player/toggle. The résumé panel hides itself (.video-hidden).
+// the music player/toggle. The resume panel hides itself (.video-hidden).
 //
 // The moon is a video link on /home as well as /about, so the home chrome
 // joins the list — including the body overlays (.asteroid-link,

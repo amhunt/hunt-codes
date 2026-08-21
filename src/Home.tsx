@@ -16,6 +16,7 @@ import {
   TooltipContent,
   TooltipProvider,
   TooltipTrigger,
+  TOOLTIP_DELAY_MS,
 } from "./ui/tooltip";
 import { Link } from "react-router-dom";
 
@@ -162,40 +163,64 @@ const Home = () => {
               </div>
             </div>
           )}
-          <div className="flex items-center gap-1">
-            <a
-              aria-label="LinkedIn"
-              target="_blank"
-              rel="noopener noreferrer"
-              href="https://www.linkedin.com/in/andrewmhunt/"
-              className="icon-pill flex size-12 items-center justify-center rounded-full p-1"
-            >
-              <Linkedin size={22} />
-            </a>
-            <a
-              aria-label="GitHub"
-              target="_blank"
-              rel="noopener noreferrer"
-              href="https://www.github.com/amhunt"
-              className="icon-pill flex size-12 items-center justify-center rounded-full p-1"
-            >
-              <GitHub size={22} />
-            </a>
-            {/* Below lg the blog-post asteroid sits out (SolarOverlays hides
-                the link trio), so the site's one work sample needs a home in
-                the icon row instead */}
-            {size !== "lg" && (
-              <a
-                aria-label="A blog post I wrote at Zip"
-                target="_blank"
-                rel="noopener noreferrer"
-                href="https://engineering.ziphq.com/material-ui/"
-                className="icon-pill flex size-12 items-center justify-center rounded-full p-1"
-              >
-                <PenLine size={20} />
-              </a>
-            )}
-            <TooltipProvider>
+          {/* One provider for the whole row: every icon opens with the same
+              slight hover delay, and sliding along the row skips it (Radix's
+              default skip grace), like native toolbar tooltips */}
+          <TooltipProvider delayDuration={TOOLTIP_DELAY_MS}>
+            <div className="flex items-center gap-1">
+              <Tooltip disableHoverableContent>
+                <TooltipTrigger asChild>
+                  <a
+                    aria-label="LinkedIn"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    href="https://www.linkedin.com/in/andrewmhunt/"
+                    className="icon-pill flex size-12 items-center justify-center rounded-full p-1"
+                  >
+                    <Linkedin size={22} />
+                  </a>
+                </TooltipTrigger>
+                <TooltipContent>
+                  <p>LinkedIn</p>
+                </TooltipContent>
+              </Tooltip>
+              <Tooltip disableHoverableContent>
+                <TooltipTrigger asChild>
+                  <a
+                    aria-label="GitHub"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    href="https://www.github.com/amhunt"
+                    className="icon-pill flex size-12 items-center justify-center rounded-full p-1"
+                  >
+                    <GitHub size={22} />
+                  </a>
+                </TooltipTrigger>
+                <TooltipContent>
+                  <p>GitHub</p>
+                </TooltipContent>
+              </Tooltip>
+              {/* Below lg the blog-post asteroid sits out (SolarOverlays hides
+                  the link trio), so the site's one work sample needs a home in
+                  the icon row instead */}
+              {size !== "lg" && (
+                <Tooltip disableHoverableContent>
+                  <TooltipTrigger asChild>
+                    <a
+                      aria-label="A blog post I wrote at Zip"
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      href="https://engineering.ziphq.com/material-ui/"
+                      className="icon-pill flex size-12 items-center justify-center rounded-full p-1"
+                    >
+                      <PenLine size={20} />
+                    </a>
+                  </TooltipTrigger>
+                  <TooltipContent>
+                    <p>A blog post I wrote at Zip</p>
+                  </TooltipContent>
+                </Tooltip>
+              )}
               <Tooltip disableHoverableContent>
                 <TooltipTrigger asChild>
                   <Link
@@ -210,12 +235,6 @@ const Home = () => {
                   <p>SVG Studio</p>
                 </TooltipContent>
               </Tooltip>
-            </TooltipProvider>
-            <TooltipProvider
-              skipDelayDuration={0}
-              delayDuration={0}
-              disableHoverableContent
-            >
               <Tooltip
                 disableHoverableContent
                 open={copyTooltipOpen}
@@ -243,8 +262,8 @@ const Home = () => {
                   </p>
                 </TooltipContent>
               </Tooltip>
-            </TooltipProvider>
-          </div>
+            </div>
+          </TooltipProvider>
         </div>
         {/* Moved to computer for large screens */}
         {/* {isMdOrLess && ( */}
@@ -278,7 +297,7 @@ const Home = () => {
           </>
         )}
       </main>
-      {/* Home is a waypoint, not the end of the line — the résumé is one
+      {/* Home is a waypoint, not the end of the line — the resume is one
           more scroll further out, and nothing else says so. Waits for the
           arrival swoop and the content fade (~2s) to finish first. */}
       <ScrollHint

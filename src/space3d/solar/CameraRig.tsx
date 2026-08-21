@@ -65,7 +65,7 @@ const ABOUT_LOOK_HEIGHT = 0.45; // aim slightly above the moon's plane
  *  the left edge, well inside the 600px gutter .resume-container reserves
  *  there. */
 const ABOUT_MOON_NDC_X = -0.5;
-/** Below lg the résumé panel keeps its 680px width and the gutter takes
+/** Below lg the resume panel keeps its 680px width and the gutter takes
  *  whatever is left (min 200px) — .resume-container's `padding-left`. The
  *  moon rides the center of that gutter, so these two numbers must match
  *  the stylesheet's. */
@@ -80,7 +80,7 @@ const LG_BREAKPOINT_PX = 1280;
 
 /**
  * Where the moon should sit horizontally (NDC) for a viewport width —
- * always the middle of the gutter the résumé panel leaves it. Returns
+ * always the middle of the gutter the resume panel leaves it. Returns
  * null on phone widths, where the panel is full-bleed: there's no gutter
  * to aim for, so the camera sits on the Earth-moon line instead and the
  * moon reads dead-center, directly above Earth.

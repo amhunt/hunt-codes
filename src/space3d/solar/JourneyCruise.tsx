@@ -19,7 +19,7 @@ import { cruiseState } from "../../journeyCruise";
  * from both solar systems, flying through the shared streak field
  * (WarpStreaks) from inside the cockpit (RocketCockpit's windshield,
  * revealed by body.rocket-journey). This component starts the ride
- * state itself on its first frame, so a deep link or the résumé link
+ * state itself on its first frame, so a deep link or the resume link
  * gets the cockpit too — not just the rocket easter egg.
  *
  * The crawl's scroll velocity feeds cruiseState.boost (scrub the story

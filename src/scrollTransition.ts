@@ -1,7 +1,7 @@
 /**
  * Scroll-scrubbed camera journey across the site's three views:
  * landing (0) → home (1) → about (2). The pages have no scrollable
- * content (the /about résumé being the exception — it keeps native
+ * content (the /about resume being the exception — it keeps native
  * scroll and no journey handlers), so useScrollJourney accumulates
  * wheel/touch deltas into the `target` stop value; CameraRig eases
  * `progress` toward it each frame and poses the camera along the

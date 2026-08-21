@@ -139,7 +139,7 @@ const SolarScene = ({
         // The video link needs the moon actually on screen AND clickable:
         // /about above phone widths (on phones the panel is full-bleed
         // and Resume doesn't mount the overlay — the moon hides behind
-        // the résumé), /home only at the widths where hideHomeExtras
+        // the resume), /home only at the widths where hideHomeExtras
         // keeps it
         linkActive={
           (view === "about" && !isPhone) || (view === "home" && !hideHomeExtras)

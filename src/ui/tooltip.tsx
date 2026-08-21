@@ -2,6 +2,12 @@ import * as React from "react";
 import * as TooltipPrimitive from "@radix-ui/react-tooltip";
 import { cn } from "lib/utils";
 
+/**
+ * Shared hover delay so every tooltip on the site opens with the same
+ * slight pause (Radix's default 700ms feels sluggish, 0–100ms twitchy).
+ */
+const TOOLTIP_DELAY_MS = 500;
+
 const TooltipProvider = TooltipPrimitive.Provider;
 
 const Tooltip = TooltipPrimitive.Root;
@@ -26,4 +32,10 @@ const TooltipContent = React.forwardRef<
 ));
 TooltipContent.displayName = TooltipPrimitive.Content.displayName;
 
-export { Tooltip, TooltipTrigger, TooltipContent, TooltipProvider };
+export {
+  Tooltip,
+  TooltipTrigger,
+  TooltipContent,
+  TooltipProvider,
+  TOOLTIP_DELAY_MS,
+};
