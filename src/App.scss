@@ -1599,7 +1599,9 @@ a:hover {
 
 // The moon's video link on /about (ZipVideoMoon), glued to the moon by
 // BodyAnchors like the rest; z 5 lifts it above the résumé scroll
-// container (z 4) so it stays hoverable
+// container (z 4) so it stays hoverable. That only works because the
+// panel leaves the moon a gutter — on phones there is no gutter, so
+// Resume doesn't mount the overlay at all (it would sit over the text).
 .moon-link {
   position: fixed;
   visibility: hidden;
