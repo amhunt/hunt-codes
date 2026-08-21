@@ -101,7 +101,7 @@ export const startSynthReturn = (): void =>
   beginJourney("none", "home", RETURN_TURN_SECONDS, TRANSIT_WARP_SECONDS);
 
 /** The /journey cruise announcing itself (JourneyCruise's first frame):
- *  a deep link or résumé-link arrival starts the ride mid-warp — cockpit
+ *  a deep link or resume-link arrival starts the ride mid-warp — cockpit
  *  up, no boarding beat. No-op when the rocket boarding already began
  *  the ride (or any other journey is playing). */
 export function startJourneyCruise(): void {

@@ -19,7 +19,7 @@ const ROUTES = ["/", "/home", "/about"];
 /**
  * Scroll-scrubbed travel between the site's views (see
  * scrollTransition.ts). Mounted by the landing page (stop 0) and home
- * page (stop 1) — not /about, whose résumé needs native scrolling.
+ * page (stop 1) — not /about, whose resume needs native scrolling.
  * Accumulates wheel/touch deltas into the journey target and commits the
  * matching route when the RENDERED progress reaches a different stop —
  * keyed to the camera, not the wheel, so a fast fling can't navigate

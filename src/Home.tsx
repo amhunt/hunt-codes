@@ -297,7 +297,7 @@ const Home = () => {
           </>
         )}
       </main>
-      {/* Home is a waypoint, not the end of the line — the résumé is one
+      {/* Home is a waypoint, not the end of the line — the resume is one
           more scroll further out, and nothing else says so. Waits for the
           arrival swoop and the content fade (~2s) to finish first. */}
       <ScrollHint

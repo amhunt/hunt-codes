@@ -320,7 +320,7 @@ body.journey-mode {
   margin-bottom: 20vh;
 }
 
-// The résumé page's pointer to the cinematic version
+// The resume page's pointer to the cinematic version
 .journey-plug {
   margin-top: 8px;
   font-size: 15px;
@@ -501,7 +501,7 @@ audio {
   left: calc(1rem + env(safe-area-inset-left, 0px));
 }
 
-// On narrow screens the résumé panel scrolls right under the toggle, so
+// On narrow screens the resume panel scrolls right under the toggle, so
 // it needs its own scrim to stay legible (no backdrop-filter — same rule
 // as everything else over the canvases). Over the plain backgrounds the
 // pill all but disappears; padding + negative margin also grow the tap
@@ -1598,7 +1598,7 @@ a:hover {
 }
 
 // The moon's video link on /about (ZipVideoMoon), glued to the moon by
-// BodyAnchors like the rest; z 5 lifts it above the résumé scroll
+// BodyAnchors like the rest; z 5 lifts it above the resume scroll
 // container (z 4) so it stays hoverable. That only works because the
 // panel leaves the moon a gutter — on phones there is no gutter, so
 // Resume doesn't mount the overlay at all (it would sit over the text).
@@ -1616,7 +1616,7 @@ a:hover {
 // ─── Zip brand-video popover (ZipVideoMoon) ────────────────
 // While the video plays, `video-mode` on <body> hides everything except
 // the stars: the solar canvas, the name letters, the mode toggle, and
-// the music player/toggle. The résumé panel hides itself (.video-hidden).
+// the music player/toggle. The resume panel hides itself (.video-hidden).
 //
 // The moon is a video link on /home as well as /about, so the home chrome
 // joins the list — including the body overlays (.asteroid-link,

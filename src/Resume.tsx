@@ -72,7 +72,7 @@ const experienceItems = [
 
 const Resume = () => {
   const [opacity, setOpacity] = useState(false);
-  // The moon's video popover (ZipVideoMoon); while it plays, the résumé
+  // The moon's video popover (ZipVideoMoon); while it plays, the resume
   // panel hides so only the stars remain behind the video
   const [videoOpen, setVideoOpen] = useState(false);
   // Drives the Home link's slide: at rest the heading sits ~288px from
