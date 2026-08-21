@@ -36,10 +36,11 @@ const SIGNATURE_VIEWBOX = "0 0 173.91 198.63";
 const SIGNATURE_D =
   "M173.91,111.43l-13.26-11.12h-27.69l-1.95-87.93-.06-.9-.2-1.34-.27-1.08-.47-1.3-.88-1.72-.78-1.12-.73-.86-1.61-1.46-1.65-1.06-1.22-.58-1.08-.39-1.31-.33-1.11-.17-1.59-.08-1.38.12-1.63.33-1.1.34-1.44.64-1.41.85-1.3,1.04-1.14,1.19-.96,1.28-57.65,94.51-29.24.02-1.54.17-.89.19-1.39.45-1.4.65-.8.47-1.15.86-1.12,1.07-.99,1.23-.81,1.33-.87,2.17-.36,1.65-.13,1.71.08,1.29.27,1.55.48,1.5.35.82.71,1.27,1.26,1.7,17.41,12.92L1.86,179.31l-.66,1.24-.6,1.53-.43,1.76-.18,1.76.06,1.4.25,1.63.46,1.58.66,1.52.47.84.89,1.25,1.11,1.22,1.28,1.07,1.39.89,1.49.7,1.58.5,2.54.44,48.11-14.74,3.09-18.38-16.73-1.58-9.38,3.67,13.93-20.84,64.96,34.01,1.4.59.92.29,1.53.31,1.85.14.78-.04,1.51-.2.94-.21,1.47-.5,1.49-.72.85-.52,1.2-.92.72-.67,1.01-1.16.57-.79.76-1.32.64-1.54.44-1.62.16-.95.09-1.68-.99-45.05h28l12.43-12.82ZM106.64,56.17l.98,44.14h-27.9l26.93-44.14ZM64.36,125.49l.75-1.24h43.03l.54,24.49-44.33-23.26Z";
 
-/** How far past the authored "A" bbox the signature mark may spill */
-const SIGNATURE_OVERSIZE = 1.6;
-/** Per-bolt slot rotations — varied so the screws read as hand-driven */
-const BOLT_SLOT_ANGLES = [0.5, 1.4, 2.3, 3];
+/**
+ * How far past the authored "A" bbox the signature mark may spill. With
+ * the rivets gone the face is all the signature's, so it runs big.
+ */
+const SIGNATURE_OVERSIZE = 2;
 
 // Extrude the signature mark and center it on the bbox the authored "A"
 // occupied (same depth, SIGNATURE_OVERSIZE× the footprint), so the coin
@@ -174,12 +175,12 @@ const BadgeMedallion = () => {
     const root = gltf.scene.clone(true);
 
     // The monogram is authored only on the front face — find it (plus the
-    // lilac rim pieces and the four rivet spheres for the recolor pass
-    // below), then process outside the traversal (we're about to graft new
-    // nodes on).
+    // lilac rim pieces for the recolor pass below, and the four authored
+    // rivet spheres, which go), then process outside the traversal (we're
+    // about to graft new nodes on / prune old ones).
     let monogram: THREE.Mesh | null = null;
     const lilacMeshes: THREE.Mesh[] = [];
-    const boltMeshes: THREE.Mesh[] = [];
+    const rivetMeshes: THREE.Mesh[] = [];
     // Same holder trick as `caret` below, so the type survives the closure.
     const gold: { material: THREE.MeshStandardMaterial | null } = {
       material: null,
@@ -190,14 +191,17 @@ const BadgeMedallion = () => {
       if (!mesh.isMesh) return;
       if (mesh.name === "monogram_A") {
         monogram = mesh;
-        // The authored gold — the recolor pass borrows it for rim + bolts.
+        // The authored gold — the recolor pass borrows it for the rim.
         gold.material = mesh.material as THREE.MeshStandardMaterial;
       }
       if (mesh.name === "disc") disc.mesh = mesh;
       if ((mesh.material as THREE.MeshStandardMaterial)?.name === "lilac")
         lilacMeshes.push(mesh);
-      if (mesh.name.startsWith("star_")) boltMeshes.push(mesh);
+      if (mesh.name.startsWith("star_")) rivetMeshes.push(mesh);
     });
+    // The four cyan rivets are authored into the GLB; the redesign drops
+    // them so the face is just the signature.
+    rivetMeshes.forEach((mesh) => mesh.removeFromParent());
 
     // A holder (not a bare `let`) so its type survives the closures above.
     const caret: { material: THREE.MeshStandardMaterial | null } = {
@@ -250,39 +254,12 @@ const BadgeMedallion = () => {
       (mono.parent as THREE.Object3D).add(pivot);
     }
 
-    // Recolor pass: the lilac rim/edge band goes gold (borrowing the
-    // authored monogram metal), and the four cyan rivets become gold
-    // flathead bolt-heads.
+    // Recolor pass: the lilac rim/edge band goes gold, borrowing the
+    // authored monogram metal.
     if (gold.material) {
       const rimGold = gold.material.clone();
       lilacMeshes.forEach((mesh) => {
         mesh.material = rimGold;
-      });
-
-      const boltGold = gold.material.clone();
-      const slotMat = new THREE.MeshStandardMaterial({
-        color: "#2a1c05", // shadowed metal at the bottom of the groove
-        metalness: 0.5,
-        roughness: 0.65,
-      });
-      boltMeshes.forEach((mesh, i) => {
-        mesh.material = boltGold;
-        mesh.geometry.computeBoundingSphere();
-        const cap = mesh.geometry.boundingSphere as THREE.Sphere;
-        // A thin dark box sunk across the cap reads as the flathead slot;
-        // each bolt gets its own angle, like hand-driven screws.
-        const slot = new THREE.Mesh(
-          new THREE.BoxGeometry(
-            cap.radius * 1.5,
-            cap.radius * 0.3,
-            cap.radius * 0.5,
-          ),
-          slotMat,
-        );
-        slot.position.copy(cap.center);
-        slot.position.z += cap.radius * 0.82;
-        slot.rotation.z = BOLT_SLOT_ANGLES[i % BOLT_SLOT_ANGLES.length];
-        mesh.add(slot);
       });
     }
 
