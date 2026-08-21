@@ -1,8 +1,7 @@
-import React, { useEffect, useState } from "react";
+import React, { useCallback, useEffect, useRef, useState } from "react";
 import cx from "classnames";
 import { ArrowLeftCircle, Calendar } from "react-feather";
 import { ArrowLeftCircleIcon } from "lucide-react";
-import { useInView } from "react-intersection-observer";
 import { Link } from "react-router-dom";
 import useWindowSize from "./useWindowSize";
 import ZipVideoMoon from "./ZipVideoMoon";
@@ -71,6 +70,11 @@ const experienceItems = [
   },
 ];
 
+// The Home link's scroll-scrubbed slide: it travels SLIDE_DISTANCE_PX
+// leftward over the first SLIDE_RANGE_PX of the container's scroll
+const SLIDE_RANGE_PX = 100;
+const SLIDE_DISTANCE_PX = 128; // the old Tailwind -translate-x-32
+
 const Resume = () => {
   const [opacity, setOpacity] = useState(false);
   // The moon's video popover (ZipVideoMoon); while it plays, the resume
@@ -79,27 +83,17 @@ const Resume = () => {
   const size = useWindowSize();
   const isSmall = size === "sm";
 
-  // Tailwind's xl (1280px) is where .resume-inner-container's top margin
-  // jumps 80px → 200px, moving the Home link's rest position — track it
-  // so the slide trigger below fires after the same ~30px of scroll at
-  // every width
-  const [isXl, setIsXl] = useState(
-    () => window.matchMedia("(min-width: 1280px)").matches,
-  );
-  useEffect(() => {
-    const query = window.matchMedia("(min-width: 1280px)");
-    const onChange = (e: MediaQueryListEvent) => setIsXl(e.matches);
-    query.addEventListener("change", onChange);
-    return () => query.removeEventListener("change", onChange);
+  // The Home link's leftward slide is scrubbed by scroll, not animated:
+  // it tracks the first SLIDE_RANGE_PX of scrollTop directly, so stopping
+  // mid-range parks the link mid-slide. Written straight to the element's
+  // style (no React state) — scroll fires every frame.
+  const linkRef = useRef<HTMLAnchorElement>(null);
+  const handleScroll = useCallback((e: React.UIEvent<HTMLElement>) => {
+    const progress = Math.min(1, e.currentTarget.scrollTop / SLIDE_RANGE_PX);
+    if (linkRef.current) {
+      linkRef.current.style.translate = `${-SLIDE_DISTANCE_PX * progress}px 0`;
+    }
   }, []);
-
-  // Drives the Home link's slide: at rest the heading sits ~288px from
-  // the viewport top on xl (~150px below it), so the margin keeps it "in
-  // view" until the user scrolls a few dozen px, then the link slides away
-  const { ref, inView } = useInView({
-    rootMargin: isXl ? "-260px" : "-124px",
-    threshold: 0,
-  });
   useEffect(() => {
     // Overlap the tail of the 2s arrival swoop (the translucent panel
     // tolerates it) and cut half a second of dead time on direct loads
@@ -125,7 +119,11 @@ const Resume = () => {
           </Link>
         </div>
       )}
-      <main className="resume-container" style={{ opacity: opacity ? 1 : 0 }}>
+      <main
+        className="resume-container"
+        style={{ opacity: opacity ? 1 : 0 }}
+        onScroll={handleScroll}
+      >
         {/* The moon doubles as the Zip brand-video link (overlay + popover).
             Not on phones: the panel is full-bleed there and the moon sits
             behind it (CameraRig's aboutMoonNdcX returns null), so the
@@ -146,14 +144,12 @@ const Resume = () => {
         >
           {/* md and up: pinned at its rest height (sticky top matches each
               breakpoint's .resume-inner-container top margin, so it never
-              moves vertically) and slides left once the heading scrolls
-              under it */}
+              moves vertically) while handleScroll scrubs it leftward over
+              the first stretch of scroll */}
           {!isSmall && (
             <Link
-              className={cx(
-                "back-to-home-link flex w-fit transition-transform items-center gap-4 mb-6 inverse -ml-8 md:sticky md:top-20 xl:top-[200px]",
-                !inView && "-translate-x-32",
-              )}
+              ref={linkRef}
+              className="back-to-home-link flex w-fit items-center gap-4 mb-6 inverse -ml-8 md:sticky md:top-20 xl:top-50"
               to="/home"
             >
               <ArrowLeftCircle size={40} />
@@ -161,9 +157,7 @@ const Resume = () => {
             </Link>
           )}
           <div className="resume-panel">
-            <h1 ref={ref} className="mt-0 mb-6">
-              About Me
-            </h1>
+            <h1 className="mt-0 mb-6">About Me</h1>
             <p className="resume-intro">
               Hey! I’m a frontend engineer based in New York. I spent ~4 years
               at{" "}
@@ -188,13 +182,14 @@ const Resume = () => {
               </a>
               .
             </p>
+            {/* Hidden until /journey gets more polish:
             <p className="journey-plug">
               Prefer the cinematic cut?{" "}
               <Link className="inverse" to="/journey">
                 Watch the journey
               </Link>{" "}
               🚀
-            </p>
+            </p> */}
             <div className="resume-divider" />
             <h2>How I like to work</h2>
             <ul className="hor-list">
