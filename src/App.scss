@@ -1334,23 +1334,9 @@ li > ul > li {
     }
   }
 
-  .back-to-home-link {
-    // A slight background behind the link so that it's always legible.
-    border-radius: 16px;
-    padding: 8px;
-    // The link sits outside the padded .resume-panel now, so it needs its
-    // own left inset (this unlayered margin overrides the Tailwind ml-8)
-    margin: -8px;
-    margin-left: 24px;
-    width: min-content;
-    background: linear-gradient(
-      to bottom,
-      transparent,
-      #002d19a6 30%,
-      #002d19a6 70%,
-      transparent
-    );
-  }
+  // (No .back-to-home-link rules here: on phones the /about Home link
+  // renders in the .homePageBackLink corner slot instead, like /home's
+  // "Back to orbit")
 }
 
 button {

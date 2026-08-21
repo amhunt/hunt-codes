@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from "react";
 import cx from "classnames";
 import { ArrowLeftCircle, Calendar } from "react-feather";
+import { ArrowLeftCircleIcon } from "lucide-react";
 import { useInView } from "react-intersection-observer";
 import { Link } from "react-router-dom";
 import useWindowSize from "./useWindowSize";
@@ -75,16 +76,30 @@ const Resume = () => {
   // The moon's video popover (ZipVideoMoon); while it plays, the resume
   // panel hides so only the stars remain behind the video
   const [videoOpen, setVideoOpen] = useState(false);
+  const size = useWindowSize();
+  const isSmall = size === "sm";
+
+  // Tailwind's xl (1280px) is where .resume-inner-container's top margin
+  // jumps 80px → 200px, moving the Home link's rest position — track it
+  // so the slide trigger below fires after the same ~30px of scroll at
+  // every width
+  const [isXl, setIsXl] = useState(
+    () => window.matchMedia("(min-width: 1280px)").matches,
+  );
+  useEffect(() => {
+    const query = window.matchMedia("(min-width: 1280px)");
+    const onChange = (e: MediaQueryListEvent) => setIsXl(e.matches);
+    query.addEventListener("change", onChange);
+    return () => query.removeEventListener("change", onChange);
+  }, []);
+
   // Drives the Home link's slide: at rest the heading sits ~288px from
-  // the viewport top on xl, so the -260px margin keeps it "in view" until
-  // the user scrolls a few dozen px, then the link slides away
+  // the viewport top on xl (~150px below it), so the margin keeps it "in
+  // view" until the user scrolls a few dozen px, then the link slides away
   const { ref, inView } = useInView({
-    rootMargin: "-260px",
+    rootMargin: isXl ? "-260px" : "-124px",
     threshold: 0,
   });
-
-  const size = useWindowSize();
-  const isLarge = size === "lg";
   useEffect(() => {
     // Overlap the tail of the 2s arrival swoop (the translucent panel
     // tolerates it) and cut half a second of dead time on direct loads
@@ -95,168 +110,192 @@ const Resume = () => {
   }, []);
 
   return (
-    <main className="resume-container" style={{ opacity: opacity ? 1 : 0 }}>
-      {/* The moon doubles as the Zip brand-video link (overlay + popover).
-          Not on phones: the panel is full-bleed there and the moon sits
-          behind it (CameraRig's aboutMoonNdcX returns null), so the
-          invisible overlay would just be a 165px tap trap over the intro
-          paragraph and whatever scrolls under it. Home gates it the same
-          way (moonLinkActive); SolarScene drops the moon's link halo to
-          match. */}
-      {size !== "sm" && (
-        <ZipVideoMoon open={videoOpen} onOpenChange={setVideoOpen} />
+    <>
+      {/* On phones the Home link takes the same corner slot and sizing as
+          /home's "Back to orbit" link, outside the scroller so it stays
+          put (body.video-mode hides .homePageBackLink, same as on /home) */}
+      {isSmall && (
+        <div
+          className="homePageBackLink"
+          style={{ opacity: opacity ? 1 : 0, transition: "opacity 1s ease" }}
+        >
+          <Link className="mt-4 flex items-center gap-1" to="/home">
+            <ArrowLeftCircleIcon className="starIcon" size={16} />
+            <span>Home</span>
+          </Link>
+        </div>
       )}
-      {/* The link lives outside .resume-panel so the frosted background
+      <main className="resume-container" style={{ opacity: opacity ? 1 : 0 }}>
+        {/* The moon doubles as the Zip brand-video link (overlay + popover).
+            Not on phones: the panel is full-bleed there and the moon sits
+            behind it (CameraRig's aboutMoonNdcX returns null), so the
+            invisible overlay would just be a 165px tap trap over the intro
+            paragraph and whatever scrolls under it. Home gates it the same
+            way (moonLinkActive); SolarScene drops the moon's link halo to
+            match. */}
+        {!isSmall && (
+          <ZipVideoMoon open={videoOpen} onOpenChange={setVideoOpen} />
+        )}
+        {/* The link lives outside .resume-panel so the frosted background
           starts above the "About Me" heading, not around the link.
           w-fit: as a flex row it would otherwise stretch to the panel's
-          full width, and once it goes sticky (xl) that invisible strip
-          rides over the résumé and steals clicks from the text under it. */}
-      <div
-        className={cx("resume-inner-container", videoOpen && "video-hidden")}
-      >
-        <Link
-          className={cx(
-            "back-to-home-link flex w-fit transition-transform items-center gap-4 mb-6 inverse ml-8 xl:sticky xl:top-[200px] xl:-ml-8",
-            !inView && isLarge && "-translate-x-32",
-          )}
-          to="/home"
+          full width, and once it goes sticky that invisible strip rides
+          over the resume and steals clicks from the text under it. */}
+        <div
+          className={cx("resume-inner-container", videoOpen && "video-hidden")}
         >
-          <ArrowLeftCircle size={40} />
-          Home
-        </Link>
-        <div className="resume-panel">
-          <h1 ref={ref} className="mt-0 mb-6">
-            About Me
-          </h1>
-          <p className="resume-intro">
-            Hey! I’m a frontend engineer based in New York. I spent ~4 years at{" "}
-            <a
-              target="_blank"
-              rel="noreferrer"
-              className="inverse"
-              href="https://ziphq.com"
+          {/* md and up: pinned at its rest height (sticky top matches each
+              breakpoint's .resume-inner-container top margin, so it never
+              moves vertically) and slides left once the heading scrolls
+              under it */}
+          {!isSmall && (
+            <Link
+              className={cx(
+                "back-to-home-link flex w-fit transition-transform items-center gap-4 mb-6 inverse -ml-8 md:sticky md:top-20 xl:top-[200px]",
+                !inView && "-translate-x-32",
+              )}
+              to="/home"
             >
-              Zip
-            </a>{" "}
-            — most recently as a staff engineer — before stepping away in 2025
-            for a proper sabbatical. A few months of recharging later, I eased
-            back in through consulting, helping teams ship polished, AI-powered
-            web products. Come fall 2026 I’m looking to go full-time again —
-            reach out to{" "}
-            <a
-              className="inverse"
-              href="mailto:andrew@hunt.codes?Subject=Hey%20Andrew"
-            >
-              andrew@hunt.codes
-            </a>
-            .
-          </p>
-          <p className="journey-plug">
-            Prefer the cinematic cut?{" "}
-            <Link className="inverse" to="/journey">
-              Watch the journey
-            </Link>{" "}
-            🚀
-          </p>
-          <div className="resume-divider" />
-          <h2>How I like to work</h2>
-          <ul className="hor-list">
-            <li>
-              <div className="card-title">Dev infrastructure</div>I believe it’s
-              difficult to overstate the importance of investing in the
-              development process. Great DevX is a prerequisite to quality UX
-              and efficient product development — this includes strong linters,
-              fast and thorough CI checks, and leaning on AI (LLMs and coding
-              agents) to automate repetitive work and free engineers for
-              higher-leverage problems.
-            </li>
-            <li>
-              <div className="card-title">Component systems</div>Investing in a
-              well-structured and robust component system will accelerate design
-              and engineering work, reduce bugs, and create a more consistent
-              user experience.
-            </li>
-            <li>
-              <div className="card-title">Product collaboration</div>
-              The best products come from designers, researchers, and engineers
-              building in the same room — tight feedback loops, shared taste,
-              and a bias toward shipping the delightful details.
-            </li>
-            <li>
-              <div className="card-title">Performance</div>
-              I’m passionate about delivering a lightning-fast, responsive user
-              experience. Performance can be a complex problem, and often needs
-              to be approached with both a data-driven and user-centric lens.
-            </li>
-          </ul>
-          <div>
-            <div className="card-title">Tools & Frameworks in my orbit</div>
-            <div className="flex flex-wrap gap-2 mt-2">
-              {tools.map((t) => (
-                <span className="pill tool-pill" key={t}>
-                  {t}
+              <ArrowLeftCircle size={40} />
+              Home
+            </Link>
+          )}
+          <div className="resume-panel">
+            <h1 ref={ref} className="mt-0 mb-6">
+              About Me
+            </h1>
+            <p className="resume-intro">
+              Hey! I’m a frontend engineer based in New York. I spent ~4 years
+              at{" "}
+              <a
+                target="_blank"
+                rel="noreferrer"
+                className="inverse"
+                href="https://ziphq.com"
+              >
+                Zip
+              </a>{" "}
+              — most recently as a staff engineer — before stepping away in 2025
+              for a proper sabbatical. A few months of recharging later, I eased
+              back in through consulting, helping teams ship polished,
+              AI-powered web products. Come fall 2026 I’m looking to go
+              full-time again — reach out to{" "}
+              <a
+                className="inverse"
+                href="mailto:andrew@hunt.codes?Subject=Hey%20Andrew"
+              >
+                andrew@hunt.codes
+              </a>
+              .
+            </p>
+            <p className="journey-plug">
+              Prefer the cinematic cut?{" "}
+              <Link className="inverse" to="/journey">
+                Watch the journey
+              </Link>{" "}
+              🚀
+            </p>
+            <div className="resume-divider" />
+            <h2>How I like to work</h2>
+            <ul className="hor-list">
+              <li>
+                <div className="card-title">Dev infrastructure</div>I believe
+                it’s difficult to overstate the importance of investing in the
+                development process. Great DevX is a prerequisite to quality UX
+                and efficient product development — this includes strong
+                linters, fast and thorough CI checks, and leaning on AI (LLMs
+                and coding agents) to automate repetitive work and free
+                engineers for higher-leverage problems.
+              </li>
+              <li>
+                <div className="card-title">Component systems</div>Investing in
+                a well-structured and robust component system will accelerate
+                design and engineering work, reduce bugs, and create a more
+                consistent user experience.
+              </li>
+              <li>
+                <div className="card-title">Product collaboration</div>
+                The best products come from designers, researchers, and
+                engineers building in the same room — tight feedback loops,
+                shared taste, and a bias toward shipping the delightful details.
+              </li>
+              <li>
+                <div className="card-title">Performance</div>
+                I’m passionate about delivering a lightning-fast, responsive
+                user experience. Performance can be a complex problem, and often
+                needs to be approached with both a data-driven and user-centric
+                lens.
+              </li>
+            </ul>
+            <div>
+              <div className="card-title">Tools & Frameworks in my orbit</div>
+              <div className="flex flex-wrap gap-2 mt-2">
+                {tools.map((t) => (
+                  <span className="pill tool-pill" key={t}>
+                    {t}
+                  </span>
+                ))}
+              </div>
+            </div>
+
+            <div className="resume-divider" />
+
+            <h2>Experience</h2>
+            {experienceItems.map((item) => (
+              <React.Fragment key={item.title}>
+                <div className="splitRow">
+                  <h3 className="flex items-center">
+                    {item.title}{" "}
+                    <span className="pill location-pill">{item.location}</span>
+                  </h3>
+                  <span className="resume-date flex items-center gap-2">
+                    {item.date}
+                    <Calendar size={12} />
+                  </span>
+                </div>
+                <ul>
+                  {item.description.map((d, idx) => (
+                    <li key={idx}>
+                      {typeof d === "string" ? (
+                        d
+                      ) : (
+                        <>
+                          {d.item}
+                          <ul>
+                            {d.subbullets?.map((s) => (
+                              <li key={s}>{s}</li>
+                            ))}
+                          </ul>
+                        </>
+                      )}
+                    </li>
+                  ))}
+                </ul>
+              </React.Fragment>
+            ))}
+            <div className="resume-divider" />
+            <h2>Education</h2>
+            <div className="splitRow">
+              <h3 className="flex items-center">
+                Princeton University
+                <span className="pill location-pill">BSE</span>
+                <span className="pill location-pill">Computer Science</span>
+              </h3>
+              <span className="resume-date">September 2013 — June 2017</span>
+            </div>
+            <div className="resume-divider" />
+            <h2>Other interests</h2>
+            <div className="flex flex-wrap gap-2">
+              {interests.map((i) => (
+                <span className="pill interest-pill" key={i}>
+                  {i}
                 </span>
               ))}
             </div>
           </div>
-
-          <div className="resume-divider" />
-
-          <h2>Experience</h2>
-          {experienceItems.map((item) => (
-            <React.Fragment key={item.title}>
-              <div className="splitRow">
-                <h3 className="flex items-center">
-                  {item.title}{" "}
-                  <span className="pill location-pill">{item.location}</span>
-                </h3>
-                <span className="resume-date flex items-center gap-2">
-                  {item.date}
-                  <Calendar size={12} />
-                </span>
-              </div>
-              <ul>
-                {item.description.map((d, idx) => (
-                  <li key={idx}>
-                    {typeof d === "string" ? (
-                      d
-                    ) : (
-                      <>
-                        {d.item}
-                        <ul>
-                          {d.subbullets?.map((s) => (
-                            <li key={s}>{s}</li>
-                          ))}
-                        </ul>
-                      </>
-                    )}
-                  </li>
-                ))}
-              </ul>
-            </React.Fragment>
-          ))}
-          <div className="resume-divider" />
-          <h2>Education</h2>
-          <div className="splitRow">
-            <h3 className="flex items-center">
-              Princeton University
-              <span className="pill location-pill">BSE</span>
-              <span className="pill location-pill">Computer Science</span>
-            </h3>
-            <span className="resume-date">September 2013 — June 2017</span>
-          </div>
-          <div className="resume-divider" />
-          <h2>Other interests</h2>
-          <div className="flex flex-wrap gap-2">
-            {interests.map((i) => (
-              <span className="pill interest-pill" key={i}>
-                {i}
-              </span>
-            ))}
-          </div>
         </div>
-      </div>
-    </main>
+      </main>
+    </>
   );
 };
 
