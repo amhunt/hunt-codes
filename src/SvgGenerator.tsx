@@ -1,6 +1,6 @@
 import React, { useState, useRef, useEffect, useCallback } from "react";
 import { Link, useNavigate, useParams } from "react-router-dom";
-import { Star } from "react-feather";
+import { Sun } from "react-feather";
 import { Check, Link2, Wand2 } from "lucide-react";
 
 const DRAWABLE_SELECTORS =
@@ -291,7 +291,7 @@ const SvgGenerator = () => {
     };
   }, [routeId]);
 
-  // The gallery of recent transmissions — decoration, so it fails quietly
+  // The gallery of past submissions — decoration, so it fails quietly
   useEffect(() => {
     let cancelled = false;
     void (async () => {
@@ -412,10 +412,10 @@ const SvgGenerator = () => {
       <div className="svg-generator-back-link">
         <Link
           className="mt-4 flex items-center gap-1 transition-transform"
-          to="/"
+          to="/home"
         >
-          <Star aria-hidden="true" className="starIcon" size={16} />
-          <span>back to orbit</span>
+          <Sun aria-hidden="true" className="starIcon" size={16} />
+          <span>Home</span>
         </Link>
       </div>
 
@@ -522,12 +522,10 @@ const SvgGenerator = () => {
           )}
         </div>
 
-        {/* Recent transmissions */}
+        {/* Past submissions — everyone's drawings, newest first */}
         {gallery.length > 0 && (
           <div className="svg-generator-gallery">
-            <h2 className="svg-generator-gallery-title">
-              recent transmissions
-            </h2>
+            <h2 className="svg-generator-gallery-title">past submissions</h2>
             <div className="svg-generator-gallery-grid">
               {gallery.map((d) => (
                 <Link
@@ -539,7 +537,15 @@ const SvgGenerator = () => {
                   <div className="svg-generator-gallery-thumb">
                     <img alt={d.prompt} src={toDataUri(d.svg)} loading="lazy" />
                   </div>
-                  <p className="svg-generator-gallery-name">{d.name}</p>
+                  {/* The drawing's name (its prompt) leads, the artist
+                      trails; both are one line with the full text in
+                      `title` for when they're cut short */}
+                  <p className="svg-generator-gallery-prompt" title={d.prompt}>
+                    {d.prompt}
+                  </p>
+                  <p className="svg-generator-gallery-name" title={d.name}>
+                    by {d.name}
+                  </p>
                 </Link>
               ))}
             </div>
