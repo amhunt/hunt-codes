@@ -129,8 +129,8 @@ const SolarOverlays = () => {
           </TooltipProvider>
         ))}
       {/* The rocket (spaceship) link is parked until the /journey copy is
-          ready — the ship still flies in the scene, it just isn't clickable.
-          Restore this block (and the startRocketJourney import) to re-arm it.
+          ready — the ship itself is parked too (SolarScene). Restore this
+          block (and the startRocketJourney import) to re-arm it.
          The rocket easter egg: clicking it boards the ship and warps to
           the /journey story crawl (rocketJourney.ts flips the route under
           the warp flash). Same anchor plumbing as the asteroid links.
