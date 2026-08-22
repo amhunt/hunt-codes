@@ -3,11 +3,12 @@ import Typed from "typed.js";
 import cx from "classnames";
 
 import { GitHub, Linkedin, Mail } from "react-feather";
-import { ArrowLeftCircleIcon, PenLine, Wand2 } from "lucide-react";
+import { PenLine, Wand2 } from "lucide-react";
 import useWindowSize from "./useWindowSize";
 import useScrollJourney from "./useScrollJourney";
 import SolarOverlays from "./SolarOverlays";
 import ScrollHint from "./ScrollHint";
+import GalaxyIcon from "./ui/GalaxyIcon";
 import { JOURNEY_STOPS } from "./scrollTransition";
 
 import {
@@ -119,7 +120,7 @@ const Home = () => {
           className={cx("mt-4 flex items-center gap-1 transition-transform")}
           to="/"
         >
-          <ArrowLeftCircleIcon className="starIcon" size={16} />
+          <GalaxyIcon aria-hidden="true" className="starIcon" size={16} />
           <span>Back to orbit</span>
         </Link>
       </div>
