@@ -107,7 +107,7 @@ const Resume = () => {
     <>
       {/* On phones the Home link takes the same corner slot and sizing as
           /home's "Back to orbit" link, outside the scroller so it stays
-          put (body.video-mode hides .homePageBackLink, same as on /home) */}
+          put (body.video-mode hides .homePageBackLink) */}
       {isSmall && (
         <div
           className="homePageBackLink"
@@ -128,9 +128,8 @@ const Resume = () => {
             Not on phones: the panel is full-bleed there and the moon sits
             behind it (CameraRig's aboutMoonNdcX returns null), so the
             invisible overlay would just be a 165px tap trap over the intro
-            paragraph and whatever scrolls under it. Home gates it the same
-            way (moonLinkActive); SolarScene drops the moon's link halo to
-            match. */}
+            paragraph and whatever scrolls under it. SolarScene drops the
+            moon's link halo to match. */}
         {!isSmall && (
           <ZipVideoMoon open={videoOpen} onOpenChange={setVideoOpen} />
         )}

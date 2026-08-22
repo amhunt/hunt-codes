@@ -13,7 +13,7 @@ import { SYNTH_CAM_HEIGHT, SYNTH_ORIGIN } from "../../synthSpec";
  * above the sun (the system reads as a flat orbital diagram). Home
  * perches just over the SUN's limb looking out toward Earth, so the
  * sun's top curve fills the bottom of the frame with mostly stars above
- * and Earth (moon alongside) hanging small in the middle distance. About
+ * and Earth hanging small in the middle distance. About
  * perches over EARTH's limb opposite the moon and rides the moon's
  * orbit, so Earth's top curve fills the foreground with the moon pinned
  * in view above-right of it. View changes swoop between the views over
@@ -178,7 +178,7 @@ function computeGoal(
   } else {
     // Perch just over the sun's limb on the far side from Earth, looking
     // out at the stars: the sun's top curve fills the bottom of the frame
-    // and Earth (with its moon) hangs small in the middle distance.
+    // and Earth hangs small in the middle distance.
     planetPosition(EARTH, t, earthPos);
     toEarth.copy(earthPos).normalize();
     side.crossVectors(toEarth, UP).normalize();

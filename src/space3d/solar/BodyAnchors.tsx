@@ -67,7 +67,7 @@ const ANCHORS: BodyAnchorConfig[] = [
     fadeInOnArrival: true,
   },
   {
-    // The moon's video link (the overlay exists on /about and /home)
+    // The moon's video link (the overlay exists on /about)
     domId: MOON_VIDEO_LINK_ID,
     position: (t, out) => moonPosition(t, out),
     radius: MOON.radius,

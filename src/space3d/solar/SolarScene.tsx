@@ -7,7 +7,6 @@ import Moon from "./Moon";
 import Sun from "./Sun";
 import Asteroid from "./Asteroid";
 import Satellite from "./Satellite";
-import Rocket from "./Rocket";
 import DrumPad from "./DrumPad";
 import RocketJourney from "./RocketJourney";
 import JourneyCruise from "./JourneyCruise";
@@ -55,11 +54,10 @@ const SolarScene = ({
   const isCompact = width < 1280;
   const isPhone = width < 768;
   // Below the lg breakpoint (useWindowSize's 1000px) the home view drops
-  // its redundant chrome — the link trio duplicates the icon buttons and
-  // the moon crowds Earth — so the perch keeps some breathing room.
-  // SolarOverlays hides the trio's click targets to match.
+  // its redundant link trio — it duplicates the icon buttons — so the
+  // perch keeps some breathing room. SolarOverlays hides the trio's click
+  // targets to match.
   const isNarrow = width < 1000;
-  const hideHomeExtras = view === "home" && isNarrow;
   useEffect(() => {
     layoutState.compact = isCompact;
   }, [isCompact]);
@@ -128,40 +126,38 @@ const SolarScene = ({
           closeUp={view === "about"}
         />
       ))}
-      {/* No moon on the landing view: from the top-down framing it reads as
-          a stray speck beside Earth rather than a body, and its orbit ring
-          crosses Earth's. It fades in on the way to the home perch, where
-          there's room to read it — and where it becomes the video link. */}
+      {/* The moon is an /about-only body: from the landing's top-down
+          framing it reads as a stray speck beside Earth rather than a body
+          (and its orbit ring crosses Earth's), and from the home perch it
+          only crowds Earth. It fades in on the way to the about perch —
+          along the scroll scrub as well as the timed swoop (Moon reads the
+          journey progress itself) — where it becomes the video link. */}
       <Moon
         orbitColor={isNightMode ? "#ffffff" : "#141428"}
         orbitOpacity={isNightMode ? 0.28 : 0.2}
-        revealed={planetsRevealed && !hideHomeExtras && !isLanding}
+        revealed={view === "about"}
         // The video link needs the moon actually on screen AND clickable:
         // /about above phone widths (on phones the panel is full-bleed
         // and Resume doesn't mount the overlay — the moon hides behind
-        // the resume), /home only at the widths where hideHomeExtras
-        // keeps it
-        linkActive={
-          (view === "about" && !isPhone) || (view === "home" && !hideHomeExtras)
-        }
+        // the resume)
+        linkActive={view === "about" && !isPhone}
       />
       {/* Link bodies — home view only: on landing they'd read as clutter
           around the sun, and on /about their DOM overlays don't exist, so
           the rocks would be dead weight drifting near the sun. They fade
           in on the way to the home perch. GitHub gets the Sputnik
           satellite, the rest are rocks. */}
-      {ASTEROIDS.map((asteroid) =>
-        asteroid.name === "github" ? (
+      {ASTEROIDS.map((asteroid) => {
+        // The rocket (spaceship) is parked along with its overlay link
+        // (SolarOverlays) until the /journey copy is ready. Restore this
+        // (and the Rocket import) to fly it again:
+        //   <Rocket key={asteroid.name} config={asteroid} visible={view === "home"} />
+        if (asteroid.name === "rocket") return null;
+        return asteroid.name === "github" ? (
           <Satellite
             key={asteroid.name}
             config={asteroid}
             visible={view === "home" && !isNarrow}
-          />
-        ) : asteroid.name === "rocket" ? (
-          <Rocket
-            key={asteroid.name}
-            config={asteroid}
-            visible={view === "home"}
           />
         ) : asteroid.name === "synthpad" ? (
           <DrumPad
@@ -177,8 +173,8 @@ const SolarScene = ({
             config={asteroid}
             visible={view === "home" && !isNarrow}
           />
-        ),
-      )}
+        );
+      })}
       {/* The second solar system, far below this one: six knob-planets
           around a beat-pulsing sun (the space synth) */}
       {view === "synth" && <SynthSystem isNightMode={isNightMode} />}

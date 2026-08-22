@@ -5,6 +5,7 @@ import { DecalGeometry } from "three/examples/jsm/geometries/DecalGeometry.js";
 
 import { EARTH, MOON, planetPosition } from "./constants";
 import { applyOffAxisSquash } from "./offAxisSquash";
+import { JOURNEY_STOPS, scrollTransitionState } from "../../scrollTransition";
 import { MOON_VIDEO_OUTLINE_ID } from "../../solarAnchorIds";
 import { writeSilhouette } from "./outline";
 import { createLogoBadgeTexture } from "../textures";
@@ -22,13 +23,17 @@ import moonMapUrl from "../../assets/moon.jpg";
  * emissive) so the /about camera — which perches over the moon's far side
  * — still reads it when that face is turned away from the sun.
  *
- * On /about and /home the moon doubles as a video link (the Zip
- * brand-launch reel — see ZipVideoMoon): movie-camera badges are decaled
- * onto the surface, and hovering the DOM overlay brightens the moon and
- * pulses its silhouette outline, matching the other link bodies. It is
- * absent from the landing view entirely (SolarScene gates `revealed`).
+ * On /about the moon doubles as a video link (the Zip brand-launch reel —
+ * see ZipVideoMoon): movie-camera badges are decaled onto the surface, and
+ * hovering the DOM overlay brightens the moon and pulses its silhouette
+ * outline, matching the other link bodies. It is absent from the landing
+ * and home views (SolarScene gates `revealed` to /about) and fades in on
+ * the way there: a link swoop flips `revealed`, and the scroll scrub is
+ * read straight from the journey progress, so the moon materializes as
+ * the visitor scrolls out from home instead of popping in on arrival.
  */
-/** Fade duration for the landing-intro reveal */
+/** Fade duration for the reveal — the link swoop's fade, and how closely
+ *  the opacity trails a fast scroll scrub */
 const REVEAL_SECONDS = 0.8;
 
 /** Movie-camera badges around the equator: 3 at 120° apart, so from any
@@ -46,10 +51,11 @@ export default function Moon({
 }: {
   orbitColor: string;
   orbitOpacity: number;
-  /** Fades the moon + its orbit ring in (landing intro) */
+  /** Shows the moon + its orbit ring (the about view). While off, the
+   *  moon still follows the home→about scroll scrub (see the useFrame). */
   revealed?: boolean;
-  /** The video link only exists on /about and /home — gate the clickable
-   *  halo to the views whose overlay is mounted */
+  /** The video link only exists on /about — gate the clickable halo to
+   *  the view whose overlay is mounted */
   linkActive?: boolean;
 }) {
   const earthGroup = useRef<THREE.Group>(null);
@@ -169,11 +175,24 @@ export default function Moon({
       mesh.current.rotation.y += delta * MOON.spinSpeed;
     }
 
-    // Landing-intro reveal: fade the moon + its orbit ring in with the planets
-    revealOpacity.current = THREE.MathUtils.clamp(
-      revealOpacity.current + (revealed ? delta : -delta) / REVEAL_SECONDS,
+    // Reveal: the about view shows the moon + its orbit ring; elsewhere it
+    // tracks the home→about scroll scrub (0 at the home stop, 1 on
+    // arrival) so it fades in along the ride — the /about route only
+    // commits once the camera has all but arrived, which would otherwise
+    // pop the moon in at the very end. A link swoop teleports the progress
+    // to the about stop, so that path simply eases in over REVEAL_SECONDS.
+    const scrubReveal = THREE.MathUtils.clamp(
+      (scrollTransitionState.progress - JOURNEY_STOPS.home) /
+        (JOURNEY_STOPS.about - JOURNEY_STOPS.home),
       0,
       1,
+    );
+    const revealTarget = revealed ? 1 : scrubReveal;
+    const maxStep = delta / REVEAL_SECONDS;
+    revealOpacity.current += THREE.MathUtils.clamp(
+      revealTarget - revealOpacity.current,
+      -maxStep,
+      maxStep,
     );
     if (surfaceMaterial.current) {
       surfaceMaterial.current.opacity = revealOpacity.current;
