@@ -2791,7 +2791,7 @@ $dns-ease: cubic-bezier(0.45, 0.05, 0.25, 1.2);
   }
 }
 
-// Recent transmissions — the gallery of everyone's drawings
+// Past submissions — the gallery of everyone's drawings
 .svg-generator-gallery {
   width: 100%;
   margin-top: 40px;
@@ -2811,10 +2811,21 @@ $dns-ease: cubic-bezier(0.45, 0.05, 0.25, 1.2);
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(96px, 1fr));
   gap: 10px;
+
+  // From the md breakpoint up the 720px column fits four ~150px previews
+  // instead of six ~95px ones — big enough to actually read a drawing
+  @media (min-width: $breakpoint-md) {
+    grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+    gap: 12px;
+  }
 }
 
 .svg-generator-gallery-card {
   display: block;
+  // Grid items default to min-width: auto, so a long nowrap prompt would
+  // widen its track instead of truncating — let the card shrink to the
+  // track and the text lines below do the ellipsizing
+  min-width: 0;
   padding: 8px;
   // Stays dark in both palettes — the drawings are composed for a night sky
   background: rgba(0, 0, 0, 0.45);
@@ -2842,15 +2853,31 @@ $dns-ease: cubic-bezier(0.45, 0.05, 0.25, 1.2);
   }
 }
 
+// The drawing's name (its prompt) leads the caption, the artist trails
+.svg-generator-gallery-prompt,
 .svg-generator-gallery-name {
-  margin: 6px 0 0;
   font-family: "Inconsolata", monospace;
-  font-size: 11px;
-  color: rgba(255, 255, 255, 0.55);
   text-align: center;
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
+}
+
+.svg-generator-gallery-prompt {
+  margin: 8px 0 0;
+  font-size: 12px;
+  font-weight: 700;
+  color: rgba(255, 255, 255, 0.92);
+
+  @media (min-width: $breakpoint-md) {
+    font-size: 13px;
+  }
+}
+
+.svg-generator-gallery-name {
+  margin: 2px 0 0;
+  font-size: 11px;
+  color: rgba(255, 255, 255, 0.55);
 }
 
 // The catch-all 404 (NotFound.tsx) — a lone beacon in the starfield
