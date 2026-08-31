@@ -128,38 +128,40 @@ const Resume = () => {
         // On egg ticks the drop IS the egg — two concurrent confetti()
         // calls in one tick race inside the shared container and the
         // second one's particles never spawn
-        const isEggTick = eggTicks.has(tick++);
-        void confetti({
-          angle: 90,
-          spread: 70,
-          origin: { x: Math.random(), y: 0 },
-          gravity: 1.2,
-          ticks: 0,
-          ...(isEggTick
-            ? {
-                // Same fall as the confetti pieces, just bigger,
-                // egg-shaped, and flat — the tumble updaters render
-                // non-flat images edge-on half the time, where a lone
-                // egg reads as a sliver
-                particleCount: 1,
-                scalar: 4,
-                flat: true,
-                shapes: ["image"],
-                shapeOptions: {
-                  image: eggImages.map((src) => ({
-                    src,
-                    width: 32,
-                    height: 40,
-                  })),
-                },
-              }
-            : {
-                particleCount: 8,
-                colors: celebrationColors,
-              }),
-        }).then((container) => {
-          confettiContainer.current = container;
-        });
+        if (eggTicks.has(tick++)) {
+          // Eggs vary in size, and bigger eggs fall faster (gravity
+          // scales with the egg's scalar). Flat because the tumble
+          // updaters render non-flat images edge-on half the time, where
+          // a lone falling egg reads as a sliver
+          const size =
+            EGG_MIN_SCALE + Math.random() * (EGG_MAX_SCALE - EGG_MIN_SCALE);
+          void confetti({
+            angle: 90,
+            spread: 70,
+            origin: { x: Math.random(), y: 0 },
+            ticks: 0,
+            particleCount: 1,
+            scalar: size,
+            gravity: EGG_GRAVITY_PER_SCALE * size,
+            flat: true,
+            shapes: ["image"],
+            shapeOptions: {
+              image: eggImages.map((src) => ({ src, width: 32, height: 40 })),
+            },
+          });
+        } else {
+          void confetti({
+            angle: 90,
+            spread: 70,
+            origin: { x: Math.random(), y: 0 },
+            gravity: 1.2,
+            ticks: 0,
+            particleCount: 8,
+            colors: celebrationColors,
+          }).then((container) => {
+            confettiContainer.current = container;
+          });
+        }
       }, RAIN_TICK_MS);
       celebrationTimers.current.push(rain);
 
@@ -438,10 +440,16 @@ const celebrationColors = ["#412596", "#9e80f9", "#487de7", "#2f9e44"];
 // Matches the ribbons.js.org "Confetti + Ribbons" demo timing: rain the
 // whole window, first ribbon wave at 2s, a new wave every 2s after
 const CELEBRATION_MS = 6000;
-const RAIN_TICK_MS = 50;
+// The demo rains every 50ms; 70ms thins the confetti ~30%
+const RAIN_TICK_MS = 70;
 
 // Easter eggs mixed into the rain across the full celebration
-const EGG_RAIN_COUNT = 20;
+const EGG_RAIN_COUNT = 14;
+// Egg size range (confetti scalar). Bigger eggs fall faster: each egg's
+// gravity is scalar × EGG_GRAVITY_PER_SCALE (the rain pieces use 1.2)
+const EGG_MIN_SCALE = 2.5;
+const EGG_MAX_SCALE = 5;
+const EGG_GRAVITY_PER_SCALE = 0.6;
 
 const interests = [
   "3D Printing",
