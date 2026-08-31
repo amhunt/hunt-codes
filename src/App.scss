@@ -1130,22 +1130,24 @@ li > ul > li {
   // frantic "disco" feel that competed with the content
   animation: rainbowFromRedToIndigo 16s ease-in-out infinite;
 
-  &:nth-of-type(1) {
+  // nth-child, not nth-of-type: the "Product Easter Eggs" pill is a
+  // <button> among <span>s, which would restart type-based counting
+  &:nth-child(1) {
     animation-delay: 0s;
   }
-  &:nth-of-type(2) {
+  &:nth-child(2) {
     animation-delay: 1s;
   }
-  &:nth-of-type(3) {
+  &:nth-child(3) {
     animation-delay: 2s;
   }
-  &:nth-of-type(4) {
+  &:nth-child(4) {
     animation-delay: 3s;
   }
-  &:nth-of-type(5) {
+  &:nth-child(5) {
     animation-delay: 4s;
   }
-  &:nth-of-type(6) {
+  &:nth-child(6) {
     animation-delay: 5s;
   }
 }
@@ -1174,6 +1176,49 @@ li > ul > li {
   }
   100% {
     background-color: #e8141666;
+  }
+}
+
+// "Product Easter Eggs" is the one pill that lives up to its name: a vivid
+// sliding-rainbow hover, and a click rains SVG eggs (EasterEggConfetti)
+.easter-egg-pill {
+  border: 0;
+  cursor: pointer;
+  font-family: inherit;
+  line-height: inherit;
+  transition: scale 0.15s ease;
+}
+
+// Doubled class beats `.App.day .interest-pill` (day mode's dark pill text)
+// so the hover goes white-on-rainbow in both palettes
+.pill.easter-egg-pill:hover,
+.pill.easter-egg-pill:focus-visible {
+  color: #fff;
+  text-decoration: none; // the global button:hover underline fights the rainbow
+  text-shadow: 0 1px 2px rgba(10, 5, 30, 0.45);
+  // First and last stop match so the 200%-wide slide wraps seamlessly
+  background-image: linear-gradient(
+    90deg,
+    #e81416,
+    #e8850c,
+    #c9a80a,
+    #2f9e44,
+    #3b5bdb,
+    #7048e8,
+    #b3369d,
+    #e81416
+  );
+  background-size: 200% 100%;
+  animation: eggRainbowSlide 1.2s linear infinite;
+  scale: 1.08;
+}
+
+@keyframes eggRainbowSlide {
+  from {
+    background-position: 0% 50%;
+  }
+  to {
+    background-position: 200% 50%;
   }
 }
 

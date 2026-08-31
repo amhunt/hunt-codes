@@ -5,6 +5,12 @@ import { ArrowLeftCircleIcon } from "lucide-react";
 import { Link } from "react-router-dom";
 import useWindowSize from "./useWindowSize";
 import ZipVideoMoon from "./ZipVideoMoon";
+import egg1 from "./assets/eggs/egg-1.png";
+import egg2 from "./assets/eggs/egg-2.png";
+import egg3 from "./assets/eggs/egg-3.png";
+import egg4 from "./assets/eggs/egg-4.png";
+import egg5 from "./assets/eggs/egg-5.png";
+import egg6 from "./assets/eggs/egg-6.png";
 
 const experienceItems = [
   {
@@ -82,6 +88,85 @@ const Resume = () => {
   const [videoOpen, setVideoOpen] = useState(false);
   const size = useWindowSize();
   const isSmall = size === "sm";
+
+  // Clicking the "Product Easter Eggs" pill fires the full celebration
+  // (lazy-loaded to keep it all off /about's critical path): the
+  // confetti.js.org "Images" egg burst, plus the ribbons.js.org
+  // "Confetti + Ribbons" combo — confetti raining from the top edge while
+  // ribbon waves flow across. Each library reuses one shared container
+  // across calls; unmount clears the timers and destroys the containers so
+  // nothing outlives the page.
+  const confettiContainer = useRef<{ destroy: () => void }>(undefined);
+  const ribbonsContainer = useRef<{ destroy: () => void }>(undefined);
+  const celebrationTimers = useRef<number[]>([]);
+  const releaseEggs = useCallback(() => {
+    if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) {
+      return;
+    }
+    void Promise.all([
+      import("@tsparticles/confetti"),
+      import("@tsparticles/ribbons"),
+    ]).then(async ([{ confetti }, { ribbons }]) => {
+      // Both plugin sets must register before the first load() — the shared
+      // tsParticles engine refuses new plugins once anything has loaded
+      await Promise.all([confetti.init(), ribbons.init()]);
+      const animationEnd = Date.now() + CELEBRATION_MS;
+
+      confettiContainer.current = await confetti({
+        spread: 360,
+        ticks: 200,
+        gravity: 1,
+        decay: 0.94,
+        startVelocity: 30,
+        particleCount: 100,
+        scalar: 3,
+        shapes: ["image"],
+        shapeOptions: {
+          image: eggImages.map((src) => ({ src, width: 32, height: 40 })),
+        },
+      });
+
+      const rain = window.setInterval(() => {
+        if (Date.now() >= animationEnd) {
+          return window.clearInterval(rain);
+        }
+        void confetti({
+          particleCount: 8,
+          angle: 90,
+          spread: 70,
+          origin: { x: Math.random(), y: 0 },
+          gravity: 1.2,
+          ticks: 0,
+          colors: celebrationColors,
+        });
+      }, 50);
+      celebrationTimers.current.push(rain);
+
+      const releaseRibbons = () =>
+        void ribbons({ colors: celebrationColors }).then((container) => {
+          ribbonsContainer.current = container;
+        });
+      const start = window.setTimeout(() => {
+        releaseRibbons();
+        const wave = window.setInterval(() => {
+          if (Date.now() >= animationEnd) {
+            return window.clearInterval(wave);
+          }
+          releaseRibbons();
+        }, 2000);
+        celebrationTimers.current.push(wave);
+      }, 2000);
+      celebrationTimers.current.push(start);
+    });
+  }, []);
+  useEffect(
+    () => () => {
+      celebrationTimers.current.forEach((id) => window.clearInterval(id));
+      confettiContainer.current?.destroy();
+      ribbonsContainer.current?.destroy();
+    },
+    [],
+  );
 
   // The Home link's leftward slide is scrubbed by scroll, not animated:
   // it tracks the first SLIDE_RANGE_PX of scrollTop directly, so stopping
@@ -280,11 +365,22 @@ const Resume = () => {
             <div className="resume-divider" />
             <h2>Other interests</h2>
             <div className="flex flex-wrap gap-2">
-              {interests.map((i) => (
-                <span className="pill interest-pill" key={i}>
-                  {i}
-                </span>
-              ))}
+              {interests.map((i) =>
+                i === "Product Easter Eggs" ? (
+                  <button
+                    type="button"
+                    className="pill interest-pill easter-egg-pill"
+                    key={i}
+                    onClick={releaseEggs}
+                  >
+                    {i}
+                  </button>
+                ) : (
+                  <span className="pill interest-pill" key={i}>
+                    {i}
+                  </span>
+                ),
+              )}
             </div>
           </div>
         </div>
@@ -310,6 +406,17 @@ const tools = [
   "Cloudflare / CDN Management",
   "Vue",
 ];
+
+const eggImages = [egg1, egg2, egg3, egg4, egg5, egg6];
+
+// Rain + ribbons in the site's own accents: $purp and $purp-light from
+// App.scss, the interest-pill rainbow-cycle blue, and the hover-gradient
+// green
+const celebrationColors = ["#412596", "#9e80f9", "#487de7", "#2f9e44"];
+
+// Matches the ribbons.js.org "Confetti + Ribbons" demo timing: rain the
+// whole window, first ribbon wave at 2s, a new wave every 2s after
+const CELEBRATION_MS = 6000;
 
 const interests = [
   "3D Printing",
