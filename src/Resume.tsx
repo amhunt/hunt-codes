@@ -5,7 +5,12 @@ import { ArrowLeftCircleIcon } from "lucide-react";
 import { Link } from "react-router-dom";
 import useWindowSize from "./useWindowSize";
 import ZipVideoMoon from "./ZipVideoMoon";
-import EasterEggConfetti from "./EasterEggConfetti";
+import egg1 from "./assets/eggs/egg-1.png";
+import egg2 from "./assets/eggs/egg-2.png";
+import egg3 from "./assets/eggs/egg-3.png";
+import egg4 from "./assets/eggs/egg-4.png";
+import egg5 from "./assets/eggs/egg-5.png";
+import egg6 from "./assets/eggs/egg-6.png";
 
 const experienceItems = [
   {
@@ -84,17 +89,32 @@ const Resume = () => {
   const size = useWindowSize();
   const isSmall = size === "sm";
 
-  // Clicking the "Product Easter Eggs" pill rains SVG eggs. Bumping the id
-  // remounts <EasterEggConfetti key={...}>, so a mid-rain re-click starts a
-  // fresh burst; the timeout outlives the longest egg (0.6s delay + 3.4s fall)
-  const [eggBurst, setEggBurst] = useState(0);
-  const eggTimer = useRef<number | undefined>(undefined);
+  // Clicking the "Product Easter Eggs" pill fires an egg-image confetti
+  // burst (@tsparticles/confetti, lazy-loaded to keep it off /about's
+  // critical path). Repeat clicks reuse one shared container; destroy it on
+  // unmount so its canvas + ticker don't outlive the page.
+  const confettiContainer = useRef<{ destroy: () => void }>(undefined);
   const releaseEggs = useCallback(() => {
-    setEggBurst((n) => n + 1);
-    window.clearTimeout(eggTimer.current);
-    eggTimer.current = window.setTimeout(() => setEggBurst(0), 4300);
+    if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) {
+      return;
+    }
+    void import("@tsparticles/confetti").then(async ({ confetti }) => {
+      confettiContainer.current = await confetti({
+        spread: 360,
+        ticks: 200,
+        gravity: 1,
+        decay: 0.94,
+        startVelocity: 30,
+        particleCount: 100,
+        scalar: 3,
+        shapes: ["image"],
+        shapeOptions: {
+          image: eggImages.map((src) => ({ src, width: 32, height: 40 })),
+        },
+      });
+    });
   }, []);
-  useEffect(() => () => window.clearTimeout(eggTimer.current), []);
+  useEffect(() => () => confettiContainer.current?.destroy(), []);
 
   // The Home link's leftward slide is scrubbed by scroll, not animated:
   // it tracks the first SLIDE_RANGE_PX of scrollTop directly, so stopping
@@ -313,7 +333,6 @@ const Resume = () => {
           </div>
         </div>
       </main>
-      {eggBurst > 0 && <EasterEggConfetti key={eggBurst} />}
     </>
   );
 };
@@ -335,6 +354,8 @@ const tools = [
   "Cloudflare / CDN Management",
   "Vue",
 ];
+
+const eggImages = [egg1, egg2, egg3, egg4, egg5, egg6];
 
 const interests = [
   "3D Printing",
