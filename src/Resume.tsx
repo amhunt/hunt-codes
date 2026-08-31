@@ -5,6 +5,7 @@ import { ArrowLeftCircleIcon } from "lucide-react";
 import { Link } from "react-router-dom";
 import useWindowSize from "./useWindowSize";
 import ZipVideoMoon from "./ZipVideoMoon";
+import EasterEggConfetti from "./EasterEggConfetti";
 
 const experienceItems = [
   {
@@ -82,6 +83,18 @@ const Resume = () => {
   const [videoOpen, setVideoOpen] = useState(false);
   const size = useWindowSize();
   const isSmall = size === "sm";
+
+  // Clicking the "Product Easter Eggs" pill rains SVG eggs. Bumping the id
+  // remounts <EasterEggConfetti key={...}>, so a mid-rain re-click starts a
+  // fresh burst; the timeout outlives the longest egg (0.6s delay + 3.4s fall)
+  const [eggBurst, setEggBurst] = useState(0);
+  const eggTimer = useRef<number | undefined>(undefined);
+  const releaseEggs = useCallback(() => {
+    setEggBurst((n) => n + 1);
+    window.clearTimeout(eggTimer.current);
+    eggTimer.current = window.setTimeout(() => setEggBurst(0), 4300);
+  }, []);
+  useEffect(() => () => window.clearTimeout(eggTimer.current), []);
 
   // The Home link's leftward slide is scrubbed by scroll, not animated:
   // it tracks the first SLIDE_RANGE_PX of scrollTop directly, so stopping
@@ -280,15 +293,27 @@ const Resume = () => {
             <div className="resume-divider" />
             <h2>Other interests</h2>
             <div className="flex flex-wrap gap-2">
-              {interests.map((i) => (
-                <span className="pill interest-pill" key={i}>
-                  {i}
-                </span>
-              ))}
+              {interests.map((i) =>
+                i === "Product Easter Eggs" ? (
+                  <button
+                    type="button"
+                    className="pill interest-pill easter-egg-pill"
+                    key={i}
+                    onClick={releaseEggs}
+                  >
+                    {i}
+                  </button>
+                ) : (
+                  <span className="pill interest-pill" key={i}>
+                    {i}
+                  </span>
+                ),
+              )}
             </div>
           </div>
         </div>
       </main>
+      {eggBurst > 0 && <EasterEggConfetti key={eggBurst} />}
     </>
   );
 };
