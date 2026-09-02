@@ -31,6 +31,7 @@ const BadgeLink = ({ isNightMode }: { isNightMode: boolean }) => {
     pathname === "/about" ||
     pathname.startsWith("/draw") ||
     pathname === "/shop" ||
+    pathname === "/projects-and-toys" ||
     (pathname === "/home" && isNightMode);
 
   // The hit target can vanish without a pointerleave — flipping to day

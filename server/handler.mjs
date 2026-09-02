@@ -653,18 +653,31 @@ const formatPrice = ({ amount, divisor, currency_code: currency }) => {
  * request and keep the minimum data, and the page shouldn't depend on
  * Etsy's field names anyway.
  */
-const normalizeListing = (listing) => {
-  const id = String(listing.listing_id);
-  const image = (listing.images || [])
-    .slice()
-    .sort((a, b) => (a.rank ?? 0) - (b.rank ?? 0))[0];
+const normalizeImage = (image) => {
   const src = image?.url_570xN;
+  if (typeof src !== "string" || !src.startsWith(ETSY_IMAGE_HOST)) return null;
   // 570xN is 570 wide; derive the height from the full-size aspect ratio
   // so the page can reserve space before the image loads
   const height =
-    image?.full_width && image?.full_height
+    image.full_width && image.full_height
       ? Math.round((570 * image.full_height) / image.full_width)
       : null;
+  return {
+    src,
+    alt: image.alt_text ? decodeEntities(image.alt_text) : null,
+    width: 570,
+    height,
+  };
+};
+
+const normalizeListing = (listing) => {
+  const id = String(listing.listing_id);
+  // Every photo, primary (lowest rank) first — the page carousels them
+  const images = (listing.images || [])
+    .slice()
+    .sort((a, b) => (a.rank ?? 0) - (b.rank ?? 0))
+    .map(normalizeImage)
+    .filter(Boolean);
   return {
     id,
     title: decodeEntities(listing.title),
@@ -676,15 +689,10 @@ const normalizeListing = (listing) => {
       listing.url.startsWith("https://www.etsy.com/")
         ? listing.url
         : `https://www.etsy.com/listing/${id}`,
-    image:
-      typeof src === "string" && src.startsWith(ETSY_IMAGE_HOST)
-        ? {
-            src,
-            alt: image.alt_text ? decodeEntities(image.alt_text) : null,
-            width: 570,
-            height,
-          }
-        : null,
+    // `image` (the primary photo alone) predates `images`; kept so a page
+    // bundle from before the carousel still renders the stored copy
+    image: images[0] ?? null,
+    images,
   };
 };
 
@@ -768,7 +776,7 @@ const SHOP_HEADERS = { "cache-control": "public, max-age=300" };
 
 const handleShop = async () => {
   if (!ETSY_SHOP_ID || !ETSY_SHOP_NAME)
-    return json(503, { error: "the gift shop isn't wired up yet" });
+    return json(503, { error: "the artifacts shop isn't wired up yet" });
 
   if (isFresh(etsyMemo)) return json(200, etsyMemo.payload, SHOP_HEADERS);
 
@@ -784,7 +792,7 @@ const handleShop = async () => {
   }
 
   const apiKey = await getParam(ETSY_KEY_PARAM);
-  if (!apiKey) return json(503, { error: "the gift shop isn't wired up yet" });
+  if (!apiKey) return json(503, { error: "the artifacts shop isn't wired up yet" });
 
   try {
     const fetchedAt = Date.now();
@@ -814,7 +822,7 @@ const handleShop = async () => {
         { "cache-control": "public, max-age=60" },
       );
     return json(502, {
-      error: "the gift shop's lights are off — try again in a bit",
+      error: "the artifacts shop's lights are off — try again in a bit",
     });
   }
 };

@@ -26,7 +26,7 @@ see `sha256Hex` in `src/SvgGenerator.tsx`) or the origin signature fails.
 `/api/shop` proxies Etsy's Open API v3 for the shop `ArtifactAndy` using
 only public endpoints (no OAuth): active listing ids for the shop, then one
 batch call with `includes=Images`. Listings are trimmed to id, title,
-formatted price, listing URL, and the primary 570px image before they are
+formatted price, listing URL, and its 570px photos (primary first) before they are
 stored or returned.
 
 - **Credentials**: SSM SecureString `/hunt-codes/etsy-api-key`, holding

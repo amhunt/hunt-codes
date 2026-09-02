@@ -1,14 +1,28 @@
-import React, { useEffect, useState } from "react";
+import React, { useCallback, useEffect, useRef, useState } from "react";
+import cx from "classnames";
 import { Link } from "react-router-dom";
-import { ArrowLeftCircleIcon } from "lucide-react";
+import {
+  ArrowLeftCircleIcon,
+  ArrowUpRight,
+  ChevronLeft,
+  ChevronRight,
+} from "lucide-react";
 
 /**
- * The gift shop: Andrew's Etsy listings, fetched through GET /api/shop
- * (see server/handler.mjs). Checkout stays on Etsy — every item links out.
+ * The artifacts shop: Andrew's Etsy listings, fetched through
+ * GET /api/shop (see server/handler.mjs). Checkout stays on Etsy — every
+ * item links out.
  *
  * Deliberately unstyled beyond legibility for now; a design pass comes
  * later.
  */
+
+type ShopImage = {
+  src: string;
+  alt: string | null;
+  width: number;
+  height: number | null;
+};
 
 type ShopListing = {
   id: string;
@@ -17,12 +31,10 @@ type ShopListing = {
   price: string | null;
   hasVariations: boolean;
   url: string;
-  image: {
-    src: string;
-    alt: string | null;
-    width: number;
-    height: number | null;
-  } | null;
+  /** The primary photo (older API responses carry only this) */
+  image: ShopImage | null;
+  /** Every photo, primary first */
+  images?: ShopImage[];
 };
 
 type ShopPayload = {
@@ -43,6 +55,82 @@ const ETSY_NOTICE =
   "The term 'Etsy' is a trademark of Etsy, Inc. This Application uses Etsy's API, but is not endorsed or certified by Etsy.";
 
 const SHOP_URL = "https://www.etsy.com/shop/ArtifactAndy";
+
+/** A listing's photos in a scroll-snap strip: swipe, or use the arrows;
+ *  the dots track which frame is in view. One photo renders plain. */
+const ListingCarousel = ({
+  images,
+  title,
+}: {
+  images: ShopImage[];
+  title: string;
+}) => {
+  const track = useRef<HTMLDivElement>(null);
+  const [index, setIndex] = useState(0);
+
+  const handleScroll = useCallback(() => {
+    const el = track.current;
+    if (!el || el.clientWidth === 0) return;
+    setIndex(Math.round(el.scrollLeft / el.clientWidth));
+  }, []);
+
+  const go = (delta: number) => {
+    const el = track.current;
+    if (!el) return;
+    const next = Math.min(images.length - 1, Math.max(0, index + delta));
+    el.scrollTo({ left: next * el.clientWidth, behavior: "smooth" });
+  };
+
+  const photos = images.map((image, i) => (
+    <img
+      key={image.src}
+      src={image.src}
+      alt={image.alt ?? (i === 0 ? title : `${title} (photo ${i + 1})`)}
+      width={image.width}
+      height={image.height ?? undefined}
+      loading="lazy"
+      decoding="async"
+    />
+  ));
+
+  if (images.length === 1) {
+    return <div className="shop-carousel-track">{photos}</div>;
+  }
+
+  return (
+    <div className="shop-carousel">
+      <div className="shop-carousel-track" ref={track} onScroll={handleScroll}>
+        {photos}
+      </div>
+      <button
+        type="button"
+        className="shop-carousel-arrow prev"
+        aria-label="Previous photo"
+        disabled={index === 0}
+        onClick={() => go(-1)}
+      >
+        <ChevronLeft size={20} />
+      </button>
+      <button
+        type="button"
+        className="shop-carousel-arrow next"
+        aria-label="Next photo"
+        disabled={index === images.length - 1}
+        onClick={() => go(1)}
+      >
+        <ChevronRight size={20} />
+      </button>
+      <div className="shop-carousel-dots" aria-hidden="true">
+        {images.map((image, i) => (
+          <span
+            key={image.src}
+            className={cx("shop-carousel-dot", i === index && "is-active")}
+          />
+        ))}
+      </div>
+    </div>
+  );
+};
 
 const Shop = () => {
   const [state, setState] = useState<ShopState>({ status: "loading" });
@@ -73,7 +161,7 @@ const Shop = () => {
         <ArrowLeftCircleIcon className="starIcon" size={16} />
         <span>home</span>
       </Link>
-      <h1>gift shop</h1>
+      <h1>artifacts</h1>
       <p>
         small things I make, sold over on{" "}
         <a href={shopUrl} target="_blank" rel="noopener noreferrer">
@@ -106,30 +194,35 @@ const Shop = () => {
 
       {state.status === "ready" && state.data.listings.length > 0 && (
         <ul className="shop-listings">
-          {state.data.listings.map((listing) => (
-            <li key={listing.id} className="shop-listing">
-              {listing.image && (
-                <img
-                  src={listing.image.src}
-                  alt={listing.image.alt ?? listing.title}
-                  width={listing.image.width}
-                  height={listing.image.height ?? undefined}
-                  loading="lazy"
-                  decoding="async"
-                />
-              )}
-              <h2>{listing.title}</h2>
-              {listing.price && (
-                <p>
-                  {listing.hasVariations ? "from " : ""}
-                  {listing.price}
-                </p>
-              )}
-              <a href={listing.url} target="_blank" rel="noopener noreferrer">
-                buy on Etsy
-              </a>
-            </li>
-          ))}
+          {state.data.listings.map((listing) => {
+            // Older API copies (the Lambda's stored payload, a cached
+            // deploy) carry the primary photo alone
+            const images =
+              listing.images ?? (listing.image ? [listing.image] : []);
+            return (
+              <li key={listing.id} className="shop-listing">
+                {images.length > 0 && (
+                  <ListingCarousel images={images} title={listing.title} />
+                )}
+                <h2>{listing.title}</h2>
+                {listing.price && (
+                  <p>
+                    {listing.hasVariations ? "from " : ""}
+                    {listing.price}
+                  </p>
+                )}
+                <a
+                  className="shop-listing-link"
+                  href={listing.url}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                >
+                  Etsy
+                  <ArrowUpRight size={14} aria-hidden="true" />
+                </a>
+              </li>
+            );
+          })}
         </ul>
       )}
 

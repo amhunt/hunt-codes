@@ -5,6 +5,8 @@
  * (Landing, SolarOverlays) can import it without dragging three.js out
  * of its lazy chunk.
  */
+import type { SatellitePart } from "./solarAnchorIds";
+
 export const hoverState = {
   sun: false,
   earth: false,
@@ -12,4 +14,7 @@ export const hoverState = {
   moon: false,
   /** Name of the hovered link asteroid (constants.ts ASTEROIDS), or null */
   asteroid: null as string | null,
+  /** The hovered part link of the satellite on /projects-and-toys
+   *  (solarAnchorIds SATELLITE_PARTS), or null */
+  satellitePart: null as SatellitePart | null,
 };

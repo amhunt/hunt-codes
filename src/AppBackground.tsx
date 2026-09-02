@@ -79,6 +79,8 @@ const AppBackground = ({
     location.pathname.includes("about") ||
     location.pathname.includes("draw") ||
     location.pathname.includes("shop");
+  // The satellite close-up (the Sputnik link's destination)
+  const isProjectsPage = location.pathname.includes("projects");
   // The synth solar system (the 808-pad easter egg's destination)
   const isSynthPage = location.pathname.includes("synth");
   // The /journey story crawl's open-space cruise
@@ -168,6 +170,7 @@ const AppBackground = ({
             isLanding={isLanding}
             isHomePage={isHomePage}
             isAboutPage={isAboutPage}
+            isProjectsPage={isProjectsPage}
             isSynthPage={isSynthPage}
             isJourneyPage={isJourneyPage}
             onJourneyNavigate={journeyNavigate}

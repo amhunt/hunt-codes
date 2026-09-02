@@ -2,7 +2,15 @@ import { useRef } from "react";
 import { useFrame } from "@react-three/fiber";
 import * as THREE from "three";
 
-import { EARTH, moonPosition, planetPosition, rigState } from "./constants";
+import {
+  EARTH,
+  moonPosition,
+  planetPosition,
+  rigState,
+  SATELLITE,
+  satelliteLegsDirection,
+  satelliteViewFrame,
+} from "./constants";
 import { starPanState } from "../starPan";
 import { JOURNEY_STOPS, scrollTransitionState } from "../../scrollTransition";
 import { journeyState } from "../../rocketJourney";
@@ -16,11 +24,14 @@ import { SYNTH_CAM_HEIGHT, SYNTH_ORIGIN } from "../../synthSpec";
  * and Earth hanging small in the middle distance. About
  * perches over EARTH's limb opposite the moon and rides the moon's
  * orbit, so Earth's top curve fills the foreground with the moon pinned
- * in view above-right of it. View changes swoop between the views over
+ * in view above-right of it. Projects (/projects-and-toys) closes in on
+ * the Sputnik satellite from just above it, the sun's limb glowing along
+ * the bottom of the frame. View changes swoop between the views over
  * a few seconds; once arrived the camera rides the moving goal.
  */
 
-export type SolarView = "landing" | "home" | "about" | "synth" | "journey";
+export type SolarView =
+  "landing" | "home" | "about" | "projects" | "synth" | "journey";
 
 // Height tuned so Earth's orbit (r 17.5) nearly reaches the bottom edge
 // (~16px margin on a laptop): visible half-height = tan(fov/2)·y ≈ .52·35.
@@ -93,8 +104,30 @@ function aboutMoonNdcX(width: number): number | null {
   return gutter / width - 1;
 }
 
+// Projects-view framing: the satellite perch. The camera sits along
+// satelliteViewFrame's direction (level with the satellite, off the sun
+// line, so the sun ends up below the frame rather than behind the
+// satellite) at a distance set by the satellite's radius: the head plus
+// its antenna cone (~3.8 radii end to end) fill about half the width of
+// a landscape frame; portrait frames back off so the cone still fits.
+const PROJECTS_CAM_RADII = 4.4;
+const PROJECTS_CAM_RADII_PORTRAIT = 5.6;
+/** Aim this far along the antenna cone from the head's center (in
+ *  satellite radii) on landscape frames — the head sits left of center
+ *  with the cone reaching right. Narrower frames aim further along it
+ *  (up to 1.6x) so the whole body centers instead of the cone clipping. */
+const PROJECTS_LOOK_ALONG_CONE = 0.6;
+const PROJECTS_LANDSCAPE_ASPECT = 1.6;
+/** Frame the satellite a touch above center (NDC): the head clears the
+ *  sun's limb and the cone tips stay well under the name title */
+const PROJECTS_NDC_Y = -0.05;
+
 // scratch values, reused every frame
 const goalPos = new THREE.Vector3();
+const satPos = new THREE.Vector3();
+const perchDir = new THREE.Vector3();
+const perchUp = new THREE.Vector3();
+const coneDir = new THREE.Vector3();
 const goalLook = new THREE.Vector3();
 const earthPos = new THREE.Vector3();
 const moonPos = new THREE.Vector3();
@@ -145,6 +178,30 @@ function computeGoal(
       goalPos.copy(LANDING_POS);
       goalLook.copy(ORIGIN);
     }
+  } else if (view === "projects") {
+    // Perch just above the satellite, on the far side from the sun,
+    // looking down at it: the head and its antenna cone fill the frame
+    // and the sun's top curve glows along the bottom edge. Rides the
+    // satellite's orbit (Earth's angular speed, like the home perch).
+    planetPosition(SATELLITE, t, satPos);
+    satelliteViewFrame(satPos, perchDir, perchUp);
+    const persp = camera as THREE.PerspectiveCamera;
+    const aspect = persp.aspect || 1;
+    const distance =
+      SATELLITE.radius *
+      Math.max(PROJECTS_CAM_RADII, PROJECTS_CAM_RADII_PORTRAIT / aspect);
+    goalPos.copy(satPos).addScaledVector(perchDir, distance);
+    // Aim along the cone so the whole body centers, and a little above
+    // the satellite so it sits slightly low in the frame
+    const tanHalfV = Math.tan((persp.fov * Math.PI) / 360);
+    satelliteLegsDirection(t, coneDir);
+    const alongCone =
+      PROJECTS_LOOK_ALONG_CONE *
+      THREE.MathUtils.clamp(PROJECTS_LANDSCAPE_ASPECT / aspect, 1, 1.6);
+    goalLook
+      .copy(satPos)
+      .addScaledVector(coneDir, alongCone * SATELLITE.radius)
+      .addScaledVector(perchUp, PROJECTS_NDC_Y * distance * tanHalfV);
   } else if (view === "about") {
     // Perch over Earth's limb opposite the moon, riding the moon's orbit:
     // Earth's top curve fills the bottom of the frame and the moon stays
@@ -233,11 +290,13 @@ export default function CameraRig({ view }: { view: SolarView }) {
   useFrame(({ camera, clock, size }, delta) => {
     const t = clock.elapsedTime;
     const scrub = scrollTransitionState;
-    // The synth system and the /journey cruise sit outside the scroll
-    // journey — no stop to adopt or scrub toward; view changes to or
-    // from them always take the timed swoop
+    // The synth system, the /journey cruise and the satellite close-up
+    // sit outside the scroll journey — no stop to adopt or scrub toward;
+    // view changes to or from them always take the timed swoop
     const stop =
-      view === "synth" || view === "journey" ? null : JOURNEY_STOPS[view];
+      view === "synth" || view === "journey" || view === "projects"
+        ? null
+        : JOURNEY_STOPS[view];
 
     // First frame: adopt the mounted view as the journey position (fresh
     // page loads start with the module's stale zeros)
@@ -283,11 +342,13 @@ export default function CameraRig({ view }: { view: SolarView }) {
     }
 
     if (view !== activeView.current) {
-      // A hop from the synth system or the /journey cruise never comes
-      // from the scrub — the parked progress says nothing about the
-      // camera there
+      // A hop from the synth system, the /journey cruise or the satellite
+      // close-up never comes from the scrub — the parked progress says
+      // nothing about the camera there
       const fromDetached =
-        activeView.current === "synth" || activeView.current === "journey";
+        activeView.current === "synth" ||
+        activeView.current === "journey" ||
+        activeView.current === "projects";
       activeView.current = view;
       if (
         stop !== null &&
@@ -300,7 +361,8 @@ export default function CameraRig({ view }: { view: SolarView }) {
         // re-animation on arrival" bug — so let the scrub glide in (or
         // ride straight through, if the target is already past this stop).
       } else {
-        // Link navigation (ENTER, Home, ABOUT ME, synth): timed swoop from
+        // Link navigation (ENTER, Home, ABOUT ME, the satellite, synth):
+        // timed swoop from
         // the current pose; the journey teleports to the destination stop
         transitionStart.current = t;
         fromPos.current.copy(camera.position);
