@@ -53,9 +53,11 @@ the preview tool.
 - Confetti/ribbons (tsParticles) load through `src/celebration.ts`: the
   shared engine throws if a plugin registers after anything has loaded,
   so every effect registers both plugin sets up front via that loader.
-  Never `import("@tsparticles/confetti")` directly. The corner coin's
-  click volley (`badgeConfetti.ts`) uses its own container id so /about's
-  rain destroying its container can't cut a volley short.
+  Never `import("@tsparticles/confetti")` directly. A live container keeps
+  a fullscreen 2D canvas clearing at up to 120fps over the WebGL scenes, so
+  destroy containers once their effect has drained (Resume on unmount; the
+  coin volley in `badgeConfetti.ts` polls its own container empty — it has
+  its own id so /about's teardown can't cut a volley short).
 - There is no `public/sitemap.xml`: `pluginSitemap` in `rsbuild.config.ts`
   emits it from `PUBLIC_ROUTES` in `src/routes.ts`, the same list that
   supplies each page's tab title. A new public page goes in that list

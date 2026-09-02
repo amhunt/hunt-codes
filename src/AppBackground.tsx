@@ -14,7 +14,6 @@ import GoldenGate from "./gg-bridge.png";
 import GoldenGateFog from "./GoldenGateFog";
 import useWindowSize from "useWindowSize";
 import { onSynthNote } from "./synthAudio";
-import SpaceJamSwitch from "./SpaceJamSwitch";
 import { nameHighlightState } from "./nameHighlight";
 import { NAME_TITLE_ID } from "./solarAnchorIds";
 // import RetroMac from "./RetroMac";
@@ -116,10 +115,6 @@ const AppBackground = ({
 
   return (
     <>
-      {/* The "Space jam" switch rides every page, the landing included: the
-          site starts muted, so the landing is where visitors look for the
-          music. Mounted once, app-wide, so the track carries across routes. */}
-      <SpaceJamSwitch />
       {!isLanding && (
         <svg
           id={NAME_TITLE_ID}
