@@ -4,6 +4,7 @@ import { ArrowLeftCircle, Calendar } from "react-feather";
 import { ArrowLeftCircleIcon } from "lucide-react";
 import { Link } from "react-router-dom";
 import useWindowSize from "./useWindowSize";
+import LifeTimeline from "./LifeTimeline";
 import ZipVideoMoon from "./ZipVideoMoon";
 import egg1 from "./assets/eggs/egg-1.png";
 import egg2 from "./assets/eggs/egg-2.png";
@@ -408,6 +409,9 @@ const Resume = () => {
           </div>
         </div>
       </main>
+      {/* Outside <main> so it stays pinned to the bottom of the screen
+          while the résumé scrolls behind it */}
+      <LifeTimeline visible={opacity} />
     </>
   );
 };
