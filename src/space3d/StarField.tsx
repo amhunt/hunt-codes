@@ -557,19 +557,32 @@ const TextStars = ({
 // fades out at night but keeps the day-mode letters, the accessible text
 // and — the part this reads — the responsive box). Not interactive: no
 // cursor gravity, just the roving letter highlight AppBackground's ticker
-// drives and a one-shot assemble on mount. Thinned and dimmed so it reads
-// as a header rather than the show.
+// drives, a random twinkle, and a one-shot assemble on mount. Thinned and
+// dimmed so it reads as a header rather than the show.
 const NAME_TEXT = "andrewhunt";
-const NAME_STAR_OPACITY = 0.6;
+const NAME_STAR_OPACITY = 0.7;
 /** Stars per px of letter width; the landing title runs at 1 */
 const NAME_STAR_DENSITY = 0.85;
 /** Floor on stars per letter — phone-sized glyphs dissolve below this */
 const NAME_MIN_STARS_PER_LETTER = 45;
+/** Smaller dots than the landing title's 1.5–2.5px */
+const NAME_STAR_RADIUS_SCALE = 0.8;
 /** The landing intro in miniature: assemble from a tight scatter */
 const NAME_INTRO_SCATTER_PX = 50;
-/** The highlighted letter's stars swell and whiten (the SVG's shimmer) */
-const NAME_HIGHLIGHT_SWELL = 0.6;
-const NAME_HIGHLIGHT_BRIGHTEN = 45;
+/** The highlighted letter's stars swell and whiten a touch (the SVG's
+ *  shimmer, kept subtle) */
+const NAME_HIGHLIGHT_SWELL = 0.3;
+const NAME_HIGHLIGHT_BRIGHTEN = 22;
+/** Twinkle: every 0.5–1.5s (random) one random star flashes to white —
+ *  a quick attack, then it fades back to its own color */
+const NAME_TWINKLE_GAP_MIN_S = 0.5;
+const NAME_TWINKLE_GAP_MAX_S = 1.5;
+const NAME_TWINKLE_ATTACK_S = 0.08;
+const NAME_TWINKLE_DECAY_S = 0.45;
+const NAME_TWINKLE_SWELL = 0.5;
+const twinkleGap = () =>
+  NAME_TWINKLE_GAP_MIN_S +
+  Math.random() * (NAME_TWINKLE_GAP_MAX_S - NAME_TWINKLE_GAP_MIN_S);
 /** Letter size from the box height (the CSS fixes the box's aspect per
  *  breakpoint), capped so the whole name always fits the width */
 const NAME_LETTER_HEIGHT_FRACTION = 0.55;
@@ -600,7 +613,9 @@ const nameStarLayout = (
         NAME_STAR_DENSITY,
         NAME_MIN_STARS_PER_LETTER / letterWidth,
       ),
-      radiusScale: Math.min(1, letterWidth / NAME_FULL_RADIUS_LETTER_PX),
+      radiusScale:
+        NAME_STAR_RADIUS_SCALE *
+        Math.min(1, letterWidth / NAME_FULL_RADIUS_LETTER_PX),
     },
   };
 };
@@ -648,7 +663,14 @@ const NameStars = ({
       buffers.sizes[i] = targets[i].r;
       buffers.phases[i] = Math.random();
     }
-    return { buffers, positions, velocities, assembled: scatter === 0 };
+    return {
+      buffers,
+      positions,
+      velocities,
+      // Per-star twinkle level (0..1), written by the frame loop
+      twinkle: new Float32Array(count),
+      assembled: scatter === 0,
+    };
   }, [targets, width, height]);
 
   useEffect(() => {
@@ -671,6 +693,9 @@ const NameStars = ({
     chromeVisible: 1,
     // Per-letter highlight, eased so the march shimmers instead of blinks
     glow: new Float32Array(NAME_TEXT.length),
+    elapsed: 0,
+    nextTwinkleAt: twinkleGap(),
+    twinkles: [] as { star: number; start: number }[],
   });
 
   // Registered before useConfigureMaterial's frame hook so the fade it
@@ -689,14 +714,41 @@ const NameStars = ({
     const count = targets.length;
     if (count === 0) return;
 
-    const factor = Math.min(delta * 1000, 100) / STAR_TICK_MS;
+    // Clamped so a backgrounded tab doesn't replay a burst of twinkles
+    // (and glide) on return
+    const dt = Math.min(delta, 0.1);
+    sim.elapsed += dt;
+    const factor = (dt * 1000) / STAR_TICK_MS;
     const highlighted = nameHighlightState.letter;
     const ease = Math.min(1, delta * 10);
     for (let l = 0; l < sim.glow.length; l++) {
       sim.glow[l] += ((l === highlighted ? 1 : 0) - sim.glow[l]) * ease;
     }
 
-    const { buffers, positions, velocities } = data;
+    const { buffers, positions, velocities, twinkle } = data;
+
+    // Twinkles: a random star flashes to white and fades back. A
+    // continuous loop, so it rests under prefers-reduced-motion like the
+    // shader's hue cycle.
+    if (!prefersReducedMotion && sim.elapsed >= sim.nextTwinkleAt) {
+      sim.twinkles.push({
+        star: Math.floor(Math.random() * count),
+        start: sim.elapsed,
+      });
+      sim.nextTwinkleAt = sim.elapsed + twinkleGap();
+    }
+    for (let t = sim.twinkles.length - 1; t >= 0; t--) {
+      const { star, start } = sim.twinkles[t];
+      const age = sim.elapsed - start;
+      const level =
+        age < NAME_TWINKLE_ATTACK_S
+          ? age / NAME_TWINKLE_ATTACK_S
+          : 1 - (age - NAME_TWINKLE_ATTACK_S) / NAME_TWINKLE_DECAY_S;
+      // A resize can shrink the star count under a live twinkle
+      if (star < count) twinkle[star] = Math.max(0, level);
+      if (level <= 0) sim.twinkles.splice(t, 1);
+    }
+
     let settled = true;
     for (let i = 0; i < count; i++) {
       const target = targets[i];
@@ -720,8 +772,12 @@ const NameStars = ({
         buffers.positions[i * 3 + 1] = domToWorldY(y, height);
       }
       const glow = sim.glow[target.letter];
-      buffers.sizes[i] = target.r * (1 + NAME_HIGHLIGHT_SWELL * glow);
-      buffers.brightens[i] = NAME_HIGHLIGHT_BRIGHTEN * glow;
+      const flash = twinkle[i];
+      buffers.sizes[i] =
+        target.r *
+        (1 + NAME_HIGHLIGHT_SWELL * glow + NAME_TWINKLE_SWELL * flash);
+      // aBrighten is % of white mixed in: 100 = pure white at the peak
+      buffers.brightens[i] = NAME_HIGHLIGHT_BRIGHTEN * glow + 100 * flash;
     }
     if (!data.assembled) {
       buffers.positionsAttr.needsUpdate = true;
