@@ -2276,7 +2276,7 @@ $switch-ease: cubic-bezier(0.45, 0.05, 0.25, 1.2);
     left: calc(12.5rem + env(safe-area-inset-left, 0px));
     bottom: calc(1rem + env(safe-area-inset-bottom, 0px));
   }
-  background: linear-gradient(180deg, #3d91d4 0%, #6cb6e8 60%, #9ed4f2 100%);
+  background: #5fa8e3;
   opacity: 1;
   // The 1.5s opacity delay is the fade-in after leaving the landing page:
   // the camera swoop leads, then the toggle appears
@@ -2300,7 +2300,7 @@ $switch-ease: cubic-bezier(0.45, 0.05, 0.25, 1.2);
   }
 
   &[data-state="checked"] {
-    background: linear-gradient(180deg, #1a2340 0%, #2c3660 60%, #3f4a7a 100%);
+    background: #2b3560;
   }
 }
 
@@ -2404,7 +2404,7 @@ $switch-ease: cubic-bezier(0.45, 0.05, 0.25, 1.2);
     inset -2px -2px 4px rgba(200, 120, 0, 0.35);
 
   &[data-state="checked"] {
-    background: radial-gradient(circle at 35% 35%, #f4f2ee, #c9c6bf 75%);
+    background: #e6e3dc;
     box-shadow:
       0 0 6px 1px rgba(230, 235, 255, 0.35),
       inset -2px -2px 4px rgba(90, 95, 120, 0.45);
@@ -2481,11 +2481,11 @@ $music-pill-pad: 4px;
   // Inline in the pill (the Tailwind-positioned day/night switch has its
   // own containing block); relative so the scene layers anchor to it
   position: relative;
-  background: linear-gradient(180deg, #23222e 0%, #34333f 60%, #45444f 100%);
+  background: #34333f;
   transition: background 500ms ease;
 
   &[data-state="checked"] {
-    background: linear-gradient(180deg, #3a1f8f 0%, #5a3bc8 60%, #8f70f2 100%);
+    background: #5a3bc8;
   }
 }
 
@@ -2578,7 +2578,7 @@ $music-pill-pad: 4px;
 .sjs-thumb {
   display: grid;
   place-items: center;
-  background: radial-gradient(circle at 35% 35%, #fff, #dcd9e6 80%);
+  background: #f3f1f8;
   box-shadow: 0 1px 3px rgba(0, 0, 0, 0.4);
   color: #24203a;
 
