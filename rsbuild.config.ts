@@ -1,7 +1,38 @@
-import { defineConfig } from "@rsbuild/core";
+import { defineConfig, type RsbuildPlugin } from "@rsbuild/core";
 import { pluginReact } from "@rsbuild/plugin-react";
 import { pluginSass } from "@rsbuild/plugin-sass";
 import { pluginSvgr } from "@rsbuild/plugin-svgr";
+
+import { PUBLIC_ROUTES, SITE_ORIGIN } from "./src/routes";
+
+// sitemap.xml is emitted from the route table rather than kept in public/:
+// the hand-maintained copy had to be remembered for every new page, and
+// its lastmod dates went stale within a month of being written. No
+// lastmod on purpose — search engines only trust it when it's reliably
+// accurate, and per-route change dates aren't something this build knows.
+const pluginSitemap = (): RsbuildPlugin => ({
+  name: "hunt-codes:sitemap",
+  setup(api) {
+    api.processAssets({ stage: "additional" }, ({ compilation, sources }) => {
+      const lines = [
+        '<?xml version="1.0" encoding="UTF-8"?>',
+        '<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">',
+        ...PUBLIC_ROUTES.flatMap(({ path, priority }) => [
+          "  <url>",
+          `    <loc>${SITE_ORIGIN}${path}</loc>`,
+          `    <priority>${priority.toFixed(1)}</priority>`,
+          "  </url>",
+        ]),
+        "</urlset>",
+        "",
+      ];
+      compilation.emitAsset(
+        "sitemap.xml",
+        new sources.RawSource(lines.join("\n")),
+      );
+    });
+  },
+});
 
 export default defineConfig({
   server: {
@@ -49,5 +80,6 @@ export default defineConfig({
     //   eslintPluginOptions: { overrideConfig: eslintConfig },
     // }),
     pluginSvgr(),
+    pluginSitemap(),
   ],
 });

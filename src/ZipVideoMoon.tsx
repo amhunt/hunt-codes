@@ -22,13 +22,21 @@ import { hoverState } from "./solarHover";
  *
  * While the popover is open the overlay itself is unmounted — BodyAnchors
  * skips absent elements, so there's nothing left hovering over the video.
+ *
+ * The résumé's work-sample card opens the same popover through the lifted
+ * `open` state, which is why the popover renders even when the moon link
+ * is off (`moonLinkActive`): on phones the moon sits behind the full-bleed
+ * panel, so there's no click target, but the video still has to open.
  */
 const ZipVideoMoon = ({
   open,
   onOpenChange,
+  moonLinkActive,
 }: {
   open: boolean;
   onOpenChange: (open: boolean) => void;
+  /** Mount the moon's click target (off on phones — see above) */
+  moonLinkActive: boolean;
 }) => {
   const close = useCallback(() => onOpenChange(false), [onOpenChange]);
 
@@ -78,6 +86,8 @@ const ZipVideoMoon = ({
       </div>
     );
   }
+
+  if (!moonLinkActive) return null;
 
   return (
     <TooltipProvider delayDuration={100}>

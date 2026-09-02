@@ -127,6 +127,8 @@ export const ASTEROIDS: SolarPlanetConfig[] = [
     // in a shallow arc low on the left: satellite crowning, the rocks
     // flanking a step lower. Placements below are solved against the
     // home camera's projection, so each lands on a chosen screen spot.
+    // Parked, not rendered: the blog post it linked moved to /about's
+    // work-sample cards (SolarScene skips it; SolarOverlays has no link)
     name: "recent",
     kind: "mercury",
     radius: 0.28,

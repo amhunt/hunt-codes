@@ -39,12 +39,9 @@ export const BodyOutline = ({ outlineId }: { outlineId: string }) => (
   </svg>
 );
 
+// The blog-post rock ("recent") is parked: the post now lives on /about's
+// work-sample cards, and SolarScene skips its 3D rock to match
 const ASTEROID_LINKS = [
-  {
-    name: "recent",
-    label: "A blog post I wrote at Zip",
-    href: "https://engineering.ziphq.com/material-ui/",
-  },
   {
     name: "github",
     label: "GitHub",
@@ -63,9 +60,9 @@ const SolarOverlays = () => {
   // hides its click target so no invisible button floats in the sky)
   const size = useWindowSize();
   const isPhone = size === "sm";
-  // Below lg the link trio (blog rock, GitHub Sputnik, LinkedIn rock)
-  // sits out too — the icon buttons cover those links, and SolarScene
-  // hides the 3D bodies to match
+  // Below lg the link pair (GitHub Sputnik, LinkedIn rock) sits out too —
+  // the icon buttons cover those links, and SolarScene hides the 3D
+  // bodies to match
   const isNarrow = size !== "lg";
   // Navigating away doesn't fire pointerleave — don't leave a hover
   // glow stuck on

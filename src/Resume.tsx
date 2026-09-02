@@ -1,7 +1,14 @@
 import React, { useCallback, useEffect, useRef, useState } from "react";
 import cx from "classnames";
 import { ArrowLeftCircle, Calendar } from "react-feather";
-import { ArrowLeftCircleIcon } from "lucide-react";
+import {
+  ArrowLeftCircleIcon,
+  ArrowUpRight,
+  AudioWaveform,
+  Clapperboard,
+  PenLine,
+  Wand2,
+} from "lucide-react";
 import { Link } from "react-router-dom";
 import useWindowSize from "./useWindowSize";
 import LifeTimeline from "./LifeTimeline";
@@ -76,6 +83,45 @@ const experienceItems = [
     ],
   },
 ];
+
+// Zip's engineering blog moved domains — engineering.ziphq.com now 301s to
+// the blog index, not the post — so link the post's current home
+const ZIP_BLOG_POST_URL =
+  "https://zip.com/engineering-blog/rewriting-our-component-library-with-material-ui";
+
+/** The inside of a work-sample card. The wrapper decides what the card is:
+ *  a router Link, an external <a>, or a <button> (the Zip reel popover). */
+const WorkCardBody = ({
+  icon,
+  title,
+  subtitle,
+  external = false,
+}: {
+  icon: React.ReactNode;
+  title: string;
+  subtitle: string;
+  /** Opens in a new tab — flag it with the arrow */
+  external?: boolean;
+}) => (
+  <>
+    <span className="work-card-icon" aria-hidden="true">
+      {icon}
+    </span>
+    <span className="work-card-text">
+      <span className="work-card-title">
+        {title}
+        {external && (
+          <ArrowUpRight
+            className="work-card-external"
+            size={14}
+            aria-hidden="true"
+          />
+        )}
+      </span>
+      <span className="work-card-subtitle">{subtitle}</span>
+    </span>
+  </>
+);
 
 // The Home link's scroll-scrubbed slide: it travels SLIDE_DISTANCE_PX
 // leftward over the first SLIDE_RANGE_PX of the container's scroll
@@ -234,14 +280,18 @@ const Resume = () => {
         onScroll={handleScroll}
       >
         {/* The moon doubles as the Zip brand-video link (overlay + popover).
-            Not on phones: the panel is full-bleed there and the moon sits
-            behind it (CameraRig's aboutMoonNdcX returns null), so the
-            invisible overlay would just be a 165px tap trap over the intro
-            paragraph and whatever scrolls under it. SolarScene drops the
-            moon's link halo to match. */}
-        {!isSmall && (
-          <ZipVideoMoon open={videoOpen} onOpenChange={setVideoOpen} />
-        )}
+            Its click target stays off on phones: the panel is full-bleed
+            there and the moon sits behind it (CameraRig's aboutMoonNdcX
+            returns null), so the invisible overlay would just be a 165px
+            tap trap over the intro paragraph and whatever scrolls under it.
+            SolarScene drops the moon's link halo to match. The popover
+            itself is always mounted — the work-sample card below opens it
+            too, phones included. */}
+        <ZipVideoMoon
+          open={videoOpen}
+          onOpenChange={setVideoOpen}
+          moonLinkActive={!isSmall}
+        />
         {/* The link lives outside .resume-panel so the frosted background
           starts above the "About Me" heading, not around the link.
           w-fit: as a flex row it would otherwise stretch to the panel's
@@ -290,6 +340,52 @@ const Resume = () => {
               </a>
               .
             </p>
+            <div className="resume-divider" />
+            <h2>Work samples</h2>
+            {/* Proof for the intro's claims, up top where a skim lands: the
+                two toys built for this site (also linked from /home), the
+                Zip reel the moon opens, and the one published post — whose
+                card replaced the /home blog asteroid. */}
+            <div className="work-samples">
+              <Link className="work-card" to="/draw">
+                <WorkCardBody
+                  icon={<Wand2 size={20} />}
+                  title="SVG Studio"
+                  subtitle="Describe a picture and an AI draws it as an animated SVG — plus a gallery of everyone's drawings"
+                />
+              </Link>
+              <Link className="work-card" to="/synth">
+                <WorkCardBody
+                  icon={<AudioWaveform size={20} />}
+                  title="Space jam studio"
+                  subtitle="A playable synth in a second solar system: the planets are knobs, your keyboard is the keys"
+                />
+              </Link>
+              <button
+                type="button"
+                className="work-card"
+                onClick={() => setVideoOpen(true)}
+              >
+                <WorkCardBody
+                  icon={<Clapperboard size={20} />}
+                  title="Zip brand launch video"
+                  subtitle="The promo reel I cut in After Effects for Zip's 2023 brand redesign"
+                />
+              </button>
+              <a
+                className="work-card"
+                href={ZIP_BLOG_POST_URL}
+                target="_blank"
+                rel="noopener noreferrer"
+              >
+                <WorkCardBody
+                  external
+                  icon={<PenLine size={20} />}
+                  title="Rewriting our component library with Material UI"
+                  subtitle="A post I wrote for Zip's engineering blog, 2023"
+                />
+              </a>
+            </div>
             {/* Hidden until /journey gets more polish:
             <p className="journey-plug">
               Prefer the cinematic cut?{" "}

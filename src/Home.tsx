@@ -3,7 +3,7 @@ import Typed from "typed.js";
 import cx from "classnames";
 
 import { GitHub, Linkedin, Mail } from "react-feather";
-import { PenLine, ShoppingBag, Wand2 } from "lucide-react";
+import { ShoppingBag, Wand2 } from "lucide-react";
 import useWindowSize from "./useWindowSize";
 import useScrollJourney from "./useScrollJourney";
 import SolarOverlays from "./SolarOverlays";
@@ -53,8 +53,8 @@ const Home = () => {
 
   const size = useWindowSize();
   const isSmall = size === "sm";
-  // 768–999px: the five icon pills squeezed the headline to ~100px, so the
-  // row wraps there — contact links on top, the work samples underneath
+  // 768–999px: the icon pills squeezed the headline to ~100px, so the
+  // row wraps there — contact links on top, the work sample underneath
   const isMedium = size === "md";
 
   const typedEl = useRef<HTMLSpanElement>(null);
@@ -161,9 +161,9 @@ const Home = () => {
               default skip grace), like native toolbar tooltips */}
           <TooltipProvider delayDuration={TOOLTIP_DELAY_MS}>
             {/* On md the pills wrap into two rows: contact links (LinkedIn,
-                GitHub, mail) on top, the work samples (blog, SVG Studio)
-                pushed underneath via `order`; max-w-38 = three 48px pills +
-                gaps. Everywhere else it's one row in DOM order. */}
+                GitHub, mail) on top, the work sample (SVG Studio) pushed
+                underneath via `order`; max-w-38 = three 48px pills + gaps.
+                Everywhere else it's one row in DOM order. */}
             <div
               className={cx(
                 "flex items-center justify-end gap-1",
@@ -202,30 +202,6 @@ const Home = () => {
                   <p>GitHub</p>
                 </TooltipContent>
               </Tooltip>
-              {/* Below lg the blog-post asteroid sits out (SolarOverlays hides
-                  the link trio), so the site's one work sample needs a home in
-                  the icon row instead */}
-              {size !== "lg" && (
-                <Tooltip disableHoverableContent>
-                  <TooltipTrigger asChild>
-                    <a
-                      aria-label="A blog post I wrote at Zip"
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      href="https://engineering.ziphq.com/material-ui/"
-                      className={cx(
-                        "icon-pill flex size-12 items-center justify-center rounded-full p-1",
-                        isMedium && "order-1",
-                      )}
-                    >
-                      <PenLine size={20} />
-                    </a>
-                  </TooltipTrigger>
-                  <TooltipContent>
-                    <p>A blog post I wrote at Zip</p>
-                  </TooltipContent>
-                </Tooltip>
-              )}
               <Tooltip disableHoverableContent>
                 <TooltipTrigger asChild>
                   <Link
@@ -329,7 +305,7 @@ const Home = () => {
         target={JOURNEY_STOPS.about}
         delayMs={HINT_DELAY_MS}
         hidden={engaged}
-        // /home renders the "Space jam" pill; the landing page doesn't
+        // /home renders the music button; the landing page doesn't
         clearsBottomLeftControl
       />
     </>
