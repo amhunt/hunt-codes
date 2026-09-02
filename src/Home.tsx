@@ -305,8 +305,6 @@ const Home = () => {
         target={JOURNEY_STOPS.about}
         delayMs={HINT_DELAY_MS}
         hidden={engaged}
-        // /home renders the music button; the landing page doesn't
-        clearsBottomLeftControl
       />
     </>
   );

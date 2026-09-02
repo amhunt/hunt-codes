@@ -21,27 +21,35 @@ import AppBackground from "AppBackground";
 import BadgeLink from "BadgeLink";
 import DayNightSwitch from "DayNightSwitch";
 import Landing from "Landing";
+import SpaceJamSwitch from "SpaceJamSwitch";
 import { NOT_FOUND_TITLE, ROUTE_TITLES, SITE_ORIGIN } from "./routes";
 
-// Pause audio when the page is hidden; resume on return if it was playing.
-// The flag lives in a ref (not a plain `let`) so it survives re-renders —
-// otherwise the "was playing" state would reset every render and playback
-// would never resume.
+// Pause audio when the page is hidden; resume on return whatever was
+// playing. Every <audio> is covered — the space-jam track (mounted
+// app-wide once switched on) and /journey's soundtrack can both be up at
+// once. The set lives in a ref (not a plain `let`) so it survives
+// re-renders — otherwise the "was playing" state would reset every render
+// and playback would never resume.
 const usePauseAudioOnHideEventListener = () => {
-  const playingOnHide = useRef(false);
+  const playingOnHide = useRef(new Set<HTMLAudioElement>());
 
   useEffect(() => {
     const handleVisibilityChange = () => {
-      const audio = document.querySelector("audio");
-      if (!audio) return;
+      const wasPlaying = playingOnHide.current;
       if (document.hidden) {
-        playingOnHide.current = !audio.paused;
-        audio.pause();
-      } else if (playingOnHide.current) {
-        // Resume if it was playing when the page was hidden. Playback can
-        // still be denied by autoplay policies — the visible controls remain
-        // the fallback.
-        void audio.play().catch(() => {});
+        wasPlaying.clear();
+        document.querySelectorAll("audio").forEach((audio) => {
+          if (audio.paused) return;
+          wasPlaying.add(audio);
+          audio.pause();
+        });
+      } else {
+        // Playback can still be denied by autoplay policies — the visible
+        // controls remain the fallback
+        wasPlaying.forEach((audio) => {
+          if (audio.isConnected) void audio.play().catch(() => {});
+        });
+        wasPlaying.clear();
       }
     };
     document.addEventListener("visibilitychange", handleVisibilityChange, {
@@ -106,7 +114,6 @@ const App = () => {
           isNightMode={isNightMode}
           onCheckedChange={setIsNightMode}
         />
-        <BadgeLink isNightMode={isNightMode} />
         <Routes>
           <Route path="/" element={<Landing />} />
           <Route path="/home" element={<Home />} />
@@ -119,6 +126,14 @@ const App = () => {
           <Route path="/projects-and-toys" element={<ProjectsAndToys />} />
           <Route path="*" element={<NotFound />} />
         </Routes>
+        {/* Fixed corner chrome sits after the routes so each page's own
+            content — the landing's ENTER sun — comes first in the tab
+            order. The "Space jam" switch rides every page, the landing
+            included: the site starts muted, so the landing is where
+            visitors look for the music; mounted once, app-wide, the track
+            carries across routes. */}
+        <SpaceJamSwitch />
+        <BadgeLink isNightMode={isNightMode} />
         {/* App-level so the windshield frame and warp flash survive the
             rides' mid-flight route hops (/home → /journey → /home) —
             per-page mounts cut the flash short at every navigation */}

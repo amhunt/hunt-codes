@@ -470,9 +470,11 @@ body.rocket-journey .cockpit-controls {
 
 // The corner "hunt.codes" medallion (space3d/BadgeMedallion — drawn in
 // the shared star canvas, which never takes pointer input). This is its
-// DOM hit target on every page but the landing: the coin doubles as the
-// site's wordmark, and clicking it flies you back to the solar system.
-// Keep the box in sync with the slot constants in BadgeMedallion.tsx.
+// DOM hit target: a click fires the signature-confetti volley
+// (badgeConfetti.ts), and on every page but the landing the coin also
+// doubles as the site's wordmark — clicking it flies you back to the
+// solar system. Keep the box in sync with the slot constants in
+// BadgeMedallion.tsx.
 .badge-link {
   position: fixed;
   right: calc(0.5rem + env(safe-area-inset-right, 0px));
@@ -481,6 +483,11 @@ body.rocket-journey .cockpit-controls {
   height: 140px;
   z-index: 4000;
   border-radius: 50%;
+  // The landing renders it as a <button>: no chrome, just the hit disc
+  appearance: none;
+  border: 0;
+  padding: 0;
+  background: none;
 
   &:focus-visible {
     outline: 2px solid #ab8ffd;
@@ -842,12 +849,10 @@ p {
 }
 
 // On a phone the "Space jam" pill (fixed bottom-left) reaches nearly to
-// the middle, so a centred caption at the same height lands on top of it.
-// Only pages that actually show the pill get lifted — it is gated on
-// `!isLanding`, so lifting the landing hint too would just leave a gap
-// under it.
+// the middle, so a centred caption at the same height lands on top of it
+// — lift the hint clear.
 @media (max-width: 767px) {
-  .scroll-hint--above-controls {
+  .scroll-hint {
     bottom: 76px;
   }
 

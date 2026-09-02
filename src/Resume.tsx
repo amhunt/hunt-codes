@@ -14,6 +14,7 @@ import useWindowSize from "./useWindowSize";
 import LifeTimeline from "./LifeTimeline";
 import ZipVideoMoon from "./ZipVideoMoon";
 import { ZIP_BLOG_POST_URL } from "./workLinks";
+import { loadCelebration } from "./celebration";
 import egg1 from "./assets/eggs/egg-1.png";
 import egg2 from "./assets/eggs/egg-2.png";
 import egg3 from "./assets/eggs/egg-3.png";
@@ -146,13 +147,7 @@ const Resume = () => {
     if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) {
       return;
     }
-    void Promise.all([
-      import("@tsparticles/confetti"),
-      import("@tsparticles/ribbons"),
-    ]).then(async ([{ confetti }, { ribbons }]) => {
-      // Both plugin sets must register before the first load() — the shared
-      // tsParticles engine refuses new plugins once anything has loaded
-      await Promise.all([confetti.init(), ribbons.init()]);
+    void loadCelebration().then(({ confetti, ribbons }) => {
       const animationEnd = Date.now() + CELEBRATION_MS;
 
       // Pre-pick which rain ticks also drop an easter egg, so exactly

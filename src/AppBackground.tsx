@@ -14,7 +14,6 @@ import GoldenGate from "./gg-bridge.png";
 import GoldenGateFog from "./GoldenGateFog";
 import useWindowSize from "useWindowSize";
 import { onSynthNote } from "./synthAudio";
-import SpaceJamSwitch from "./SpaceJamSwitch";
 import { nameHighlightState } from "./nameHighlight";
 import { NAME_TITLE_ID } from "./solarAnchorIds";
 // import RetroMac from "./RetroMac";
@@ -118,9 +117,6 @@ const AppBackground = ({
 
   return (
     <>
-      {/* Keep the landing page's solar-system intro uncluttered — the music
-          switch only appears once the visitor has entered */}
-      {!isLanding && <SpaceJamSwitch />}
       {!isLanding && (
         <svg
           id={NAME_TITLE_ID}
