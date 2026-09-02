@@ -77,14 +77,27 @@ fresh OpenAI `user` identifier every time.
 `viewerIp()` therefore prefers `CloudFront-Viewer-Address` (CloudFront
 generates it and overwrites any viewer-supplied copy) and falls back to
 `sourceIp`, which behind OAC is the edge POP — coarser than per-visitor,
-but unforgeable. **Optional upgrade:** forward `CloudFront-Viewer-Address`
-via the origin request policy and the fallback stops being used. That
-means replacing the managed `AllViewerExceptHostHeader` policy with a
-custom one, and the replacement must still exclude `Host` (forwarding it
-breaks OAC signing against the Lambda URL host) while still forwarding
-`x-amz-content-sha256` (POSTs fail to sign without it). Left undone
-deliberately — the code is safe either way and the global daily cap is
-the real spend ceiling.
+but unforgeable. Since Sept 2026 the `/api/*` behaviors on both
+distributions use the custom origin request policy
+`hunt-codes-api-viewer-geo` (whitelist mode), which forwards
+`CloudFront-Viewer-Address` and the `CloudFront-Viewer-*` geo headers, so
+the fallback is only a safety net. The policy must never forward `Host`
+(it breaks OAC signing against the Lambda URL host) and must forward
+`content-type`; add any new viewer header the handler starts reading to
+that whitelist, or it silently won't arrive. Two CloudFront quirks hit
+while building it: a policy may list at most 10 headers, and
+`x-amz-content-sha256` cannot be listed at all (CloudFront rejects
+`x-amz-*` in the whitelist) yet still reaches the origin — verified with a
+signed POST after the switch.
+
+### What a drawing item stores about its author
+
+Alongside the hashed IP used for rate limiting, each `drawing#<id>` item
+keeps the raw viewer `ip` and a `geo` map (country, region, city, time
+zone, lat/lon) taken from CloudFront's viewer-location headers, for a
+future drawings-on-a-globe view. These fields are write-only from the
+API's perspective: `drawingToJson` picks its output fields explicitly and
+never returns them. Drawings made before this change have only `ipHash`.
 - **Deadline budget**: both OpenAI calls share one 50s deadline, under
   CloudFront's 60s origin read timeout. Past that CloudFront returns its
   own HTML 504 and the visitor never receives a drawing that was billed.
