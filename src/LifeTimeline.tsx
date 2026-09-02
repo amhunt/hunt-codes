@@ -1,4 +1,4 @@
-import React, { useEffect, useRef, useState } from "react";
+import React, { useEffect, useMemo, useRef, useState } from "react";
 import cx from "classnames";
 
 import {
@@ -11,7 +11,8 @@ import {
 /** Decimal year, so era widths are plain subtraction */
 const ym = (year: number, month: number) => year + (month - 1) / 12;
 
-type Era = {
+/** What the tooltip shows — an era, or the future tail */
+type Blurb = {
   /** The only thing that goes in the bar itself */
   title: string;
   /** School or employer, shown next to the title in the tooltip */
@@ -21,6 +22,9 @@ type Era = {
   /** Quoted exactly as the résumé states it — years, no invented precision */
   dates: string;
   blurb: string;
+};
+
+type Era = Blurb & {
   /** Segment fill. Life eras share a color; work walks up the purple ramp */
   color: string;
   start: number;
@@ -109,7 +113,7 @@ const eras: Era[] = [
  * it's a fixed-width tail (see --life-future-w) that fades out to the
  * right the way childhood fades in on the left.
  */
-const future = {
+const future: Blurb = {
   title: "future",
   dates: "Fall 2026 – ?",
   blurb:
@@ -150,90 +154,115 @@ const MIN_YEAR_PX = 42;
 /** The childhood segment fades over its left half (see .life-seg--open) */
 const OPEN_START_LABEL_FRACTION = 0.5;
 
+// The geometry never changes after load (the running era ends at this
+// month), so it's laid out once: each era's share of the track and the
+// narrowest segment its label fits in. Only the fits-or-not booleans
+// depend on the live bar width.
+const now = new Date();
+const today = ym(now.getFullYear(), now.getMonth() + 1);
+const span = today - VISIBLE_START;
+const layout = eras.map((era) => ({
+  era,
+  width:
+    (((era.end ?? today) - Math.max(era.start, VISIBLE_START)) / span) * 100,
+  labelMinPx:
+    (twoLineChars(era.title) * LABEL_PX_PER_CHAR + LABEL_PADDING_PX) /
+    (era.openStart ? OPEN_START_LABEL_FRACTION : 1),
+  year: Math.floor(era.start),
+  key: `${era.title}-${era.dates}`,
+}));
+
 const FUTURE_KEY = "future";
 
+const ariaLabel = ({ title, org, dates }: Blurb) =>
+  [title, org, dates].filter(Boolean).join(", ");
+
 const LifeTimeline = ({ visible }: { visible: boolean }) => {
-  // Widths are percentages, so the pixel width of the bar is the only
+  // Widths are percentages, so the pixel width of the track is the only
   // thing that decides whether a label fits. Watched rather than read on
   // render: the bar spans the viewport and resizes without a re-render.
-  const barRef = useRef<HTMLDivElement>(null);
-  const [barWidth, setBarWidth] = useState(0);
+  const trackRef = useRef<HTMLDivElement>(null);
+  const [trackWidth, setTrackWidth] = useState(0);
   useEffect(() => {
-    const bar = barRef.current;
-    if (!bar) return;
+    const track = trackRef.current;
+    if (!track) return;
     const observer = new ResizeObserver(([entry]) => {
-      setBarWidth(entry.contentRect.width);
+      setTrackWidth(Math.round(entry.contentRect.width));
     });
-    observer.observe(bar);
+    observer.observe(track);
     return () => observer.disconnect();
   }, []);
 
-  // Tooltips are controlled so a tap opens them: Radix only opens on
-  // hover and on keyboard focus, which leaves phones with no way in.
-  const [openTitle, setOpenTitle] = useState<string | null>(null);
-  const wasOpen = useRef(false);
-
-  const now = new Date();
-  const today = ym(now.getFullYear(), now.getMonth() + 1);
-  const span = today - VISIBLE_START;
-
-  const segments = eras.map((era) => {
-    const width =
-      (((era.end ?? today) - Math.max(era.start, VISIBLE_START)) / span) * 100;
-    const px = (barWidth * width) / 100;
-    const labelPx = era.openStart ? px * OPEN_START_LABEL_FRACTION : px;
-    return {
-      era,
-      width,
-      showLabel:
-        labelPx >=
-        twoLineChars(era.title) * LABEL_PX_PER_CHAR + LABEL_PADDING_PX,
-      showYear: px >= MIN_YEAR_PX,
-      year: Math.floor(era.start),
-      key: `${era.title}-${era.dates}`,
-    };
-  });
-
-  const tip = (era: {
-    title: string;
-    org?: string;
-    location?: string;
-    dates: string;
-    blurb: string;
-  }) => (
-    <TooltipContent
-      side="top"
-      sideOffset={10}
-      collisionPadding={12}
-      // Strip the shared tooltip chrome (dark chip, tight padding,
-      // clipped overflow) — the card below brings its own
-      className="overflow-visible bg-transparent p-0"
-    >
-      <div className="life-tip-card">
-        <div className="life-tip-head">
-          <span className="life-tip-title">
-            {era.title}
-            {era.org && <span className="life-tip-org"> · {era.org}</span>}
-          </span>
-          {era.location && (
-            <span className="pill location-pill">{era.location}</span>
-          )}
-        </div>
-        <div className="life-tip-dates">{era.dates}</div>
-        <p className="life-tip-blurb">{era.blurb}</p>
-      </div>
-    </TooltipContent>
+  const segments = useMemo(
+    () =>
+      layout.map((cell) => {
+        const px = (trackWidth * cell.width) / 100;
+        return {
+          ...cell,
+          showLabel: px >= cell.labelMinPx,
+          showYear: px >= MIN_YEAR_PX,
+        };
+      }),
+    [trackWidth],
   );
 
+  // Tooltips are controlled so a tap opens them: Radix only opens on
+  // hover and on keyboard focus, which leaves phones with no way in.
   // Tap-to-toggle needs to know whether the tooltip was already open when
   // the pointer went down, because Radix closes it on pointerdown before
-  // click ever fires
-  const trigger = (key: string) => ({
-    onPointerDown: () => {
-      wasOpen.current = openTitle === key;
-    },
-    onClick: () => setOpenTitle(wasOpen.current ? null : key),
-  });
+  // click ever fires.
+  const [openKey, setOpenKey] = useState<string | null>(null);
+  const wasOpen = useRef(false);
+
+  /** One segment: a tooltip-triggering button plus its card */
+  const segment = (
+    key: string,
+    info: Blurb,
+    props: React.ButtonHTMLAttributes<HTMLButtonElement>,
+    children: React.ReactNode,
+  ) => (
+    <Tooltip
+      key={key}
+      open={openKey === key}
+      onOpenChange={(open) => setOpenKey(open ? key : null)}
+    >
+      <TooltipTrigger asChild>
+        <button
+          type="button"
+          aria-label={ariaLabel(info)}
+          onPointerDown={() => {
+            wasOpen.current = openKey === key;
+          }}
+          onClick={() => setOpenKey(wasOpen.current ? null : key)}
+          {...props}
+        >
+          {children}
+        </button>
+      </TooltipTrigger>
+      <TooltipContent
+        side="top"
+        sideOffset={10}
+        collisionPadding={12}
+        // Strip the shared tooltip chrome (dark chip, tight padding,
+        // clipped overflow) — the card below brings its own
+        className="overflow-visible bg-transparent p-0"
+      >
+        <div className="life-tip-card">
+          <div className="life-tip-head">
+            <span className="life-tip-title">
+              {info.title}
+              {info.org && <span className="life-tip-org"> · {info.org}</span>}
+            </span>
+            {info.location && (
+              <span className="pill location-pill">{info.location}</span>
+            )}
+          </div>
+          <div className="life-tip-dates">{info.dates}</div>
+          <p className="life-tip-blurb">{info.blurb}</p>
+        </div>
+      </TooltipContent>
+    </Tooltip>
+  );
 
   return (
     <div
@@ -247,55 +276,31 @@ const LifeTimeline = ({ visible }: { visible: boolean }) => {
         <div className="life-timeline-bar">
           {/* The eras share the bar with the fixed-width future tail, so
               their percentages are of this inner track, not the bar */}
-          <div className="life-timeline-track" ref={barRef}>
-            {segments.map(({ era, width, showLabel, key }) => (
-              <Tooltip
-                key={key}
-                open={openTitle === key}
-                onOpenChange={(open) => setOpenTitle(open ? key : null)}
-              >
-                <TooltipTrigger asChild>
-                  <button
-                    type="button"
-                    className={cx(
-                      "life-seg",
-                      era.openStart && "life-seg--open",
-                    )}
-                    style={{ width: `${width}%`, background: era.color }}
-                    aria-label={[era.title, era.org, era.dates]
-                      .filter(Boolean)
-                      .join(", ")}
-                    {...trigger(key)}
-                  >
-                    {showLabel && (
-                      <span className="life-seg-label" aria-hidden="true">
-                        {era.title}
-                      </span>
-                    )}
-                  </button>
-                </TooltipTrigger>
-                {tip(era)}
-              </Tooltip>
-            ))}
+          <div className="life-timeline-track" ref={trackRef}>
+            {segments.map(({ era, width, showLabel, key }) =>
+              segment(
+                key,
+                era,
+                {
+                  className: cx("life-seg", era.openStart && "life-seg--open"),
+                  style: { width: `${width}%`, background: era.color },
+                },
+                showLabel && (
+                  <span className="life-seg-label" aria-hidden="true">
+                    {era.title}
+                  </span>
+                ),
+              ),
+            )}
           </div>
-          <Tooltip
-            open={openTitle === FUTURE_KEY}
-            onOpenChange={(open) => setOpenTitle(open ? FUTURE_KEY : null)}
-          >
-            <TooltipTrigger asChild>
-              <button
-                type="button"
-                className="life-seg life-seg--future"
-                aria-label={`${future.title}, ${future.dates}`}
-                {...trigger(FUTURE_KEY)}
-              >
-                <span className="life-seg-label life-seg-label--future">
-                  {future.title}
-                </span>
-              </button>
-            </TooltipTrigger>
-            {tip(future)}
-          </Tooltip>
+          {segment(
+            FUTURE_KEY,
+            future,
+            { className: "life-seg life-seg--future" },
+            <span className="life-seg-label life-seg-label--future">
+              {future.title}
+            </span>,
+          )}
         </div>
       </TooltipProvider>
       {/* Year rules line up with the segment boundaries above. The first
@@ -303,16 +308,14 @@ const LifeTimeline = ({ visible }: { visible: boolean }) => {
           instead of a tick; the future tail's tick is today. */}
       <div className="life-timeline-axis" aria-hidden="true">
         <div className="life-timeline-track">
-          {segments.map(({ era, width, showYear, year, key }, i) => (
+          {segments.map(({ width, showYear, year, key }, i) => (
             <span
               className="life-axis-cell"
               key={key}
               style={{ width: `${width}%` }}
             >
               {i === 0 ? (
-                <span className="life-axis-open">
-                  ← {Math.floor(era.start)}
-                </span>
+                <span className="life-axis-open">← {year}</span>
               ) : (
                 showYear && <span className="life-axis-year">{year}</span>
               )}
