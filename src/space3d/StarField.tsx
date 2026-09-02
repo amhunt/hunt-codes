@@ -67,6 +67,13 @@ const prefersReducedMotion =
 
 const HALO_FACTOR = 3; // sprite is 3x the dot diameter, for the glow halo
 
+// Twinkle (aTwinkle 0..1, the name header): the star's sprite is grown
+// TWINKLE_GROW× on the CPU (aSize) so the sparkle rays have room, while
+// the shader pulls the dot's core back in so it only grows TWINKLE_DOT_GROW×
+// instead of ballooning with the sprite.
+const TWINKLE_GROW = 5;
+const TWINKLE_DOT_GROW = 1.6;
+
 // Extra wrap range beyond the viewport so big sprites drift fully
 // offscreen before re-entering on the far side instead of popping
 const PAN_WRAP_PAD_PX = 160;
@@ -77,6 +84,7 @@ const vertexShader = /* glsl */ `
   attribute float aPhase;
   attribute float aDisco;
   attribute float aBrighten;
+  attribute float aTwinkle;
   uniform float uTime;
   uniform float uPixelRatio;
   uniform float uMaxPointSize;
@@ -84,8 +92,10 @@ const vertexShader = /* glsl */ `
   uniform vec2 uWrap;
   varying vec3 vColor;
   varying float vExtraHue;
+  varying float vTwinkle;
 
   void main() {
+    vTwinkle = aTwinkle;
     float scale = 1.0;
     float extraHue = 0.0;
     if (aDisco > 0.5) {
@@ -120,6 +130,15 @@ const fragmentShader = /* glsl */ `
   uniform float uGlowStrength;
   varying vec3 vColor;
   varying float vExtraHue;
+  varying float vTwinkle;
+
+  // One sparkle ray: \`across\` is the distance off the ray's line, \`along\`
+  // the distance from the center along it (sprite units, 0..0.5). Thin,
+  // tapering to nothing at the sprite edge.
+  float ray(float across, float along) {
+    float taper = pow(max(0.0, 1.0 - along * 2.0), 0.8);
+    return 1.5 * exp(-across * 25.0) * taper;
+  }
 
   // CSS filter: hue-rotate() matrix (column-major)
   vec3 hueRotate(vec3 color, float angle) {
@@ -138,11 +157,26 @@ const fragmentShader = /* glsl */ `
     float d = length(p) * 2.0; // 0 at center, 1 at sprite edge
     // The dot core fills 1/HALO_FACTOR of the sprite; the rest is glow.
     // A slightly larger, softer-edged core makes the stars read bigger.
-    float core = 1.0 - smoothstep(0.34, 0.42, d);
+    // While twinkling the sprite is TWINKLE_GROW× bigger, so the core
+    // thresholds shrink to keep the dot near its size (see TWINKLE_GROW).
+    float coreScale = mix(
+      1.0,
+      ${TWINKLE_DOT_GROW.toFixed(1)} / (1.0 + ${TWINKLE_GROW.toFixed(1)}),
+      vTwinkle
+    );
+    float core = 1.0 - smoothstep(0.34 * coreScale, 0.42 * coreScale, d);
     float halo = exp(-d * 5.0) * uGlowStrength * (1.0 - core);
+    // Four-point sparkle (plus faint diagonals) that fades with the twinkle
+    vec2 a = abs(p);
+    vec2 q = abs(vec2(p.x + p.y, p.x - p.y)) * 0.7071;
+    float spark = vTwinkle * (
+      ray(a.x, a.y) + ray(a.y, a.x) + 0.5 * (ray(q.x, q.y) + ray(q.y, q.x))
+    );
     float hue = uHue + vExtraHue;
-    vec3 color = hueRotate(vColor, hue) * core + hueRotate(uGlowColor, hue) * halo;
-    float alpha = (core + halo) * uOpacity;
+    vec3 color = hueRotate(vColor, hue) * core
+      + hueRotate(uGlowColor, hue) * halo
+      + vec3(1.0) * spark;
+    float alpha = (core + halo + spark) * uOpacity;
     if (alpha < 0.004) discard;
     gl_FragColor = vec4(color, alpha);
   }
@@ -188,9 +222,11 @@ interface StarBuffers {
   phases: Float32Array;
   discos: Float32Array;
   brightens: Float32Array;
+  twinkles: Float32Array;
   positionsAttr: THREE.BufferAttribute;
   sizesAttr: THREE.BufferAttribute;
   brightensAttr: THREE.BufferAttribute;
+  twinklesAttr: THREE.BufferAttribute;
 }
 
 /** The one place that knows the star shader's per-vertex attribute layout. */
@@ -215,6 +251,7 @@ const createStarGeometry = (
   const phasesAttr = make(1, "aPhase");
   const discosAttr = make(1, "aDisco");
   const brightensAttr = make(1, "aBrighten");
+  const twinklesAttr = make(1, "aTwinkle");
   // Points are spread across the whole screen; skip per-frame culling math
   geometry.boundingSphere = new THREE.Sphere(new THREE.Vector3(), extent);
   return {
@@ -225,9 +262,11 @@ const createStarGeometry = (
     phases: phasesAttr.array as Float32Array,
     discos: discosAttr.array as Float32Array,
     brightens: brightensAttr.array as Float32Array,
+    twinkles: twinklesAttr.array as Float32Array,
     positionsAttr,
     sizesAttr,
     brightensAttr,
+    twinklesAttr,
   };
 };
 
@@ -573,13 +612,14 @@ const NAME_INTRO_SCATTER_PX = 50;
  *  shimmer, kept subtle) */
 const NAME_HIGHLIGHT_SWELL = 0.3;
 const NAME_HIGHLIGHT_BRIGHTEN = 22;
-/** Twinkle: every 0.5–1.5s (random) one random star flashes to white —
- *  a quick attack, then it fades back to its own color */
-const NAME_TWINKLE_GAP_MIN_S = 0.5;
-const NAME_TWINKLE_GAP_MAX_S = 1.5;
-const NAME_TWINKLE_ATTACK_S = 0.08;
-const NAME_TWINKLE_DECAY_S = 0.45;
-const NAME_TWINKLE_SWELL = 0.5;
+/** Twinkle: every 0.25–0.75s (random) one random star flares — a quick
+ *  attack to white with a four-point sparkle (the shader's aTwinkle rays)
+ *  and a TWINKLE_GROW× sprite, then it fades back to its own color */
+const NAME_TWINKLE_GAP_MIN_S = 0.25;
+const NAME_TWINKLE_GAP_MAX_S = 0.75;
+const NAME_TWINKLE_ATTACK_S = 0.1;
+const NAME_TWINKLE_HOLD_S = 0.15;
+const NAME_TWINKLE_DECAY_S = 0.6;
 const twinkleGap = () =>
   NAME_TWINKLE_GAP_MIN_S +
   Math.random() * (NAME_TWINKLE_GAP_MAX_S - NAME_TWINKLE_GAP_MIN_S);
@@ -667,8 +707,6 @@ const NameStars = ({
       buffers,
       positions,
       velocities,
-      // Per-star twinkle level (0..1), written by the frame loop
-      twinkle: new Float32Array(count),
       assembled: scatter === 0,
     };
   }, [targets, width, height]);
@@ -725,7 +763,9 @@ const NameStars = ({
       sim.glow[l] += ((l === highlighted ? 1 : 0) - sim.glow[l]) * ease;
     }
 
-    const { buffers, positions, velocities, twinkle } = data;
+    const { buffers, positions, velocities } = data;
+    // Per-star twinkle level (0..1) — the shader's aTwinkle, written here
+    const twinkle = buffers.twinkles;
 
     // Twinkles: a random star flashes to white and fades back. A
     // continuous loop, so it rests under prefers-reduced-motion like the
@@ -740,13 +780,21 @@ const NameStars = ({
     for (let t = sim.twinkles.length - 1; t >= 0; t--) {
       const { star, start } = sim.twinkles[t];
       const age = sim.elapsed - start;
-      const level =
-        age < NAME_TWINKLE_ATTACK_S
+      // Lifetime by age, not by level: a twinkle is born at level 0 and
+      // must survive its first frame to ramp up
+      const decayStart = NAME_TWINKLE_ATTACK_S + NAME_TWINKLE_HOLD_S;
+      const done = age >= decayStart + NAME_TWINKLE_DECAY_S;
+      // Envelope: quick attack, brief hold at full, then the fade back
+      const level = done
+        ? 0
+        : age < NAME_TWINKLE_ATTACK_S
           ? age / NAME_TWINKLE_ATTACK_S
-          : 1 - (age - NAME_TWINKLE_ATTACK_S) / NAME_TWINKLE_DECAY_S;
+          : age < decayStart
+            ? 1
+            : 1 - (age - decayStart) / NAME_TWINKLE_DECAY_S;
       // A resize can shrink the star count under a live twinkle
-      if (star < count) twinkle[star] = Math.max(0, level);
-      if (level <= 0) sim.twinkles.splice(t, 1);
+      if (star < count) twinkle[star] = level;
+      if (done) sim.twinkles.splice(t, 1);
     }
 
     let settled = true;
@@ -774,8 +822,7 @@ const NameStars = ({
       const glow = sim.glow[target.letter];
       const flash = twinkle[i];
       buffers.sizes[i] =
-        target.r *
-        (1 + NAME_HIGHLIGHT_SWELL * glow + NAME_TWINKLE_SWELL * flash);
+        target.r * (1 + NAME_HIGHLIGHT_SWELL * glow + TWINKLE_GROW * flash);
       // aBrighten is % of white mixed in: 100 = pure white at the peak
       buffers.brightens[i] = NAME_HIGHLIGHT_BRIGHTEN * glow + 100 * flash;
     }
@@ -785,6 +832,7 @@ const NameStars = ({
     }
     buffers.sizesAttr.needsUpdate = true;
     buffers.brightensAttr.needsUpdate = true;
+    buffers.twinklesAttr.needsUpdate = true;
   });
 
   useConfigureMaterial(material, fadeRef);
