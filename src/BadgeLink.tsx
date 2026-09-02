@@ -22,6 +22,7 @@ const BadgeLink = ({ isNightMode }: { isNightMode: boolean }) => {
     pathname === "/journey" ||
     pathname === "/about" ||
     pathname.startsWith("/draw") ||
+    pathname === "/shop" ||
     (pathname === "/home" && isNightMode);
   if (!visible) return null;
 

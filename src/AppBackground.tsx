@@ -72,9 +72,12 @@ const AppBackground = ({
   }, []);
 
   const isHomePage = location.pathname.includes("home");
-  // /draw shares the about-page background (Earth + moon in the 3D scene)
+  // /draw and /shop share the about-page background (Earth + moon in the
+  // 3D scene)
   const isAboutPage =
-    location.pathname.includes("about") || location.pathname.includes("draw");
+    location.pathname.includes("about") ||
+    location.pathname.includes("draw") ||
+    location.pathname.includes("shop");
   // The synth solar system (the 808-pad easter egg's destination)
   const isSynthPage = location.pathname.includes("synth");
   // The /journey story crawl's open-space cruise
