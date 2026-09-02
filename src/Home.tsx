@@ -222,7 +222,7 @@ const Home = () => {
               <Tooltip disableHoverableContent>
                 <TooltipTrigger asChild>
                   <Link
-                    aria-label="Gift Shop"
+                    aria-label="Artifacts"
                     to="/shop"
                     className={cx(
                       "icon-pill flex size-12 items-center justify-center rounded-full p-1",
@@ -233,7 +233,7 @@ const Home = () => {
                   </Link>
                 </TooltipTrigger>
                 <TooltipContent>
-                  <p>Gift Shop</p>
+                  <p>Artifacts</p>
                 </TooltipContent>
               </Tooltip>
               <Tooltip

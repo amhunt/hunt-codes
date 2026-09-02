@@ -1549,7 +1549,8 @@ a:hover {
 #solar-system a,
 .earth-about-ring,
 .asteroid-link,
-.moon-link {
+.moon-link,
+.satellite-link {
   -webkit-tap-highlight-color: transparent;
 }
 
@@ -1671,7 +1672,9 @@ a:hover {
 .earth-about-ring:hover .body-outline,
 .earth-about-ring:focus-visible .body-outline,
 .moon-link:hover .body-outline,
-.moon-link:focus-visible .body-outline {
+.moon-link:focus-visible .body-outline,
+.satellite-link:hover .body-outline,
+.satellite-link:focus-visible .body-outline {
   opacity: 1;
 }
 
@@ -1716,6 +1719,73 @@ a:hover {
   cursor: pointer;
 }
 
+// The satellite's part links on /projects-and-toys (ProjectsAndToys):
+// the antenna cone, the video screen, the graffiti heart and the cargo
+// crate, each glued to its part by BodyAnchors. Same contract as Earth's
+// ring: hidden until placed, faded in once the camera's swoop settles.
+.satellite-link {
+  position: fixed;
+  visibility: hidden;
+  opacity: 0;
+  transition: opacity 0.8s ease;
+  z-index: 3;
+  border-radius: 50%;
+  pointer-events: auto;
+  cursor: pointer;
+  // The <button> (the screen) must render like the <a>s around it
+  padding: 0;
+  border: 0;
+  background: none;
+}
+
+// /projects-and-toys is the 3D close-up; this is its only copy — a
+// caption in the bottom-right, the one corner the composition leaves
+// dark (the sun's limb rides the bottom-left), revealed after the
+// arrival swoop. Inset past the 140px corner medallion (.badge-link).
+// Phones center it above the medallion and the "Space jam" pill instead.
+.projects-caption {
+  position: fixed;
+  right: calc(164px + env(safe-area-inset-right, 0px));
+  bottom: calc(44px + env(safe-area-inset-bottom, 0px));
+  z-index: 3;
+  text-align: right;
+  font-family: "Inconsolata", monospace;
+  color: #e8e6f5;
+  opacity: 0;
+  transition: opacity 1s ease;
+  pointer-events: none;
+
+  &.show {
+    opacity: 1;
+  }
+
+  h1 {
+    margin: 0;
+    font-size: 22px;
+    font-weight: 700;
+    letter-spacing: 2px;
+    text-shadow: 0 0 24px $purp-light-transparent;
+  }
+
+  p {
+    margin: 4px 0 0;
+    font-size: 14px;
+    letter-spacing: 0.5px;
+    opacity: 0.8;
+  }
+
+  @media (max-width: $breakpoint-sm) {
+    left: 24px;
+    right: 24px;
+    bottom: calc(160px + env(safe-area-inset-bottom, 0px));
+    text-align: center;
+  }
+}
+
+.App.day .projects-caption {
+  color: #24203a;
+}
+
 // ─── Zip brand-video popover (ZipVideoMoon) ────────────────
 // While the video plays, `video-mode` on <body> hides everything except
 // the stars: the solar canvas, the name letters, the mode toggle, the
@@ -1730,6 +1800,8 @@ body.video-mode {
   .music-toggle,
   .homePageBackLink,
   .life-timeline,
+  .projects-caption,
+  .satellite-link,
   .badge-link {
     opacity: 0 !important;
     pointer-events: none !important;
@@ -3408,9 +3480,9 @@ $music-pill-pad: 4px;
   }
 }
 
-// The gift shop (/shop). Bare-bones for now — a fixed, scrolling layer
-// over the scene so the listings are legible in both palettes; the real
-// design pass comes later. No backdrop-filter (see .resume-panel).
+// The artifacts shop (/shop). Bare-bones for now — a fixed, scrolling
+// layer over the scene so the listings are legible in both palettes; the
+// real design pass comes later. No backdrop-filter (see .resume-panel).
 .shop-page {
   position: fixed;
   inset: 0;
@@ -3420,6 +3492,12 @@ $music-pill-pad: 4px;
   font-family: "Inconsolata", monospace;
   color: #e8e6f5;
 
+  // Wide screens get a proper gutter instead of hugging the left edge
+  @media (min-width: $breakpoint-lg) {
+    padding-left: 96px;
+    padding-right: 96px;
+  }
+
   h1 {
     margin: 16px 0 4px;
     font-size: 32px;
@@ -3428,10 +3506,13 @@ $music-pill-pad: 4px;
     text-shadow: 0 0 24px $purp-light-transparent;
   }
 
+  // Listing titles: a notch smaller than the body copy, in a very light
+  // green so they stand apart from the purple links
   h2 {
     margin: 8px 0 0;
-    font-size: 16px;
+    font-size: 14px;
     font-weight: 700;
+    color: #d3f9dd;
   }
 
   p {
@@ -3469,6 +3550,115 @@ $music-pill-pad: 4px;
   background: rgba(8, 6, 28, 0.82);
 }
 
+// The "Etsy ↗" link under each listing: the arrow rides inline in the
+// link's own color
+.shop-listing-link {
+  display: inline-flex;
+  align-items: center;
+  gap: 2px;
+}
+
+// Listing photos: a scroll-snap strip (swipe on touch, the arrows on a
+// mouse) with a dot per photo. Every frame is the same 4:3 box so the
+// card doesn't jump between photos of different shapes.
+.shop-carousel {
+  position: relative;
+}
+
+.shop-carousel-track {
+  display: flex;
+  overflow-x: auto;
+  scroll-snap-type: x mandatory;
+  scrollbar-width: none;
+  border-radius: 8px;
+
+  &::-webkit-scrollbar {
+    display: none;
+  }
+
+  img {
+    flex: 0 0 100%;
+    aspect-ratio: 4 / 3;
+    object-fit: cover;
+    scroll-snap-align: start;
+    scroll-snap-stop: always;
+  }
+}
+
+.shop-carousel-arrow {
+  position: absolute;
+  top: 50%;
+  transform: translateY(-50%);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
+  padding: 0;
+  border: 0;
+  border-radius: 50%;
+  color: #ffffff;
+  background: rgba(8, 6, 28, 0.55);
+  opacity: 0;
+  transition:
+    opacity 0.2s ease,
+    background-color 0.2s ease;
+
+  &:hover {
+    background: rgba(65, 37, 150, 0.85);
+  }
+
+  &:disabled {
+    opacity: 0 !important;
+    pointer-events: none;
+  }
+
+  &.prev {
+    left: 6px;
+  }
+
+  &.next {
+    right: 6px;
+  }
+}
+
+// Arrows show on hover (and always on touch screens, where there is no
+// hover to reveal them — though swiping works regardless)
+.shop-carousel:hover .shop-carousel-arrow,
+.shop-carousel-arrow:focus-visible {
+  opacity: 1;
+}
+
+@media (hover: none) {
+  .shop-carousel-arrow {
+    opacity: 1;
+  }
+}
+
+.shop-carousel-dots {
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 8px;
+  display: flex;
+  justify-content: center;
+  gap: 5px;
+  pointer-events: none;
+}
+
+.shop-carousel-dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.45);
+  box-shadow: 0 0 3px rgba(0, 0, 0, 0.6);
+  transition: background-color 0.2s ease;
+
+  &.is-active {
+    background: #ffffff;
+  }
+}
+
 .shop-footer {
   margin-top: 48px;
   max-width: 72ch;
@@ -3481,6 +3671,11 @@ $music-pill-pad: 4px;
 
   a {
     color: $purp;
+  }
+
+  // The night palette's pale green vanishes on the white cards
+  h2 {
+    color: #2f7a44;
   }
 
   .shop-listing {

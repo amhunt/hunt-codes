@@ -11,6 +11,7 @@ import "./App.scss";
 import Home from "./Home";
 import Journey from "./Journey";
 import NotFound from "./NotFound";
+import ProjectsAndToys from "./ProjectsAndToys";
 import Resume from "./Resume";
 import RocketCockpit from "./RocketCockpit";
 import Shop from "./Shop";
@@ -115,6 +116,7 @@ const App = () => {
           <Route path="/draw" element={<SvgGenerator />} />
           <Route path="/draw/:id" element={<SvgGenerator />} />
           <Route path="/shop" element={<Shop />} />
+          <Route path="/projects-and-toys" element={<ProjectsAndToys />} />
           <Route path="*" element={<NotFound />} />
         </Routes>
         {/* App-level so the windshield frame and warp flash survive the

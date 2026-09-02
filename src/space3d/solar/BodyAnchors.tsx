@@ -8,6 +8,7 @@ import {
   MOON,
   planetPosition,
   rigState,
+  satellitePartState,
   type SolarPlanetConfig,
 } from "./constants";
 import { projectBody, type ProjectedBody } from "./projection";
@@ -16,6 +17,9 @@ import {
   asteroidAnchorId,
   EARTH_ABOUT_RING_ID,
   MOON_VIDEO_LINK_ID,
+  SATELLITE_PARTS,
+  satellitePartAnchorId,
+  type SatellitePart,
 } from "../../solarAnchorIds";
 
 /**
@@ -55,6 +59,20 @@ const asteroidConfig = (asteroid: SolarPlanetConfig): BodyAnchorConfig => ({
   minSizePx: 44,
 });
 
+/** The satellite's part links on /projects-and-toys: Satellite publishes
+ *  each part's world center per frame (satellitePartState — the parts
+ *  ride its rig orientation). Sized to the part: the head parts get a
+ *  roomy circle, the antenna a tighter one so it stays clear of the head
+ *  (the cone is long and thin; its hover outline shows the true shape). */
+const satellitePartConfig = (part: SatellitePart): BodyAnchorConfig => ({
+  domId: satellitePartAnchorId(part),
+  position: (_t, out) => out.copy(satellitePartState[part].position),
+  radius: satellitePartState[part].radius,
+  ringScale: part === "antenna" ? 1.2 : 1.6,
+  minSizePx: 44,
+  fadeInOnArrival: true,
+});
+
 const ANCHORS: BodyAnchorConfig[] = [
   {
     domId: EARTH_ABOUT_RING_ID,
@@ -76,6 +94,7 @@ const ANCHORS: BodyAnchorConfig[] = [
     fadeInOnArrival: true,
   },
   ...ASTEROIDS.map(asteroidConfig),
+  ...SATELLITE_PARTS.map(satellitePartConfig),
 ];
 
 const worldPos = new THREE.Vector3();

@@ -13,6 +13,7 @@ import { Link } from "react-router-dom";
 import useWindowSize from "./useWindowSize";
 import LifeTimeline from "./LifeTimeline";
 import ZipVideoMoon from "./ZipVideoMoon";
+import { ZIP_BLOG_POST_URL } from "./workLinks";
 import egg1 from "./assets/eggs/egg-1.png";
 import egg2 from "./assets/eggs/egg-2.png";
 import egg3 from "./assets/eggs/egg-3.png";
@@ -83,11 +84,6 @@ const experienceItems = [
     ],
   },
 ];
-
-// Zip's engineering blog moved domains — engineering.ziphq.com now 301s to
-// the blog index, not the post — so link the post's current home
-const ZIP_BLOG_POST_URL =
-  "https://zip.com/engineering-blog/rewriting-our-component-library-with-material-ui";
 
 /** The inside of a work-sample card. The wrapper decides what the card is:
  *  a router Link, an external <a>, or a <button> (the Zip reel popover). */

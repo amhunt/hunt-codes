@@ -24,7 +24,12 @@ export const PUBLIC_ROUTES: PublicRoute[] = [
   { path: "/draw", title: "SVG Studio | Andrew Hunt", priority: 0.5 },
   { path: "/journey", title: "The Journey | Andrew Hunt", priority: 0.5 },
   { path: "/synth", title: "Space jam studio | Andrew Hunt", priority: 0.5 },
-  { path: "/shop", title: "Gift Shop | Andrew Hunt", priority: 0.5 },
+  { path: "/shop", title: "Artifacts | Andrew Hunt", priority: 0.5 },
+  {
+    path: "/projects-and-toys",
+    title: "Projects & Toys | Andrew Hunt",
+    priority: 0.5,
+  },
 ];
 
 export const ROUTE_TITLES: Record<string, string> = Object.fromEntries(

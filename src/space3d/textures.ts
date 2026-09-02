@@ -183,21 +183,6 @@ export function createInteractiveGlowTexture(): THREE.CanvasTexture {
   return asTexture(canvas);
 }
 
-/** The GitHub mark (Octocat silhouette), from simple-icons (CC0), in a
- *  24x24 viewBox. */
-const GITHUB_MARK_PATH =
-  "M12 .297c-6.63 0-12 5.373-12 12 0 5.303 3.438 9.8 8.205 11.385.6.113." +
-  "82-.258.82-.577 0-.285-.01-1.04-.015-2.04-3.338.724-4.042-1.61-4.042-" +
-  "1.61C4.422 18.07 3.633 17.7 3.633 17.7c-1.087-.744.084-.729.084-.729 " +
-  "1.205.084 1.838 1.236 1.838 1.236 1.07 1.835 2.809 1.305 3.495.998." +
-  "108-.776.417-1.305.76-1.605-2.665-.3-5.466-1.332-5.466-5.93 0-1.31." +
-  "465-2.38 1.235-3.22-.135-.303-.54-1.523.105-3.176 0 0 1.005-.322 3.3 " +
-  "1.23.96-.267 1.98-.399 3-.405 1.02.006 2.04.138 3 .405 2.28-1.552 " +
-  "3.285-1.23 3.285-1.23.645 1.653.24 2.873.12 3.176.765.84 1.23 1.91 " +
-  "1.23 3.22 0 4.61-2.805 5.625-5.475 5.92.42.36.81 1.096.81 2.22 0 " +
-  "1.606-.015 2.896-.015 3.286 0 .315.21.69.825.57C20.565 22.092 24 " +
-  "17.592 24 12.297c0-6.627-5.373-12-12-12";
-
 /** The LinkedIn logo (rounded square with "in" knocked out), from
  *  simple-icons (CC0), in a 24x24 viewBox. */
 const LINKEDIN_MARK_PATH =
@@ -229,13 +214,12 @@ const VIDEO_MARK_PATH =
   "M17 10.5V7c0-.55-.45-1-1-1H4c-.55 0-1 .45-1 1v10c0 .55.45 1 1 1h12c.55 " +
   "0 1-.45 1-1v-3.5l4 4v-11l-4 4z";
 
-export type AsteroidLogo = "github" | "linkedin" | "blog" | "video";
+export type AsteroidLogo = "linkedin" | "blog" | "video";
 
 const LOGO_MARKS: Record<
   AsteroidLogo,
   { path: string; color: string; scale: number }
 > = {
-  github: { path: GITHUB_MARK_PATH, color: "#5000f0", scale: 0.72 },
   // The square marks are scaled down so they don't overwhelm the asteroid
   linkedin: { path: LINKEDIN_MARK_PATH, color: "#0a66c2", scale: 0.6 },
   blog: { path: RSS_MARK_PATH, color: "#f26522", scale: 0.6 },
@@ -265,5 +249,136 @@ export function createLogoBadgeTexture(
   ctx.fillStyle = mark.color;
   ctx.fill(new Path2D(mark.path));
   ctx.setTransform(1, 0, 0, 1, 0, 0);
+  return asTexture(canvas);
+}
+
+/** A heart (Material Design "favorite", Apache 2.0), in a 24x24 viewBox */
+const HEART_PATH =
+  "M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 " +
+  "0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 " +
+  "3.78-3.4 6.86-8.55 11.54L12 21.35z";
+
+/** A red spray-paint heart tagged on the satellite's head (its SVG Studio
+ *  link, /projects-and-toys): the mark goes down in a ring of jittered,
+ *  translucent passes so the edge fuzzes like over-spray, then a solid
+ *  core, slanted the way a tag gets sprayed, with two drips running off
+ *  the bottom and a wet highlight on the upper lobe. Transparent
+ *  canvas — a "sticker" decal, like the badges. */
+export function createGraffitiHeartTexture(): THREE.CanvasTexture {
+  const size = 256;
+  const canvas = createCanvas(size, size);
+  const ctx = canvas.getContext("2d");
+  if (!ctx) return asTexture(canvas);
+
+  const c = size / 2;
+  const heart = new Path2D(HEART_PATH);
+  const scale = (size / 24) * 0.7;
+  const spray = (dx: number, dy: number, alpha: number, grow: number) => {
+    ctx.setTransform(1, 0, 0, 1, 0, 0);
+    ctx.translate(c + dx, c + dy);
+    ctx.rotate(-0.32);
+    ctx.scale(scale * grow, scale * grow);
+    ctx.translate(-12, -12.2);
+    ctx.globalAlpha = alpha;
+    ctx.fill(heart);
+  };
+  // Over-spray halo: offset passes at low alpha build a soft edge
+  ctx.fillStyle = "#c81a26";
+  for (let i = 0; i < 8; i++) {
+    const a = i * 0.79;
+    spray(Math.cos(a) * 6, Math.sin(a) * 6, 0.2, 1.06);
+  }
+  ctx.fillStyle = "#e8232f";
+  spray(0, 0, 0.96, 1);
+  ctx.setTransform(1, 0, 0, 1, 0, 0);
+
+  // Drips off the lower lobe (their tops sit inside the solid fill)
+  ctx.globalAlpha = 0.92;
+  ctx.fillStyle = "#d61f2b";
+  for (const [x, length] of [
+    [c - 30, 36],
+    [c + 2, 22],
+  ]) {
+    ctx.fillRect(x - 3, c + 28, 6, length);
+    ctx.beginPath();
+    ctx.arc(x, c + 28 + length, 4.5, 0, Math.PI * 2);
+    ctx.fill();
+  }
+  // Wet highlight on the upper-left lobe
+  ctx.globalAlpha = 0.4;
+  ctx.fillStyle = "#ffffff";
+  ctx.beginPath();
+  ctx.ellipse(c - 34, c - 30, 13, 6, -0.5, 0, Math.PI * 2);
+  ctx.fill();
+  ctx.globalAlpha = 1;
+  return asTexture(canvas);
+}
+
+/** The little video screen set into the satellite's head (its Zip
+ *  launch-reel link, /projects-and-toys): dark glass with a purple
+ *  backlight, faint scanlines, a play button and a scrubber — enough to
+ *  read "there's a film in here" from across the frame. Aspect matches
+ *  the screen plane (0.56 x 0.38 body radii). */
+export function createVideoScreenTexture(): THREE.CanvasTexture {
+  const w = 256;
+  const h = 176;
+  const canvas = createCanvas(w, h);
+  const ctx = canvas.getContext("2d");
+  if (!ctx) return asTexture(canvas);
+
+  const glass = ctx.createLinearGradient(0, 0, w, h);
+  glass.addColorStop(0, "#161b33");
+  glass.addColorStop(1, "#070914");
+  ctx.fillStyle = glass;
+  ctx.fillRect(0, 0, w, h);
+
+  const backlight = ctx.createRadialGradient(
+    w / 2,
+    h / 2,
+    0,
+    w / 2,
+    h / 2,
+    w * 0.55,
+  );
+  backlight.addColorStop(0, "rgba(158, 128, 249, 0.6)");
+  backlight.addColorStop(1, "rgba(158, 128, 249, 0)");
+  ctx.fillStyle = backlight;
+  ctx.fillRect(0, 0, w, h);
+
+  ctx.fillStyle = "rgba(0, 0, 0, 0.2)";
+  for (let y = 0; y < h; y += 4) ctx.fillRect(0, y, w, 1);
+
+  // Play button
+  const cx = w / 2;
+  const cy = h / 2 - 8;
+  ctx.fillStyle = "rgba(255, 255, 255, 0.2)";
+  ctx.beginPath();
+  ctx.arc(cx, cy, 36, 0, Math.PI * 2);
+  ctx.fill();
+  ctx.fillStyle = "#ffffff";
+  ctx.beginPath();
+  ctx.moveTo(cx - 12, cy - 19);
+  ctx.lineTo(cx + 20, cy);
+  ctx.lineTo(cx - 12, cy + 19);
+  ctx.closePath();
+  ctx.fill();
+
+  // Scrubber, a third of the way in
+  const barY = h - 24;
+  ctx.fillStyle = "rgba(255, 255, 255, 0.28)";
+  ctx.fillRect(22, barY, w - 44, 4);
+  const played = 22 + (w - 44) * 0.36;
+  ctx.fillStyle = "#b9a4ff";
+  ctx.fillRect(22, barY, played - 22, 4);
+  ctx.beginPath();
+  ctx.arc(played, barY + 2, 6, 0, Math.PI * 2);
+  ctx.fill();
+
+  // Glass sheen across the top-left
+  const sheen = ctx.createLinearGradient(0, 0, w * 0.7, h * 0.7);
+  sheen.addColorStop(0, "rgba(255, 255, 255, 0.18)");
+  sheen.addColorStop(0.55, "rgba(255, 255, 255, 0)");
+  ctx.fillStyle = sheen;
+  ctx.fillRect(0, 0, w, h);
   return asTexture(canvas);
 }

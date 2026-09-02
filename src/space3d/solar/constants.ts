@@ -1,6 +1,7 @@
 import * as THREE from "three";
 
 import type { PlanetKind } from "../../landingScene";
+import type { SatellitePart } from "../../solarAnchorIds";
 import type { AsteroidLogo } from "../textures";
 
 /**
@@ -123,7 +124,7 @@ export const EARTH = PLANETS.find((p) => p.name === "Earth")!;
 const ASTEROID_Y = SUN_RADIUS;
 export const ASTEROIDS: SolarPlanetConfig[] = [
   {
-    // The link trio (blog rock, GitHub Sputnik, LinkedIn rock) clusters
+    // The link trio (blog rock, Sputnik satellite, LinkedIn rock) clusters
     // in a shallow arc low on the left: satellite crowning, the rocks
     // flanking a step lower. Placements below are solved against the
     // home camera's projection, so each lands on a chosen screen spot.
@@ -145,11 +146,13 @@ export const ASTEROIDS: SolarPlanetConfig[] = [
     },
   },
   {
-    // Rendered as the Sputnik satellite (Satellite.tsx), which carries
-    // its own GitHub badge — no decal `logo` needed. Crowns the trio.
-    name: "github",
+    // Rendered as the Sputnik satellite (Satellite.tsx): the door to
+    // /projects-and-toys, where the camera closes in and its parts (the
+    // antenna cone, a screen, a graffiti heart, a cargo crate) become the
+    // links. Crowns the trio.
+    name: "satellite",
     kind: "mercury",
-    radius: 0.32,
+    radius: 0.44,
     orbitRadius: 3.17,
     orbitSpeed: EARTH.orbitSpeed,
     orbitPhase: EARTH.orbitPhase - 1.054,
@@ -221,6 +224,112 @@ export const ASTEROIDS: SolarPlanetConfig[] = [
 
 export const ROCKET = ASTEROIDS.find((a) => a.name === "rocket")!;
 export const SYNTH_PAD = ASTEROIDS.find((a) => a.name === "synthpad")!;
+export const SATELLITE = ASTEROIDS.find((a) => a.name === "satellite")!;
+
+/** Satellite proportions, as multiples of its config radius: the polished
+ *  head sphere and the length of each antenna leg (Satellite.tsx builds
+ *  the meshes from these; the part-link overlays are sized from them). */
+export const SATELLITE_BODY_RADIUS_RATIO = 0.8;
+export const SATELLITE_LEG_LENGTH_RATIO = 2.6;
+/** Radians each antenna leg splays off the cone axis */
+export const SATELLITE_LEG_TILT = 0.32;
+
+/**
+ * World-space centers of the satellite's link parts on /projects-and-toys
+ * (solarAnchorIds SATELLITE_PARTS), written by Satellite each frame and
+ * read by BodyAnchors to glue the DOM overlays: the parts hang off the
+ * satellite's per-frame rig orientation, which nothing else can
+ * recompute. `radius` is each part's rough world extent, for sizing its
+ * overlay. A plain mutable module, like sunState.
+ */
+const satelliteBodyRadius = SATELLITE.radius * SATELLITE_BODY_RADIUS_RATIO;
+export const satellitePartState: Record<
+  SatellitePart,
+  { position: THREE.Vector3; radius: number }
+> = {
+  antenna: {
+    position: new THREE.Vector3(),
+    radius: SATELLITE.radius * SATELLITE_LEG_LENGTH_RATIO * 0.33,
+  },
+  screen: { position: new THREE.Vector3(), radius: satelliteBodyRadius * 0.32 },
+  heart: { position: new THREE.Vector3(), radius: satelliteBodyRadius * 0.28 },
+  crate: { position: new THREE.Vector3(), radius: satelliteBodyRadius * 0.3 },
+};
+
+const WORLD_UP = new THREE.Vector3(0, 1, 0);
+const legsEarth = new THREE.Vector3();
+const legsSide = new THREE.Vector3();
+/** How far the satellite's leg cone swings off dead-away-from-camera in
+ *  the home view: enough right (+side) and down (-y) drift that the
+ *  trailing legs still read as a cone instead of hiding edge-on behind
+ *  the sphere. */
+const LEGS_SIDE_DRIFT = 0.35;
+const LEGS_DOWN_DRIFT = 0.05;
+
+/**
+ * Where the satellite's antenna cone points at elapsed time t: mostly
+ * AWAY from the home camera in its co-rotating frame (the home camera
+ * looks along the sun→Earth axis, so "away" is the Earth direction),
+ * drifted right + down. The home camera co-rotates with Earth's orbit,
+ * so this heading is fixed on screen there. Shared by Satellite (which
+ * aims the cone) and CameraRig (which centers the /projects-and-toys
+ * close-up on the whole body, cone included).
+ */
+export function satelliteLegsDirection(
+  t: number,
+  out = new THREE.Vector3(),
+): THREE.Vector3 {
+  planetPosition(EARTH, t, legsEarth);
+  legsEarth.normalize(); // ≈ camera forward on the home perch
+  legsSide.copy(legsEarth).cross(WORLD_UP).normalize(); // screen-right
+  return out
+    .copy(legsEarth)
+    .addScaledVector(legsSide, LEGS_SIDE_DRIFT)
+    .addScaledVector(WORLD_UP, -LEGS_DOWN_DRIFT)
+    .normalize();
+}
+
+const frameOutward = new THREE.Vector3();
+/** How far the close-up perch swings from level-with-the-satellite toward
+ *  straight above it (radially away from the sun): 0 leaves the sun just
+ *  under the bottom edge, more of it looks further down over the head,
+ *  raising the sun's limb into the frame. */
+const PERCH_CLIMB = 0.12;
+/** Then swing the perch around the sun line, radians. 0 puts the sun
+ *  dead below the satellite and its antenna cone climbing screen-right;
+ *  this much slides the sun's limb to the bottom-left and levels the
+ *  cone out to the right, leaving the bottom-right clear for the caption. */
+const PERCH_AZIMUTH = 0.35;
+
+/**
+ * The /projects-and-toys viewing frame around the satellite. `outToward`
+ * is the direction from the satellite to its close-up camera perch:
+ * level with the satellite and perpendicular to the sun→satellite line,
+ * on the upper side, tipped PERCH_CLIMB outward and swung PERCH_AZIMUTH
+ * around the sun line. Looking back along it with world-up as the
+ * camera's up keeps the sun below the frame, its limb glowing along the
+ * bottom edge instead of filling the sky behind the satellite. `outUp` is
+ * that pose's screen-up. CameraRig perches there; Satellite mounts its
+ * link parts on the hemisphere facing it, so they face the camera by
+ * construction.
+ */
+export function satelliteViewFrame(
+  satellitePos: THREE.Vector3,
+  outToward: THREE.Vector3,
+  outUp: THREE.Vector3,
+): void {
+  frameOutward.copy(satellitePos).normalize(); // sun→satellite
+  // World-up with the outward component removed: level with the
+  // satellite, perpendicular to the sun line, on the upper side
+  outToward
+    .copy(WORLD_UP)
+    .addScaledVector(frameOutward, -frameOutward.y)
+    .normalize()
+    .addScaledVector(frameOutward, PERCH_CLIMB)
+    .normalize()
+    .applyAxisAngle(frameOutward, PERCH_AZIMUTH);
+  outUp.copy(WORLD_UP).addScaledVector(outToward, -outToward.y).normalize();
+}
 
 /** Earth's moon — orbits Earth (not the sun), in the same XZ plane. */
 export const MOON = {

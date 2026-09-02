@@ -16,9 +16,10 @@ const LANDING_STAR_OPACITY = 0.8;
  *   field). Mounted on every route.
  * - SolarScene: the perspective solar system (hunt-codes-3's scene — sun,
  *   orbiting planets + Earth's moon, camera rig). Mounted on the landing,
- *   home and about routes; the camera swoops between the top-down landing
- *   view, the Earth-perch home view and the moon-perch about view, and the
- *   sun's DOM rings follow the projection (landing/home only).
+ *   home, about and projects routes; the camera swoops between the
+ *   top-down landing view, the Earth-perch home view, the moon-perch about
+ *   view and the satellite close-up, and the sun's DOM rings follow the
+ *   projection (landing/home only).
  *
  * Scenes hide themselves when their DOM anchor is absent, and StarField
  * gates its layers invisible once fully faded, so a day-mode canvas
@@ -48,6 +49,7 @@ const Space3DBackground = ({
   isLanding,
   isHomePage,
   isAboutPage,
+  isProjectsPage,
   isSynthPage,
   isJourneyPage,
   onJourneyNavigate,
@@ -56,6 +58,8 @@ const Space3DBackground = ({
   isLanding: boolean;
   isHomePage: boolean;
   isAboutPage: boolean;
+  /** The satellite close-up (/projects-and-toys) */
+  isProjectsPage: boolean;
   isSynthPage: boolean;
   isJourneyPage: boolean;
   /** Router navigation for the lightspeed journeys (passed down into the
@@ -89,6 +93,7 @@ const Space3DBackground = ({
       {(isLanding ||
         isHomePage ||
         isAboutPage ||
+        isProjectsPage ||
         isSynthPage ||
         isJourneyPage) && (
         <SolarScene
@@ -101,7 +106,9 @@ const Space3DBackground = ({
                   ? "journey"
                   : isAboutPage
                     ? "about"
-                    : "home"
+                    : isProjectsPage
+                      ? "projects"
+                      : "home"
           }
           isNightMode={isNightMode}
           onNavigate={onJourneyNavigate}

@@ -46,6 +46,8 @@ const SolarScene = ({
   onNavigate: (to: string) => void;
 }) => {
   const isLanding = view === "landing";
+  // The satellite close-up (/projects-and-toys)
+  const isProjects = view === "projects";
   // Below the lg breakpoint the camera switches to its NDC-fraction
   // framing (CameraRig) and the wide-screen body placement stops
   // fitting — the link bodies pull inward (constants.ts `compact`
@@ -108,7 +110,7 @@ const SolarScene = ({
           wash out the stars (and the crisp flare corona) — shrink it to
           hug the limb there */}
       <Sun
-        targetGlowScale={view === "home" ? 2.2 : 4}
+        targetGlowScale={view === "home" || isProjects ? 2.2 : 4}
         isNightMode={isNightMode}
         showEnterRing={isLanding}
         enterRevealed={enterRevealed}
@@ -145,8 +147,9 @@ const SolarScene = ({
       {/* Link bodies — home view only: on landing they'd read as clutter
           around the sun, and on /about their DOM overlays don't exist, so
           the rocks would be dead weight drifting near the sun. They fade
-          in on the way to the home perch. GitHub gets the Sputnik
-          satellite, the rest are rocks. */}
+          in on the way to the home perch. The Sputnik satellite is the
+          /projects-and-toys door (and that page's subject), the rest are
+          rocks. */}
       {ASTEROIDS.map((asteroid) => {
         // The rocket (spaceship) is parked along with its overlay link
         // (SolarOverlays) until the /journey copy is ready. Restore this
@@ -156,11 +159,20 @@ const SolarScene = ({
         // The blog-post rock is parked too: the post moved to /about's
         // work-sample cards, and SolarOverlays dropped its link
         if (asteroid.name === "recent") return null;
-        return asteroid.name === "github" ? (
+        // The LinkedIn rock is parked for now (not deleted — it may come
+        // back): the icon pill covers the link. Its overlay in
+        // SolarOverlays is commented out to match; drop this line and
+        // restore that block to bring it back.
+        if (asteroid.name === "linkedin") return null;
+        return asteroid.name === "satellite" ? (
           <Satellite
             key={asteroid.name}
             config={asteroid}
-            visible={view === "home" && !isNarrow}
+            // The close-up shows it at every width (the page is nothing
+            // without it); on /home it sits out below lg like the rocks
+            visible={isProjects || (view === "home" && !isNarrow)}
+            bodyLink={view === "home"}
+            partsActive={isProjects}
           />
         ) : asteroid.name === "synthpad" ? (
           <DrumPad
