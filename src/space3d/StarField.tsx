@@ -71,7 +71,7 @@ const HALO_FACTOR = 3; // sprite is 3x the dot diameter, for the glow halo
 // TWINKLE_GROW× on the CPU (aSize) so the sparkle rays have room, while
 // the shader pulls the dot's core back in so it only grows TWINKLE_DOT_GROW×
 // instead of ballooning with the sprite.
-const TWINKLE_GROW = 5;
+const TWINKLE_GROW = 2.5;
 const TWINKLE_DOT_GROW = 1.6;
 
 // Extra wrap range beyond the viewport so big sprites drift fully
@@ -598,7 +598,7 @@ const TextStars = ({
 // cursor gravity, just the roving letter highlight AppBackground's ticker
 // drives, a random twinkle, and a one-shot assemble on mount. Thinned and
 // dimmed so it reads as a header rather than the show.
-const NAME_TEXT = "andrewhunt";
+const NAME_TEXT = "ANDREWHUNT";
 const NAME_STAR_OPACITY = 0.7;
 /** Stars per px of letter width; the landing title runs at 1 */
 const NAME_STAR_DENSITY = 0.85;
@@ -612,11 +612,11 @@ const NAME_INTRO_SCATTER_PX = 50;
  *  shimmer, kept subtle) */
 const NAME_HIGHLIGHT_SWELL = 0.3;
 const NAME_HIGHLIGHT_BRIGHTEN = 22;
-/** Twinkle: every 0.25–0.75s (random) one random star flares — a quick
+/** Twinkle: every 0.5–1.5s (random) one random star flares — a quick
  *  attack to white with a four-point sparkle (the shader's aTwinkle rays)
  *  and a TWINKLE_GROW× sprite, then it fades back to its own color */
-const NAME_TWINKLE_GAP_MIN_S = 0.25;
-const NAME_TWINKLE_GAP_MAX_S = 0.75;
+const NAME_TWINKLE_GAP_MIN_S = 0.5;
+const NAME_TWINKLE_GAP_MAX_S = 1.5;
 const NAME_TWINKLE_ATTACK_S = 0.1;
 const NAME_TWINKLE_HOLD_S = 0.15;
 const NAME_TWINKLE_DECAY_S = 0.6;
