@@ -48,7 +48,7 @@ class BackgroundErrorBoundary extends React.Component<
 }
 
 // Needed to get hover state on individual chars
-const andrewHunt = "andrewhunt";
+const andrewHunt = "ANDREWHUNT";
 const nameArr: string[] = [];
 for (const c of andrewHunt) {
   nameArr.push(c);
@@ -140,7 +140,7 @@ const AppBackground = ({
                 key={idx}
                 className={cx(
                   highlightedCharIdx === idx && "highlightedChar",
-                  c === "h" ? "z-10" : "z-0",
+                  c === "H" ? "z-10" : "z-0",
                 )}
                 alignmentBaseline="hanging"
               >
