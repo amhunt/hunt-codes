@@ -316,8 +316,8 @@ export default function CameraRig({ view }: { view: SolarView }) {
     scrub.rigSettled = p >= 1;
 
     // Scroll journey (useScrollJourney writes the target): once no timed
-    // swoop owns the camera, chase the wheel target so the scrub glides,
-    // parking wherever the visitor stops.
+    // swoop owns the camera, chase the wheel/idle-settling target so the
+    // scrub glides into its nearest stop after the visitor pauses.
     if (p >= 1) {
       scrub.progress +=
         (scrub.target - scrub.progress) * Math.min(1, delta * SCRUB_EASE_RATE);
