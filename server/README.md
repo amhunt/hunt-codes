@@ -19,6 +19,31 @@ see `sha256Hex` in `src/SvgGenerator.tsx`) or the origin signature fails.
 | `POST /api/draw` | `{name, prompt}` → moderate → generate (gpt-4o) → validate SVG → store → `{id, name, prompt, svg, createdAt}` |
 | `GET /api/drawings` | 12 most recent drawings (gallery) |
 | `GET /api/drawings/{id}` | one drawing; **410** when missing (CloudFront rewrites 403/404 into the SPA's index.html, so those statuses are unusable for the API) |
+| `GET /api/shop` | Andrew's active Etsy listings for `/shop` — `{shop, listings, fetchedAt, stale?}` (see "Etsy shop" below) |
+
+## Etsy shop
+
+`/api/shop` proxies Etsy's Open API v3 for the shop `ArtifactAndy` using
+only public endpoints (no OAuth): active listing ids for the shop, then one
+batch call with `includes=Images`. Listings are trimmed to id, title,
+formatted price, listing URL, and the primary 570px image before they are
+stored or returned.
+
+- **Credentials**: SSM SecureString `/hunt-codes/etsy-api-key`, holding
+  `keystring:shared_secret` — Etsy rejects the keystring alone. The app is
+  a Seller App ("huntcodes-shop-page") in the Etsy developer portal, scoped
+  to the shop; its limits are 10 QPS / 10K QPD.
+- **Config**: env `ETSY_SHOP_ID` (62597361) and `ETSY_SHOP_NAME`
+  (`ArtifactAndy`). Both missing → 503 "not wired up".
+- **Caching**: CloudFront's `/api/*` behavior is CachingDisabled, so the
+  Lambda caches for itself: a per-container copy plus the DynamoDB item
+  `pk = etsy#listings`. Fresh for an hour (`ETSY_FRESH_SECONDS`); after
+  that the next request refetches. If Etsy fails, the stored copy is
+  served with `stale: true` until it is six hours old — the ceiling Etsy's
+  API Terms put on displayed listing age — then the route returns 502.
+- **Terms**: the page must show the Etsy trademark notice verbatim, must
+  not mimic Etsy's look, and must send buyers to Etsy for checkout. An app
+  with no successful calls for six months can be suspended.
 
 ## Abuse & account-safety model
 

@@ -5,6 +5,7 @@
  *   POST /api/draw            — generate + persist a drawing
  *   GET  /api/drawings        — recent drawings for the gallery
  *   GET  /api/drawings/{id}   — one drawing (permalink)
+ *   GET  /api/shop            — Andrew's Etsy listings for the /shop page
  *
  * Design notes:
  * - The OpenAI key lives in SSM SecureString `/hunt-codes/openai-api-key`;
@@ -46,6 +47,20 @@ const PER_IP_HOURLY_LIMIT = Number(process.env.PER_IP_HOURLY_LIMIT || 10);
 const DAILY_GLOBAL_LIMIT = Number(process.env.DAILY_GLOBAL_LIMIT || 150);
 const GENERATION_MODEL = process.env.GENERATION_MODEL || "gpt-4o";
 
+// Etsy seller-app credentials live in SSM as `keystring:shared_secret` —
+// Etsy's v3 API rejects the keystring alone ("Shared secret is required").
+const ETSY_KEY_PARAM = process.env.ETSY_KEY_PARAM || "/hunt-codes/etsy-api-key";
+const ETSY_SHOP_ID = process.env.ETSY_SHOP_ID || "";
+const ETSY_SHOP_NAME = process.env.ETSY_SHOP_NAME || "";
+// Refetch after an hour; keep serving a stored copy for up to six hours if
+// Etsy is down or rate-limiting — six hours is the ceiling Etsy's API Terms
+// put on how old displayed listing content may be.
+const ETSY_FRESH_SECONDS = Number(process.env.ETSY_FRESH_SECONDS || 3600);
+const ETSY_STALE_MAX_SECONDS = 6 * 3600;
+const ETSY_BUDGET_MS = 10_000;
+const ETSY_CACHE_PK = "etsy#listings";
+const ETSY_IMAGE_HOST = "https://i.etsystatic.com/";
+
 const NAME_MAX = 40;
 const PROMPT_MAX = 300;
 const SVG_MAX_BYTES = 150_000; // DynamoDB item ceiling is 400KB; stay well under
@@ -68,32 +83,38 @@ Rules:
 const ddb = new DynamoDBClient({});
 const ssm = new SSMClient({});
 
-let cachedOpenAiKey = null;
-const getOpenAiKey = async () => {
-  if (cachedOpenAiKey) return cachedOpenAiKey;
+// SSM SecureStrings, read once per container. Only a found value is
+// cached: ParameterNotFound (key not set yet) returns null so the caller
+// can report "not wired up" instead of a generic 500, and is retried next
+// request.
+const paramCache = new Map();
+const getParam = async (name) => {
+  if (paramCache.has(name)) return paramCache.get(name);
+  let value = null;
   try {
     const res = await ssm.send(
-      new GetParameterCommand({ Name: OPENAI_KEY_PARAM, WithDecryption: true }),
+      new GetParameterCommand({ Name: name, WithDecryption: true }),
     );
-    cachedOpenAiKey = res.Parameter?.Value || null;
+    value = res.Parameter?.Value || null;
   } catch (err) {
-    // ParameterNotFound before the key is set — report "not wired up"
-    // instead of a generic 500
     if (err?.name !== "ParameterNotFound") throw err;
-    cachedOpenAiKey = null;
   }
-  return cachedOpenAiKey;
+  if (value) paramCache.set(name, value);
+  return value;
 };
 
 /**
- * Drop the cached key so the next request re-reads SSM. Called when
- * OpenAI rejects it: without this, rotating the key leaves warm
+ * Drop a cached key so the next request re-reads SSM. Called when the
+ * upstream rejects it: without this, rotating the key leaves warm
  * containers presenting the revoked one until they happen to recycle,
  * and the site half-fails for however long that takes.
  */
-const forgetOpenAiKey = () => {
-  cachedOpenAiKey = null;
+const forgetParam = (name) => {
+  paramCache.delete(name);
 };
+
+const getOpenAiKey = () => getParam(OPENAI_KEY_PARAM);
+const forgetOpenAiKey = () => forgetParam(OPENAI_KEY_PARAM);
 
 const json = (statusCode, body, extraHeaders = {}) => ({
   statusCode,
@@ -559,6 +580,245 @@ const handleListDrawings = async () => {
   );
 };
 
+// ---------------------------------------------------------------------------
+// Etsy shop — GET /api/shop
+//
+// The /shop page lists Andrew's own Etsy listings. Only public v3
+// endpoints are used (no OAuth): one call for the shop's active listing
+// ids, one batch call for titles/prices/images. Checkout stays on Etsy —
+// every listing links out.
+//
+// Caching: CloudFront's /api/* behavior is CachingDisabled, so the Lambda
+// caches for itself — a per-container copy plus one DynamoDB item so cold
+// containers don't each pay Etsy (the seller-app key allows 10 QPS /
+// 10K QPD). Fresh for ETSY_FRESH_SECONDS; past that we refetch, and if
+// Etsy fails we serve the stored copy (flagged `stale`) until it is
+// ETSY_STALE_MAX_SECONDS old, after which the endpoint errors rather than
+// show content older than Etsy's terms allow.
+
+class EtsyError extends Error {
+  constructor(status, detail) {
+    super(`etsy ${status}: ${detail}`);
+    this.status = status;
+  }
+}
+
+const etsyFetch = async (path, apiKey, deadline) => {
+  const timeoutMs = deadline - Date.now();
+  if (timeoutMs <= 0) throw new Error(`no time left in budget for ${path}`);
+  const response = await fetch(
+    `https://openapi.etsy.com/v3/application/${path}`,
+    {
+      headers: { "x-api-key": apiKey },
+      signal: AbortSignal.timeout(timeoutMs),
+    },
+  );
+  if (!response.ok) {
+    if (response.status === 401 || response.status === 403)
+      forgetParam(ETSY_KEY_PARAM);
+    const detail = await response.text().catch(() => "");
+    throw new EtsyError(response.status, detail.slice(0, 200));
+  }
+  return response.json();
+};
+
+// Etsy HTML-escapes titles ("Andy&#39;s Artifacts"); the page renders
+// them as text, so unescape here rather than shipping entities.
+const NAMED_ENTITIES = { amp: "&", lt: "<", gt: ">", quot: '"', apos: "'" };
+const decodeEntities = (text) =>
+  String(text ?? "").replace(/&(#x?[0-9a-f]+|[a-z]+);/gi, (match, code) => {
+    if (code[0] === "#") {
+      const n =
+        code[1]?.toLowerCase() === "x"
+          ? parseInt(code.slice(2), 16)
+          : parseInt(code.slice(1), 10);
+      return Number.isFinite(n) ? String.fromCodePoint(n) : match;
+    }
+    return NAMED_ENTITIES[code.toLowerCase()] ?? match;
+  });
+
+const formatPrice = ({ amount, divisor, currency_code: currency }) => {
+  const value = amount / (divisor || 100);
+  try {
+    return new Intl.NumberFormat("en-US", { style: "currency", currency }).format(
+      value,
+    );
+  } catch {
+    return `${value.toFixed(2)} ${currency}`;
+  }
+};
+
+/**
+ * Trim an Etsy listing to what the page shows. Etsy's terms ask apps to
+ * request and keep the minimum data, and the page shouldn't depend on
+ * Etsy's field names anyway.
+ */
+const normalizeListing = (listing) => {
+  const id = String(listing.listing_id);
+  const image = (listing.images || [])
+    .slice()
+    .sort((a, b) => (a.rank ?? 0) - (b.rank ?? 0))[0];
+  const src = image?.url_570xN;
+  // 570xN is 570 wide; derive the height from the full-size aspect ratio
+  // so the page can reserve space before the image loads
+  const height =
+    image?.full_width && image?.full_height
+      ? Math.round((570 * image.full_height) / image.full_width)
+      : null;
+  return {
+    id,
+    title: decodeEntities(listing.title),
+    // With variations Etsy reports the lowest option's price
+    price: listing.price ? formatPrice(listing.price) : null,
+    hasVariations: Boolean(listing.has_variations),
+    url:
+      typeof listing.url === "string" &&
+      listing.url.startsWith("https://www.etsy.com/")
+        ? listing.url
+        : `https://www.etsy.com/listing/${id}`,
+    image:
+      typeof src === "string" && src.startsWith(ETSY_IMAGE_HOST)
+        ? {
+            src,
+            alt: image.alt_text ? decodeEntities(image.alt_text) : null,
+            width: 570,
+            height,
+          }
+        : null,
+  };
+};
+
+const fetchEtsyListings = async (apiKey) => {
+  const deadline = Date.now() + ETSY_BUDGET_MS;
+  // Active listings come newest-first; paginate past 100 just in case
+  const ids = [];
+  for (let offset = 0; ; offset += 100) {
+    const page = await etsyFetch(
+      `shops/${ETSY_SHOP_ID}/listings/active?limit=100&offset=${offset}`,
+      apiKey,
+      deadline,
+    );
+    const results = page.results || [];
+    for (const r of results) ids.push(r.listing_id);
+    if (results.length < 100 || ids.length >= (page.count || 0)) break;
+  }
+
+  const listings = [];
+  for (let i = 0; i < ids.length; i += 100) {
+    const batch = await etsyFetch(
+      `listings/batch?listing_ids=${ids.slice(i, i + 100).join(",")}&includes=Images`,
+      apiKey,
+      deadline,
+    );
+    listings.push(...(batch.results || []));
+  }
+  // The batch endpoint doesn't promise order; restore newest-first
+  const order = new Map(ids.map((id, i) => [id, i]));
+  listings.sort((a, b) => order.get(a.listing_id) - order.get(b.listing_id));
+  return listings.filter((l) => l.state === "active").map(normalizeListing);
+};
+
+const shopPayload = (listings, fetchedAt) => ({
+  shop: {
+    name: ETSY_SHOP_NAME,
+    url: `https://www.etsy.com/shop/${ETSY_SHOP_NAME}`,
+  },
+  listings,
+  fetchedAt: new Date(fetchedAt).toISOString(),
+});
+
+let etsyMemo = null; // { payload, fetchedAt } for this container
+
+const readEtsyCache = async () => {
+  const res = await ddb.send(
+    new GetItemCommand({
+      TableName: TABLE_NAME,
+      Key: { pk: { S: ETSY_CACHE_PK } },
+    }),
+  );
+  const item = res.Item;
+  if (!item?.payload?.S || !item?.fetchedAt?.N) return null;
+  return { payload: JSON.parse(item.payload.S), fetchedAt: Number(item.fetchedAt.N) };
+};
+
+const writeEtsyCache = async (payload, fetchedAt) => {
+  await ddb.send(
+    new PutItemCommand({
+      TableName: TABLE_NAME,
+      Item: {
+        pk: { S: ETSY_CACHE_PK },
+        payload: { S: JSON.stringify(payload) },
+        fetchedAt: { N: String(fetchedAt) },
+        // TTL is a lazy backstop; the age checks below are what enforce
+        // the six-hour ceiling
+        expiresAt: {
+          N: String(Math.floor(fetchedAt / 1000) + ETSY_STALE_MAX_SECONDS),
+        },
+      },
+    }),
+  );
+};
+
+const ageSeconds = (entry) => (Date.now() - entry.fetchedAt) / 1000;
+const isFresh = (entry) => Boolean(entry) && ageSeconds(entry) < ETSY_FRESH_SECONDS;
+const isServable = (entry) =>
+  Boolean(entry) && ageSeconds(entry) < ETSY_STALE_MAX_SECONDS;
+
+const SHOP_HEADERS = { "cache-control": "public, max-age=300" };
+
+const handleShop = async () => {
+  if (!ETSY_SHOP_ID || !ETSY_SHOP_NAME)
+    return json(503, { error: "the gift shop isn't wired up yet" });
+
+  if (isFresh(etsyMemo)) return json(200, etsyMemo.payload, SHOP_HEADERS);
+
+  let stored = null;
+  try {
+    stored = await readEtsyCache();
+  } catch (err) {
+    console.error("etsy cache read error", err);
+  }
+  if (isFresh(stored)) {
+    etsyMemo = stored;
+    return json(200, stored.payload, SHOP_HEADERS);
+  }
+
+  const apiKey = await getParam(ETSY_KEY_PARAM);
+  if (!apiKey) return json(503, { error: "the gift shop isn't wired up yet" });
+
+  try {
+    const fetchedAt = Date.now();
+    const listings = await fetchEtsyListings(apiKey);
+    const payload = shopPayload(listings, fetchedAt);
+    etsyMemo = { payload, fetchedAt };
+    try {
+      await writeEtsyCache(payload, fetchedAt);
+    } catch (err) {
+      console.error("etsy cache write error", err);
+    }
+    console.log(
+      JSON.stringify({ event: "etsy_refreshed", listings: listings.length }),
+    );
+    return json(200, payload, SHOP_HEADERS);
+  } catch (err) {
+    console.error("etsy fetch error", err);
+    const fallback = isServable(stored)
+      ? stored
+      : isServable(etsyMemo)
+        ? etsyMemo
+        : null;
+    if (fallback)
+      return json(
+        200,
+        { ...fallback.payload, stale: true },
+        { "cache-control": "public, max-age=60" },
+      );
+    return json(502, {
+      error: "the gift shop's lights are off — try again in a bit",
+    });
+  }
+};
+
 export const handler = async (event) => {
   const method = event.requestContext?.http?.method || "GET";
   const path = event.rawPath || "/";
@@ -567,6 +827,7 @@ export const handler = async (event) => {
     if (method === "POST" && path === "/api/draw") return await handleDraw(event);
     if (method === "GET" && path === "/api/drawings")
       return await handleListDrawings();
+    if (method === "GET" && path === "/api/shop") return await handleShop();
     const idMatch = method === "GET" && path.match(/^\/api\/drawings\/([a-f0-9]{10})$/);
     if (idMatch) return await handleGetDrawing(idMatch[1]);
     return json(400, { error: "unknown route" });

@@ -13,6 +13,7 @@ import Journey from "./Journey";
 import NotFound from "./NotFound";
 import Resume from "./Resume";
 import RocketCockpit from "./RocketCockpit";
+import Shop from "./Shop";
 import Synth from "./Synth";
 import SvgGenerator from "./SvgGenerator";
 import AppBackground from "AppBackground";
@@ -58,6 +59,7 @@ const ROUTE_TITLES: Record<string, string> = {
   "/synth": "Space jam studio | Andrew Hunt",
   "/journey": "The Journey | Andrew Hunt",
   "/draw": "SVG Studio | Andrew Hunt",
+  "/shop": "Gift Shop | Andrew Hunt",
 };
 // Anything else lands on the catch-all 404 route
 const NOT_FOUND_TITLE = "Lost in space | Andrew Hunt";
@@ -123,6 +125,7 @@ const App = () => {
           <Route path="/journey" element={<Journey />} />
           <Route path="/draw" element={<SvgGenerator />} />
           <Route path="/draw/:id" element={<SvgGenerator />} />
+          <Route path="/shop" element={<Shop />} />
           <Route path="*" element={<NotFound />} />
         </Routes>
         {/* App-level so the windshield frame and warp flash survive the

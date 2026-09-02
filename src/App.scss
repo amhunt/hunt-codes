@@ -2966,3 +2966,84 @@ $dns-ease: cubic-bezier(0.45, 0.05, 0.25, 1.2);
     color: $purp;
   }
 }
+
+// The gift shop (/shop). Bare-bones for now — a fixed, scrolling layer
+// over the scene so the listings are legible in both palettes; the real
+// design pass comes later. No backdrop-filter (see .resume-panel).
+.shop-page {
+  position: fixed;
+  inset: 0;
+  z-index: 5;
+  overflow-y: auto;
+  padding: 72px 24px 48px;
+  font-family: "Inconsolata", monospace;
+  color: #e8e6f5;
+
+  h1 {
+    margin: 16px 0 4px;
+    font-size: 32px;
+    font-weight: 700;
+    letter-spacing: 2px;
+    text-shadow: 0 0 24px $purp-light-transparent;
+  }
+
+  h2 {
+    margin: 8px 0 0;
+    font-size: 16px;
+    font-weight: 700;
+  }
+
+  p {
+    margin: 4px 0;
+    font-size: 14px;
+    letter-spacing: 0.5px;
+  }
+
+  a {
+    color: $purp-light;
+  }
+
+  img {
+    display: block;
+    width: 100%;
+    height: auto;
+    border-radius: 8px;
+    background: rgba(255, 255, 255, 0.06);
+  }
+}
+
+.shop-listings {
+  list-style: none;
+  margin: 24px 0 0;
+  padding: 0;
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+  gap: 24px;
+  max-width: 960px;
+}
+
+.shop-listing {
+  padding: 12px;
+  border-radius: 12px;
+  background: rgba(8, 6, 28, 0.82);
+}
+
+.shop-footer {
+  margin-top: 48px;
+  max-width: 72ch;
+  font-size: 12px;
+  opacity: 0.7;
+}
+
+.App.day .shop-page {
+  color: #24203a;
+
+  a {
+    color: $purp;
+  }
+
+  .shop-listing {
+    background: rgba(255, 255, 255, 0.88);
+    box-shadow: 0 8px 24px rgba(80, 40, 120, 0.12);
+  }
+}
