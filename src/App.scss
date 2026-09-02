@@ -52,27 +52,28 @@ $breakpoint-lg: 1280px;
     color: rgba(20, 20, 40, 0.7);
   }
 
-  // The composer is styled for the night sky — keep it legible by day
+  // The composer's purple is tuned for the night sky — by day a lighter
+  // lavender wash keeps the dark text legible over the pastel gradient
   .svg-generator-composer {
-    background: rgba(255, 255, 255, 0.55);
-    border-color: rgba(0, 0, 0, 0.15);
+    background: rgba(158, 128, 249, 0.32);
+    border-color: rgba(65, 37, 150, 0.3);
   }
 
   .svg-generator-input::placeholder,
   .svg-generator-signature input::placeholder {
-    color: rgba(20, 20, 40, 0.55);
+    color: rgba(20, 20, 40, 0.6);
   }
 
   .svg-generator-signature {
-    color: rgba(20, 20, 40, 0.6);
+    color: rgba(20, 20, 40, 0.68);
 
     input {
-      border-bottom-color: rgba(0, 0, 0, 0.25);
+      border-bottom-color: rgba(0, 0, 0, 0.35);
     }
   }
 
   .svg-generator-counter {
-    color: rgba(20, 20, 40, 0.5);
+    color: rgba(20, 20, 40, 0.65);
   }
 
   .svg-generator-ideas-label,
@@ -848,9 +849,8 @@ p {
   }
 }
 
-// On a phone the "Space jam" pill (fixed bottom-left) reaches nearly to
-// the middle, so a centred caption at the same height lands on top of it
-// — lift the hint clear.
+// On a phone the music switch (fixed bottom-left) shares the bottom band
+// with a centred caption, so the caption is lifted clear of it.
 @media (max-width: 767px) {
   .scroll-hint {
     bottom: 76px;
@@ -936,11 +936,15 @@ p {
 // place as glyph-sampled stars (NameStars in space3d/StarField.tsx), laid
 // out over this element's box — so move the name by moving this box.
 .nameTitle {
+  // Breathing room between the letters and the viewport edge (they spread
+  // across the whole box). Scales with the viewport — ~65px on a laptop —
+  // and never pinches below 32px; phones set their own below.
+  --name-inset: clamp(32px, 4.5vw, 80px);
   position: absolute;
-  left: 24px;
-  right: 24px;
+  left: var(--name-inset);
+  right: var(--name-inset);
   top: calc(40px + env(safe-area-inset-top, 0px));
-  width: calc(100% - 48px);
+  width: calc(100% - 2 * var(--name-inset));
   // ~1s to match the day/night background crossfade
   transition: opacity 1s ease;
   z-index: 2;
@@ -1433,10 +1437,7 @@ li > ul > li {
   }
 
   .nameTitle {
-    left: 16px;
-    right: 16px;
-    top: calc(40px + env(safe-area-inset-top, 0px));
-    width: calc(100% - 32px);
+    --name-inset: 28px;
   }
 
   .App-gg-bridge {
@@ -2460,14 +2461,14 @@ $switch-ease: cubic-bezier(0.45, 0.05, 0.25, 1.2);
   // nudge the toggle inside the safe area on phones.
   top: calc(1rem + env(safe-area-inset-top, 0px));
   right: calc(3rem + env(safe-area-inset-right, 0px));
-  // lg+: the toggle joins the space-jam pill in a bottom-left control row
+  // lg+: the toggle joins the music switch in a bottom-left control row
   // instead of floating alone in the top-right corner. The left offset is
-  // the pill's right edge (~182px with the Mac system font — it varies
-  // with the visitor's font stack) plus a gap; see .music-toggle below.
+  // the music switch's right edge (1rem in, one switch wide) plus a gap;
+  // see .music-toggle below.
   @media (min-width: $breakpoint-lg) {
     top: auto;
     right: auto;
-    left: calc(12.5rem + env(safe-area-inset-left, 0px));
+    left: calc(1rem + #{$switch-width} + 20px + env(safe-area-inset-left, 0px));
     bottom: calc(1rem + env(safe-area-inset-bottom, 0px));
   }
   background: #5fa8e3;
@@ -2641,44 +2642,32 @@ $switch-ease: cubic-bezier(0.45, 0.05, 0.25, 1.2);
 }
 
 // ─── Space jam switch (SpaceJamSwitch.tsx) ─────────────────
-// The bottom-left music toggle: a "Space jam" label pill with the switch
-// at its right end. Charcoal track with a flatline while muted; purple
-// with a bouncing equaliser while the jams play. The thumb is a plain
-// disc carrying a speaker (playing) or a red-slashed one (muted).
+// The bottom-left music toggle. Charcoal track with a flatline while
+// muted; purple with a bouncing equaliser while the jams play. The thumb
+// is a plain disc carrying a speaker (playing) or a red-slashed one
+// (muted). A tooltip ("Play space jams" / "Pause space jams") stands in
+// for the label the old pill carried.
+//
+// The switch is its own tooltip trigger, and Radix's Tooltip.Trigger
+// writes its open/closed `data-state` over the Switch root's checked one
+// — so everything in this section keys off `aria-checked` instead. (The
+// thumb keeps its own `data-state`, which is what the shared
+// .scene-switch-thumb slide reads.)
 
-$music-pill-pad: 4px;
-
-// The label pill. Sits where the old "Enable space jams" button did, clear
-// of the home indicator / rounded corners now that viewport-fit=cover lets
-// the page extend under them; the padding is backed out of the offsets so
-// the switch inside lands at exactly 1rem — level with the day/night
-// switch beside it on lg. On narrow screens the resume panel scrolls right
-// under the pill, so it needs its own scrim to stay legible (no
-// backdrop-filter — same rule as everything else over the canvases).
+// Placement: positioned by the Tailwind classes on the component (fixed
+// bottom-left); nudged inside the safe area now that viewport-fit=cover
+// lets the page extend under the home indicator / rounded corners, and
+// level with the day/night switch beside it on lg.
 .music-toggle {
-  bottom: calc(1rem - #{$music-pill-pad} + env(safe-area-inset-bottom, 0px));
-  left: calc(1rem - #{$music-pill-pad} + env(safe-area-inset-left, 0px));
-  padding: $music-pill-pad $music-pill-pad $music-pill-pad 14px;
-  border-radius: 999px;
-  background: rgba(8, 6, 28, 0.75);
-  color: #e8e6f5;
-  cursor: pointer;
-  user-select: none;
-}
-
-.App.day .music-toggle {
-  background: rgba(255, 255, 255, 0.75);
-  color: #24203a;
+  bottom: calc(1rem + env(safe-area-inset-bottom, 0px));
+  left: calc(1rem + env(safe-area-inset-left, 0px));
 }
 
 .space-jam-switch {
-  // Inline in the pill (the Tailwind-positioned day/night switch has its
-  // own containing block); relative so the scene layers anchor to it
-  position: relative;
   background: #34333f;
   transition: background 500ms ease;
 
-  &[data-state="checked"] {
+  &[aria-checked="true"] {
     background: #5a3bc8;
   }
 }
@@ -2706,7 +2695,7 @@ $music-pill-pad: 4px;
     background: rgba(255, 255, 255, 0.35);
   }
 
-  [data-state="checked"] & {
+  [aria-checked="true"] & {
     opacity: 0;
   }
 }
@@ -2721,7 +2710,7 @@ $music-pill-pad: 4px;
   padding-left: 9px;
   opacity: 0;
 
-  [data-state="checked"] & {
+  [aria-checked="true"] & {
     opacity: 1;
   }
 }
@@ -2734,7 +2723,7 @@ $music-pill-pad: 4px;
   // Don't keep bouncing under the faded-out layer while muted
   animation-play-state: paused;
 
-  [data-state="checked"] & {
+  [aria-checked="true"] & {
     animation-play-state: running;
   }
 
@@ -2785,7 +2774,7 @@ $music-pill-pad: 4px;
 .sjs-icon-on {
   opacity: 0;
 
-  [data-state="checked"] & {
+  [aria-checked="true"] & {
     opacity: 1;
   }
 }
@@ -2793,7 +2782,7 @@ $music-pill-pad: 4px;
 .sjs-icon-off {
   opacity: 1;
 
-  [data-state="checked"] & {
+  [aria-checked="true"] & {
     opacity: 0;
   }
 }
@@ -2889,14 +2878,17 @@ $music-pill-pad: 4px;
 
 // The composer: one bordered panel holding the prompt, the signature and
 // the draw button. The panel carries the focus ring for the whole group.
+// Translucent purple — thin enough that the stars (and whatever planet
+// drifts past) still show through; the text inside is brightened a notch
+// to hold its contrast over the tint.
 .svg-generator-composer {
   display: flex;
   flex-direction: column;
   gap: 10px;
   width: 100%;
   padding: 14px 16px 12px;
-  background: rgba(255, 255, 255, 0.06);
-  border: 1px solid rgba(255, 255, 255, 0.12);
+  background: rgba(101, 66, 214, 0.35);
+  border: 1px solid rgba(158, 128, 249, 0.4);
   border-radius: 16px;
   box-sizing: border-box;
   transition:
@@ -2904,8 +2896,8 @@ $music-pill-pad: 4px;
     box-shadow 0.2s;
 
   &:focus-within {
-    border-color: $purp-light-transparent;
-    box-shadow: 0 0 24px rgba(150, 116, 249, 0.15);
+    border-color: $purp-light;
+    box-shadow: 0 0 24px rgba(150, 116, 249, 0.25);
   }
 }
 
@@ -2928,7 +2920,7 @@ $music-pill-pad: 4px;
   box-sizing: border-box;
 
   &::placeholder {
-    color: rgba(255, 255, 255, 0.5);
+    color: rgba(255, 255, 255, 0.65);
   }
 
   &:disabled {
@@ -2953,7 +2945,7 @@ $music-pill-pad: 4px;
   min-width: 0;
   font-family: "Inconsolata", monospace;
   font-size: 13px;
-  color: rgba(255, 255, 255, 0.6);
+  color: rgba(255, 255, 255, 0.72);
   cursor: text;
 
   input {
@@ -2963,7 +2955,7 @@ $music-pill-pad: 4px;
     padding: 4px 0;
     background: transparent;
     border: none;
-    border-bottom: 1px solid rgba(255, 255, 255, 0.2);
+    border-bottom: 1px solid rgba(255, 255, 255, 0.35);
     color: #fff;
     font-family: "Inconsolata", monospace;
     font-size: 14px;
@@ -2971,7 +2963,7 @@ $music-pill-pad: 4px;
     transition: border-color 0.2s;
 
     &::placeholder {
-      color: rgba(255, 255, 255, 0.45);
+      color: rgba(255, 255, 255, 0.6);
     }
 
     &:focus {
@@ -3001,7 +2993,7 @@ $music-pill-pad: 4px;
   font-family: "Inconsolata", monospace;
   font-size: 11px;
   letter-spacing: 0.5px;
-  color: rgba(255, 255, 255, 0.45);
+  color: rgba(255, 255, 255, 0.65);
 
   &.is-full {
     color: #ffb86b;
@@ -3016,8 +3008,14 @@ $music-pill-pad: 4px;
   height: 44px;
   padding: 0 18px 0 16px;
   border-radius: 12px;
-  background: linear-gradient(135deg, $purp, $purp-light);
+  // Lifted off the purple panel by a faint light ring and a drop shadow;
+  // the gradient stops short of $purp-light so the white label keeps
+  // ≥4.5:1 contrast across its whole width
+  background: linear-gradient(135deg, #5a3bc8, #7a56ee);
   border: none;
+  box-shadow:
+    0 0 0 1px rgba(255, 255, 255, 0.22),
+    0 4px 14px rgba(0, 0, 0, 0.35);
   color: #fff !important;
   font-family: "Inconsolata", monospace;
   font-size: 14px;
@@ -3032,7 +3030,9 @@ $music-pill-pad: 4px;
 
   &:hover:not(:disabled) {
     transform: scale(1.04);
-    box-shadow: 0 0 24px rgba(150, 116, 249, 0.4);
+    box-shadow:
+      0 0 0 1px rgba(255, 255, 255, 0.35),
+      0 0 24px rgba(150, 116, 249, 0.5);
     text-decoration: none !important;
     color: #fff !important;
   }

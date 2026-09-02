@@ -10,7 +10,9 @@ import cx from "classnames";
  * clouds, a bouncing equaliser) via `children` and its own thumb art (sun
  * and moon, a speaker) via `thumb`. Radix mirrors `data-state="checked"`
  * onto both the root and the thumb, which is what the per-switch styles
- * key off.
+ * key off. `ref` (a plain prop in React 19) rides along in `...props`, so
+ * a Radix `asChild` parent — the music switch's tooltip trigger — can
+ * anchor to the button.
  */
 const SceneSwitch = ({
   className,
@@ -18,7 +20,7 @@ const SceneSwitch = ({
   thumb,
   children,
   ...props
-}: React.ComponentPropsWithoutRef<typeof Switch.Root> & {
+}: React.ComponentPropsWithRef<typeof Switch.Root> & {
   /** What rides on the thumb */
   thumb?: React.ReactNode;
   thumbClassName?: string;
