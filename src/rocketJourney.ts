@@ -63,8 +63,9 @@ export const journeyState = {
 };
 
 /** The `body` class that hides the page UI and reveals the windshield
- *  overlay while the journey plays (same pattern as `video-mode`). */
-const JOURNEY_BODY_CLASS = "rocket-journey";
+ *  overlay while the journey plays (same pattern as `video-mode`). The
+ *  WebGL name header reads it to hide alongside the DOM chrome. */
+export const JOURNEY_BODY_CLASS = "rocket-journey";
 
 function beginJourney(
   vehicle: JourneyVehicle,

@@ -902,38 +902,29 @@ p {
   }
 }
 
+// The "andrewhunt" name at the top of every page past the landing. This
+// SVG carries the day-mode letters (and the accessible text); at night it
+// fades to transparent and the WebGL star field draws the name in its
+// place as glyph-sampled stars (NameStars in space3d/StarField.tsx), laid
+// out over this element's box — so move the name by moving this box.
 .nameTitle {
   position: absolute;
   left: 24px;
   right: 24px;
   top: calc(40px + env(safe-area-inset-top, 0px));
   width: calc(100% - 48px);
-  // fill matches opacity so the letters finish recoloring alongside the
-  // ~1s day/night background crossfade instead of trailing it by 2s
-  transition:
-    fill 1s ease,
-    opacity 1s ease;
+  // ~1s to match the day/night background crossfade
+  transition: opacity 1s ease;
   z-index: 2;
   mix-blend-mode: multiply;
   max-height: 200px;
   font-family:
     "nova-mono", "Helvetica Neue", "Segoe UI", "Roboto", "Oxygen", "Ubuntu",
     "Cantarell", "Fira Sans", "Droid Sans", sans-serif;
-
-  &.night {
-    mix-blend-mode: difference;
-  }
 }
 
-.highlightedChar_day {
+.highlightedChar {
   fill: #002d19;
-}
-
-.highlightedChar_night {
-  // Halfway between the old green (#6cfc9e) and the white base letters,
-  // so the roving highlight reads as a shimmer rather than a blink
-  fill: #b6fdcf;
-  z-index: 100;
 }
 
 // Circular icon buttons in the home link row. Plain CSS rather than
