@@ -124,10 +124,9 @@ export const EARTH = PLANETS.find((p) => p.name === "Earth")!;
 const ASTEROID_Y = SUN_RADIUS;
 export const ASTEROIDS: SolarPlanetConfig[] = [
   {
-    // The link trio (blog rock, Sputnik satellite, LinkedIn rock) clusters
-    // in a shallow arc low on the left: satellite crowning, the rocks
-    // flanking a step lower. Placements below are solved against the
-    // home camera's projection, so each lands on a chosen screen spot.
+    // The link rocks (blog, LinkedIn — both parked) cluster in a shallow
+    // arc low on the left. Placements below are solved against the home
+    // camera's projection, so each lands on a chosen screen spot.
     // Parked, not rendered: the blog post it linked moved to /about's
     // work-sample cards (SolarScene skips it; SolarOverlays has no link)
     name: "recent",
@@ -149,15 +148,21 @@ export const ASTEROIDS: SolarPlanetConfig[] = [
     // Rendered as the Sputnik satellite (Satellite.tsx): the door to
     // /projects-and-toys, where the camera closes in and its parts (the
     // antenna cone, a screen, a graffiti heart, a cargo crate) become the
-    // links. Crowns the trio.
+    // links. On lg+ it floats in the gap between the home info panel and
+    // Earth, just above the panel's top edge: the panel is a fixed-size
+    // DOM box while the bodies' screen offsets scale with the viewport
+    // height, and this spot (head at ~(715, 236) on a 1440x815 frame,
+    // same camera distance as before) stays clear of it from 1280x800 up
+    // through 2560x1440. Lower and further left it slid under the typed
+    // greeting, whose box swallowed the link's clicks.
     name: "satellite",
     kind: "mercury",
     radius: 0.44,
-    orbitRadius: 3.17,
+    orbitRadius: 3.92,
     orbitSpeed: EARTH.orbitSpeed,
-    orbitPhase: EARTH.orbitPhase - 1.054,
+    orbitPhase: EARTH.orbitPhase - 0.2,
     spinSpeed: -0.25 * SPEED_SCALE,
-    yOffset: 2.67,
+    yOffset: 4.11,
     compact: {
       orbitRadius: 4.5,
       orbitPhase: EARTH.orbitPhase + 0.01,
@@ -291,14 +296,17 @@ export function satelliteLegsDirection(
 
 const frameOutward = new THREE.Vector3();
 /** How far the close-up perch swings from level-with-the-satellite toward
- *  straight above it (radially away from the sun): 0 leaves the sun just
- *  under the bottom edge, more of it looks further down over the head,
- *  raising the sun's limb into the frame. */
-const PERCH_CLIMB = 0.12;
+ *  straight above it (radially away from the sun): more of it looks
+ *  further down over the head, raising the sun's limb into the frame.
+ *  The satellite floats well above the sun now, so it takes this much to
+ *  bring the limb up to the bottom ~quarter of the frame — and looking
+ *  down this steeply also lifts Earth out of the top of the frame, where
+ *  a level perch left it cropped in the corner. */
+const PERCH_CLIMB = 0.7;
 /** Then swing the perch around the sun line, radians. 0 puts the sun
- *  dead below the satellite and its antenna cone climbing screen-right;
- *  this much slides the sun's limb to the bottom-left and levels the
- *  cone out to the right, leaving the bottom-right clear for the caption. */
+ *  dead below the satellite; this much slides its limb to the bottom-left
+ *  with the antenna cone reaching up-right, leaving the bottom-right
+ *  clear for the caption. */
 const PERCH_AZIMUTH = 0.35;
 
 /**

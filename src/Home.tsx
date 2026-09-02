@@ -268,7 +268,11 @@ const Home = () => {
         </div>
         {/* Moved to computer for large screens */}
         {/* {isMdOrLess && ( */}
-        <div className="hoverableHomeItem h-20 gap-0">
+        {/* Click-through: the row is a fixed 80px band that otherwise sits
+            over whatever the 3D scene has drifted underneath it (the
+            satellite link). Only the email link needs pointer events, and
+            it opts back in — typed.js copies the tag, class included. */}
+        <div className="hoverableHomeItem pointer-events-none h-20 gap-0">
           <div className="typed-greeting">
             <span
               ref={typedEl}
@@ -280,7 +284,12 @@ const Home = () => {
             <p>interested in working together?</p>
             <p>
               reach out to{" "}
-              <a href="mailto:andrew+contact@hunt.codes">andrew@hunt.codes</a>
+              <a
+                className="pointer-events-auto"
+                href="mailto:andrew+contact@hunt.codes"
+              >
+                andrew@hunt.codes
+              </a>
             </p>
             <p>hey there!</p>
           </div>

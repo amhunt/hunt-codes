@@ -50,10 +50,6 @@ type ShopState =
   | { status: "error" }
   | { status: "ready"; data: ShopPayload };
 
-// Required verbatim by Etsy's API Terms of Use (section 1)
-const ETSY_NOTICE =
-  "The term 'Etsy' is a trademark of Etsy, Inc. This Application uses Etsy's API, but is not endorsed or certified by Etsy.";
-
 const SHOP_URL = "https://www.etsy.com/shop/ArtifactAndy";
 
 /** A listing's photos in a scroll-snap strip: swipe, or use the arrows;
@@ -225,10 +221,6 @@ const Shop = () => {
           })}
         </ul>
       )}
-
-      <footer className="shop-footer">
-        <p>{ETSY_NOTICE}</p>
-      </footer>
     </main>
   );
 };

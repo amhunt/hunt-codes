@@ -118,9 +118,10 @@ const PROJECTS_CAM_RADII_PORTRAIT = 5.6;
  *  (up to 1.6x) so the whole body centers instead of the cone clipping. */
 const PROJECTS_LOOK_ALONG_CONE = 0.6;
 const PROJECTS_LANDSCAPE_ASPECT = 1.6;
-/** Frame the satellite a touch above center (NDC): the head clears the
- *  sun's limb and the cone tips stay well under the name title */
-const PROJECTS_NDC_Y = -0.05;
+/** Vertical framing nudge (NDC, positive = satellite lower): with the
+ *  antenna cone reaching up-right, a hair below center keeps its tips out
+ *  of the name title while the head still clears the sun's limb */
+const PROJECTS_NDC_Y = 0.02;
 
 // scratch values, reused every frame
 const goalPos = new THREE.Vector3();
