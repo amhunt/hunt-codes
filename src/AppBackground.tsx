@@ -14,7 +14,7 @@ import GoldenGate from "./gg-bridge.png";
 import GoldenGateFog from "./GoldenGateFog";
 import useWindowSize from "useWindowSize";
 import { onSynthNote } from "./synthAudio";
-import { MusicIcon } from "lucide-react";
+import SpaceJamSwitch from "./SpaceJamSwitch";
 // import RetroMac from "./RetroMac";
 
 // Loaded on demand so three.js ships as its own chunk
@@ -83,7 +83,6 @@ const AppBackground = ({
   // The /journey story crawl's open-space cruise
   const isJourneyPage = location.pathname.includes("journey");
   const isLanding = location.pathname === "/" || location.pathname === "";
-  const [musicEnabled, setMusicEnabled] = useState(false);
 
   const [highlightedCharIdx, setHighlightedCharIdx] = useState(0);
 
@@ -106,51 +105,11 @@ const AppBackground = ({
     return () => clearInterval(interval);
   }, [isLanding, isSynthPage]);
 
-  // Start playback as soon as the player mounts — i.e. right after the
-  // visitor clicks "Enable space jams". That click is the user gesture that
-  // makes play() allowed, and the <audio> only exists once musicEnabled is
-  // true, so there's nothing to play before then.
-  useEffect(() => {
-    if (!musicEnabled) return;
-    document
-      .querySelector("audio")
-      ?.play()
-      // Playback can still be denied by autoplay policies — the visible
-      // controls remain the fallback.
-      .catch(() => {});
-  }, [musicEnabled]);
-
   return (
     <>
-      {/* Keep the landing page's solar-system intro uncluttered — the audio
-          player and its trigger only appear once the visitor has entered */}
-      {!isLanding &&
-        (musicEnabled ? (
-          <audio
-            controlsList="nodownload"
-            loop
-            className={cx(
-              "z-[10000] fixed bottom-4 left-4",
-              isNightMode && "nightmode",
-            )}
-            controls
-          >
-            <source src="/analog.m4a" type="audio/mp4" />
-          </audio>
-        ) : (
-          <button
-            type="button"
-            onClick={() => setMusicEnabled(true)}
-            className={cx(
-              // music-toggle: hook for the video-mode hiding rules (App.scss)
-              "music-toggle fixed bottom-4 left-4 z-[5000] flex items-center gap-1",
-              isNightMode && "inverse",
-            )}
-          >
-            <MusicIcon size={16} />
-            <span>Enable space jams</span>
-          </button>
-        ))}
+      {/* Keep the landing page's solar-system intro uncluttered — the music
+          switch only appears once the visitor has entered */}
+      {!isLanding && <SpaceJamSwitch />}
       {!isLanding && (
         <svg
           className={cx(

@@ -8,6 +8,9 @@ import type { StorybookConfig } from "storybook-react-rsbuild";
  */
 const config: StorybookConfig = {
   stories: ["../src/**/*.stories.@(ts|tsx)"],
+  // The site's static assets (the space-jam track lives here), so the
+  // music switch story can actually play
+  staticDirs: ["../public"],
   addons: [],
   framework: {
     name: "storybook-react-rsbuild",

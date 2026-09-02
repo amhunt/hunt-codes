@@ -329,7 +329,7 @@ const Home = () => {
         target={JOURNEY_STOPS.about}
         delayMs={HINT_DELAY_MS}
         hidden={engaged}
-        // /home renders the "Enable space jams" pill; the landing page doesn't
+        // /home renders the "Space jam" pill; the landing page doesn't
         clearsBottomLeftControl
       />
     </>

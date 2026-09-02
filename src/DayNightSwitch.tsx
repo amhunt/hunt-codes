@@ -1,8 +1,8 @@
 import React from "react";
-import * as Switch from "@radix-ui/react-switch";
 import { useLocation } from "react-router-dom";
 import cx from "classnames";
 
+import SceneSwitch from "ui/SceneSwitch";
 import useWindowSize from "useWindowSize";
 
 // Sun/moon mode switch, after the classic light/dark toggle design
@@ -25,7 +25,7 @@ const DayNightSwitch = ({
   // small-screen declutter alongside the moon and link-trio bodies)
   const onNarrowHome = pathname === "/home" && size !== "lg";
   return (
-    <Switch.Root
+    <SceneSwitch
       className={cx(
         "day-night-switch fixed right-12 top-4 z-[5000]",
         (onLanding || onNarrowHome) && "dns-hidden",
@@ -33,6 +33,14 @@ const DayNightSwitch = ({
       checked={isNightMode}
       onCheckedChange={onCheckedChange}
       aria-label="Night mode"
+      thumbClassName="dns-thumb"
+      thumb={
+        <>
+          <span aria-hidden className="dns-crater dns-crater-1" />
+          <span aria-hidden className="dns-crater dns-crater-2" />
+          <span aria-hidden className="dns-crater dns-crater-3" />
+        </>
+      }
     >
       <span aria-hidden className="dns-scene dns-scene-day">
         <span className="dns-cloud dns-cloud-1" />
@@ -44,12 +52,7 @@ const DayNightSwitch = ({
         <span className="dns-star dns-star-3" />
         <span className="dns-star dns-star-4" />
       </span>
-      <Switch.Thumb className="dns-thumb">
-        <span aria-hidden className="dns-crater dns-crater-1" />
-        <span aria-hidden className="dns-crater dns-crater-2" />
-        <span aria-hidden className="dns-crater dns-crater-3" />
-      </Switch.Thumb>
-    </Switch.Root>
+    </SceneSwitch>
   );
 };
 
