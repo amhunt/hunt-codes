@@ -50,6 +50,10 @@ the preview tool.
   `data:image/svg+xml` `<img>` — never inline them as markup** (a review
   broke the server-side regex allowlist three ways; the `<img>` isolation
   is the real XSS gate). See `server/README.md`.
+- There is no `public/sitemap.xml`: `pluginSitemap` in `rsbuild.config.ts`
+  emits it from `PUBLIC_ROUTES` in `src/routes.ts`, the same list that
+  supplies each page's tab title. A new public page goes in that list
+  (title + priority) and gets its `<Route>` in `App.tsx`.
 
 Day/night is a user toggle in `App.tsx` (night default); every page must
 stay legible in both palettes (`.App.night` / `.App.day` overrides).
@@ -104,7 +108,7 @@ Invariants worth knowing:
 
 - Andrew is an independent consultant in **NYC**; he **left Zip in 2025**
   (staff engineer). Past roles correctly say San Francisco — history, not
-  stale copy. `twitter:creator` `@_andrew_hunt` is correct.
+  stale copy.
 - **Easter eggs are intentional — do not "clean up":** the
   `console.log("bro what r u doing in the console...")` in App.tsx, and
   the unused-but-kept `Logo.tsx` / `RetroMac.tsx` (knip flags them; leave

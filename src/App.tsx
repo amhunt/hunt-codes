@@ -20,6 +20,7 @@ import AppBackground from "AppBackground";
 import BadgeLink from "BadgeLink";
 import DayNightSwitch from "DayNightSwitch";
 import Landing from "Landing";
+import { NOT_FOUND_TITLE, ROUTE_TITLES, SITE_ORIGIN } from "./routes";
 
 // Pause audio when the page is hidden; resume on return if it was playing.
 // The flag lives in a ref (not a plain `let`) so it survives re-renders —
@@ -51,21 +52,9 @@ const usePauseAudioOnHideEventListener = () => {
   }, []);
 };
 
-const DEFAULT_TITLE = "Andrew Hunt - Frontend Engineer | New York";
-const ROUTE_TITLES: Record<string, string> = {
-  "/": DEFAULT_TITLE,
-  "/home": DEFAULT_TITLE,
-  "/about": "About Me | Andrew Hunt",
-  "/synth": "Space jam studio | Andrew Hunt",
-  "/journey": "The Journey | Andrew Hunt",
-  "/draw": "SVG Studio | Andrew Hunt",
-  "/shop": "Gift Shop | Andrew Hunt",
-};
-// Anything else lands on the catch-all 404 route
-const NOT_FOUND_TITLE = "Lost in space | Andrew Hunt";
-
 // The static index.html head serves every route of the SPA; keep the tab
-// title and canonical URL in sync as the visitor navigates
+// title and canonical URL in sync as the visitor navigates (titles come
+// from routes.ts, the same list the sitemap is generated from)
 const RouteMeta = () => {
   const { pathname } = useLocation();
   useEffect(() => {
@@ -77,7 +66,7 @@ const RouteMeta = () => {
       .querySelector('link[rel="canonical"]')
       ?.setAttribute(
         "href",
-        `https://www.hunt.codes${pathname === "/" ? "/" : pathname}`,
+        `${SITE_ORIGIN}${pathname === "/" ? "/" : pathname}`,
       );
   }, [pathname]);
   return null;

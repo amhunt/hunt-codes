@@ -54,7 +54,7 @@ const SolarScene = ({
   const isCompact = width < 1280;
   const isPhone = width < 768;
   // Below the lg breakpoint (useWindowSize's 1000px) the home view drops
-  // its redundant link trio — it duplicates the icon buttons — so the
+  // its redundant link bodies — they duplicate the icon buttons — so the
   // perch keeps some breathing room. SolarOverlays hides the trio's click
   // targets to match.
   const isNarrow = width < 1000;
@@ -153,6 +153,9 @@ const SolarScene = ({
         // (and the Rocket import) to fly it again:
         //   <Rocket key={asteroid.name} config={asteroid} visible={view === "home"} />
         if (asteroid.name === "rocket") return null;
+        // The blog-post rock is parked too: the post moved to /about's
+        // work-sample cards, and SolarOverlays dropped its link
+        if (asteroid.name === "recent") return null;
         return asteroid.name === "github" ? (
           <Satellite
             key={asteroid.name}
