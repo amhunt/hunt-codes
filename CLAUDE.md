@@ -50,6 +50,12 @@ the preview tool.
   `data:image/svg+xml` `<img>` — never inline them as markup** (a review
   broke the server-side regex allowlist three ways; the `<img>` isolation
   is the real XSS gate). See `server/README.md`.
+- Confetti/ribbons (tsParticles) load through `src/celebration.ts`: the
+  shared engine throws if a plugin registers after anything has loaded,
+  so every effect registers both plugin sets up front via that loader.
+  Never `import("@tsparticles/confetti")` directly. The corner coin's
+  click volley (`badgeConfetti.ts`) uses its own container id so /about's
+  rain destroying its container can't cut a volley short.
 - There is no `public/sitemap.xml`: `pluginSitemap` in `rsbuild.config.ts`
   emits it from `PUBLIC_ROUTES` in `src/routes.ts`, the same list that
   supplies each page's tab title. A new public page goes in that list

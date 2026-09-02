@@ -116,9 +116,10 @@ const AppBackground = ({
 
   return (
     <>
-      {/* Keep the landing page's solar-system intro uncluttered — the music
-          switch only appears once the visitor has entered */}
-      {!isLanding && <SpaceJamSwitch />}
+      {/* The "Space jam" switch rides every page, the landing included: the
+          site starts muted, so the landing is where visitors look for the
+          music. Mounted once, app-wide, so the track carries across routes. */}
+      <SpaceJamSwitch />
       {!isLanding && (
         <svg
           id={NAME_TITLE_ID}

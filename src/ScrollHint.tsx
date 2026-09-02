@@ -43,11 +43,6 @@ type ScrollHintProps = {
   delayMs: number;
   /** Hide it — the visitor has started scrubbing and no longer needs it */
   hidden?: boolean;
-  /**
-   * Lift it clear of the bottom-left audio pill on phones. Only pages that
-   * render that pill need this — it is gated on `!isLanding`.
-   */
-  clearsBottomLeftControl?: boolean;
 };
 
 /**
@@ -59,12 +54,7 @@ type ScrollHintProps = {
  * hard-navigating — a chevron that merely *hints* at travel would be a
  * broken promise as a <button>.
  */
-const ScrollHint = ({
-  target,
-  delayMs,
-  hidden = false,
-  clearsBottomLeftControl = false,
-}: ScrollHintProps) => {
+const ScrollHint = ({ target, delayMs, hidden = false }: ScrollHintProps) => {
   const [ready, setReady] = useState(false);
   const [clicked, setClicked] = useState(false);
   const destinationText = DESTINATION_TEXT[target];
@@ -82,7 +72,6 @@ const ScrollHint = ({
             type="button"
             className={cx(
               "scroll-hint",
-              clearsBottomLeftControl && "scroll-hint--above-controls",
               (!ready || hidden || clicked) && "hint-hidden",
             )}
             aria-label={destinationText}
