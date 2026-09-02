@@ -47,7 +47,8 @@ const VIEWPORTS = {
  * at 0.019 across five seconds.)
  *
  * These stories exist to judge layout, so they skip the choreography and
- * show where things land. Judge the intro itself in the real app.
+ * show where things land (the day/night switch's own delayed fade-in
+ * included). Judge the intro itself in the real app.
  */
 const SETTLED_ENTRANCES = `
   .homeInfoContainer {
@@ -61,6 +62,9 @@ const SETTLED_ENTRANCES = `
   }
   .scroll-hint-chevron {
     animation: none !important;
+  }
+  .day-night-switch {
+    transition: none !important;
   }
 `;
 

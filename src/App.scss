@@ -478,44 +478,6 @@ body.rocket-journey .cockpit-controls {
   font-weight: 700;
 }
 
-audio {
-  &::-webkit-media-controls-play-button,
-  &::-webkit-media-controls-panel {
-    transition: all 1s;
-    background-color: rgb(255, 123, 0);
-  }
-  &.nightmode {
-    &::-webkit-media-controls-play-button,
-    &::-webkit-media-controls-panel {
-      background-color: $purp-light;
-    }
-  }
-}
-
-// The music toggle and the player it becomes sit in the bottom-left
-// corner: keep them clear of the home indicator / rounded corners now
-// that viewport-fit=cover lets the page extend under them
-.music-toggle,
-audio {
-  bottom: calc(1rem + env(safe-area-inset-bottom, 0px));
-  left: calc(1rem + env(safe-area-inset-left, 0px));
-}
-
-// On narrow screens the resume panel scrolls right under the toggle, so
-// it needs its own scrim to stay legible (no backdrop-filter — same rule
-// as everything else over the canvases). Over the plain backgrounds the
-// pill all but disappears; padding + negative margin also grow the tap
-// target without moving the label.
-.music-toggle {
-  padding: 6px 10px;
-  margin: -6px -10px;
-  border-radius: 999px;
-  background: rgba(8, 6, 28, 0.75);
-}
-
-.App.day .music-toggle {
-  background: rgba(255, 255, 255, 0.75);
-}
 .resume-divider {
   width: 100%;
   height: 1px;
@@ -768,6 +730,7 @@ p {
   .App-background_day,
   .body-outline-pulse,
   .scroll-hint-chevron,
+  .sjs-bar,
   .svg-generator-spinner,
   .svg-generator-loading-dots span,
   // The hue cycle on the drawing itself. The per-element wobble lives
@@ -855,11 +818,11 @@ p {
   }
 }
 
-// On a phone the "Enable space jams" pill (fixed bottom-4 left-4) runs
-// almost the full width, so a centred caption at the same height lands on
-// top of it. Only pages that actually show the pill get lifted — it is
-// gated on `!isLanding`, so lifting the landing hint too would just leave
-// a gap under it.
+// On a phone the "Space jam" pill (fixed bottom-left) reaches nearly to
+// the middle, so a centred caption at the same height lands on top of it.
+// Only pages that actually show the pill get lifted — it is gated on
+// `!isLanding`, so lifting the landing hint too would just leave a gap
+// under it.
 @media (max-width: 767px) {
   .scroll-hint--above-controls {
     bottom: 76px;
@@ -1648,7 +1611,6 @@ body.video-mode {
   .solar-canvas,
   .nameTitle,
   .day-night-switch,
-  audio,
   .music-toggle,
   .homePageBackLink,
   .badge-link {
@@ -1672,7 +1634,6 @@ body.rocket-journey {
   .homePageBackLink,
   .nameTitle,
   .day-night-switch,
-  audio,
   .music-toggle,
   .asteroid-link,
   .earth-about-ring,
@@ -2248,41 +2209,74 @@ body.rocket-journey #rocket-cockpit {
   }
 }
 
+// ─── Scene switches (ui/SceneSwitch.tsx) ───────────────────
+// One pill chassis for the site's toggles: the day/night switch and the
+// space-jam switch. The chassis owns the geometry, the shell shading and
+// the thumb's overshooting slide; each switch paints its own track scene
+// and thumb art in the sections that follow.
+
+$switch-width: 68px;
+$switch-height: 34px;
+$switch-thumb: 26px;
+$switch-pad: 4px;
+$switch-ease: cubic-bezier(0.45, 0.05, 0.25, 1.2);
+
+.scene-switch {
+  // Positioning is the caller's (fixed via Tailwind classes, or inline in
+  // a pill) — set nothing here that would beat the layered utilities. The
+  // scene layers below are absolute, so whatever position the caller
+  // picks doubles as their containing block.
+  flex: none;
+  width: $switch-width;
+  height: $switch-height;
+  border-radius: $switch-height;
+  overflow: hidden;
+  box-shadow:
+    inset 0 2px 4px rgba(0, 0, 0, 0.35),
+    inset 0 -1px 2px rgba(255, 255, 255, 0.35),
+    0 2px 6px rgba(0, 0, 0, 0.25);
+}
+
+// The sliding thumb. Radix toggles data-state on the thumb too.
+.scene-switch-thumb {
+  display: block;
+  position: relative;
+  width: $switch-thumb;
+  height: $switch-thumb;
+  border-radius: 50%;
+  transform: translateX($switch-pad);
+  transition:
+    transform 500ms $switch-ease,
+    background 500ms ease,
+    box-shadow 500ms ease;
+
+  &[data-state="checked"] {
+    transform: translateX($switch-width - $switch-thumb - $switch-pad);
+  }
+}
+
 // ─── Day/Night Switch (DayNightSwitch.tsx) ─────────────────
 // Sun/moon toggle after dribbble.com/shots/14431115: sky + clouds with a
 // glowing sun thumb (unchecked/day), starry navy with a cratered moon
 // thumb (checked/night).
 
-$dns-width: 68px;
-$dns-height: 34px;
-$dns-thumb: 26px;
-$dns-pad: 4px;
-$dns-ease: cubic-bezier(0.45, 0.05, 0.25, 1.2);
-
 .day-night-switch {
-  // Positioned by the Tailwind classes on the component (fixed top-right);
-  // fixed also serves as the containing block for the absolute layers below.
+  // Positioned by the Tailwind classes on the component (fixed top-right).
   // viewport-fit=cover extends the page under notches/rounded corners, so
   // nudge the toggle inside the safe area on phones.
   top: calc(1rem + env(safe-area-inset-top, 0px));
   right: calc(3rem + env(safe-area-inset-right, 0px));
-  // lg+: the toggle joins the music button in a bottom-left control row
-  // instead of floating alone in the top-right corner
+  // lg+: the toggle joins the space-jam pill in a bottom-left control row
+  // instead of floating alone in the top-right corner. The left offset is
+  // the pill's right edge (~182px with the Mac system font — it varies
+  // with the visitor's font stack) plus a gap; see .music-toggle below.
   @media (min-width: $breakpoint-lg) {
     top: auto;
     right: auto;
-    left: calc(15rem + env(safe-area-inset-left, 0px));
+    left: calc(12.5rem + env(safe-area-inset-left, 0px));
     bottom: calc(1rem + env(safe-area-inset-bottom, 0px));
   }
-  width: $dns-width;
-  height: $dns-height;
-  border-radius: $dns-height;
-  overflow: hidden;
   background: linear-gradient(180deg, #3d91d4 0%, #6cb6e8 60%, #9ed4f2 100%);
-  box-shadow:
-    inset 0 2px 4px rgba(0, 0, 0, 0.35),
-    inset 0 -1px 2px rgba(255, 255, 255, 0.35),
-    0 2px 6px rgba(0, 0, 0, 0.25);
   opacity: 1;
   // The 1.5s opacity delay is the fade-in after leaving the landing page:
   // the camera swoop leads, then the toggle appears
@@ -2402,25 +2396,14 @@ $dns-ease: cubic-bezier(0.45, 0.05, 0.25, 1.2);
   bottom: 6px;
 }
 
-// The sliding sun/moon. Radix toggles data-state on the thumb too.
+// The sun by day, the moon by night
 .dns-thumb {
-  display: block;
-  position: relative;
-  width: $dns-thumb;
-  height: $dns-thumb;
-  border-radius: 50%;
-  transform: translateX($dns-pad);
-  transition:
-    transform 500ms $dns-ease,
-    background 500ms ease,
-    box-shadow 500ms ease;
   background: radial-gradient(circle at 35% 35%, #ffe484, #ffc933 70%);
   box-shadow:
     0 0 6px 2px rgba(255, 200, 60, 0.6),
     inset -2px -2px 4px rgba(200, 120, 0, 0.35);
 
   &[data-state="checked"] {
-    transform: translateX($dns-width - $dns-thumb - $dns-pad);
     background: radial-gradient(circle at 35% 35%, #f4f2ee, #c9c6bf 75%);
     box-shadow:
       0 0 6px 1px rgba(230, 235, 255, 0.35),
@@ -2461,6 +2444,168 @@ $dns-ease: cubic-bezier(0.45, 0.05, 0.25, 1.2);
   height: 4px;
   left: 9px;
   bottom: 4px;
+}
+
+// ─── Space jam switch (SpaceJamSwitch.tsx) ─────────────────
+// The bottom-left music toggle: a "Space jam" label pill with the switch
+// at its right end. Charcoal track with a flatline while muted; purple
+// with a bouncing equaliser while the jams play. The thumb is a plain
+// disc carrying a speaker (playing) or a red-slashed one (muted).
+
+$music-pill-pad: 4px;
+
+// The label pill. Sits where the old "Enable space jams" button did, clear
+// of the home indicator / rounded corners now that viewport-fit=cover lets
+// the page extend under them; the padding is backed out of the offsets so
+// the switch inside lands at exactly 1rem — level with the day/night
+// switch beside it on lg. On narrow screens the resume panel scrolls right
+// under the pill, so it needs its own scrim to stay legible (no
+// backdrop-filter — same rule as everything else over the canvases).
+.music-toggle {
+  bottom: calc(1rem - #{$music-pill-pad} + env(safe-area-inset-bottom, 0px));
+  left: calc(1rem - #{$music-pill-pad} + env(safe-area-inset-left, 0px));
+  padding: $music-pill-pad $music-pill-pad $music-pill-pad 14px;
+  border-radius: 999px;
+  background: rgba(8, 6, 28, 0.75);
+  color: #e8e6f5;
+  cursor: pointer;
+  user-select: none;
+}
+
+.App.day .music-toggle {
+  background: rgba(255, 255, 255, 0.75);
+  color: #24203a;
+}
+
+.space-jam-switch {
+  // Inline in the pill (the Tailwind-positioned day/night switch has its
+  // own containing block); relative so the scene layers anchor to it
+  position: relative;
+  background: linear-gradient(180deg, #23222e 0%, #34333f 60%, #45444f 100%);
+  transition: background 500ms ease;
+
+  &[data-state="checked"] {
+    background: linear-gradient(180deg, #3a1f8f 0%, #5a3bc8 60%, #8f70f2 100%);
+  }
+}
+
+// Muted and playing dressing layers crossfade with the flip
+.sjs-scene {
+  position: absolute;
+  inset: 0;
+  transition: opacity 400ms ease;
+}
+
+// Muted: a flatline on the right, where the thumb isn't
+.sjs-scene-off {
+  opacity: 1;
+
+  &::before {
+    content: "";
+    position: absolute;
+    left: 38px;
+    right: 9px;
+    top: 50%;
+    height: 2px;
+    margin-top: -1px;
+    border-radius: 1px;
+    background: rgba(255, 255, 255, 0.35);
+  }
+
+  [data-state="checked"] & {
+    opacity: 0;
+  }
+}
+
+// Playing: four bars bouncing on the left. They start at staggered
+// heights so the still frame (reduced motion, or paused while muted)
+// still reads as an equaliser.
+.sjs-scene-on {
+  display: flex;
+  align-items: center;
+  gap: 3px;
+  padding-left: 9px;
+  opacity: 0;
+
+  [data-state="checked"] & {
+    opacity: 1;
+  }
+}
+
+.sjs-bar {
+  width: 3px;
+  border-radius: 2px;
+  background: rgba(255, 255, 255, 0.85);
+  animation: sjs-bounce 700ms ease-in-out infinite alternate;
+  // Don't keep bouncing under the faded-out layer while muted
+  animation-play-state: paused;
+
+  [data-state="checked"] & {
+    animation-play-state: running;
+  }
+
+  &:nth-child(1) {
+    height: 8px;
+  }
+
+  &:nth-child(2) {
+    height: 16px;
+    animation-delay: -250ms;
+  }
+
+  &:nth-child(3) {
+    height: 11px;
+    animation-delay: -500ms;
+  }
+
+  &:nth-child(4) {
+    height: 14px;
+    animation-delay: -120ms;
+  }
+}
+
+@keyframes sjs-bounce {
+  from {
+    transform: scaleY(0.35);
+  }
+  to {
+    transform: scaleY(1);
+  }
+}
+
+// A plain disc with the two speaker icons stacked on it; the flip
+// crossfades between them
+.sjs-thumb {
+  display: grid;
+  place-items: center;
+  background: radial-gradient(circle at 35% 35%, #fff, #dcd9e6 80%);
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.4);
+  color: #24203a;
+
+  > svg {
+    grid-area: 1 / 1;
+    transition: opacity 300ms ease;
+  }
+}
+
+.sjs-icon-on {
+  opacity: 0;
+
+  [data-state="checked"] & {
+    opacity: 1;
+  }
+}
+
+.sjs-icon-off {
+  opacity: 1;
+
+  [data-state="checked"] & {
+    opacity: 0;
+  }
+}
+
+.speaker-slash {
+  stroke: #e5484d;
 }
 
 // ─── SVG Generator Page ────────────────────────────────────

@@ -27,6 +27,9 @@ the preview tool.
 - `corepack yarn tsc --noEmit` / `corepack yarn lint` / `corepack yarn build`
   — run all three to verify changes
 - `corepack yarn test` — runs `bun test` (see "Testing preferences")
+- `corepack yarn storybook` — Storybook on port 6006 (`.claude/launch.json` has a
+  `storybook` entry for the preview tool). Stories live next to their
+  components (`src/**/*.stories.tsx`); `public/` is served so audio plays.
 - `corepack yarn knip` — known false positives: `postcss`, `tw-animate-css`
   (used via CSS), `serve`, and a few intentionally-kept exports. Don't chase
   these.
