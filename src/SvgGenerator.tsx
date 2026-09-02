@@ -216,6 +216,9 @@ const SvgGenerator = () => {
   const inputRef = useRef<HTMLTextAreaElement>(null);
   const nameInputRef = useRef<HTMLInputElement>(null);
   const resultRef = useRef<HTMLDivElement>(null);
+  // Set by a successful generation so the effect below scrolls the result
+  // up once it has committed — permalink loads leave it alone
+  const scrollToResultRef = useRef(false);
   // Set for the whole POST /api/draw round trip. Generation clears the
   // displayed drawing, which would otherwise look to the permalink effect
   // below like "we're on /draw/:id with nothing loaded" — it would re-fetch
@@ -288,6 +291,17 @@ const SvgGenerator = () => {
     }, 2600);
     return () => clearInterval(timer);
   }, [generating]);
+
+  // The header band puts a fresh drawing below the fold on a laptop —
+  // bring it up without scrolling the composer away (`nearest` only moves
+  // as far as it has to). An effect rather than a rAF after setDrawing:
+  // the concurrent scheduler commits in its own task, so a rAF could run
+  // first and measure the loading frame instead of the drawing.
+  useEffect(() => {
+    if (!drawing || !scrollToResultRef.current) return;
+    scrollToResultRef.current = false;
+    resultRef.current?.scrollIntoView({ behavior: "smooth", block: "nearest" });
+  }, [drawing]);
 
   // Landing on /draw (no id) is a fresh canvas. Clearing loading here too
   // is what rescues a back-navigation out of an in-flight permalink fetch:
@@ -431,18 +445,10 @@ const SvgGenerator = () => {
       }
       if (stillHere()) {
         loadedIdRef.current = data.id;
+        scrollToResultRef.current = true;
         setDrawing(data);
         // Give the fresh drawing its shareable home
         void navigate(`/draw/${data.id}`);
-        // The header band puts the result below the fold on a laptop —
-        // bring it up once it has rendered, without scrolling the composer
-        // away (`nearest` only moves as far as it has to)
-        requestAnimationFrame(() => {
-          resultRef.current?.scrollIntoView({
-            behavior: "smooth",
-            block: "nearest",
-          });
-        });
       }
     } catch (err) {
       if (stillHere()) {
