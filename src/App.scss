@@ -756,7 +756,10 @@ p {
   // The hue cycle on the drawing itself. The per-element wobble lives
   // inside the image's own document, which this block cannot reach —
   // buildAnimationCSS carries its own reduced-motion rule for that.
-  .svg-generator-svg-wrapper img {
+  .svg-generator-svg-wrapper img,
+  // The life bar's "future" tail: its drifting sheen and breathing glow
+  .life-seg--future::before,
+  .life-seg-label--future {
     animation: none !important;
   }
 }
@@ -996,6 +999,8 @@ li > ul > li {
   // center: change one, change the other.
   @media (min-width: $breakpoint-sm) {
     padding-left: max(200px, calc(100vw - 680px));
+    // Room to scroll the last line clear of the fixed life bar
+    padding-bottom: 150px;
   }
 
   @media (min-width: 1280px) {
@@ -1624,6 +1629,7 @@ body.video-mode {
   .day-night-switch,
   .music-toggle,
   .homePageBackLink,
+  .life-timeline,
   .badge-link {
     opacity: 0 !important;
     pointer-events: none !important;
@@ -3381,4 +3387,385 @@ $music-pill-pad: 4px;
     background: rgba(255, 255, 255, 0.88);
     box-shadow: 0 8px 24px rgba(80, 40, 120, 0.12);
   }
+}
+
+// ─── The life bar (/about) ─────────────────────────────────────────────
+// One strip along the bottom of the screen where every era is as wide as
+// it was long (LifeTimeline.tsx). Fixed rather than parked in the résumé
+// panel so it stays put while the résumé scrolls behind it. z 6: over the
+// panel (z 4) and the canvases (z 2), under the Radix tooltip portals
+// (z 50) it opens above itself.
+//
+// The band spans the whole viewport width (its slab runs edge to edge);
+// the bar inside is inset by clearances: `padding-right` keeps it off the
+// corner medallion (140px, bottom-right), `bottom` off the music pill and
+// — at lg — the day/night switch that joins it in that corner.
+.life-timeline {
+  position: fixed;
+  left: 0;
+  right: 0;
+  bottom: calc(3.25rem + env(safe-area-inset-bottom, 0px));
+  padding-right: 160px;
+  z-index: 6;
+  font-family: "Inconsolata", monospace;
+  // The band covers the résumé panel's right margin too — only the bar
+  // itself takes the pointer
+  pointer-events: none;
+  // Fades in on the résumé panel's schedule, a beat after the swoop lands
+  transition: opacity 1s ease 500ms;
+
+  &.life-timeline--hidden {
+    opacity: 0;
+
+    .life-timeline-bar {
+      pointer-events: none;
+    }
+  }
+
+  @media (max-width: $breakpoint-sm) {
+    // Above the (96px) medallion rather than beside it — a phone can't
+    // spare a third of the bar's width to sit next to it
+    padding-right: 12px;
+    bottom: calc(7rem + env(safe-area-inset-bottom, 0px));
+  }
+
+  // A soft slab behind the whole thing. The bar floats over the résumé's
+  // body copy and over Earth's bright limb, and the 10px year ticks lose
+  // against both; the slab also groups the ticks with the bar instead of
+  // leaving them scattered over the text. Fades out upward so it reads as
+  // part of the bar rather than as a toolbar pinned to the viewport.
+  // No backdrop-filter — see the note on .resume-panel.
+  &::before {
+    content: "";
+    position: absolute;
+    inset: -14px 0 -18px 0;
+    z-index: -1;
+    background: linear-gradient(
+      to top,
+      rgba(6, 4, 22, 0) 0%,
+      rgba(6, 4, 22, 0.8) 20%,
+      rgba(6, 4, 22, 0.8) 80%,
+      rgba(6, 4, 22, 0) 100%
+    );
+  }
+}
+
+// Both ends of the bar are open — childhood fades in off the left edge,
+// the future tail fades out on the right — so no corners, and the lift is
+// a drop-shadow (follows the fades) rather than a box-shadow (a hard
+// rectangle under the transparent tail).
+.life-timeline-bar {
+  --life-future-w: 96px;
+  display: flex;
+  height: 34px;
+  overflow: hidden;
+  pointer-events: auto;
+  filter: drop-shadow(0 6px 10px rgba(0, 0, 0, 0.45));
+
+  @media (max-width: $breakpoint-sm) {
+    --life-future-w: 68px;
+    height: 28px;
+  }
+}
+
+// The eras' track: the bar minus the fixed-width future tail. Repeated
+// in the axis so the ticks keep lining up with the boundaries.
+.life-timeline-track {
+  display: flex;
+  flex: 1 1 auto;
+  min-width: 0;
+  height: 100%;
+}
+
+.life-seg {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 100%;
+  padding: 0 6px;
+  border: 0;
+  color: #fff;
+  font: inherit;
+  cursor: pointer;
+  overflow: hidden;
+  transition: filter 150ms ease;
+
+  // Hairline between neighbours, so two shades of the same purple still
+  // read as two jobs
+  & + & {
+    box-shadow: inset 1px 0 0 rgba(255, 255, 255, 0.3);
+  }
+
+  &:hover,
+  &[data-state="delayed-open"],
+  &[data-state="instant-open"] {
+    filter: brightness(1.25);
+  }
+
+  // The bar clips its children, so the focus ring has to live inside
+  &:focus-visible {
+    outline: none;
+    box-shadow: inset 0 0 0 2px #fff;
+  }
+}
+
+// Childhood: no left edge, just a fade off the side of the screen — the
+// left edge of the bar is not 1995. Its label right-aligns so it lands in
+// the solid half rather than dissolving into the fade.
+.life-seg--open {
+  justify-content: flex-end;
+  padding-right: 10px;
+  mask-image: linear-gradient(to right, transparent 0%, #000 50%);
+  -webkit-mask-image: linear-gradient(to right, transparent 0%, #000 50%);
+}
+
+.life-seg-label {
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.3px;
+  // Two lines fit the bar's height, and LifeTimeline only shows a label
+  // that fits its segment in at most two
+  line-height: 1.15;
+  text-align: center;
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.35);
+}
+
+// ─ The future tail ─
+// A translucent off-white slot after today that fades out to the right —
+// the ghost of a segment that hasn't happened yet. Two loops keep it
+// unsettled: a pale sheen drifting through it (transform-only, so cheap)
+// and the label's glow breathing. Both stop under reduced motion.
+.life-seg--future {
+  position: relative;
+  flex: 0 0 var(--life-future-w);
+  padding: 0 14px 0 8px;
+  overflow: hidden;
+  background: rgba(240, 236, 255, 0.22);
+  mask-image: linear-gradient(to right, #000 25%, transparent 96%);
+  -webkit-mask-image: linear-gradient(to right, #000 25%, transparent 96%);
+  box-shadow: inset 1px 0 0 rgba(255, 255, 255, 0.4);
+
+  &::before {
+    content: "";
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(
+      100deg,
+      transparent 30%,
+      rgba(255, 255, 255, 0.38) 50%,
+      transparent 70%
+    );
+    animation: lifeFutureSheen 3.2s ease-in-out infinite;
+    pointer-events: none;
+  }
+
+  &:hover,
+  &[data-state="delayed-open"],
+  &[data-state="instant-open"] {
+    filter: none;
+    background: rgba(240, 236, 255, 0.34);
+  }
+}
+
+.life-seg-label--future {
+  position: relative;
+  font-family: "Retro Floral", Georgia, "Times New Roman", serif;
+  font-style: italic;
+  font-weight: 400;
+  font-size: 15px;
+  letter-spacing: 1px;
+  color: #f6f2ff;
+  animation: lifeFutureGlow 2.4s ease-in-out infinite;
+}
+
+@keyframes lifeFutureSheen {
+  from {
+    transform: translateX(-100%);
+  }
+  to {
+    transform: translateX(100%);
+  }
+}
+
+@keyframes lifeFutureGlow {
+  0%,
+  100% {
+    opacity: 0.72;
+    text-shadow:
+      0 0 4px rgba(255, 255, 255, 0.5),
+      0 0 10px rgba(158, 128, 249, 0.45);
+  }
+  50% {
+    opacity: 1;
+    text-shadow:
+      0 0 6px #fff,
+      0 0 16px rgba(158, 128, 249, 0.95),
+      0 0 28px rgba(158, 128, 249, 0.55);
+  }
+}
+
+// Year rules under the segment boundaries. Same flex percentages as the
+// bar, so every tick lands exactly on its era's left edge.
+.life-timeline-axis {
+  --life-future-w: 96px;
+  position: relative;
+  display: flex;
+  height: 14px;
+  margin-top: 4px;
+
+  @media (max-width: $breakpoint-sm) {
+    --life-future-w: 68px;
+  }
+}
+
+.life-axis-cell {
+  position: relative;
+  flex: 0 0 auto;
+}
+
+.life-axis-year,
+.life-axis-open,
+.life-axis-now {
+  position: absolute;
+  top: 0;
+  height: 12px;
+  line-height: 12px;
+  font-size: 10px;
+  letter-spacing: 0.5px;
+  white-space: nowrap;
+  color: rgba(255, 255, 255, 0.62);
+  // The bar floats over the starfield and Earth's bright limb — the tick
+  // labels have no panel of their own to sit on
+  text-shadow: 0 1px 3px rgba(0, 0, 0, 0.9);
+}
+
+.life-axis-year {
+  left: 0;
+  padding-left: 5px;
+  border-left: 1px solid rgba(255, 255, 255, 0.3);
+}
+
+// Sits under the faded end of the childhood segment, which is exactly
+// what it labels: the part of the bar that ran off the screen
+.life-axis-open {
+  left: 6px;
+  opacity: 0.75;
+}
+
+.life-axis-cell--future {
+  flex: 0 0 var(--life-future-w);
+}
+
+.life-axis-now {
+  font-style: italic;
+}
+
+.App.day {
+  .life-timeline::before {
+    background: linear-gradient(
+      to top,
+      rgba(255, 255, 255, 0) 0%,
+      rgba(255, 255, 255, 0.88) 20%,
+      rgba(255, 255, 255, 0.88) 80%,
+      rgba(255, 255, 255, 0) 100%
+    );
+  }
+
+  .life-axis-year,
+  .life-axis-open,
+  .life-axis-now {
+    color: rgba(36, 32, 58, 0.75);
+    text-shadow: 0 1px 3px rgba(255, 255, 255, 0.95);
+  }
+
+  .life-axis-year {
+    border-left-color: rgba(36, 32, 58, 0.3);
+  }
+
+  // Off-white on the white day slab vanishes — go lilac, and let the
+  // label glow purple instead of white
+  .life-seg--future {
+    background: rgba(120, 90, 220, 0.16);
+
+    &:hover,
+    &[data-state="delayed-open"],
+    &[data-state="instant-open"] {
+      background: rgba(120, 90, 220, 0.26);
+    }
+  }
+
+  .life-seg-label--future {
+    color: $purp;
+    animation-name: lifeFutureGlowDay;
+  }
+
+  .life-timeline-bar {
+    filter: drop-shadow(0 6px 10px rgba(80, 40, 120, 0.22));
+  }
+}
+
+@keyframes lifeFutureGlowDay {
+  0%,
+  100% {
+    opacity: 0.75;
+    text-shadow: 0 0 6px rgba(158, 128, 249, 0.35);
+  }
+  50% {
+    opacity: 1;
+    text-shadow:
+      0 0 6px rgba(158, 128, 249, 0.9),
+      0 0 14px rgba(158, 128, 249, 0.6);
+  }
+}
+
+// The rich tooltip. Radix portals it to <body>, outside .App, so it can
+// never see the day/night class — like every other tooltip on the site it
+// stays dark in both palettes.
+.life-tip-card {
+  max-width: 320px;
+  padding: 10px 12px 11px;
+  border-radius: 10px;
+  background: rgba(12, 9, 34, 0.97);
+  border: 1px solid rgba(158, 128, 249, 0.45);
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
+  color: #ece9ff;
+  font-family: "Inconsolata", monospace;
+  white-space: normal;
+}
+
+.life-tip-head {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 6px;
+
+  .pill {
+    // The résumé's pills are sized for headings; these ride a 14px title
+    margin-left: 0;
+    font-size: 10px;
+    padding: 2px 8px;
+  }
+}
+
+.life-tip-title {
+  font-size: 14px;
+  font-weight: 700;
+}
+
+.life-tip-org {
+  color: $purp-light;
+}
+
+.life-tip-dates {
+  margin-top: 3px;
+  font-size: 11px;
+  letter-spacing: 0.4px;
+  opacity: 0.7;
+}
+
+.life-tip-blurb {
+  margin: 7px 0 0;
+  font-size: 12px;
+  line-height: 1.5;
+  color: rgba(236, 233, 255, 0.85);
 }
