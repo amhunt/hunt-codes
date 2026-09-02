@@ -1756,6 +1756,11 @@ a:hover {
   text-align: right;
   font-family: "Inconsolata", monospace;
   color: #e8e6f5;
+  // The antenna legs sweep right through this corner; a dark pill (the
+  // "Space jam" control's treatment) keeps the copy legible over them
+  padding: 10px 18px 12px;
+  border-radius: 14px;
+  background: rgba(8, 6, 28, 0.72);
   opacity: 0;
   transition: opacity 1s ease;
   pointer-events: none;
@@ -1789,6 +1794,7 @@ a:hover {
 
 .App.day .projects-caption {
   color: #24203a;
+  background: rgba(255, 255, 255, 0.78);
 }
 
 // ─── Zip brand-video popover (ZipVideoMoon) ────────────────

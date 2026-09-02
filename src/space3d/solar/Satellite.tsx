@@ -7,7 +7,7 @@ import {
   planetPosition,
   satelliteLegsDirection,
   satellitePartState,
-  satelliteViewFrame,
+  satellitePerchPose,
   SATELLITE_BODY_RADIUS_RATIO,
   SATELLITE_LEG_LENGTH_RATIO,
   SATELLITE_LEG_TILT,
@@ -49,8 +49,8 @@ import InteractiveGlow from "./InteractiveGlow";
  * heading. The beacon and the link parts hang off the rig, not the
  * rolling body, so they hold still. The parts live in a "presentation"
  * frame whose +Z faces the close-up perch and whose +Y is that view's
- * screen-up (satelliteViewFrame, the same function CameraRig perches
- * with), so their layout is designed in screen terms — screen lower
+ * screen-up (satellitePerchPose, the same pose CameraRig perches
+ * at), so their layout is designed in screen terms — screen lower
  * right, heart upper left, crate lower left — and lands facing the
  * camera by construction.
  */
@@ -78,15 +78,22 @@ const ROLL_SPEED_SCALE = 0.35;
  *  camera: `polar` is degrees off the camera-facing pole (0 = dead
  *  center, 90 = the limb), `azimuth` degrees counter-clockwise from
  *  screen-right. The beacon (rig +Y) lands top-center on its own and the
- *  antenna cone trails off screen-left; these fill the other corners. */
+ *  antenna cone runs off screen-right; the head is cut off by the
+ *  bottom and left edges, so these keep to its upper and right reaches.
+ *  The close-up camera sits only ~2.5 head radii out, which shrinks the
+ *  visible cap and stretches its rim, so the parts stay well inside
+ *  ~40° or they'd smear along the limb. */
 const HEAD_PART_PLACEMENTS: Record<
   Exclude<SatellitePart, "antenna">,
   { polar: number; azimuth: number }
 > = {
-  screen: { polar: 40, azimuth: -20 },
-  heart: { polar: 38, azimuth: 150 },
-  crate: { polar: 47, azimuth: 215 },
+  screen: { polar: 32, azimuth: -20 },
+  heart: { polar: 28, azimuth: 120 },
+  crate: { polar: 36, azimuth: 45 },
 };
+/** The antenna link's anchor, as a fraction of the leg length past the
+ *  attach point: mid-cone, roughly the middle of the visible stretch */
+const ANTENNA_ANCHOR_ALONG = 0.5;
 /** The tag's slant, radians */
 const HEART_TILT = -0.3;
 
@@ -102,7 +109,10 @@ const HOVER_TINT = new THREE.Color(1.7, 1.7, 1.7);
 const legsDir = new THREE.Vector3();
 const legsBack = new THREE.Vector3();
 const legsMatrix = new THREE.Matrix4();
+const perchPos = new THREE.Vector3();
+const perchLook = new THREE.Vector3();
 const perchDir = new THREE.Vector3();
+const perchForward = new THREE.Vector3();
 const perchUp = new THREE.Vector3();
 const frameMatrix = new THREE.Matrix4();
 const frameQuat = new THREE.Quaternion();
@@ -283,7 +293,9 @@ export default function Satellite({
   );
 
   const bodyGeometry = useMemo(
-    () => new THREE.SphereGeometry(bodyRadius, 24, 16),
+    // Segments for a head that fills the /projects-and-toys frame: the
+    // old 24x16 read as facets along the rim and under the heart decal
+    () => new THREE.SphereGeometry(bodyRadius, 48, 32),
     [bodyRadius],
   );
   useEffect(() => () => bodyGeometry.dispose(), [bodyGeometry]);
@@ -311,9 +323,10 @@ export default function Satellite({
       }),
     [bodyRadius, legLength],
   );
-  /** The antenna link's anchor: the cone's midpoint, on its axis */
+  /** The antenna link's anchor, on the cone's axis */
   const antennaAxial =
-    (bodyRadius * 0.7 + legLength / 2) * Math.cos(SATELLITE_LEG_TILT);
+    (bodyRadius * 0.7 + legLength * ANTENNA_ANCHOR_ALONG) *
+    Math.cos(SATELLITE_LEG_TILT);
 
   // Head parts, posed in the presentation frame (see HEAD_PART_PLACEMENTS)
   const poses = useMemo(() => {
@@ -335,7 +348,7 @@ export default function Satellite({
       },
       // Strapped on: its bottom face sits just under the surface
       crate: {
-        position: crateDir.clone().multiplyScalar(bodyRadius * 1.1),
+        position: crateDir.clone().multiplyScalar(bodyRadius * 1.08),
         quaternion: surfacePose(crateDir),
       },
     };
@@ -347,12 +360,12 @@ export default function Satellite({
   // sticker lies on the surface wherever the body has rolled to.
   const heartGeometry = useMemo(() => {
     const target = new THREE.Mesh(bodyGeometry);
-    const size = bodyRadius * 0.52;
+    const size = bodyRadius * 0.42;
     return new DecalGeometry(
       target,
       poses.heart.position,
       new THREE.Euler().setFromQuaternion(poses.heart.quaternion),
-      new THREE.Vector3(size, size, bodyRadius * 0.4),
+      new THREE.Vector3(size, size, bodyRadius * 0.35),
     );
   }, [bodyGeometry, bodyRadius, poses]);
   useEffect(() => () => heartGeometry.dispose(), [heartGeometry]);
@@ -400,10 +413,26 @@ export default function Satellite({
       rig.current.quaternion.setFromRotationMatrix(legsMatrix);
     }
 
-    // Presentation frame: +Z toward the close-up perch, +Y its screen-up.
+    // Presentation frame: +Z toward the close-up perch, +Y that pose's
+    // screen-up (world-up with the arrival view direction removed — the
+    // perch yaws hard to put the head off-center, which rolls the frame).
     // `present` is a child of the rig, so local = rig⁻¹ · world.
     if (present.current && rig.current && group.current) {
-      satelliteViewFrame(group.current.position, perchDir, perchUp);
+      const persp = camera as THREE.PerspectiveCamera;
+      satellitePerchPose(
+        t,
+        group.current.position,
+        persp.fov,
+        persp.aspect || 1,
+        perchPos,
+        perchLook,
+      );
+      perchDir.copy(perchPos).sub(group.current.position).normalize();
+      perchForward.copy(perchLook).sub(perchPos).normalize();
+      perchUp
+        .copy(UP)
+        .addScaledVector(perchForward, -UP.dot(perchForward))
+        .normalize();
       frameMatrix.lookAt(perchDir, ZERO, perchUp);
       frameQuat.setFromRotationMatrix(frameMatrix);
       rigInverse.copy(rig.current.quaternion).invert();
@@ -527,7 +556,7 @@ export default function Satellite({
           material={materials.bulb}
           position={[0, bodyRadius * 1.05, 0]}
         >
-          <sphereGeometry args={[bodyRadius * 0.15, 12, 8]} />
+          <sphereGeometry args={[bodyRadius * 0.12, 12, 8]} />
         </mesh>
         {/* The /projects-and-toys link parts (faded out elsewhere) */}
         <group ref={parts}>
@@ -535,7 +564,7 @@ export default function Satellite({
               here, the legs themselves roll with the body above */}
           <group ref={anchorRef.antenna} position={[0, 0, antennaAxial]}>
             <InteractiveGlow
-              radius={legLength * 0.22}
+              radius={legLength * 0.2}
               opacityRef={partsShown}
               enabled={partsActive}
               strength={0.35}
@@ -551,8 +580,8 @@ export default function Satellite({
               <mesh ref={screenBezel} material={materials.bezel}>
                 <boxGeometry
                   args={[
-                    bodyRadius * 0.64,
-                    bodyRadius * 0.46,
+                    bodyRadius * 0.52,
+                    bodyRadius * 0.375,
                     bodyRadius * 0.09,
                   ]}
                 />
@@ -561,7 +590,7 @@ export default function Satellite({
                 material={materials.display}
                 position={[0, 0, bodyRadius * 0.06]}
               >
-                <planeGeometry args={[bodyRadius * 0.56, bodyRadius * 0.38]} />
+                <planeGeometry args={[bodyRadius * 0.45, bodyRadius * 0.305]} />
               </mesh>
               <InteractiveGlow
                 radius={satellitePartState.screen.radius}
@@ -594,35 +623,35 @@ export default function Satellite({
               <mesh ref={crateBox} material={materials.crate}>
                 <boxGeometry
                   args={[
-                    bodyRadius * 0.4,
-                    bodyRadius * 0.32,
-                    bodyRadius * 0.28,
+                    bodyRadius * 0.34,
+                    bodyRadius * 0.27,
+                    bodyRadius * 0.24,
                   ]}
                 />
               </mesh>
               <mesh material={materials.strap}>
                 <boxGeometry
                   args={[
-                    bodyRadius * 0.07,
-                    bodyRadius * 0.335,
-                    bodyRadius * 0.295,
+                    bodyRadius * 0.06,
+                    bodyRadius * 0.285,
+                    bodyRadius * 0.255,
                   ]}
                 />
               </mesh>
               <mesh material={materials.strap}>
                 <boxGeometry
                   args={[
-                    bodyRadius * 0.415,
-                    bodyRadius * 0.07,
-                    bodyRadius * 0.295,
+                    bodyRadius * 0.355,
+                    bodyRadius * 0.06,
+                    bodyRadius * 0.255,
                   ]}
                 />
               </mesh>
               <mesh
                 material={materials.strap}
-                position={[0, 0, bodyRadius * 0.16]}
+                position={[0, 0, bodyRadius * 0.14]}
               >
-                <sphereGeometry args={[bodyRadius * 0.05, 10, 8]} />
+                <sphereGeometry args={[bodyRadius * 0.045, 10, 8]} />
               </mesh>
               <InteractiveGlow
                 radius={satellitePartState.crate.radius}

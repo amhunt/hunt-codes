@@ -252,13 +252,16 @@ export const satellitePartState: Record<
   SatellitePart,
   { position: THREE.Vector3; radius: number }
 > = {
+  // The cone's tips run off-screen in the close-up, so its hit circle
+  // sits mid-cone (Satellite's ANTENNA_ANCHOR_ALONG) and covers the
+  // visible stretch of the legs
   antenna: {
     position: new THREE.Vector3(),
-    radius: SATELLITE.radius * SATELLITE_LEG_LENGTH_RATIO * 0.33,
+    radius: SATELLITE.radius * SATELLITE_LEG_LENGTH_RATIO * 0.3,
   },
-  screen: { position: new THREE.Vector3(), radius: satelliteBodyRadius * 0.32 },
-  heart: { position: new THREE.Vector3(), radius: satelliteBodyRadius * 0.28 },
-  crate: { position: new THREE.Vector3(), radius: satelliteBodyRadius * 0.3 },
+  screen: { position: new THREE.Vector3(), radius: satelliteBodyRadius * 0.27 },
+  heart: { position: new THREE.Vector3(), radius: satelliteBodyRadius * 0.22 },
+  crate: { position: new THREE.Vector3(), radius: satelliteBodyRadius * 0.24 },
 };
 
 const WORLD_UP = new THREE.Vector3(0, 1, 0);
@@ -294,49 +297,85 @@ export function satelliteLegsDirection(
     .normalize();
 }
 
-const frameOutward = new THREE.Vector3();
-/** How far the close-up perch swings from level-with-the-satellite toward
- *  straight above it (radially away from the sun): more of it looks
- *  further down over the head, raising the sun's limb into the frame.
- *  The satellite floats well above the sun now, so it takes this much to
- *  bring the limb up to the bottom ~quarter of the frame — and looking
- *  down this steeply also lifts Earth out of the top of the frame, where
- *  a level perch left it cropped in the corner. */
-const PERCH_CLIMB = 0.7;
-/** Then swing the perch around the sun line, radians. 0 puts the sun
- *  dead below the satellite; this much slides its limb to the bottom-left
- *  with the antenna cone reaching up-right, leaving the bottom-right
- *  clear for the caption. */
-const PERCH_AZIMUTH = 0.35;
+// ── The /projects-and-toys close-up perch ──────────────────────────────
+// The camera sits close enough that the head looms nearly the full
+// height of a landscape frame — cut off by the bottom and left edges —
+// with the antenna cone laid out flat to screen-right, running off the
+// edge with its tips out of frame. The pose is built from that layout:
+// a no-roll camera whose forward is perpendicular to the cone's heading
+// (so the legs stay in the screen plane, pointing right), pitched
+// PERCH_PITCH down onto the head, and TRANSLATED (not yawed) until the
+// head projects at the requested spot — yawing a steeply pitched camera
+// rolls its screen-up, which would tilt the whole layout. The sun and
+// Earth both fall outside the frame from here; the stars carry the
+// background. Portrait frames back off so the head fits the width.
+const PERCH_RADII = 2;
+const PERCH_RADII_PORTRAIT = 1.7;
+/** Down-tilt onto the head, radians: enough that the beacon on top of
+ *  the head is in view without looking straight down at it */
+const PERCH_PITCH = 0.45;
+/** Where the head's center lands (NDC) on a landscape frame: well left
+ *  of center so the cone has the width to sweep across, and low so the
+ *  head crowds the bottom edge while its top clears the name title.
+ *  Narrow frames slide it back to the horizontal center. */
+const PERCH_HEAD_NDC_X = -0.5;
+const PERCH_HEAD_NDC_Y = -0.35;
+const PERCH_LANDSCAPE_ASPECT = 1.6;
+const PERCH_PORTRAIT_ASPECT = 0.9;
+
+const perchHeading = new THREE.Vector3();
+const perchForward = new THREE.Vector3();
+const perchRight = new THREE.Vector3();
+const perchUp = new THREE.Vector3();
+const perchToBody = new THREE.Vector3();
 
 /**
- * The /projects-and-toys viewing frame around the satellite. `outToward`
- * is the direction from the satellite to its close-up camera perch:
- * level with the satellite and perpendicular to the sun→satellite line,
- * on the upper side, tipped PERCH_CLIMB outward and swung PERCH_AZIMUTH
- * around the sun line. Looking back along it with world-up as the
- * camera's up keeps the sun below the frame, its limb glowing along the
- * bottom edge instead of filling the sky behind the satellite. `outUp` is
- * that pose's screen-up. CameraRig perches there; Satellite mounts its
- * link parts on the hemisphere facing it, so they face the camera by
- * construction.
+ * The /projects-and-toys camera pose at elapsed time t for a satellite at
+ * `satellitePos` and a camera of the given vertical fov (degrees) and
+ * aspect: the perch position and its look target. CameraRig swoops to
+ * it; Satellite derives its link parts' layout from the same pose (their
+ * frame faces this perch, with its screen-up), so the parts land where
+ * the layout says by construction.
  */
-export function satelliteViewFrame(
+export function satellitePerchPose(
+  t: number,
   satellitePos: THREE.Vector3,
-  outToward: THREE.Vector3,
-  outUp: THREE.Vector3,
+  fovDeg: number,
+  aspect: number,
+  outPos: THREE.Vector3,
+  outLook: THREE.Vector3,
 ): void {
-  frameOutward.copy(satellitePos).normalize(); // sun→satellite
-  // World-up with the outward component removed: level with the
-  // satellite, perpendicular to the sun line, on the upper side
-  outToward
-    .copy(WORLD_UP)
-    .addScaledVector(frameOutward, -frameOutward.y)
-    .normalize()
-    .addScaledVector(frameOutward, PERCH_CLIMB)
-    .normalize()
-    .applyAxisAngle(frameOutward, PERCH_AZIMUTH);
-  outUp.copy(WORLD_UP).addScaledVector(outToward, -outToward.y).normalize();
+  // Horizontal heading of the antenna cone → the camera's screen-right
+  satelliteLegsDirection(t, perchHeading);
+  perchHeading.y = 0;
+  perchHeading.normalize();
+  // A no-roll camera whose right is that heading looks along UP × heading
+  // (its forward × UP gives the heading back), pitched down
+  perchForward
+    .crossVectors(WORLD_UP, perchHeading)
+    .multiplyScalar(Math.cos(PERCH_PITCH))
+    .addScaledVector(WORLD_UP, -Math.sin(PERCH_PITCH));
+  perchRight.crossVectors(perchForward, WORLD_UP).normalize();
+  perchUp.crossVectors(perchRight, perchForward);
+  // Slide the camera so the head projects at the requested NDC spot: a
+  // body along forward + x·tan(fovH/2)·right + y·tan(fovV/2)·up lands at
+  // NDC (x, y) exactly, so put the satellite that way from the camera
+  const tanHalfV = Math.tan((fovDeg * Math.PI) / 360);
+  const wide = THREE.MathUtils.clamp(
+    (aspect - PERCH_PORTRAIT_ASPECT) /
+      (PERCH_LANDSCAPE_ASPECT - PERCH_PORTRAIT_ASPECT),
+    0,
+    1,
+  );
+  perchToBody
+    .copy(perchForward)
+    .addScaledVector(perchRight, PERCH_HEAD_NDC_X * wide * tanHalfV * aspect)
+    .addScaledVector(perchUp, PERCH_HEAD_NDC_Y * tanHalfV)
+    .normalize();
+  const distance =
+    SATELLITE.radius * Math.max(PERCH_RADII, PERCH_RADII_PORTRAIT / aspect);
+  outPos.copy(satellitePos).addScaledVector(perchToBody, -distance);
+  outLook.copy(outPos).add(perchForward);
 }
 
 /** Earth's moon — orbits Earth (not the sun), in the same XZ plane. */
