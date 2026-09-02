@@ -5,8 +5,9 @@
  * scroll and no journey handlers), so useScrollJourney accumulates
  * wheel/touch deltas into the `target` stop value; CameraRig eases
  * `progress` toward it each frame and poses the camera along the
- * between-view swoops. Stopping mid-scroll parks the camera mid-swoop;
- * scrolling back retreats. When the RENDERED progress reaches a
+ * between-view swoops. After scrolling pauses, useScrollJourney gently
+ * settles the target at the nearest stop; new input interrupts settling.
+ * When the RENDERED progress reaches a
  * different stop, the hook commits the matching route — and CameraRig
  * recognizes the scroll-committed arrival and skips its timed swoop
  * (restarting it was the "full re-animation" bug).
