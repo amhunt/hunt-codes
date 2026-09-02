@@ -1,10 +1,51 @@
-import React, { useState, useRef, useEffect, useCallback } from "react";
+import React, {
+  useState,
+  useRef,
+  useEffect,
+  useCallback,
+  useLayoutEffect,
+  useMemo,
+} from "react";
 import { Link, useNavigate, useParams } from "react-router-dom";
 import { Sun } from "react-feather";
-import { Check, Link2, Wand2 } from "lucide-react";
+import { Check, Download, Link2, RefreshCw, Wand2 } from "lucide-react";
 
 const DRAWABLE_SELECTORS =
   "path, circle, ellipse, line, polyline, polygon, rect";
+
+/** Mirrors PROMPT_MAX / NAME_MAX in server/handler.mjs */
+const PROMPT_MAX = 300;
+const NAME_MAX = 40;
+
+/** Starting points for the blank-page moment; clicking one only fills the
+ *  prompt — it never submits, so an idle click can't spend a generation. */
+const PROMPT_IDEAS = [
+  "saturn with rings",
+  "a cat in a spacesuit",
+  "a lighthouse in a storm",
+  "a robot watering a plant",
+  "a hot air balloon at sunrise",
+];
+
+/** Generation can take up to ~50s; these keep the wait feeling alive. */
+const GENERATING_LINES = [
+  "sharpening the pencils…",
+  "consulting the muse…",
+  "inking the outlines…",
+  "mixing the colors…",
+  "adding a few stars…",
+  "signing the corner…",
+];
+
+/** "a fox reading a book!" → "a-fox-reading-a-book.svg" */
+const downloadName = (prompt: string) => {
+  const slug = prompt
+    .toLowerCase()
+    .replaceAll(/[^a-z0-9]+/g, "-")
+    .replaceAll(/^-+|-+$/g, "")
+    .slice(0, 60);
+  return `${slug || "drawing"}.svg`;
+};
 
 /** Number of wave keyframe variants elements are cycled through. */
 const NUM_WAVE_VARIANTS = 14;
@@ -169,9 +210,12 @@ const SvgGenerator = () => {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
   const [copied, setCopied] = useState(false);
+  // Which of GENERATING_LINES is showing while a drawing is in flight
+  const [lineIndex, setLineIndex] = useState(0);
 
-  const inputRef = useRef<HTMLInputElement>(null);
+  const inputRef = useRef<HTMLTextAreaElement>(null);
   const nameInputRef = useRef<HTMLInputElement>(null);
+  const resultRef = useRef<HTMLDivElement>(null);
   // Set for the whole POST /api/draw round trip. Generation clears the
   // displayed drawing, which would otherwise look to the permalink effect
   // below like "we're on /draw/:id with nothing loaded" — it would re-fetch
@@ -224,6 +268,26 @@ const SvgGenerator = () => {
     }, 500);
     return () => clearTimeout(timer);
   }, []);
+
+  // The prompt box grows with its text (a single-line input scrolled long
+  // prompts out of sight); the CSS max-height caps it and scrolls past that
+  useLayoutEffect(() => {
+    const el = inputRef.current;
+    if (!el) return;
+    el.style.height = "auto";
+    el.style.height = `${el.scrollHeight}px`;
+  }, [prompt]);
+
+  // Cycle the status line while generating so a 30s wait doesn't read as a
+  // hang; starts over from the first line on every generation
+  useEffect(() => {
+    if (!generating) return;
+    setLineIndex(0);
+    const timer = setInterval(() => {
+      setLineIndex((i) => (i + 1) % GENERATING_LINES.length);
+    }, 2600);
+    return () => clearInterval(timer);
+  }, [generating]);
 
   // Landing on /draw (no id) is a fresh canvas. Clearing loading here too
   // is what rescues a back-navigation out of an in-flight permalink fetch:
@@ -370,6 +434,15 @@ const SvgGenerator = () => {
         setDrawing(data);
         // Give the fresh drawing its shareable home
         void navigate(`/draw/${data.id}`);
+        // The header band puts the result below the fold on a laptop —
+        // bring it up once it has rendered, without scrolling the composer
+        // away (`nearest` only moves as far as it has to)
+        requestAnimationFrame(() => {
+          resultRef.current?.scrollIntoView({
+            behavior: "smooth",
+            block: "nearest",
+          });
+        });
       }
     } catch (err) {
       if (stillHere()) {
@@ -407,6 +480,38 @@ const SvgGenerator = () => {
     }
   };
 
+  // Enter submits the prompt; Shift+Enter is the one way to get a newline
+  const handlePromptKeyDown = (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
+    if (e.key === "Enter" && !e.shiftKey) {
+      e.preventDefault();
+      if (!loading) void generateSvg();
+    }
+  };
+
+  // Drop a suggestion (or the loaded drawing's prompt) into the box, ready
+  // to edit or send — deliberately not submitting, generations are billed
+  const usePrompt = useCallback((text: string) => {
+    setPrompt(text);
+    const el = inputRef.current;
+    if (el) {
+      el.focus();
+      el.scrollIntoView({ block: "nearest", behavior: "smooth" });
+    }
+  }, []);
+
+  // Built once per drawing rather than on every keystroke — the animation
+  // CSS plus base64 is a few KB of string work
+  const drawingSrc = useMemo(
+    () => (drawing ? toDataUri(drawing.svg) : ""),
+    [drawing],
+  );
+
+  const promptLength = prompt.length;
+  const showCounter = promptLength >= PROMPT_MAX - 60;
+  // Blank page only: with a drawing on screen the pills just pushed it below
+  // the fold, and "remix" covers the starting-point job there
+  const showIdeas = !prompt.trim() && !loading && !drawing;
+
   return (
     <div className="svg-generator-page">
       <div className="svg-generator-back-link">
@@ -425,76 +530,121 @@ const SvgGenerator = () => {
           Describe an image and watch AI bring it to life as an animated SVG
         </p>
 
-        {/* Signature — every drawing is signed by its artist */}
-        <div className="svg-generator-name-row">
-          <input
-            ref={nameInputRef}
-            aria-label="Your name — it signs your drawing"
-            className="svg-generator-name-input"
-            type="text"
-            placeholder="sign your work, space cadet"
-            value={name}
-            maxLength={40}
-            onChange={(e) => setName(e.target.value)}
-            onKeyDown={handleKeyDown}
-            disabled={loading}
-            spellCheck={false}
-            autoComplete="off"
-          />
-        </div>
-
-        {/* Prompt Input */}
-        <div className="svg-generator-input-row">
-          <input
+        {/* The composer: the prompt is the hero, the signature rides along
+            underneath it, and the button says what it does */}
+        <div className="svg-generator-composer">
+          <textarea
             ref={inputRef}
             aria-label="Describe an image to draw"
             className="svg-generator-input"
-            type="text"
-            placeholder='Describe an image to draw, e.g. "saturn with rings"'
+            placeholder="what should the robot draw?"
             value={prompt}
-            maxLength={300}
+            maxLength={PROMPT_MAX}
+            rows={1}
             onChange={(e) => setPrompt(e.target.value)}
-            onKeyDown={handleKeyDown}
+            onKeyDown={handlePromptKeyDown}
             disabled={loading}
             spellCheck={false}
           />
-          <button
-            className="svg-generator-button"
-            onClick={() => void generateSvg()}
-            disabled={loading || !prompt.trim()}
-            type="button"
-            aria-label={loading ? "Generating…" : "Generate drawing"}
-          >
-            {loading ? (
-              <span className="svg-generator-spinner" aria-hidden="true" />
-            ) : (
-              <Wand2 size={20} aria-hidden="true" />
-            )}
-          </button>
+          <div className="svg-generator-composer-row">
+            {/* Signature — every drawing is signed by its artist */}
+            <label className="svg-generator-signature">
+              <span className="svg-generator-signature-label">signed by</span>
+              <input
+                ref={nameInputRef}
+                aria-label="Your name — it signs your drawing"
+                type="text"
+                placeholder="you, space cadet"
+                value={name}
+                maxLength={NAME_MAX}
+                onChange={(e) => setName(e.target.value)}
+                onKeyDown={handleKeyDown}
+                disabled={loading}
+                spellCheck={false}
+                autoComplete="off"
+              />
+            </label>
+            <div className="svg-generator-composer-end">
+              {showCounter && (
+                <span
+                  className={`svg-generator-counter ${promptLength >= PROMPT_MAX ? "is-full" : ""}`}
+                  aria-live="polite"
+                >
+                  {promptLength}/{PROMPT_MAX}
+                </span>
+              )}
+              <button
+                className="svg-generator-button"
+                onClick={() => void generateSvg()}
+                disabled={loading || !prompt.trim()}
+                type="button"
+                aria-label={loading ? "Generating…" : "Generate drawing"}
+              >
+                {loading ? (
+                  <span className="svg-generator-spinner" aria-hidden="true" />
+                ) : (
+                  <Wand2 size={18} aria-hidden="true" />
+                )}
+                <span>{loading ? "drawing…" : "draw it"}</span>
+              </button>
+            </div>
+          </div>
         </div>
 
-        {/* Error */}
-        {error && <p className="svg-generator-error">{error}</p>}
+        {/* Blank-page helpers: a few starting points that fill the prompt */}
+        {showIdeas && (
+          <div className="svg-generator-ideas" aria-label="Prompt ideas">
+            <span className="svg-generator-ideas-label">try one</span>
+            {PROMPT_IDEAS.map((idea) => (
+              <button
+                key={idea}
+                className="svg-generator-idea"
+                type="button"
+                onClick={() => usePrompt(idea)}
+              >
+                {idea}
+              </button>
+            ))}
+          </div>
+        )}
+
+        {/* Error — announced, since it often answers an Enter press */}
+        {error && (
+          <p className="svg-generator-error" role="alert">
+            {error}
+          </p>
+        )}
 
         {/* Result */}
         <div
+          ref={resultRef}
           className={`svg-generator-result ${drawing ? "has-content" : ""} ${loading ? "is-loading" : ""}`}
         >
           {loading && (
-            <div className="svg-generator-loading">
+            <div className="svg-generator-loading" aria-live="polite">
               <div className="svg-generator-loading-dots">
                 <span />
                 <span />
                 <span />
               </div>
-              <p>
-                {/* Not `routeId && !drawing` — regenerating from a permalink
-                    also clears the drawing while the id stays in the URL,
-                    which read as "tuning in" when we were really drawing */}
-                {generating
-                  ? "Generating your SVG..."
-                  : "Tuning into the transmission..."}
-              </p>
+              {/* Not `routeId && !drawing` — regenerating from a permalink
+                  also clears the drawing while the id stays in the URL,
+                  which read as "tuning in" when we were really drawing */}
+              {generating ? (
+                <>
+                  {/* Keyed so each line gets its own entrance */}
+                  <p key={lineIndex} className="svg-generator-loading-line">
+                    {GENERATING_LINES[lineIndex]}
+                  </p>
+                  <p className="svg-generator-loading-hint">
+                    the robot usually takes 10–40 seconds
+                  </p>
+                </>
+              ) : (
+                <p className="svg-generator-loading-line">
+                  tuning into the transmission…
+                </p>
+              )}
             </div>
           )}
           {drawing && (
@@ -502,21 +652,47 @@ const SvgGenerator = () => {
               <div className="svg-generator-svg-wrapper">
                 <img
                   alt={`${drawing.prompt} — drawn by ${drawing.name}`}
-                  src={toDataUri(drawing.svg)}
+                  src={drawingSrc}
                 />
               </div>
               <div className="svg-generator-caption">
                 <span className="svg-generator-caption-text">
                   &ldquo;{drawing.prompt}&rdquo; — drawn by {drawing.name}
                 </span>
-                <button
-                  className="svg-generator-copy-btn"
-                  onClick={() => void copyLink()}
-                  type="button"
-                >
-                  {copied ? <Check size={13} /> : <Link2 size={13} />}
-                  {copied ? "copied!" : "copy link"}
-                </button>
+                <div className="svg-generator-actions">
+                  <button
+                    className="svg-generator-action"
+                    onClick={() => usePrompt(drawing.prompt)}
+                    type="button"
+                    title="Load this prompt so you can tweak it and draw your own"
+                  >
+                    <RefreshCw size={13} aria-hidden="true" />
+                    remix
+                  </button>
+                  {/* The same inert data URI the <img> shows — the animated
+                      SVG, saved as a file */}
+                  <a
+                    className="svg-generator-action"
+                    href={drawingSrc}
+                    download={downloadName(drawing.prompt)}
+                    title="Save the animated SVG"
+                  >
+                    <Download size={13} aria-hidden="true" />
+                    download
+                  </a>
+                  <button
+                    className="svg-generator-action"
+                    onClick={() => void copyLink()}
+                    type="button"
+                  >
+                    {copied ? (
+                      <Check size={13} aria-hidden="true" />
+                    ) : (
+                      <Link2 size={13} aria-hidden="true" />
+                    )}
+                    {copied ? "copied!" : "copy link"}
+                  </button>
+                </div>
               </div>
             </>
           )}
@@ -527,27 +703,38 @@ const SvgGenerator = () => {
           <div className="svg-generator-gallery">
             <h2 className="svg-generator-gallery-title">past submissions</h2>
             <div className="svg-generator-gallery-grid">
-              {gallery.map((d) => (
-                <Link
-                  key={d.id}
-                  className="svg-generator-gallery-card"
-                  to={`/draw/${d.id}`}
-                  title={`"${d.prompt}" by ${d.name}`}
-                >
-                  <div className="svg-generator-gallery-thumb">
-                    <img alt={d.prompt} src={toDataUri(d.svg)} loading="lazy" />
-                  </div>
-                  {/* The drawing's name (its prompt) leads, the artist
-                      trails; both are one line with the full text in
-                      `title` for when they're cut short */}
-                  <p className="svg-generator-gallery-prompt" title={d.prompt}>
-                    {d.prompt}
-                  </p>
-                  <p className="svg-generator-gallery-name" title={d.name}>
-                    by {d.name}
-                  </p>
-                </Link>
-              ))}
+              {gallery.map((d) => {
+                const isCurrent = d.id === routeId;
+                return (
+                  <Link
+                    key={d.id}
+                    className={`svg-generator-gallery-card ${isCurrent ? "is-current" : ""}`}
+                    to={`/draw/${d.id}`}
+                    title={`"${d.prompt}" by ${d.name}`}
+                    aria-current={isCurrent ? "page" : undefined}
+                  >
+                    <div className="svg-generator-gallery-thumb">
+                      <img
+                        alt={d.prompt}
+                        src={toDataUri(d.svg)}
+                        loading="lazy"
+                      />
+                    </div>
+                    {/* The drawing's name (its prompt) leads on up to two
+                        lines, the artist trails on one; the full text is
+                        in `title` for when they're cut short */}
+                    <p
+                      className="svg-generator-gallery-prompt"
+                      title={d.prompt}
+                    >
+                      {d.prompt}
+                    </p>
+                    <p className="svg-generator-gallery-name" title={d.name}>
+                      by {d.name}
+                    </p>
+                  </Link>
+                );
+              })}
             </div>
           </div>
         )}

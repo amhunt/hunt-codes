@@ -43,7 +43,8 @@ $breakpoint-lg: 1280px;
   }
 
   .svg-generator-title,
-  .svg-generator-input {
+  .svg-generator-input,
+  .svg-generator-signature input {
     color: #222;
   }
 
@@ -51,24 +52,53 @@ $breakpoint-lg: 1280px;
     color: rgba(20, 20, 40, 0.7);
   }
 
-  .svg-generator-input {
-    background: rgba(0, 0, 0, 0.05);
+  // The composer is styled for the night sky — keep it legible by day
+  .svg-generator-composer {
+    background: rgba(255, 255, 255, 0.55);
     border-color: rgba(0, 0, 0, 0.15);
   }
 
-  .svg-generator-input::placeholder {
-    color: rgba(20, 20, 40, 0.65);
+  .svg-generator-input::placeholder,
+  .svg-generator-signature input::placeholder {
+    color: rgba(20, 20, 40, 0.55);
   }
 
-  // These are styled for the night sky only — keep them legible by day
-  .svg-generator-name-input {
-    color: #222;
-    background: rgba(0, 0, 0, 0.05);
-    border-color: rgba(0, 0, 0, 0.15);
+  .svg-generator-signature {
+    color: rgba(20, 20, 40, 0.6);
 
-    &::placeholder {
-      color: rgba(20, 20, 40, 0.65);
+    input {
+      border-bottom-color: rgba(0, 0, 0, 0.25);
     }
+  }
+
+  .svg-generator-counter {
+    color: rgba(20, 20, 40, 0.5);
+  }
+
+  .svg-generator-ideas-label,
+  .svg-generator-gallery-title,
+  .svg-generator-loading-hint {
+    color: rgba(20, 20, 40, 0.5);
+  }
+
+  .svg-generator-idea,
+  .svg-generator-action {
+    color: rgba(20, 20, 40, 0.65);
+    border-color: rgba(0, 0, 0, 0.2);
+
+    &:hover {
+      color: $purp;
+      border-color: $purp;
+    }
+  }
+
+  .svg-generator-loading {
+    background: rgba(255, 255, 255, 0.35);
+    border-color: rgba(0, 0, 0, 0.15);
+  }
+
+  .svg-generator-loading-line {
+    color: rgba(20, 20, 40, 0.7);
   }
 
   .svg-generator-caption-text {
@@ -81,18 +111,8 @@ $breakpoint-lg: 1280px;
     background: rgba(0, 0, 0, 0.8);
   }
 
-  .svg-generator-gallery-title {
-    color: rgba(20, 20, 40, 0.5);
-  }
-
-  .svg-generator-copy-btn {
-    color: rgba(20, 20, 40, 0.6);
-    border-color: rgba(0, 0, 0, 0.2);
-
-    &:hover {
-      color: $purp;
-      border-color: $purp;
-    }
+  .svg-generator-error {
+    color: #c62828;
   }
 
   // White pill text washes out on the frosted-white day panel
@@ -2477,7 +2497,14 @@ $dns-ease: cubic-bezier(0.45, 0.05, 0.25, 1.2);
   // fold (title, name field) becomes unreachable. Auto margins collapse to
   // zero when free space runs out, which keeps the whole page scrollable.
   overflow-y: auto;
-  padding: 24px;
+  // The top padding clears the "andrewhunt" star glyphs that live in the
+  // header band on every page — once the gallery makes the page scroll,
+  // this is where the title lands, and it used to land on the letters
+  padding: 150px 24px 40px;
+
+  @media (max-width: $breakpoint-sm) {
+    padding: 116px 16px 32px;
+  }
 }
 
 .svg-generator-back-link {
@@ -2541,71 +2568,124 @@ $dns-ease: cubic-bezier(0.45, 0.05, 0.25, 1.2);
   letter-spacing: 0.5px;
 }
 
-// Signature — every drawing is signed by its artist
-.svg-generator-name-row {
-  width: 100%;
-  margin-bottom: 10px;
-}
-
-.svg-generator-name-input {
-  width: 100%;
-  padding: 10px 18px;
-  background: rgba(255, 255, 255, 0.05);
-  border: 1px solid rgba(255, 255, 255, 0.1);
-  border-radius: 10px;
-  color: rgba(255, 255, 255, 0.85);
-  font-family: "Inconsolata", monospace;
-  font-size: 13px;
-  outline: none;
-  transition: border-color 0.2s;
-  box-sizing: border-box;
-
-  &::placeholder {
-    color: rgba(255, 255, 255, 0.55);
-  }
-
-  &:focus {
-    border-color: $purp-light-transparent;
-  }
-
-  &:disabled {
-    opacity: 0.5;
-  }
-}
-
-// Prompt input row
-.svg-generator-input-row {
+// The composer: one bordered panel holding the prompt, the signature and
+// the draw button. The panel carries the focus ring for the whole group.
+.svg-generator-composer {
   display: flex;
+  flex-direction: column;
+  gap: 10px;
   width: 100%;
-  gap: 8px;
-}
-
-.svg-generator-input {
-  flex: 1;
-  padding: 14px 18px;
+  padding: 14px 16px 12px;
   background: rgba(255, 255, 255, 0.06);
   border: 1px solid rgba(255, 255, 255, 0.12);
-  border-radius: 12px;
-  color: #fff;
-  font-family: "Inconsolata", monospace;
-  font-size: 16px;
-  outline: none;
+  border-radius: 16px;
+  box-sizing: border-box;
   transition:
     border-color 0.2s,
     box-shadow 0.2s;
+
+  &:focus-within {
+    border-color: $purp-light-transparent;
+    box-shadow: 0 0 24px rgba(150, 116, 249, 0.15);
+  }
+}
+
+// The prompt box grows with its text (SvgGenerator.tsx sets the height
+// from scrollHeight); past ~5 lines it scrolls instead
+.svg-generator-input {
+  width: 100%;
+  min-height: 48px;
+  max-height: 160px;
+  padding: 4px 2px;
+  background: transparent;
+  border: none;
+  color: #fff;
+  font-family: "Inconsolata", monospace;
+  font-size: 17px;
+  line-height: 1.45;
+  outline: none;
+  resize: none;
+  overflow-y: auto;
   box-sizing: border-box;
 
   &::placeholder {
-    color: rgba(255, 255, 255, 0.55);
-  }
-
-  &:focus {
-    border-color: $purp-light-transparent;
-    box-shadow: 0 0 20px rgba(150, 116, 249, 0.15);
+    color: rgba(255, 255, 255, 0.5);
   }
 
   &:disabled {
     opacity: 0.5;
+  }
+}
+
+.svg-generator-composer-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
+// Signature — every drawing is signed by its artist
+.svg-generator-signature {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex: 1 1 200px;
+  min-width: 0;
+  font-family: "Inconsolata", monospace;
+  font-size: 13px;
+  color: rgba(255, 255, 255, 0.6);
+  cursor: text;
+
+  input {
+    flex: 1;
+    min-width: 0;
+    max-width: 240px;
+    padding: 4px 0;
+    background: transparent;
+    border: none;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.2);
+    color: #fff;
+    font-family: "Inconsolata", monospace;
+    font-size: 14px;
+    outline: none;
+    transition: border-color 0.2s;
+
+    &::placeholder {
+      color: rgba(255, 255, 255, 0.45);
+    }
+
+    &:focus {
+      border-bottom-color: $purp-light;
+    }
+
+    &:disabled {
+      opacity: 0.5;
+    }
+  }
+}
+
+.svg-generator-signature-label {
+  flex-shrink: 0;
+  letter-spacing: 0.5px;
+}
+
+.svg-generator-composer-end {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-left: auto;
+}
+
+// Only appears in the last 60 characters, so it's a warning, not a meter
+.svg-generator-counter {
+  font-family: "Inconsolata", monospace;
+  font-size: 11px;
+  letter-spacing: 0.5px;
+  color: rgba(255, 255, 255, 0.45);
+
+  &.is-full {
+    color: #ffb86b;
   }
 }
 
@@ -2613,12 +2693,17 @@ $dns-ease: cubic-bezier(0.45, 0.05, 0.25, 1.2);
   display: flex;
   align-items: center;
   justify-content: center;
-  width: 52px;
-  height: 52px;
+  gap: 8px;
+  height: 44px;
+  padding: 0 18px 0 16px;
   border-radius: 12px;
   background: linear-gradient(135deg, $purp, $purp-light);
   border: none;
   color: #fff !important;
+  font-family: "Inconsolata", monospace;
+  font-size: 14px;
+  font-weight: 700;
+  letter-spacing: 0.5px;
   cursor: pointer;
   transition:
     transform 0.15s,
@@ -2627,7 +2712,7 @@ $dns-ease: cubic-bezier(0.45, 0.05, 0.25, 1.2);
   flex-shrink: 0;
 
   &:hover:not(:disabled) {
-    transform: scale(1.05);
+    transform: scale(1.04);
     box-shadow: 0 0 24px rgba(150, 116, 249, 0.4);
     text-decoration: none !important;
     color: #fff !important;
@@ -2640,6 +2725,63 @@ $dns-ease: cubic-bezier(0.45, 0.05, 0.25, 1.2);
   &:disabled {
     opacity: 0.4;
     cursor: not-allowed;
+  }
+}
+
+// Prompt ideas — pills that fill the box (never submit) for the blank page
+.svg-generator-ideas {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+  width: 100%;
+  margin-top: 12px;
+  animation: svgGenFadeIn 0.4s ease both;
+
+  // On a phone five wrapped pills ate a third of the screen — one row that
+  // scrolls sideways instead, bleeding to the screen edge like a carousel
+  @media (max-width: $breakpoint-sm) {
+    flex-wrap: nowrap;
+    overflow-x: auto;
+    width: calc(100% + 32px);
+    margin-left: -16px;
+    padding: 2px 16px;
+    scrollbar-width: none;
+
+    &::-webkit-scrollbar {
+      display: none;
+    }
+  }
+}
+
+.svg-generator-ideas-label {
+  font-family: "Inconsolata", monospace;
+  font-size: 11px;
+  letter-spacing: 2px;
+  text-transform: uppercase;
+  color: rgba(255, 255, 255, 0.5);
+  margin-right: 2px;
+}
+
+.svg-generator-idea {
+  flex-shrink: 0;
+  padding: 6px 12px;
+  background: transparent;
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  border-radius: 999px;
+  color: rgba(255, 255, 255, 0.75);
+  font-family: "Inconsolata", monospace;
+  font-size: 12px;
+  cursor: pointer;
+  transition:
+    color 0.2s,
+    border-color 0.2s,
+    background-color 0.2s;
+
+  &:hover {
+    color: $purp-light;
+    border-color: $purp-light-transparent;
+    background: $purp-light-transparent-25;
   }
 }
 
@@ -2681,18 +2823,37 @@ $dns-ease: cubic-bezier(0.45, 0.05, 0.25, 1.2);
   }
 }
 
+// A frame roughly the size of the drawing to come, so the gallery below
+// doesn't lurch when the result lands
 .svg-generator-loading {
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 16px;
-  padding: 48px 0;
+  justify-content: center;
+  gap: 14px;
+  min-height: 320px;
+  padding: 48px 24px;
+  background: rgba(0, 0, 0, 0.3);
+  border: 1px dashed rgba(255, 255, 255, 0.14);
+  border-radius: 16px;
+  box-sizing: border-box;
 
   p {
+    margin: 0;
     font-family: "Inconsolata", monospace;
-    font-size: 14px;
-    color: rgba(255, 255, 255, 0.5);
+    text-align: center;
   }
+}
+
+.svg-generator-loading-line {
+  font-size: 14px;
+  color: rgba(255, 255, 255, 0.7);
+  animation: svgGenFadeIn 0.4s ease both;
+}
+
+.svg-generator-loading-hint {
+  font-size: 12px;
+  color: rgba(255, 255, 255, 0.4);
 }
 
 .svg-generator-loading-dots {
@@ -2786,16 +2947,20 @@ $dns-ease: cubic-bezier(0.45, 0.05, 0.25, 1.2);
   }
 }
 
-// Caption under the drawing — the prompt, the artist, the share link
+// Caption under the drawing — the prompt, the artist, then remix /
+// download / share. Wraps onto two lines on phones.
 .svg-generator-caption {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  gap: 12px;
+  gap: 10px 12px;
+  flex-wrap: wrap;
   margin-top: 12px;
 }
 
 .svg-generator-caption-text {
+  flex: 1 1 260px;
+  min-width: 0;
   font-family: "Inconsolata", monospace;
   font-size: 13px;
   color: rgba(255, 255, 255, 0.7);
@@ -2804,7 +2969,14 @@ $dns-ease: cubic-bezier(0.45, 0.05, 0.25, 1.2);
   white-space: nowrap;
 }
 
-.svg-generator-copy-btn {
+.svg-generator-actions {
+  display: flex;
+  gap: 8px;
+  flex-shrink: 0;
+  margin-left: auto;
+}
+
+.svg-generator-action {
   display: flex;
   align-items: center;
   gap: 6px;
@@ -2816,7 +2988,10 @@ $dns-ease: cubic-bezier(0.45, 0.05, 0.25, 1.2);
   color: rgba(255, 255, 255, 0.7);
   font-family: "Inconsolata", monospace;
   font-size: 12px;
+  line-height: 1.2;
   cursor: pointer;
+  // The download is an <a>; it should look exactly like its sibling buttons
+  text-decoration: none !important;
   transition:
     color 0.2s,
     border-color 0.2s;
@@ -2845,11 +3020,12 @@ $dns-ease: cubic-bezier(0.45, 0.05, 0.25, 1.2);
 
 .svg-generator-gallery-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(96px, 1fr));
+  // Two columns on a phone (three squeezed every caption to "a rocket sh…"),
+  // four across the 720px column from the md breakpoint up — big enough to
+  // actually read a drawing
+  grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
   gap: 10px;
 
-  // From the md breakpoint up the 720px column fits four ~150px previews
-  // instead of six ~95px ones — big enough to actually read a drawing
   @media (min-width: $breakpoint-md) {
     grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
     gap: 12px;
@@ -2876,6 +3052,12 @@ $dns-ease: cubic-bezier(0.45, 0.05, 0.25, 1.2);
     transform: translateY(-2px);
     border-color: $purp-light-transparent;
   }
+
+  // The drawing currently on screen (aria-current="page")
+  &.is-current {
+    border-color: $purp-light;
+    box-shadow: 0 0 0 1px $purp-light-transparent;
+  }
 }
 
 .svg-generator-gallery-thumb {
@@ -2899,7 +3081,15 @@ $dns-ease: cubic-bezier(0.45, 0.05, 0.25, 1.2);
   white-space: nowrap;
 }
 
+// Up to two lines, then an ellipsis; the two-line minimum keeps every
+// card's artist line on the same baseline across a row
 .svg-generator-gallery-prompt {
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  white-space: normal;
+  line-height: 1.3;
+  min-height: 2.6em;
   margin: 8px 0 0;
   font-size: 12px;
   font-weight: 700;
