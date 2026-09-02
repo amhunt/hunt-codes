@@ -22,10 +22,12 @@ import badgeUrl from "../assets/hunt-codes-badge.glb";
  * separated at x ≈ 6.5 in monogram-local space) so the bar can blink on
  * and off like a text-input caret while the rest of the badge stays lit.
  *
- * The clickable layer is a fixed DOM link glued over the same corner
- * (BadgeLink in Landing/AppBackground chrome) — the canvas itself never
- * takes pointer input. Hover flows through badgeHoverState, the same
- * plain-mutable-module pattern as solarHover.
+ * The clickable layer is a fixed DOM hit target glued over the same
+ * corner (BadgeLink, mounted app-wide in App.tsx) — the canvas itself
+ * never takes pointer input. Hover flows through badgeHoverState, the
+ * same plain-mutable-module pattern as solarHover: under the cursor the
+ * coin grows a touch, slows its spin to half, and blinks its caret twice
+ * as fast.
  */
 
 // Monogram-local x: the "A" spans ~0–6.24, the caret bar ~6.97–8.33.
@@ -79,9 +81,16 @@ const buildSignatureGeometry = (
 };
 // Match a text caret's cadence: ~530ms visible, ~530ms hidden.
 const CARET_HALF_PERIOD_S = 0.53;
+// Hover doubles the blink rate
+const CARET_BLINK_RATE_HOVER = 2;
 const SPIN_SPEED = 0.6; // rad/s → ~10s per revolution
-const SPIN_SPEED_HOVER = 1.7; // the coin perks up under the cursor
-const HOVER_SCALE = 1.07;
+// Under the cursor the coin settles to half speed — a "look at me" hold
+// rather than a flourish
+const SPIN_SPEED_HOVER = SPIN_SPEED * 0.5;
+const HOVER_SCALE = 1.05;
+// Hover ease rate (per second): ~0.1s time constant, so the scale and
+// spin changes read as a short transition rather than a snap
+const HOVER_EASE_RATE = 10;
 /** Corner slot, matching the DOM link (App.scss .badge-link) */
 const SLOT_PX = 140;
 const SLOT_PX_SMALL = 96;
@@ -314,6 +323,10 @@ const BadgeMedallion = () => {
   const anchorRef = useRef<THREE.Group>(null);
   const spinRef = useRef<THREE.Group>(null);
   const hoverEase = useRef(0);
+  // Caret blink phase in half-periods. Accumulated from frame deltas
+  // rather than read off the clock so the hover speed-up changes the
+  // rate without jumping the phase.
+  const caretPhase = useRef(0);
   // Grow-in on load so the coin doesn't pop mid-choreography (the GLB
   // arrives async); reduced motion skips straight to full size
   const mountEase = useRef(0);
@@ -335,7 +348,7 @@ const BadgeMedallion = () => {
     // Hover (from the DOM link): ease toward a livelier spin + a nudge up
     const hoverTarget = badgeHoverState.hovered ? 1 : 0;
     hoverEase.current +=
-      (hoverTarget - hoverEase.current) * Math.min(1, delta * 8);
+      (hoverTarget - hoverEase.current) * Math.min(1, delta * HOVER_EASE_RATE);
     mountEase.current = reducedMotion.current
       ? 1
       : Math.min(1, mountEase.current + delta / 0.6);
@@ -352,9 +365,12 @@ const BadgeMedallion = () => {
         (SPIN_SPEED + (SPIN_SPEED_HOVER - SPIN_SPEED) * hoverEase.current);
     }
     if (caretMaterial) {
+      caretPhase.current +=
+        (delta / CARET_HALF_PERIOD_S) *
+        (1 + (CARET_BLINK_RATE_HOVER - 1) * hoverEase.current);
       const visible = reducedMotion.current
         ? true
-        : Math.floor(state.clock.elapsedTime / CARET_HALF_PERIOD_S) % 2 === 0;
+        : Math.floor(caretPhase.current) % 2 === 0;
       caretMaterial.opacity = visible ? 1 : 0;
     }
   });
