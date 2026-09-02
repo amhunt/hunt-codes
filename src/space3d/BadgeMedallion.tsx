@@ -345,7 +345,8 @@ const BadgeMedallion = () => {
       BADGE_Z,
     );
 
-    // Hover (from the DOM link): ease toward a livelier spin + a nudge up
+    // Hover (from the DOM hit target): ease toward the slower spin, the
+    // faster caret and the nudge up
     const hoverTarget = badgeHoverState.hovered ? 1 : 0;
     hoverEase.current +=
       (hoverTarget - hoverEase.current) * Math.min(1, delta * HOVER_EASE_RATE);
