@@ -2755,6 +2755,8 @@ $dns-ease: cubic-bezier(0.45, 0.05, 0.25, 1.2);
 }
 
 .svg-generator-ideas-label {
+  flex-shrink: 0;
+  white-space: nowrap;
   font-family: "Inconsolata", monospace;
   font-size: 11px;
   letter-spacing: 2px;
@@ -2814,6 +2816,9 @@ $dns-ease: cubic-bezier(0.45, 0.05, 0.25, 1.2);
 .svg-generator-result {
   width: 100%;
   margin-top: 32px;
+  // The post-generation scrollIntoView uses `nearest`, which would leave the
+  // action buttons flush with the bottom edge — keep a little air under them
+  scroll-margin-bottom: 24px;
   min-height: 0;
   transition: min-height 0.3s ease;
 
@@ -2911,7 +2916,11 @@ $dns-ease: cubic-bezier(0.45, 0.05, 0.25, 1.2);
     display: block;
     width: 400px;
     max-width: 100%;
-    max-height: 400px;
+    // Drawings are 400×400 viewBoxes; a fixed square gives the frame its
+    // height before the image decodes, so the scroll-into-view after a
+    // generation sees the real box (and nothing jumps when it loads)
+    aspect-ratio: 1 / 1;
+    height: auto;
     // Slow color cycling — hue rotates through the full spectrum
     animation: svgGenColorCycle 18s linear infinite;
   }
