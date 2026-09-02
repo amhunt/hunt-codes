@@ -11,6 +11,8 @@ export interface SampledStar {
   y: number;
   r: number;
   color: string;
+  /** Index of the glyph this star belongs to within the sampled text */
+  letter: number;
 }
 
 // Sampling-internal: glyph-canvas coordinates used only for the
@@ -20,24 +22,46 @@ interface PlacedStar extends SampledStar {
   canvasY: number;
 }
 
-const offsetY = 60;
+/** Where a line of star text sits on screen (CSS px). */
+export interface TextStarLayout {
+  /** Left edge of the first glyph */
+  x: number;
+  /** Top of the glyph boxes; the glyphs hang below by ~1.6× the letter
+   *  width (the sampled font size) */
+  y: number;
+  /** Total glyph width, spacing excluded — sets the sampled font size */
+  textWidth: number;
+  /** Gap between consecutive letters */
+  letterSpacing: number;
+}
+
+const LANDING_TEXT_TOP_PX = 60;
 const fontFamily = "Helvetica Neue";
 
 const MIN_PX_DIFF_BETWEEN_STARS = 3;
 
 const generateStarsForLetter = ({
   letter,
+  letterIndex,
   offsetX,
+  offsetY,
   letterWidthPx,
   averageLetterWidth,
+  density,
+  radiusScale,
 }: {
   letter: string;
+  letterIndex: number;
   offsetX: number;
+  offsetY: number;
   letterWidthPx: number;
   averageLetterWidth: number;
+  density: number;
+  radiusScale: number;
 }) => {
-  // Number of stars is proportional to the width of the letter (imperfect approximation)
-  const numStars = letterWidthPx;
+  // Number of stars is proportional to the width of the letter (imperfect
+  // approximation); density thins it for the muted name header
+  const numStars = Math.round(letterWidthPx * density);
   const canvas = document.createElement("canvas");
   const ctx = canvas.getContext("2d");
   if (!ctx) return [];
@@ -79,11 +103,12 @@ const generateStarsForLetter = ({
           canvasX: x,
           y: (y * averageLetterHeight) / ctxTextHeight + offsetY,
           canvasY: y,
-          r: Math.random() + 1.5,
+          r: (Math.random() + 1.5) * radiusScale,
           // Color should be a hex value between blue and red, based on the x and y coordinates. Blue in the top-left, red in the bottom-right.
           color: tinycolor
             .mix("#3effcc", "#ff2d2d", xRandom * 100)
             .toHexString(),
+          letter: letterIndex,
         });
         foundPoint = true;
       }
@@ -97,12 +122,31 @@ const percentageWidthOfText = 0.8;
 const percentageWidthOfSpacing = 0.1;
 const percentageWidthForSidePadding = 0.05;
 
-export const generateStarsForLetters = (
+/** The landing title's layout: 80% of the viewport width of glyphs, 10%
+ *  of letter spacing, 5% of padding each side. */
+const landingTextLayout = (
   text: string,
   windowWidth: number,
+): TextStarLayout => ({
+  x: percentageWidthForSidePadding * windowWidth,
+  y: LANDING_TEXT_TOP_PX,
+  textWidth: Math.round(percentageWidthOfText * windowWidth),
+  letterSpacing: (windowWidth * percentageWidthOfSpacing) / (text.length - 1),
+});
+
+export interface TextStarOptions {
+  /** Stars per px of letter width (1 = the landing title's full density) */
+  density?: number;
+  /** Multiplier on the 1.5–2.5px star radius, for small glyphs */
+  radiusScale?: number;
+}
+
+/** Sample a line of text into stars at the given layout. */
+export const generateStarsForText = (
+  text: string,
+  layout: TextStarLayout,
+  { density = 1, radiusScale = 1 }: TextStarOptions = {},
 ): SampledStar[] => {
-  const letterSpacing =
-    (windowWidth * percentageWidthOfSpacing) / (text.length - 1);
   const canvas = document.createElement("canvas");
   const ctx = canvas.getContext("2d");
   if (!ctx) return [];
@@ -118,29 +162,37 @@ export const generateStarsForLetters = (
     return width;
   });
 
-  const totalStarsWidthPx = Math.round(percentageWidthOfText * windowWidth);
+  const totalStarsWidthPx = layout.textWidth;
   const averageLetterWidth = totalStarsWidthPx / text.length;
   const scaledLetterWidths = letterWidths.map((letterWidthPx) =>
     Math.round((letterWidthPx / totalPrescaledCharWidths) * totalStarsWidthPx),
   );
 
-  // Calculate starting X position to center the text
-  const startX = percentageWidthForSidePadding * windowWidth;
-
   // Generate stars for each letter, taking into account the actual width of previous letters
-  let currentX = startX;
+  let currentX = layout.x;
   return text.split("").flatMap((letter, index) => {
     const stars = generateStarsForLetter({
       letter,
+      letterIndex: index,
       offsetX: currentX,
+      offsetY: layout.y,
       letterWidthPx: scaledLetterWidths[index],
       averageLetterWidth,
+      density,
+      radiusScale,
     });
     // Move currentX by the width of this letter plus spacing
-    currentX += scaledLetterWidths[index] + letterSpacing;
+    currentX += scaledLetterWidths[index] + layout.letterSpacing;
     return stars;
   });
 };
+
+/** The landing title ("HUNT.CODES" and the phrases that follow it). */
+export const generateStarsForLetters = (
+  text: string,
+  windowWidth: number,
+): SampledStar[] =>
+  generateStarsForText(text, landingTextLayout(text, windowWidth));
 
 export const starPhrases = ["HUNT.CODES", "BUILT WITH ♥", "BY ANDREW HUNT"];
 export const starPhrasesSmall = ["ANDREW", "HUNT", "CODES ★"];

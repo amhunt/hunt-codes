@@ -15,6 +15,8 @@ import GoldenGateFog from "./GoldenGateFog";
 import useWindowSize from "useWindowSize";
 import { onSynthNote } from "./synthAudio";
 import SpaceJamSwitch from "./SpaceJamSwitch";
+import { nameHighlightState } from "./nameHighlight";
+import { NAME_TITLE_ID } from "./solarAnchorIds";
 // import RetroMac from "./RetroMac";
 
 // Loaded on demand so three.js ships as its own chunk
@@ -87,7 +89,8 @@ const AppBackground = ({
   const [highlightedCharIdx, setHighlightedCharIdx] = useState(0);
 
   useEffect(() => {
-    // The nameTitle SVG this drives only renders off the landing page, so
+    // The name header this drives (the nameTitle SVG by day, the star
+    // field's NameStars by night) only renders off the landing page, so
     // don't fire a 5x/sec state update + re-render on the landing route.
     if (isLanding) return;
     // On /synth the ticker keeps time with the music instead of the
@@ -105,6 +108,12 @@ const AppBackground = ({
     return () => clearInterval(interval);
   }, [isLanding, isSynthPage]);
 
+  // Mirror the highlight for the WebGL name stars, which read it per frame
+  // rather than having the ticker re-render the memo'd canvas tree
+  useEffect(() => {
+    nameHighlightState.letter = highlightedCharIdx;
+  }, [highlightedCharIdx]);
+
   return (
     <>
       {/* Keep the landing page's solar-system intro uncluttered — the music
@@ -112,10 +121,14 @@ const AppBackground = ({
       {!isLanding && <SpaceJamSwitch />}
       {!isLanding && (
         <svg
+          id={NAME_TITLE_ID}
           className={cx(
             "nameTitle",
+            // At night the star field draws the name over this box
+            // (NameStars): the SVG fades out but stays mounted for its
+            // layout and the accessible text
             isNightMode
-              ? "opacity-30 pointer-events-none fill-white night"
+              ? "opacity-0 pointer-events-none"
               : "fill-[#004225] opacity-75",
           )}
           viewBox={size === "lg" ? "0 0 200 20" : "0 0 100 20"}
@@ -126,10 +139,7 @@ const AppBackground = ({
               <tspan
                 key={idx}
                 className={cx(
-                  highlightedCharIdx === idx &&
-                    (isNightMode
-                      ? "highlightedChar_night"
-                      : "highlightedChar_day"),
+                  highlightedCharIdx === idx && "highlightedChar",
                   c === "h" ? "z-10" : "z-0",
                 )}
                 alignmentBaseline="hanging"

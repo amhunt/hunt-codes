@@ -12,6 +12,10 @@ export const EARTH_ABOUT_OUTLINE_ID = "earth-about-outline";
  *  group holding its hover-outline paths (written by Moon). */
 export const MOON_VIDEO_LINK_ID = "moon-video-link";
 export const MOON_VIDEO_OUTLINE_ID = "moon-video-outline";
+/** The "andrewhunt" name SVG at the top of every page past the landing
+ *  (AppBackground); at night the star field lays its glyph stars out over
+ *  this element's box (NameStars in space3d/StarField). */
+export const NAME_TITLE_ID = "name-title";
 export const asteroidAnchorId = (name: string) => `asteroid-link-${name}`;
 /** Group inside the anchor holding the hover-outline paths; Asteroid
  *  writes the projected silhouette into every path under it. */
