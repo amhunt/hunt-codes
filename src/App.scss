@@ -1025,6 +1025,20 @@ li > ul > li {
   }
 }
 
+// While a scroll up from the top of the resume scrubs the camera back
+// toward /home (Resume's recedeWithScrub fades the panel and the life bar
+// under inline opacity), the fading chrome leaves hit-testing — the bar
+// opts back in to pointer events on its own, so it needs naming — and the
+// scroller's thumb stops painting over the empty sky
+.resume-inner-container[data-receding],
+.life-timeline[data-receding] .life-timeline-bar {
+  pointer-events: none;
+}
+
+.resume-container[data-receding] {
+  scrollbar-color: transparent transparent;
+}
+
 // Translucent panel so the text stays legible over whatever the 3D scene
 // puts behind it (Earth's bright limb, the drifting moon). No
 // backdrop-filter: blurring a content-height panel over two animating
