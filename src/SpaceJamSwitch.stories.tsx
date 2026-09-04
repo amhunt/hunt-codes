@@ -6,10 +6,11 @@ import DayNightSwitch from "./DayNightSwitch";
 import SpaceJamSwitch from "./SpaceJamSwitch";
 
 /**
- * The bottom-left "Space jam" pill: the label plus the music switch, with
- * its muted (red-slashed speaker, flatline) and playing (speaker, bouncing
- * equaliser) dressings. The pill takes its palette from the `.App.day` /
- * `.App.night` wrapper, so the toolbar palette switch covers both looks.
+ * The bottom-left music switch, with its muted (red-slashed speaker,
+ * flatline) and playing (speaker, bouncing equaliser) dressings. Hovering
+ * or focusing it shows the "Play space jams" / "Pause space jams" tooltip.
+ * The toolbar palette switch (`.App.day` / `.App.night`) shows it over
+ * both backdrops.
  *
  * Flipping the switch by hand plays the real track (`public/` is served
  * as Storybook's static dir).
@@ -39,7 +40,7 @@ export const Playing: Story = {
     const play = spyOn(HTMLMediaElement.prototype, "play").mockResolvedValue();
     try {
       const toggle = within(canvasElement).getByRole("switch", {
-        name: "Space jam",
+        name: "Space jams",
       });
       await userEvent.click(toggle);
       await expect(toggle).toHaveAttribute("aria-checked", "true");
@@ -49,7 +50,7 @@ export const Playing: Story = {
   },
 };
 
-/** Day palette, muted — the pill goes light with dark text. */
+/** Day palette, muted — the charcoal track over the pastel sky. */
 export const MutedDay: Story = {
   globals: { palette: "day" },
 };
@@ -69,9 +70,9 @@ const ControlRow = () => {
 
 /**
  * Laptop width, where the day/night switch leaves the top-right corner
- * and joins the pill in a bottom-left control row. Checks the two sit
- * level and the gap between them (`.day-night-switch`'s lg `left` is
- * tuned by hand against the pill's width).
+ * and joins the music switch in a bottom-left control row. Checks the two
+ * sit level and the gap between them (`.day-night-switch`'s lg `left` is
+ * the switch's width plus a gap).
  */
 export const ControlRowLarge: Story = {
   globals: { viewport: { value: "lg" } },
