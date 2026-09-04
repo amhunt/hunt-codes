@@ -57,29 +57,49 @@ $breakpoint-lg: 1280px;
   .svg-generator-composer {
     background: rgba(158, 128, 249, 0.32);
     border-color: rgba(65, 37, 150, 0.3);
+
+    // This override outranks the base :focus-within, so restate the focus
+    // ring here or the panel never shows one by day
+    &:focus-within {
+      border-color: $purp;
+      box-shadow: 0 0 24px rgba(65, 37, 150, 0.25);
+    }
   }
 
+  // The small, faint text needs a heavier hand over the lavender than it
+  // did over the old white wash: 0.72 clears 4.5:1, 0.6 landed at ~3.8:1
   .svg-generator-input::placeholder,
   .svg-generator-signature input::placeholder {
-    color: rgba(20, 20, 40, 0.6);
+    color: rgba(20, 20, 40, 0.72);
   }
 
   .svg-generator-signature {
     color: rgba(20, 20, 40, 0.68);
 
     input {
-      border-bottom-color: rgba(0, 0, 0, 0.35);
+      border-bottom-color: rgba(0, 0, 0, 0.5);
+
+      // Same specificity trap as the composer's focus ring
+      &:focus {
+        border-bottom-color: $purp;
+      }
     }
   }
 
   .svg-generator-counter {
-    color: rgba(20, 20, 40, 0.65);
+    color: rgba(20, 20, 40, 0.72);
+
+    // The night orange is lost on lavender (and this rule outranks the
+    // base .is-full anyway) — a rust that still reads as a warning
+    &.is-full {
+      color: #7c2d12;
+    }
   }
 
   .svg-generator-ideas-label,
   .svg-generator-gallery-title,
   .svg-generator-loading-hint {
-    color: rgba(20, 20, 40, 0.5);
+    color: rgba(20, 20, 40, 0.65);
   }
 
   .svg-generator-idea,
@@ -1411,7 +1431,7 @@ li > ul > li {
   .sm-screen-summary-line {
     position: fixed;
     // Tucked just under the "andrewhunt" name letters (their box ends
-    // ~109px down at iPhone widths); tracks the same safe-area shift as
+    // ~104px down at iPhone widths); tracks the same safe-area shift as
     // .nameTitle
     top: calc(120px + env(safe-area-inset-top, 0px));
     width: 100%;
@@ -2417,10 +2437,10 @@ $switch-pad: 4px;
 $switch-ease: cubic-bezier(0.45, 0.05, 0.25, 1.2);
 
 .scene-switch {
-  // Positioning is the caller's (fixed via Tailwind classes, or inline in
-  // a pill) — set nothing here that would beat the layered utilities. The
-  // scene layers below are absolute, so whatever position the caller
-  // picks doubles as their containing block.
+  // Positioning is the caller's (fixed via Tailwind classes) — set nothing
+  // here that would beat the layered utilities. The scene layers below are
+  // absolute, so whatever position the caller picks doubles as their
+  // containing block.
   flex: none;
   width: $switch-width;
   height: $switch-height;
@@ -2430,6 +2450,13 @@ $switch-ease: cubic-bezier(0.45, 0.05, 0.25, 1.2);
     inset 0 2px 4px rgba(0, 0, 0, 0.35),
     inset 0 -1px 2px rgba(255, 255, 255, 0.35),
     0 2px 6px rgba(0, 0, 0, 0.25);
+
+  // The global button:focus-visible ring squares the corners (it sets a
+  // 4px radius, and overflow: hidden clips the scenes to match) — keep
+  // the pill round under keyboard focus
+  &:focus-visible {
+    border-radius: $switch-height;
+  }
 }
 
 // The sliding thumb. Radix toggles data-state on the thumb too.
@@ -3014,7 +3041,7 @@ $switch-ease: cubic-bezier(0.45, 0.05, 0.25, 1.2);
   background: linear-gradient(135deg, #5a3bc8, #7a56ee);
   border: none;
   box-shadow:
-    0 0 0 1px rgba(255, 255, 255, 0.22),
+    0 0 0 1px rgba(255, 255, 255, 0.35),
     0 4px 14px rgba(0, 0, 0, 0.35);
   color: #fff !important;
   font-family: "Inconsolata", monospace;
@@ -3031,7 +3058,7 @@ $switch-ease: cubic-bezier(0.45, 0.05, 0.25, 1.2);
   &:hover:not(:disabled) {
     transform: scale(1.04);
     box-shadow:
-      0 0 0 1px rgba(255, 255, 255, 0.35),
+      0 0 0 1px rgba(255, 255, 255, 0.5),
       0 0 24px rgba(150, 116, 249, 0.5);
     text-decoration: none !important;
     color: #fff !important;
@@ -3698,7 +3725,7 @@ $switch-ease: cubic-bezier(0.45, 0.05, 0.25, 1.2);
 //
 // The band spans the whole viewport width (its slab runs edge to edge);
 // the bar inside is inset by clearances: `padding-right` keeps it off the
-// corner medallion (140px, bottom-right), `bottom` off the music pill and
+// corner medallion (140px, bottom-right), `bottom` off the music switch and
 // — at lg — the day/night switch that joins it in that corner.
 //
 // Everything the day palette changes is a custom property here, so the
