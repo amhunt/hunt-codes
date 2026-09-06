@@ -149,8 +149,8 @@ export const ASTEROIDS: SolarPlanetConfig[] = [
   {
     // Rendered as the Sputnik satellite (Satellite.tsx): the door to
     // /projects-and-toys, where the camera closes in and its parts (the
-    // antenna cone, a screen, a floating pen, a vase) become the
-    // links. On wide screens it floats low-center above the sun's limb:
+    // screen, a floating pen, a vase, a scroll off its antenna tips)
+    // become the links. On wide screens it floats low-center above the sun's limb:
     // right of the intro text (`.homeInfoContainer`, whose width grows
     // with the viewport — this spot clears it through 2560x1440) and
     // short of Earth's "ABOUT ME" ring, legs trailing toward Earth.
@@ -246,10 +246,7 @@ export const satellitePartState: Record<
   SatellitePart,
   { position: THREE.Vector3; radius: number }
 > = {
-  antenna: {
-    position: new THREE.Vector3(),
-    radius: SATELLITE.radius * SATELLITE_LEG_LENGTH_RATIO * 0.33,
-  },
+  scroll: { position: new THREE.Vector3(), radius: satelliteBodyRadius * 0.5 },
   screen: { position: new THREE.Vector3(), radius: satelliteBodyRadius * 0.32 },
   pen: { position: new THREE.Vector3(), radius: satelliteBodyRadius * 0.5 },
   vase: { position: new THREE.Vector3(), radius: satelliteBodyRadius * 0.3 },

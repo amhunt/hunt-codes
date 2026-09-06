@@ -41,7 +41,17 @@ import InteractiveGlow from "./InteractiveGlow";
 
 const FADE_IN_SECONDS = 3;
 const FADE_OUT_SECONDS = 1;
-const HOVER_EMISSIVE = 0.55;
+/** The pad floats on the shadowed side of the close-up (the sun sits
+ *  below the frame, so the sun lights its underside and the pads face
+ *  the dark), so like the satellite's pen and vase it glows in its own
+ *  colors: each material's emissive is its own color, at BASE resting
+ *  and HOVER when hovered. The chassis glows a lighter slate than its
+ *  paint so it reads as a slab, not a hole. */
+const BASE_EMISSIVE = 0.55;
+const HOVER_EMISSIVE = 1.4;
+const CHASSIS_BASE_EMISSIVE = 0.35;
+const CHASSIS_HOVER_EMISSIVE = 0.9;
+const CHASSIS_GLOW = "#5a6170";
 
 /** Where the pad floats in the close-up, as fractions of the frame's
  *  half-width / half-height at the satellite's depth: left of the head
@@ -102,8 +112,8 @@ export default function DrumPad({
         color: "#2a2e35",
         metalness: 0.35,
         roughness: 0.55,
-        emissive: "#ffffff",
-        emissiveIntensity: 0,
+        emissive: CHASSIS_GLOW,
+        emissiveIntensity: CHASSIS_BASE_EMISSIVE,
         transparent: true,
       }),
       pads: PAD_ROW_COLORS.map(
@@ -112,8 +122,8 @@ export default function DrumPad({
             color,
             metalness: 0.1,
             roughness: 0.5,
-            emissive: "#ffffff",
-            emissiveIntensity: 0,
+            emissive: color,
+            emissiveIntensity: BASE_EMISSIVE,
             transparent: true,
           }),
       ),
@@ -121,8 +131,8 @@ export default function DrumPad({
         color: "#cfd6dd",
         metalness: 0.8,
         roughness: 0.35,
-        emissive: "#ffffff",
-        emissiveIntensity: 0,
+        emissive: "#cfd6dd",
+        emissiveIntensity: BASE_EMISSIVE * 0.6,
         transparent: true,
       }),
       led: new THREE.MeshBasicMaterial({
@@ -230,15 +240,19 @@ export default function DrumPad({
         t % BLINK_PERIOD_SECONDS < BLINK_PERIOD_SECONDS * BLINK_ON_FRACTION;
     }
 
-    // Hover: wash toward white, same treatment as the other link bodies
+    // Hover: turn the self-glow up, same treatment as the pen and vase
     const ease = Math.min(delta * 6, 1);
-    materials.chassis.emissiveIntensity +=
-      ((hovered ? HOVER_EMISSIVE : 0) - materials.chassis.emissiveIntensity) *
-      ease;
-    materials.pads.forEach((material) => {
-      material.emissiveIntensity = materials.chassis.emissiveIntensity;
-    });
-    materials.knob.emissiveIntensity = materials.chassis.emissiveIntensity;
+    const glowTo = (material: THREE.MeshStandardMaterial, target: number) => {
+      material.emissiveIntensity +=
+        (target - material.emissiveIntensity) * ease;
+    };
+    glowTo(
+      materials.chassis,
+      hovered ? CHASSIS_HOVER_EMISSIVE : CHASSIS_BASE_EMISSIVE,
+    );
+    const padGlow = hovered ? HOVER_EMISSIVE : BASE_EMISSIVE;
+    materials.pads.forEach((material) => glowTo(material, padGlow));
+    glowTo(materials.knob, padGlow * 0.6);
 
     if (hovered) {
       writeSilhouette(
