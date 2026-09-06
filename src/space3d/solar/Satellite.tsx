@@ -1,7 +1,6 @@
 import React, { useCallback, useEffect, useMemo, useRef } from "react";
 import { useFrame } from "@react-three/fiber";
 import * as THREE from "three";
-import { DecalGeometry } from "three/examples/jsm/geometries/DecalGeometry.js";
 
 import {
   planetPosition,
@@ -20,39 +19,41 @@ import {
   type SatellitePart,
 } from "../../solarAnchorIds";
 import { writeSilhouette } from "./outline";
-import {
-  createGraffitiHeartTexture,
-  createVideoScreenTexture,
-} from "../textures";
+import { createVideoScreenTexture } from "../textures";
 import { hoverState } from "../../solarHover";
+import { applyGoldShimmer, createShimmerUniforms } from "./goldShimmer";
 import InteractiveGlow from "./InteractiveGlow";
 
 /**
  * The Sputnik-style satellite: a polished metal sphere trailing a cone of
- * four antenna legs, with a blinking beacon on top of the head. On /home
- * the whole body is one link — to /projects-and-toys — reusing the
- * asteroid link plumbing (BodyAnchors overlay, hover freeze/brighten/
- * outline, landing fade) via the same config. On /projects-and-toys the
- * camera closes in (CameraRig's satellite perch) and the body's PARTS
- * become the links: the antenna cone (the Zip blog post), a little video
- * screen set into the head (the Zip launch reel), a red graffiti heart
- * sprayed on the head (SVG Studio) and a cargo crate strapped to it
- * (/shop). The parts exist for that view only — they fade in on the way
+ * four antenna legs, with a blinking beacon capping the head dead
+ * opposite the cone. On /home the whole body is one link — to
+ * /projects-and-toys — reusing the asteroid link plumbing (BodyAnchors
+ * overlay, hover freeze/brighten/outline, landing fade) via the same
+ * config. On /projects-and-toys the camera closes in (CameraRig's
+ * satellite perch) and the body's PARTS become the links: the antenna
+ * cone (the Zip blog post), a little video screen set into the head (the
+ * Zip launch reel), a pen floating under the cone (SVG Studio) and a
+ * mid-century vase standing on top of the head (/shop, the 3D print
+ * store). The parts exist for that view only — they fade in on the way
  * there and out on the way back — and each gets the Earth treatment on
- * hover: brighten, pulsing silhouette outline, an always-on halo.
+ * hover: brighten, pulsing silhouette outline, an always-on halo. A gold
+ * glint also sweeps across the parts every few seconds (goldShimmer.ts)
+ * so the clickable pieces stand out from the head they sit on, hovered
+ * or not.
  *
  * Orientation: the home camera co-rotates with Earth's orbit, so a fixed
  * world heading would slowly wheel around on screen. The rig therefore
  * re-aims the leg cone every frame (satelliteLegsDirection — fixed in the
  * co-rotating frame), and the body's only motion is a slow roll about
  * that leg axis: the cone spins in place, the legs never leave their
- * heading. The beacon and the link parts hang off the rig, not the
- * rolling body, so they hold still. The parts live in a "presentation"
- * frame whose +Z faces the close-up perch and whose +Y is that view's
- * screen-up (satelliteViewFrame, the same function CameraRig perches
- * with), so their layout is designed in screen terms — screen lower
- * right, heart upper left, crate lower left — and lands facing the
- * camera by construction.
+ * heading. The beacon sits on that axis, and the link parts hang off the
+ * rig rather than the rolling body, so they all hold still. The parts
+ * live in a "presentation" frame whose +Z faces the close-up perch and
+ * whose +Y is that view's screen-up (satelliteViewFrame, the same
+ * function CameraRig perches with), so their layout is designed in screen
+ * terms — screen lower right, vase on top, pen under the cone — and lands
+ * facing the camera by construction.
  */
 
 const FADE_IN_SECONDS = 3;
@@ -68,34 +69,96 @@ const HOVER_EMISSIVE = 0.9;
  *  on its night side — the sun sits below the frame) still reads as
  *  metal against the black sky instead of vanishing into it */
 const BASE_EMISSIVE = 0.07;
-/** The crate's self-glow (in its own colors), resting and hovered */
-const CRATE_BASE_EMISSIVE = 0.45;
-const CRATE_HOVER_EMISSIVE = 1.5;
+/** The vase's self-glow (in its own glaze), resting and hovered */
+const VASE_BASE_EMISSIVE = 0.45;
+const VASE_HOVER_EMISSIVE = 1.5;
+/** The pen's self-glow (in its own colors), resting and hovered */
+const PEN_BASE_EMISSIVE = 0.4;
+const PEN_HOVER_EMISSIVE = 1.3;
 /** Slow the body roll well below the config spin (a stately tumble) */
 const ROLL_SPEED_SCALE = 0.35;
+
+/** The gold glint (goldShimmer.ts): one sweep every PERIOD, crossing the
+ *  body — ±SPAN radii along the screen diagonal, lower left to upper
+ *  right — in SWEEP seconds, then resting off the body until the next.
+ *  Under reduced motion the band parks over everything as a faint,
+ *  steady gilt instead. */
+const SHIMMER_PERIOD_SECONDS = 3;
+const SHIMMER_SWEEP_SECONDS = 1.1;
+const SHIMMER_SPAN_RADII = 2;
+const SHIMMER_HALF_WIDTH_RADII = 0.35;
+const SHIMMER_STRENGTH = 0.5;
+const SHIMMER_STATIC_STRENGTH = 0.12;
+
+/** The vase's silhouette — a LatheGeometry profile, [radius, height] in
+ *  units of the head's radius, foot to lip: a low round belly drawn up
+ *  into a long neck with a small flared lip, the mid-century bud vase.
+ *  The last points turn back inward for the rim and the mouth. */
+const VASE_PROFILE: [number, number][] = [
+  [0, 0],
+  [0.12, 0],
+  [0.17, 0.02],
+  [0.21, 0.07],
+  [0.225, 0.14],
+  [0.21, 0.22],
+  [0.165, 0.3],
+  [0.115, 0.37],
+  [0.085, 0.44],
+  [0.072, 0.52],
+  [0.075, 0.58],
+  [0.095, 0.63],
+  [0.1, 0.65],
+  [0.075, 0.65],
+  [0.065, 0.62],
+];
+/** The anchor (halo + overlay center) sits this far above the surface,
+ *  about the vase's middle; the foot is sunk a hair under the surface so
+ *  no seam shows where the sphere curves away beneath it */
+const VASE_ANCHOR_LIFT = 0.25;
+const VASE_FOOT_SINK = 0.03;
+
+/** The pen (SVG Studio) floats under the antenna cone, in the
+ *  presentation frame: its center in head radii from the head's center
+ *  (screen-right, screen-down, toward the camera) and its slant, radians
+ *  — nib to the lower left, cap to the upper right. The dimensions are
+ *  head radii along the pen's own axis (+Y toward the cap). */
+const PEN_CENTER = { x: 1.5, y: -2.2, z: 0.15 };
+const PEN_SLANT = -Math.PI / 4;
+const PEN_BARREL_RADIUS = 0.075;
+const PEN_BARREL_LENGTH = 1;
+const PEN_NIB_LENGTH = 0.28;
+const PEN_CAP_RADIUS = 0.085;
+const PEN_CAP_LENGTH = 0.34;
+/** Idle drift: a slow bob (head radii) and a rocking of the slant (rad) */
+const PEN_BOB = 0.05;
+const PEN_ROCK = 0.06;
+
+const prefersReducedMotion =
+  typeof window !== "undefined" &&
+  window.matchMedia?.("(prefers-reduced-motion: reduce)").matches;
 
 /** Where each head part sits on the hemisphere facing the close-up
  *  camera: `polar` is degrees off the camera-facing pole (0 = dead
  *  center, 90 = the limb), `azimuth` degrees counter-clockwise from
- *  screen-right. The beacon (rig +Y) lands top-center on its own and the
- *  antenna cone trails off screen-left; these fill the other corners. */
+ *  screen-right. The antenna cone reaches off screen-right, the beacon
+ *  (capping the head opposite it) peeks past the upper-left limb on its
+ *  own, and the pen floats off the head (PEN_CENTER). The vase takes the
+ *  top of the head — just short of the limb, so its foot visibly rests
+ *  on the curve — where its axis is screen-up and it stands upright on
+ *  screen; the screen fills the lower right. */
 const HEAD_PART_PLACEMENTS: Record<
-  Exclude<SatellitePart, "antenna">,
+  Exclude<SatellitePart, "antenna" | "pen">,
   { polar: number; azimuth: number }
 > = {
   screen: { polar: 40, azimuth: -20 },
-  heart: { polar: 38, azimuth: 150 },
-  crate: { polar: 47, azimuth: 215 },
+  vase: { polar: 82, azimuth: 90 },
 };
-/** The tag's slant, radians */
-const HEART_TILT = -0.3;
 
 const Y_AXIS = new THREE.Vector3(0, 1, 0);
-const Z_AXIS = new THREE.Vector3(0, 0, 1);
 const UP = new THREE.Vector3(0, 1, 0);
 const ZERO = new THREE.Vector3(0, 0, 0);
 const PLAIN_TINT = new THREE.Color(1, 1, 1);
-/** Unlit parts (the screen, the heart) brighten by scaling their map */
+/** The unlit display brightens by scaling its map */
 const HOVER_TINT = new THREE.Color(1.7, 1.7, 1.7);
 
 // scratch values, reused every frame
@@ -107,6 +170,8 @@ const perchUp = new THREE.Vector3();
 const frameMatrix = new THREE.Matrix4();
 const frameQuat = new THREE.Quaternion();
 const rigInverse = new THREE.Quaternion();
+const camRight = new THREE.Vector3();
+const camUp = new THREE.Vector3();
 
 /** Unit direction on the camera-facing disc (see HEAD_PART_PLACEMENTS) */
 function discDirection({
@@ -127,7 +192,7 @@ function discDirection({
 
 /** Pose for a part sitting on the head at direction `dir`: local +Z
  *  points outward along it, local +Y as close to screen-up as the
- *  tangent plane allows, so the screen and the crate stand upright.
+ *  tangent plane allows, so the screen and the vase stand upright.
  *  (Matrix4.lookAt builds a frame whose +Z runs target → eye.) */
 function surfacePose(dir: THREE.Vector3): THREE.Quaternion {
   return new THREE.Quaternion().setFromRotationMatrix(
@@ -158,15 +223,16 @@ export default function Satellite({
   const head = useRef<THREE.Mesh>(null);
   const bulb = useRef<THREE.Mesh>(null);
   const screenBezel = useRef<THREE.Mesh>(null);
-  const heartDecal = useRef<THREE.Mesh>(null);
-  const crateBox = useRef<THREE.Mesh>(null);
+  const vaseBody = useRef<THREE.Mesh>(null);
   const legMeshes = useRef<THREE.Mesh[]>([]);
+  const penMeshes = useRef<THREE.Mesh[]>([]);
   const partAnchors = useRef<Record<SatellitePart, THREE.Object3D | null>>({
     antenna: null,
     screen: null,
-    heart: null,
-    crate: null,
+    pen: null,
+    vase: null,
   });
+  const penPhase = useRef(0);
   const opacity = useRef(visible ? 1 : 0);
   const partsOpacity = useRef(partsActive ? 1 : 0);
   /** parts × body opacity: what the part halos follow */
@@ -179,6 +245,11 @@ export default function Satellite({
   const registerLeg = useCallback((mesh: THREE.Mesh | null) => {
     if (mesh && !legMeshes.current.includes(mesh)) {
       legMeshes.current.push(mesh);
+    }
+  }, []);
+  const registerPen = useCallback((mesh: THREE.Mesh | null) => {
+    if (mesh && !penMeshes.current.includes(mesh)) {
+      penMeshes.current.push(mesh);
     }
   }, []);
   const anchorRef = useMemo(
@@ -194,8 +265,9 @@ export default function Satellite({
     [],
   );
 
-  const materials = useMemo(
-    () => ({
+  const shimmer = useMemo(() => createShimmerUniforms(), []);
+  const materials = useMemo(() => {
+    const set = {
       body: new THREE.MeshStandardMaterial({
         color: "#dfe4ea",
         metalness: 0.85,
@@ -229,36 +301,58 @@ export default function Satellite({
         map: createVideoScreenTexture(),
         transparent: true,
       }),
-      // Same sticker treatment as the badge decals: unlit so the paint
-      // stays red on the dark side, polygonOffset floats it off the faces
-      heart: new THREE.MeshBasicMaterial({
-        map: createGraffitiHeartTexture(),
-        transparent: true,
-        depthWrite: false,
-        polygonOffset: true,
-        polygonOffsetFactor: -4,
-      }),
-      // The crate sits on the head's shadowed side, so it glows in its
-      // own colors (emissive = diffuse) rather than reading as a black box
-      crate: new THREE.MeshStandardMaterial({
-        color: "#c9a56b",
-        metalness: 0,
-        roughness: 0.85,
-        emissive: "#c9a56b",
-        emissiveIntensity: CRATE_BASE_EMISSIVE,
-        transparent: true,
-      }),
-      strap: new THREE.MeshStandardMaterial({
-        color: "#5b3fc4",
+      // The pen floats on the shadowed side too, so it carries its own
+      // glow: the site's purple for the barrel, a near-black cap, a
+      // steel nib and clip
+      penBarrel: new THREE.MeshStandardMaterial({
+        color: "#7c62e0",
         metalness: 0.1,
-        roughness: 0.6,
+        roughness: 0.4,
         emissive: "#7c62e0",
-        emissiveIntensity: CRATE_BASE_EMISSIVE,
+        emissiveIntensity: PEN_BASE_EMISSIVE,
         transparent: true,
       }),
-    }),
-    [],
-  );
+      penCap: new THREE.MeshStandardMaterial({
+        color: "#2a2440",
+        metalness: 0.2,
+        roughness: 0.45,
+        emissive: "#4a4070",
+        emissiveIntensity: PEN_BASE_EMISSIVE,
+        transparent: true,
+      }),
+      penSteel: new THREE.MeshStandardMaterial({
+        color: "#cfd6dd",
+        metalness: 0.8,
+        roughness: 0.35,
+        emissive: "#cfd6dd",
+        emissiveIntensity: PEN_BASE_EMISSIVE * 0.6,
+        transparent: true,
+      }),
+      // The vase sits on the head's shadowed side, so it glows in its own
+      // glaze (emissive = diffuse) rather than reading as a black
+      // silhouette: a satin teal, the mid-century palette's cool note
+      vase: new THREE.MeshStandardMaterial({
+        color: "#2f9e90",
+        metalness: 0,
+        roughness: 0.55,
+        emissive: "#2f9e90",
+        emissiveIntensity: VASE_BASE_EMISSIVE,
+        transparent: true,
+      }),
+    };
+    // The link parts carry the gold glint (the legs are the antenna link;
+    // the head itself is not a link, so it stays plain)
+    [
+      set.leg,
+      set.bezel,
+      set.display,
+      set.penBarrel,
+      set.penCap,
+      set.penSteel,
+      set.vase,
+    ].forEach((material) => applyGoldShimmer(material, shimmer));
+    return set;
+  }, [shimmer]);
   const bodyMaterials = useMemo(
     () => [materials.body, materials.leg, materials.bulb],
     [materials],
@@ -267,16 +361,16 @@ export default function Satellite({
     () => [
       materials.bezel,
       materials.display,
-      materials.heart,
-      materials.crate,
-      materials.strap,
+      materials.penBarrel,
+      materials.penCap,
+      materials.penSteel,
+      materials.vase,
     ],
     [materials],
   );
   useEffect(
     () => () => {
       materials.display.map?.dispose();
-      materials.heart.map?.dispose();
       Object.values(materials).forEach((material) => material.dispose());
     },
     [materials],
@@ -318,44 +412,35 @@ export default function Satellite({
   // Head parts, posed in the presentation frame (see HEAD_PART_PLACEMENTS)
   const poses = useMemo(() => {
     const screenDir = discDirection(HEAD_PART_PLACEMENTS.screen);
-    const heartDir = discDirection(HEAD_PART_PLACEMENTS.heart);
-    const crateDir = discDirection(HEAD_PART_PLACEMENTS.crate);
+    const vaseDir = discDirection(HEAD_PART_PLACEMENTS.vase);
     return {
       // Sunk a hair so the bezel's corners bed into the curve
       screen: {
         position: screenDir.clone().multiplyScalar(bodyRadius * 0.98),
         quaternion: surfacePose(screenDir),
       },
-      heart: {
-        position: heartDir.clone().multiplyScalar(bodyRadius),
-        // Slanted like a sprayed tag
-        quaternion: surfacePose(heartDir).multiply(
-          new THREE.Quaternion().setFromAxisAngle(Z_AXIS, HEART_TILT),
-        ),
-      },
-      // Strapped on: its bottom face sits just under the surface
-      crate: {
-        position: crateDir.clone().multiplyScalar(bodyRadius * 1.1),
-        quaternion: surfacePose(crateDir),
+      // Standing on top: anchored about its middle, foot sunk just under
+      // the surface (the mesh offsets itself below the anchor)
+      vase: {
+        position: vaseDir
+          .clone()
+          .multiplyScalar(bodyRadius * (1 + VASE_ANCHOR_LIFT)),
+        quaternion: surfacePose(vaseDir),
       },
     };
   }, [bodyRadius]);
 
-  // The heart is a decal clipped to the head's surface. It is cut from an
-  // identity-posed copy of the sphere and mounted under the presentation
-  // frame rather than the rolling body: the sphere is symmetric, so the
-  // sticker lies on the surface wherever the body has rolled to.
-  const heartGeometry = useMemo(() => {
-    const target = new THREE.Mesh(bodyGeometry);
-    const size = bodyRadius * 0.52;
-    return new DecalGeometry(
-      target,
-      poses.heart.position,
-      new THREE.Euler().setFromQuaternion(poses.heart.quaternion),
-      new THREE.Vector3(size, size, bodyRadius * 0.4),
-    );
-  }, [bodyGeometry, bodyRadius, poses]);
-  useEffect(() => () => heartGeometry.dispose(), [heartGeometry]);
+  const vaseGeometry = useMemo(
+    () =>
+      new THREE.LatheGeometry(
+        VASE_PROFILE.map(
+          ([r, h]) => new THREE.Vector2(r * bodyRadius, h * bodyRadius),
+        ),
+        28,
+      ),
+    [bodyRadius],
+  );
+  useEffect(() => () => vaseGeometry.dispose(), [vaseGeometry]);
 
   useFrame(({ clock, camera, size }, delta) => {
     const t = clock.elapsedTime;
@@ -391,9 +476,9 @@ export default function Satellite({
     });
 
     // Aim the leg cone (satelliteLegsDirection): lookAt aims local -Z, so
-    // sight down the NEGATED direction; this keeps local +Y world-up (the
-    // beacon stays on top of the head, which a minimal Z→dir rotation
-    // does not guarantee)
+    // sight down the NEGATED direction; this keeps local +Y world-up, so
+    // the rig's frame never twists as the heading drifts (a minimal Z→dir
+    // rotation does not guarantee that)
     if (rig.current) {
       satelliteLegsDirection(t, legsDir);
       legsMatrix.lookAt(ZERO, legsBack.copy(legsDir).negate(), UP);
@@ -443,18 +528,57 @@ export default function Satellite({
       partHovered === "screen" ? HOVER_TINT : PLAIN_TINT,
       ease,
     );
-    materials.heart.color.lerp(
-      partHovered === "heart" ? HOVER_TINT : PLAIN_TINT,
-      ease,
-    );
+    const penGlow =
+      partHovered === "pen" ? PEN_HOVER_EMISSIVE : PEN_BASE_EMISSIVE;
+    glowTo(materials.penBarrel, penGlow);
+    glowTo(materials.penCap, penGlow);
+    glowTo(materials.penSteel, penGlow * 0.6);
     glowTo(
-      materials.crate,
-      partHovered === "crate" ? CRATE_HOVER_EMISSIVE : CRATE_BASE_EMISSIVE,
+      materials.vase,
+      partHovered === "vase" ? VASE_HOVER_EMISSIVE : VASE_BASE_EMISSIVE,
     );
-    glowTo(
-      materials.strap,
-      partHovered === "crate" ? CRATE_HOVER_EMISSIVE : CRATE_BASE_EMISSIVE,
-    );
+
+    // The pen drifts — a slow bob and a rock of its slant — frozen while
+    // hovered so the outline is cut from a still pose (and held still
+    // under reduced motion)
+    const pen = partAnchors.current.pen;
+    if (pen) {
+      if (partHovered !== "pen" && !prefersReducedMotion) {
+        penPhase.current += delta;
+      }
+      const phase = penPhase.current;
+      pen.position.set(
+        PEN_CENTER.x * bodyRadius,
+        (PEN_CENTER.y + Math.sin(phase * 1.3) * PEN_BOB) * bodyRadius,
+        PEN_CENTER.z * bodyRadius,
+      );
+      pen.rotation.z = PEN_SLANT + Math.sin(phase * 0.8) * PEN_ROCK;
+    }
+
+    // The gold glint: slide the band along the screen diagonal (camera
+    // right + up) across the body, then rest it off the body until the
+    // next sweep. Follows the parts' reveal, so /home never glints.
+    if (group.current) {
+      group.current.getWorldPosition(shimmer.origin.value);
+      camRight.setFromMatrixColumn(camera.matrixWorld, 0);
+      camUp.setFromMatrixColumn(camera.matrixWorld, 1);
+      shimmer.direction.value.copy(camRight).add(camUp).normalize();
+      const span = config.radius * SHIMMER_SPAN_RADII;
+      if (prefersReducedMotion) {
+        // A band wide enough to cover the whole body evenly
+        shimmer.offset.value = 0;
+        shimmer.halfWidth.value = span * 20;
+        shimmer.strength.value = SHIMMER_STATIC_STRENGTH * partsShown.current;
+      } else {
+        const sweep = Math.min(
+          (t % SHIMMER_PERIOD_SECONDS) / SHIMMER_SWEEP_SECONDS,
+          1,
+        );
+        shimmer.offset.value = THREE.MathUtils.lerp(-span, span, sweep);
+        shimmer.halfWidth.value = config.radius * SHIMMER_HALF_WIDTH_RADII;
+        shimmer.strength.value = SHIMMER_STRENGTH * partsShown.current;
+      }
+    }
 
     // Publish the parts' world centers for their DOM overlays
     // (BodyAnchors glues the /projects-and-toys links to them)
@@ -477,13 +601,13 @@ export default function Satellite({
       const meshes =
         partHovered === "antenna"
           ? legMeshes.current
-          : [
-              partHovered === "screen"
-                ? screenBezel.current
-                : partHovered === "heart"
-                  ? heartDecal.current
-                  : crateBox.current,
-            ].filter((mesh): mesh is THREE.Mesh => mesh !== null);
+          : partHovered === "pen"
+            ? penMeshes.current
+            : [
+                partHovered === "screen"
+                  ? screenBezel.current
+                  : vaseBody.current,
+              ].filter((mesh): mesh is THREE.Mesh => mesh !== null);
       writeSilhouette(
         satellitePartOutlineId(partHovered),
         meshes,
@@ -520,12 +644,12 @@ export default function Satellite({
             </mesh>
           ))}
         </group>
-        {/* Blinking beacon on top of the head — outside the rolling body
-            so "top" holds still while the legs spin */}
+        {/* Blinking beacon capping the head, dead opposite the antenna
+            cone: on the roll axis, so it holds still while the legs spin */}
         <mesh
           ref={bulb}
           material={materials.bulb}
-          position={[0, bodyRadius * 1.05, 0]}
+          position={[0, 0, -bodyRadius * 1.05]}
         >
           <sphereGeometry args={[bodyRadius * 0.15, 12, 8]} />
         </mesh>
@@ -570,62 +694,115 @@ export default function Satellite({
                 strength={0.35}
               />
             </group>
-            {/* The graffiti heart: a decal on the surface (the anchor
-                carries its halo and gives the overlay its center) */}
-            <mesh
-              ref={heartDecal}
-              geometry={heartGeometry}
-              material={materials.heart}
-            />
-            <group ref={anchorRef.heart} position={poses.heart.position}>
+            {/* The vase: lathe-turned, standing on top of the head (its
+                axis is the pose's outward +Z, so the lathe's +Y turns
+                onto it) */}
+            <group
+              ref={anchorRef.vase}
+              position={poses.vase.position}
+              quaternion={poses.vase.quaternion}
+            >
+              <mesh
+                ref={vaseBody}
+                geometry={vaseGeometry}
+                material={materials.vase}
+                position={[
+                  0,
+                  0,
+                  -(VASE_ANCHOR_LIFT + VASE_FOOT_SINK) * bodyRadius,
+                ]}
+                rotation={[Math.PI / 2, 0, 0]}
+              />
               <InteractiveGlow
-                radius={satellitePartState.heart.radius}
+                radius={satellitePartState.vase.radius}
                 opacityRef={partsShown}
                 enabled={partsActive}
                 strength={0.35}
               />
             </group>
-            {/* The cargo crate: a parcel under two straps and a knot */}
-            <group
-              ref={anchorRef.crate}
-              position={poses.crate.position}
-              quaternion={poses.crate.quaternion}
-            >
-              <mesh ref={crateBox} material={materials.crate}>
-                <boxGeometry
+            {/* The pen (SVG Studio), floating under the antenna cone, nib
+                to the lower left: barrel, steel nib, a capped end with a
+                clip. Its own axis is +Y (the cylinders'), so the slant is
+                a roll about Z; the frame loop drives its pose (idle bob
+                and rock) and the group doubles as the anchor. */}
+            <group ref={anchorRef.pen}>
+              <mesh ref={registerPen} material={materials.penBarrel}>
+                <cylinderGeometry
                   args={[
-                    bodyRadius * 0.4,
-                    bodyRadius * 0.32,
-                    bodyRadius * 0.28,
+                    PEN_BARREL_RADIUS * bodyRadius,
+                    PEN_BARREL_RADIUS * bodyRadius,
+                    PEN_BARREL_LENGTH * bodyRadius,
+                    16,
                   ]}
                 />
               </mesh>
-              <mesh material={materials.strap}>
-                <boxGeometry
+              {/* nib: a cone off the barrel's lower end (apex down) */}
+              <mesh
+                ref={registerPen}
+                material={materials.penSteel}
+                position={[
+                  0,
+                  -(PEN_BARREL_LENGTH / 2 + PEN_NIB_LENGTH / 2) * bodyRadius,
+                  0,
+                ]}
+                rotation={[Math.PI, 0, 0]}
+              >
+                <coneGeometry
                   args={[
-                    bodyRadius * 0.07,
-                    bodyRadius * 0.335,
-                    bodyRadius * 0.295,
+                    PEN_BARREL_RADIUS * bodyRadius,
+                    PEN_NIB_LENGTH * bodyRadius,
+                    16,
                   ]}
                 />
               </mesh>
-              <mesh material={materials.strap}>
-                <boxGeometry
+              {/* cap: a fatter sleeve over the upper end, rounded off */}
+              <mesh
+                ref={registerPen}
+                material={materials.penCap}
+                position={[
+                  0,
+                  (PEN_BARREL_LENGTH / 2 - PEN_CAP_LENGTH / 2 + 0.06) *
+                    bodyRadius,
+                  0,
+                ]}
+              >
+                <cylinderGeometry
                   args={[
-                    bodyRadius * 0.415,
-                    bodyRadius * 0.07,
-                    bodyRadius * 0.295,
+                    PEN_CAP_RADIUS * bodyRadius,
+                    PEN_CAP_RADIUS * bodyRadius,
+                    PEN_CAP_LENGTH * bodyRadius,
+                    16,
                   ]}
                 />
               </mesh>
               <mesh
-                material={materials.strap}
-                position={[0, 0, bodyRadius * 0.16]}
+                ref={registerPen}
+                material={materials.penCap}
+                position={[0, (PEN_BARREL_LENGTH / 2 + 0.06) * bodyRadius, 0]}
               >
-                <sphereGeometry args={[bodyRadius * 0.05, 10, 8]} />
+                <sphereGeometry args={[PEN_CAP_RADIUS * bodyRadius, 12, 8]} />
+              </mesh>
+              {/* clip, along the cap's camera-facing flank */}
+              <mesh
+                ref={registerPen}
+                material={materials.penSteel}
+                position={[
+                  PEN_CAP_RADIUS * 1.15 * bodyRadius,
+                  (PEN_BARREL_LENGTH / 2 - PEN_CAP_LENGTH / 2 + 0.08) *
+                    bodyRadius,
+                  0,
+                ]}
+              >
+                <boxGeometry
+                  args={[
+                    0.03 * bodyRadius,
+                    PEN_CAP_LENGTH * 0.85 * bodyRadius,
+                    0.05 * bodyRadius,
+                  ]}
+                />
               </mesh>
               <InteractiveGlow
-                radius={satellitePartState.crate.radius}
+                radius={satellitePartState.pen.radius}
                 opacityRef={partsShown}
                 enabled={partsActive}
                 strength={0.35}

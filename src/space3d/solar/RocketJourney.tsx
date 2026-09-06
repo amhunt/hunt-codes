@@ -2,7 +2,7 @@ import React, { useEffect, useRef } from "react";
 import { useFrame } from "@react-three/fiber";
 import * as THREE from "three";
 
-import { planetPosition, ROCKET, SYNTH_PAD } from "./constants";
+import { planetPosition, ROCKET, synthPadState } from "./constants";
 import { rocketNoseDirection } from "./Rocket";
 import { viewGoal, type SolarView } from "./CameraRig";
 import { CRUISE_POS, CRUISE_QUAT } from "./JourneyCruise";
@@ -183,8 +183,9 @@ export default function RocketJourney({
         rocketNoseDirection(t, travelDir);
         targetPos.copy(refPos).addScaledVector(travelDir, -BOARD_CAM_BEHIND);
       } else if (state.vehicle === "pad") {
-        // Over the 808 pad, sighted through it toward the synth system
-        planetPosition(SYNTH_PAD, t, refPos);
+        // Over the 808 pad (DrumPad publishes where it floats), sighted
+        // through it toward the synth system
+        refPos.copy(synthPadState.position);
         travelDir.copy(SYNTH_ORIGIN_VEC).sub(refPos).normalize();
         targetPos.copy(refPos).addScaledVector(travelDir, -BOARD_PAD_BEHIND);
       } else {

@@ -22,9 +22,9 @@ export const asteroidAnchorId = (name: string) => `asteroid-link-${name}`;
 export const asteroidOutlineId = (name: string) => `asteroid-outline-${name}`;
 /** The satellite's part links on /projects-and-toys — the antenna cone
  *  (Zip blog post), the head's video screen (Zip launch reel), the
- *  graffiti heart (SVG Studio) and the cargo crate (/shop). ProjectsAndToys
+ *  floating pen (SVG Studio) and the vase (/shop). ProjectsAndToys
  *  renders the overlays; Satellite writes their positions and outlines. */
-export const SATELLITE_PARTS = ["antenna", "screen", "heart", "crate"] as const;
+export const SATELLITE_PARTS = ["antenna", "screen", "pen", "vase"] as const;
 export type SatellitePart = (typeof SATELLITE_PARTS)[number];
 export const satellitePartAnchorId = (part: SatellitePart) =>
   `satellite-part-${part}`;

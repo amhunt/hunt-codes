@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from "react";
 import cx from "classnames";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import { ArrowLeftCircleIcon } from "lucide-react";
 
 import {
@@ -10,12 +10,17 @@ import {
   TooltipTrigger,
 } from "./ui/tooltip";
 import {
+  asteroidAnchorId,
+  asteroidOutlineId,
   satellitePartAnchorId,
   satellitePartOutlineId,
   type SatellitePart,
 } from "./solarAnchorIds";
 import { BodyOutline } from "./SolarOverlays";
 import { hoverState } from "./solarHover";
+import { journeyState, startSynthJourney } from "./rocketJourney";
+import { ensureAudio } from "./synthAudio";
+import useWindowSize from "./useWindowSize";
 import ZipVideoPopover from "./ZipVideoPopover";
 import { ZIP_BLOG_POST_URL } from "./workLinks";
 
@@ -24,13 +29,15 @@ import { ZIP_BLOG_POST_URL } from "./workLinks";
  * scene — the camera swoops in from /home (CameraRig's satellite perch)
  * and the satellite's parts fade in as the links (Satellite.tsx): the
  * antenna cone opens the Zip blog post, the screen on its head plays the
- * Zip launch reel, the graffiti heart is the SVG Studio and the cargo
- * crate is the shop. The canvases take no pointer input, so each part
- * gets an invisible fixed overlay here that BodyAnchors glues to its
- * projection every frame, with the same pulsing silhouette outline the
- * other link bodies use (`.satellite-link` in App.scss starts hidden and
- * fades in once the camera settles). Beyond that: a corner Home link and
- * a one-line caption.
+ * Zip launch reel, the pen floating under the cone is the SVG Studio and
+ * the vase standing on top is the 3D print store. The canvases take no
+ * pointer input, so each part gets an invisible fixed overlay here that
+ * BodyAnchors glues to its projection every frame, with the same pulsing
+ * silhouette outline the other link bodies use (`.satellite-link` in
+ * App.scss starts hidden and fades in once the camera settles). The 808
+ * drum pad floats beside the satellite here too (DrumPad — the door to
+ * the synth studio), with the same kind of overlay. Beyond that: a
+ * corner Home link and a one-line caption.
  */
 
 /** The arrival swoop lands at 2s; the caption follows a beat later */
@@ -39,8 +46,8 @@ const CAPTION_DELAY_MS = 2400;
 const PART_TOOLTIP = {
   antenna: "Zip blog post",
   screen: "Zip launch video",
-  heart: "SVG Studio",
-  crate: "Artifacts",
+  pen: "SVG Studio",
+  vase: "3D Print Store",
 } as const satisfies Record<SatellitePart, string>;
 
 const partHoverProps = (part: SatellitePart) => ({
@@ -87,8 +94,12 @@ const PartLink = ({
 );
 
 const ProjectsAndToys = () => {
+  const navigate = useNavigate();
   const [videoOpen, setVideoOpen] = useState(false);
   const [captionShown, setCaptionShown] = useState(false);
+  // No pad on phones (SolarScene hides the 3D pad to match): the
+  // portrait close-up leaves no room beside the head
+  const isPhone = useWindowSize() === "sm";
 
   useEffect(() => {
     const timer = setTimeout(() => setCaptionShown(true), CAPTION_DELAY_MS);
@@ -96,10 +107,11 @@ const ProjectsAndToys = () => {
   }, []);
 
   // Navigating away (or opening the video) doesn't fire pointerleave —
-  // don't leave a part's hover glow stuck on
+  // don't leave a part's (or the pad's) hover glow stuck on
   useEffect(
     () => () => {
       hoverState.satellitePart = null;
+      hoverState.asteroid = null;
     },
     [],
   );
@@ -155,20 +167,62 @@ const ProjectsAndToys = () => {
               </button>
             )}
           </PartLink>
-          <PartLink part="heart">
+          <PartLink part="pen">
             {({ outline, ...props }) => (
               <Link {...props} to="/draw">
                 {outline}
               </Link>
             )}
           </PartLink>
-          <PartLink part="crate">
+          <PartLink part="vase">
             {({ outline, ...props }) => (
               <Link {...props} to="/shop">
                 {outline}
               </Link>
             )}
           </PartLink>
+          {/* The floating 808 pad: warps to the synth solar system
+              (/synth). Unlocking the AudioContext inside this click is
+              what lets the beat start playing the moment you land. */}
+          {!isPhone && (
+            <TooltipProvider delayDuration={100}>
+              <Tooltip disableHoverableContent>
+                <TooltipTrigger asChild>
+                  <button
+                    type="button"
+                    id={asteroidAnchorId("synthpad")}
+                    className="satellite-link"
+                    aria-label="Space jam studio"
+                    onClick={() => {
+                      ensureAudio();
+                      startSynthJourney();
+                      // The studio lives at /synth: flip the URL as the
+                      // ride boards (shareable, back-button aborts the
+                      // trip) rather than after the warp lands. Only if
+                      // the journey actually launched — the 3D driver
+                      // may be dead (crashed canvas).
+                      if (journeyState.phase !== "idle") {
+                        void navigate("/synth");
+                      }
+                    }}
+                    onPointerEnter={() => {
+                      hoverState.asteroid = "synthpad";
+                    }}
+                    onPointerLeave={() => {
+                      if (hoverState.asteroid === "synthpad") {
+                        hoverState.asteroid = null;
+                      }
+                    }}
+                  >
+                    <BodyOutline outlineId={asteroidOutlineId("synthpad")} />
+                  </button>
+                </TooltipTrigger>
+                <TooltipContent updatePositionStrategy="always">
+                  <p>Space jam studio</p>
+                </TooltipContent>
+              </Tooltip>
+            </TooltipProvider>
+          )}
         </>
       )}
     </>

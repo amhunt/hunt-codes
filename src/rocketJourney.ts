@@ -93,7 +93,8 @@ function beginJourney(
 export const startRocketJourney = (): void =>
   beginJourney("rocket", "journey", BOARDING_SECONDS, Infinity);
 
-/** The 808 pad: warp from /home to the synth solar system (/synth). */
+/** The 808 pad: warp from /projects-and-toys to the synth solar system
+ *  (/synth). */
 export const startSynthJourney = (): void =>
   beginJourney("pad", "synth", TRANSIT_BOARD_SECONDS, TRANSIT_WARP_SECONDS);
 

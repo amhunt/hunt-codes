@@ -9,6 +9,8 @@ import {
   planetPosition,
   rigState,
   satellitePartState,
+  SYNTH_PAD,
+  synthPadState,
   type SolarPlanetConfig,
 } from "./constants";
 import { projectBody, type ProjectedBody } from "./projection";
@@ -94,6 +96,17 @@ const ANCHORS: BodyAnchorConfig[] = [
     fadeInOnArrival: true,
   },
   ...ASTEROIDS.map(asteroidConfig),
+  {
+    // The 808 pad floats beside the satellite in the close-up; DrumPad
+    // publishes its center (synthPadState) the way the satellite's parts
+    // do, since it hangs off the view's camera framing, not an orbit
+    domId: asteroidAnchorId(SYNTH_PAD.name),
+    position: (_t, out) => out.copy(synthPadState.position),
+    radius: SYNTH_PAD.radius,
+    ringScale: 1.4,
+    minSizePx: 44,
+    fadeInOnArrival: true,
+  },
   ...SATELLITE_PARTS.map(satellitePartConfig),
 ];
 
