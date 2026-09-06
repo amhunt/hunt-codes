@@ -2,7 +2,13 @@ import React, { useEffect, useMemo, useRef } from "react";
 import { useFrame } from "@react-three/fiber";
 import * as THREE from "three";
 
-import { planetPosition, type SolarPlanetConfig } from "./constants";
+import {
+  planetPosition,
+  SATELLITE,
+  synthPadState,
+  type SolarPlanetConfig,
+} from "./constants";
+import { viewGoal } from "./CameraRig";
 import { asteroidOutlineId } from "../../solarAnchorIds";
 import { writeSilhouette } from "./outline";
 import { hoverState } from "../../solarHover";
@@ -10,11 +16,21 @@ import InteractiveGlow from "./InteractiveGlow";
 
 /**
  * The synth easter egg's front door: a little TR-808-style drum machine
- * floating among the link bodies on /home — charcoal slab, 4x4 grid of
- * red/orange/yellow/cream pads, a row of knobs, a blinking status LED.
- * Clicking its overlay (SolarOverlays) warps to the synth solar system.
- * Reuses the asteroid link plumbing: same config shape, BodyAnchors
- * overlay, hover freeze/brighten/outline, landing fade.
+ * floating beside the Sputnik satellite in the /projects-and-toys
+ * close-up — charcoal slab, 4x4 grid of red/orange/yellow/cream pads, a
+ * row of knobs, a blinking status LED. Clicking its overlay
+ * (ProjectsAndToys) warps to the synth solar system. Reuses the asteroid
+ * link plumbing: BodyAnchors overlay, hover freeze/brighten/outline, and
+ * the landing-style fade — it fades in along the arrival swoop from
+ * /home and out on the way back.
+ *
+ * Placement: it isn't an orbiting body. Each frame it sits at the
+ * satellite's depth in the close-up camera's GOAL frame (CameraRig's
+ * viewGoal), offset across that frame by PAD_NDC_X/Y, so it holds a
+ * fixed world spot beside the satellite (riding its orbit), stays in
+ * frame at every aspect, and the swoop reveals it rather than dragging
+ * it along. It publishes that spot (synthPadState) for its overlay and
+ * for the synth transit's boarding beat.
  *
  * Orientation: like the rocket, the rig re-derives its basis every
  * frame so the pad face tips toward the camera (blended with world-up,
@@ -26,6 +42,16 @@ import InteractiveGlow from "./InteractiveGlow";
 const FADE_IN_SECONDS = 3;
 const FADE_OUT_SECONDS = 1;
 const HOVER_EMISSIVE = 0.55;
+
+/** Where the pad floats in the close-up, as fractions of the frame's
+ *  half-width / half-height at the satellite's depth: left of the head
+ *  and a little above center — the upper left is the corner the
+ *  composition leaves free (the antenna cone reaches right, the sun's
+ *  limb rides the bottom left, the caption sits bottom right). */
+const PAD_NDC_X = -0.7;
+const PAD_NDC_Y = 0.28;
+/** Idle bob amplitude, as a fraction of the pad's radius */
+const BOB_RADII = 0.15;
 
 /** Classic 808 pad-row colors, front row to back. Local -z is the front
  *  edge (the rig maps +z up-screen, away from the viewer). */
@@ -40,6 +66,13 @@ const BLINK_ON_FRACTION = 0.65;
 const UP = new THREE.Vector3(0, 1, 0);
 
 // scratch values, reused every frame
+const goalPos = new THREE.Vector3();
+const goalLook = new THREE.Vector3();
+const goalRight = new THREE.Vector3();
+const goalUp = new THREE.Vector3();
+const goalForward = new THREE.Vector3();
+const goalMatrix = new THREE.Matrix4();
+const satPos = new THREE.Vector3();
 const topDir = new THREE.Vector3();
 const backEdge = new THREE.Vector3();
 const sideAxis = new THREE.Vector3();
@@ -49,10 +82,11 @@ export default function DrumPad({
   config,
   visible = true,
 }: {
-  config: SolarPlanetConfig;
+  /** Name (its overlay/hover id) and radius (its chassis + halo scale) */
+  config: Pick<SolarPlanetConfig, "name" | "radius">;
   visible?: boolean;
 }) {
-  const group = useRef<THREE.Group>(null); // orbit position + fade
+  const group = useRef<THREE.Group>(null); // placement + fade
   const rig = useRef<THREE.Group>(null); // face-to-camera basis
   const body = useRef<THREE.Group>(null); // sways around the face axis
   const led = useRef<THREE.Mesh>(null);
@@ -131,8 +165,26 @@ export default function DrumPad({
     }
 
     if (group.current) {
-      planetPosition(config, t, group.current.position);
-      group.current.position.y += Math.sin(bobPhase.current) * 0.06;
+      // Anchor to the close-up framing (see PAD_NDC_*): the goal camera's
+      // frame, at the satellite's depth along its forward axis
+      viewGoal("projects", t, camera, size, goalPos, goalLook);
+      goalMatrix.lookAt(goalPos, goalLook, UP);
+      goalRight.setFromMatrixColumn(goalMatrix, 0);
+      goalUp.setFromMatrixColumn(goalMatrix, 1);
+      goalForward.setFromMatrixColumn(goalMatrix, 2).negate();
+      planetPosition(SATELLITE, t, satPos);
+      const depth = satPos.sub(goalPos).dot(goalForward);
+      const persp = camera as THREE.PerspectiveCamera;
+      const tanHalfV = Math.tan((persp.fov * Math.PI) / 360);
+      const tanHalfH = tanHalfV * (persp.aspect || 1);
+      group.current.position
+        .copy(goalPos)
+        .addScaledVector(goalForward, depth)
+        .addScaledVector(goalRight, PAD_NDC_X * depth * tanHalfH)
+        .addScaledVector(goalUp, PAD_NDC_Y * depth * tanHalfV);
+      group.current.position.y +=
+        Math.sin(bobPhase.current) * config.radius * BOB_RADII;
+      synthPadState.position.copy(group.current.position);
 
       // Same landing-view fade as the asteroids
       const step = visible

@@ -13,7 +13,7 @@ import JourneyCruise from "./JourneyCruise";
 import SynthSystem from "./SynthSystem";
 import SunSvgAnchor from "./SunSvgAnchor";
 import BodyAnchors from "./BodyAnchors";
-import { ASTEROIDS, layoutState, PLANETS } from "./constants";
+import { ASTEROIDS, layoutState, PLANETS, SYNTH_PAD } from "./constants";
 import useWindowWidth from "../../useWindowWidth";
 
 /**
@@ -174,14 +174,6 @@ const SolarScene = ({
             bodyLink={view === "home"}
             partsActive={isProjects}
           />
-        ) : asteroid.name === "synthpad" ? (
-          <DrumPad
-            key={asteroid.name}
-            config={asteroid}
-            // No pad on phones: the sky above the sun is too tight for a
-            // fourth clickable, and SolarOverlays hides its button too
-            visible={view === "home" && !isPhone}
-          />
         ) : (
           <Asteroid
             key={asteroid.name}
@@ -190,6 +182,13 @@ const SolarScene = ({
           />
         );
       })}
+      {/* The 808 pad — the synth studio's door — floats beside the
+          satellite in the close-up only (DrumPad places itself from that
+          view's framing); it fades in along the arrival swoop from /home
+          and out on the way back. No pad on phones: the portrait close-up
+          leaves no room beside the head, and ProjectsAndToys hides its
+          button too */}
+      <DrumPad config={SYNTH_PAD} visible={isProjects && !isPhone} />
       {/* The second solar system, far below this one: six knob-planets
           around a beat-pulsing sun (the space synth) */}
       {view === "synth" && <SynthSystem isNightMode={isNightMode} />}

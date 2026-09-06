@@ -124,10 +124,11 @@ export const EARTH = PLANETS.find((p) => p.name === "Earth")!;
 const ASTEROID_Y = SUN_RADIUS;
 export const ASTEROIDS: SolarPlanetConfig[] = [
   {
-    // The link trio (blog rock, Sputnik satellite, LinkedIn rock) clusters
-    // in a shallow arc low on the left: satellite crowning, the rocks
-    // flanking a step lower. Placements below are solved against the
-    // home camera's projection, so each lands on a chosen screen spot.
+    // The link trio (blog rock, Sputnik satellite, LinkedIn rock) once
+    // clustered in a shallow arc low on the left; both rocks are parked
+    // now and the satellite has moved right (see its entry). Placements
+    // below are solved against the home camera's projection, so each
+    // lands on a chosen screen spot.
     // Parked, not rendered: the blog post it linked moved to /about's
     // work-sample cards (SolarScene skips it; SolarOverlays has no link)
     name: "recent",
@@ -148,14 +149,17 @@ export const ASTEROIDS: SolarPlanetConfig[] = [
   {
     // Rendered as the Sputnik satellite (Satellite.tsx): the door to
     // /projects-and-toys, where the camera closes in and its parts (the
-    // antenna cone, a screen, a graffiti heart, a cargo crate) become the
-    // links. Crowns the trio.
+    // antenna cone, a screen, a floating pen, a vase) become the
+    // links. On wide screens it floats low-center above the sun's limb:
+    // right of the intro text (`.homeInfoContainer`, whose width grows
+    // with the viewport — this spot clears it through 2560x1440) and
+    // short of Earth's "ABOUT ME" ring, legs trailing toward Earth.
     name: "satellite",
     kind: "mercury",
     radius: 0.44,
-    orbitRadius: 3.17,
+    orbitRadius: 4,
     orbitSpeed: EARTH.orbitSpeed,
-    orbitPhase: EARTH.orbitPhase - 1.054,
+    orbitPhase: EARTH.orbitPhase - 0.15,
     spinSpeed: -0.25 * SPEED_SCALE,
     yOffset: 2.67,
     compact: {
@@ -199,31 +203,26 @@ export const ASTEROIDS: SolarPlanetConfig[] = [
       yOffset: ASTEROID_Y - 1.1,
     },
   },
-  {
-    // Rendered as the floating 808 drum pad (DrumPad.tsx). Clicking it
-    // warps to the synth solar system (/synth). Rides low between the
-    // sun and Earth on wide screens. Hidden entirely on phone-width
-    // screens (SolarScene + SolarOverlays).
-    name: "synthpad",
-    kind: "mercury",
-    radius: 0.4,
-    orbitRadius: 5.31,
-    orbitSpeed: EARTH.orbitSpeed,
-    orbitPhase: EARTH.orbitPhase + 0.4,
-    spinSpeed: 0.2 * SPEED_SCALE,
-    yOffset: 0.54,
-    // Tablet widths (compact layout, pad still shown): slide left so it
-    // doesn't eclipse the LinkedIn rock, which shares its base bearing
-    compact: {
-      orbitRadius: 4.2,
-      orbitPhase: EARTH.orbitPhase - 0.36,
-      yOffset: ASTEROID_Y - 0.5,
-    },
-  },
 ];
 
 export const ROCKET = ASTEROIDS.find((a) => a.name === "rocket")!;
-export const SYNTH_PAD = ASTEROIDS.find((a) => a.name === "synthpad")!;
+
+/**
+ * The floating 808 drum pad (DrumPad.tsx): the door to the synth solar
+ * system (/synth). Not an orbiting body — it floats beside the satellite
+ * in the /projects-and-toys close-up, placed from that view's camera
+ * framing (DrumPad), so it carries no orbit. Hidden on phone widths
+ * (SolarScene + ProjectsAndToys). `radius` scales its chassis and halo.
+ */
+export const SYNTH_PAD = { name: "synthpad", radius: 0.25 };
+
+/**
+ * World center of the 808 pad, written by DrumPad each frame and read by
+ * BodyAnchors (its click overlay) and RocketJourney (the synth transit
+ * boards over it): the pad hangs off the close-up camera framing, which
+ * nothing else can recompute. A plain mutable module, like sunState.
+ */
+export const synthPadState = { position: new THREE.Vector3() };
 export const SATELLITE = ASTEROIDS.find((a) => a.name === "satellite")!;
 
 /** Satellite proportions, as multiples of its config radius: the polished
@@ -252,8 +251,8 @@ export const satellitePartState: Record<
     radius: SATELLITE.radius * SATELLITE_LEG_LENGTH_RATIO * 0.33,
   },
   screen: { position: new THREE.Vector3(), radius: satelliteBodyRadius * 0.32 },
-  heart: { position: new THREE.Vector3(), radius: satelliteBodyRadius * 0.28 },
-  crate: { position: new THREE.Vector3(), radius: satelliteBodyRadius * 0.3 },
+  pen: { position: new THREE.Vector3(), radius: satelliteBodyRadius * 0.5 },
+  vase: { position: new THREE.Vector3(), radius: satelliteBodyRadius * 0.3 },
 };
 
 const WORLD_UP = new THREE.Vector3(0, 1, 0);
@@ -291,15 +290,18 @@ export function satelliteLegsDirection(
 
 const frameOutward = new THREE.Vector3();
 /** How far the close-up perch swings from level-with-the-satellite toward
- *  straight above it (radially away from the sun): 0 leaves the sun just
+ *  straight above it (radially away from the sun): 0 leaves the sun
  *  under the bottom edge, more of it looks further down over the head,
- *  raising the sun's limb into the frame. */
-const PERCH_CLIMB = 0.12;
+ *  raising the sun's limb into the frame. Tuned to the satellite's home
+ *  spot — it orbits well clear of the sun, so the perch climbs this much
+ *  to bring ~7° of limb into the frame. */
+const PERCH_CLIMB = 0.35;
 /** Then swing the perch around the sun line, radians. 0 puts the sun
- *  dead below the satellite and its antenna cone climbing screen-right;
+ *  dead below the satellite with its antenna cone climbing screen-right;
  *  this much slides the sun's limb to the bottom-left and levels the
- *  cone out to the right, leaving the bottom-right clear for the caption. */
-const PERCH_AZIMUTH = 0.35;
+ *  cone out to the right (a touch below level), leaving the bottom-right
+ *  clear for the caption. */
+const PERCH_AZIMUTH = 0.8;
 
 /**
  * The /projects-and-toys viewing frame around the satellite. `outToward`

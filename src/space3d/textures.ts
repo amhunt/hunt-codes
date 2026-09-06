@@ -252,68 +252,6 @@ export function createLogoBadgeTexture(
   return asTexture(canvas);
 }
 
-/** A heart (Material Design "favorite", Apache 2.0), in a 24x24 viewBox */
-const HEART_PATH =
-  "M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 " +
-  "0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 " +
-  "3.78-3.4 6.86-8.55 11.54L12 21.35z";
-
-/** A red spray-paint heart tagged on the satellite's head (its SVG Studio
- *  link, /projects-and-toys): the mark goes down in a ring of jittered,
- *  translucent passes so the edge fuzzes like over-spray, then a solid
- *  core, slanted the way a tag gets sprayed, with two drips running off
- *  the bottom and a wet highlight on the upper lobe. Transparent
- *  canvas — a "sticker" decal, like the badges. */
-export function createGraffitiHeartTexture(): THREE.CanvasTexture {
-  const size = 256;
-  const canvas = createCanvas(size, size);
-  const ctx = canvas.getContext("2d");
-  if (!ctx) return asTexture(canvas);
-
-  const c = size / 2;
-  const heart = new Path2D(HEART_PATH);
-  const scale = (size / 24) * 0.7;
-  const spray = (dx: number, dy: number, alpha: number, grow: number) => {
-    ctx.setTransform(1, 0, 0, 1, 0, 0);
-    ctx.translate(c + dx, c + dy);
-    ctx.rotate(-0.32);
-    ctx.scale(scale * grow, scale * grow);
-    ctx.translate(-12, -12.2);
-    ctx.globalAlpha = alpha;
-    ctx.fill(heart);
-  };
-  // Over-spray halo: offset passes at low alpha build a soft edge
-  ctx.fillStyle = "#c81a26";
-  for (let i = 0; i < 8; i++) {
-    const a = i * 0.79;
-    spray(Math.cos(a) * 6, Math.sin(a) * 6, 0.2, 1.06);
-  }
-  ctx.fillStyle = "#e8232f";
-  spray(0, 0, 0.96, 1);
-  ctx.setTransform(1, 0, 0, 1, 0, 0);
-
-  // Drips off the lower lobe (their tops sit inside the solid fill)
-  ctx.globalAlpha = 0.92;
-  ctx.fillStyle = "#d61f2b";
-  for (const [x, length] of [
-    [c - 30, 36],
-    [c + 2, 22],
-  ]) {
-    ctx.fillRect(x - 3, c + 28, 6, length);
-    ctx.beginPath();
-    ctx.arc(x, c + 28 + length, 4.5, 0, Math.PI * 2);
-    ctx.fill();
-  }
-  // Wet highlight on the upper-left lobe
-  ctx.globalAlpha = 0.4;
-  ctx.fillStyle = "#ffffff";
-  ctx.beginPath();
-  ctx.ellipse(c - 34, c - 30, 13, 6, -0.5, 0, Math.PI * 2);
-  ctx.fill();
-  ctx.globalAlpha = 1;
-  return asTexture(canvas);
-}
-
 /** The little video screen set into the satellite's head (its Zip
  *  launch-reel link, /projects-and-toys): dark glass with a purple
  *  backlight, faint scanlines, a play button and a scrubber — enough to

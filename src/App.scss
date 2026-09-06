@@ -1760,8 +1760,9 @@ a:hover {
 }
 
 // The satellite's part links on /projects-and-toys (ProjectsAndToys):
-// the antenna cone, the video screen, the graffiti heart and the cargo
-// crate, each glued to its part by BodyAnchors. Same contract as Earth's
+// the antenna cone, the video screen, the floating pen and the vase,
+// each glued to its part by BodyAnchors — and the 808 pad floating
+// beside the satellite, glued the same way. Same contract as Earth's
 // ring: hidden until placed, faded in once the camera's swoop settles.
 .satellite-link {
   position: fixed;
@@ -1865,6 +1866,8 @@ body.rocket-journey {
   .day-night-switch,
   .music-toggle,
   .asteroid-link,
+  .satellite-link,
+  .projects-caption,
   .earth-about-ring,
   .synthBackLink,
   .synth-knob,

@@ -1,5 +1,5 @@
 import React from "react";
-import { Link, useNavigate } from "react-router-dom";
+import { Link } from "react-router-dom";
 
 import {
   Tooltip,
@@ -14,8 +14,6 @@ import {
   EARTH_ABOUT_RING_ID,
 } from "./solarAnchorIds";
 import { hoverState } from "./solarHover";
-import { journeyState, startSynthJourney } from "./rocketJourney";
-import { ensureAudio } from "./synthAudio";
 import useWindowSize from "./useWindowSize";
 
 /**
@@ -44,13 +42,9 @@ export const BodyOutline = ({ outlineId }: { outlineId: string }) => (
 // LinkedIn rock is parked too (see the commented block below).
 
 const SolarOverlays = () => {
-  const navigate = useNavigate();
-  // The 808 pad sits out on phones (SolarScene hides the 3D pad; this
-  // hides its click target so no invisible button floats in the sky)
+  // Below lg the Sputnik satellite sits out — SolarScene hides the 3D
+  // body to match (its page stays reachable from /about's work cards)
   const size = useWindowSize();
-  const isPhone = size === "sm";
-  // Below lg the Sputnik satellite sits out too — SolarScene hides the
-  // 3D body to match (its page stays reachable from /about's work cards)
   const isNarrow = size !== "lg";
   // Navigating away doesn't fire pointerleave — don't leave a hover
   // glow stuck on
@@ -94,7 +88,7 @@ const SolarOverlays = () => {
                 id={asteroidAnchorId("satellite")}
                 className="asteroid-link"
                 to="/projects-and-toys"
-                aria-label="Creations"
+                aria-label="Projects & creations"
                 onPointerEnter={() => {
                   hoverState.asteroid = "satellite";
                 }}
@@ -108,7 +102,7 @@ const SolarOverlays = () => {
               </Link>
             </TooltipTrigger>
             <TooltipContent updatePositionStrategy="always">
-              <p>Creations</p>
+              <p>Projects &amp; creations</p>
             </TooltipContent>
           </Tooltip>
         </TooltipProvider>
@@ -147,7 +141,8 @@ const SolarOverlays = () => {
       */}
       {/* The rocket (spaceship) link is parked until the /journey copy is
           ready — the ship itself is parked too (SolarScene). Restore this
-          block (and the startRocketJourney import) to re-arm it.
+          block (and the startRocketJourney, journeyState and useNavigate
+          imports) to re-arm it.
          The rocket easter egg: clicking it boards the ship and warps to
           the /journey story crawl (rocketJourney.ts flips the route under
           the warp flash). Same anchor plumbing as the asteroid links.
@@ -186,47 +181,6 @@ const SolarOverlays = () => {
         </Tooltip>
       </TooltipProvider>
       */}
-      {/* The floating 808 pad: warps to the synth solar system (/synth).
-          Unlocking the AudioContext inside this click is what lets the
-          beat start playing the moment you land. */}
-      {!isPhone && (
-        <TooltipProvider delayDuration={100}>
-          <Tooltip disableHoverableContent>
-            <TooltipTrigger asChild>
-              <button
-                type="button"
-                id={asteroidAnchorId("synthpad")}
-                className="asteroid-link"
-                aria-label="Space jam studio"
-                onClick={() => {
-                  ensureAudio();
-                  startSynthJourney();
-                  // The studio lives at /synth: flip the URL as the ride
-                  // boards (shareable, back-button aborts the trip) rather
-                  // than after the warp lands. Only if the journey actually
-                  // launched — the 3D driver may be dead (crashed canvas).
-                  if (journeyState.phase !== "idle") {
-                    void navigate("/synth");
-                  }
-                }}
-                onPointerEnter={() => {
-                  hoverState.asteroid = "synthpad";
-                }}
-                onPointerLeave={() => {
-                  if (hoverState.asteroid === "synthpad") {
-                    hoverState.asteroid = null;
-                  }
-                }}
-              >
-                <BodyOutline outlineId={asteroidOutlineId("synthpad")} />
-              </button>
-            </TooltipTrigger>
-            <TooltipContent updatePositionStrategy="always">
-              <p>Space jam studio</p>
-            </TooltipContent>
-          </Tooltip>
-        </TooltipProvider>
-      )}
     </>
   );
 };
