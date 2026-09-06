@@ -1,15 +1,18 @@
 import * as THREE from "three";
 
 /**
- * The gold glint that sweeps across the satellite's link parts on
- * /projects-and-toys (Satellite.tsx): the "these are clickable" tell,
- * independent of the hover wash. Rather than a separate mesh it is folded
- * into each part's own material — a shader hook adds a soft gold band to
- * the lit color wherever the surface crosses a plane sliding across the
- * body — so the glint follows every part's true shape (the tapered legs,
- * the pen's barrel, the vase's curve) and is masked by the part's own
- * alpha. One shared uniform set drives every part, so the band crosses
- * the whole satellite as a single sweep.
+ * A band of light that sweeps across the satellite (Satellite.tsx): the
+ * gold glint over its link parts on /projects-and-toys — the "these are
+ * clickable" tell, independent of the hover wash — and the purple energy
+ * wave that washes over the whole body every few seconds on /home.
+ * Rather than a separate mesh it is folded into each part's own material
+ * — a shader hook adds a soft band to the lit color wherever the surface
+ * crosses a plane sliding across the body — so the sweep follows every
+ * part's true shape (the tapered legs, the pen's barrel, the vase's
+ * curve) and is masked by the part's own alpha. One shared uniform set
+ * drives every part a band covers, so it crosses the whole satellite as
+ * a single sweep; a material can carry several bands (the legs take
+ * both), each with its own uniforms.
  */
 
 export interface ShimmerUniforms {
@@ -45,41 +48,52 @@ varying vec3 vShimmerWorld;
 const VERTEX_BODY = /* glsl */ `
 vShimmerWorld = ( modelMatrix * vec4( transformed, 1.0 ) ).xyz;
 `;
-const FRAGMENT_HEADER = /* glsl */ `
-uniform vec3 uShimmerOrigin;
-uniform vec3 uShimmerDirection;
-uniform float uShimmerOffset;
-uniform float uShimmerHalfWidth;
-uniform float uShimmerStrength;
-uniform vec3 uShimmerColor;
+const FRAGMENT_VARYING = /* glsl */ `
 varying vec3 vShimmerWorld;
+`;
+// Per band, `i` numbering its uniforms
+const fragmentHeader = (i: number) => /* glsl */ `
+uniform vec3 uShimmerOrigin${i};
+uniform vec3 uShimmerDirection${i};
+uniform float uShimmerOffset${i};
+uniform float uShimmerHalfWidth${i};
+uniform float uShimmerStrength${i};
+uniform vec3 uShimmerColor${i};
 `;
 // Squared so the band has a bright core and soft shoulders. Added to the
 // lit color just before it is written out, after every lighting step and
 // before the alpha, so the part's own transparency masks it.
-const FRAGMENT_BODY = /* glsl */ `
+const fragmentBody = (i: number) => /* glsl */ `
 {
   float shimmerAlong =
-    dot( vShimmerWorld - uShimmerOrigin, uShimmerDirection ) - uShimmerOffset;
+    dot( vShimmerWorld - uShimmerOrigin${i}, uShimmerDirection${i} ) - uShimmerOffset${i};
   float shimmerBand =
-    1.0 - smoothstep( 0.0, uShimmerHalfWidth, abs( shimmerAlong ) );
-  outgoingLight += uShimmerColor * ( uShimmerStrength * shimmerBand * shimmerBand );
+    1.0 - smoothstep( 0.0, uShimmerHalfWidth${i}, abs( shimmerAlong ) );
+  outgoingLight += uShimmerColor${i} * ( uShimmerStrength${i} * shimmerBand * shimmerBand );
 }
 `;
 
-/** Hook the glint into a built-in material (MeshBasic / MeshStandard).
- *  Call before the material's first render. */
-export function applyGoldShimmer(
+/** Hook one or more bands into a built-in material (MeshBasic /
+ *  MeshStandard). Call before the material's first render. */
+export function applyShimmer(
   material: THREE.Material,
-  uniforms: ShimmerUniforms,
+  bands: ShimmerUniforms[],
 ): void {
+  // Three keys its program cache on this hook's source text, which is
+  // the same for every band count — so name the count, or a one-band
+  // material would be handed a two-band program (or the reverse)
+  material.customProgramCacheKey = () => `shimmer:${bands.length}`;
   material.onBeforeCompile = (shader) => {
-    shader.uniforms.uShimmerOrigin = uniforms.origin;
-    shader.uniforms.uShimmerDirection = uniforms.direction;
-    shader.uniforms.uShimmerOffset = uniforms.offset;
-    shader.uniforms.uShimmerHalfWidth = uniforms.halfWidth;
-    shader.uniforms.uShimmerStrength = uniforms.strength;
-    shader.uniforms.uShimmerColor = uniforms.color;
+    bands.forEach((uniforms, i) => {
+      shader.uniforms[`uShimmerOrigin${i}`] = uniforms.origin;
+      shader.uniforms[`uShimmerDirection${i}`] = uniforms.direction;
+      shader.uniforms[`uShimmerOffset${i}`] = uniforms.offset;
+      shader.uniforms[`uShimmerHalfWidth${i}`] = uniforms.halfWidth;
+      shader.uniforms[`uShimmerStrength${i}`] = uniforms.strength;
+      shader.uniforms[`uShimmerColor${i}`] = uniforms.color;
+    });
+    const headers = bands.map((_, i) => fragmentHeader(i)).join("");
+    const bodies = bands.map((_, i) => fragmentBody(i)).join("");
     shader.vertexShader = shader.vertexShader
       .replace("#include <common>", `#include <common>${VERTEX_HEADER}`)
       .replace(
@@ -87,10 +101,13 @@ export function applyGoldShimmer(
         `#include <project_vertex>${VERTEX_BODY}`,
       );
     shader.fragmentShader = shader.fragmentShader
-      .replace("#include <common>", `#include <common>${FRAGMENT_HEADER}`)
+      .replace(
+        "#include <common>",
+        `#include <common>${FRAGMENT_VARYING}${headers}`,
+      )
       .replace(
         "#include <opaque_fragment>",
-        `${FRAGMENT_BODY}#include <opaque_fragment>`,
+        `${bodies}#include <opaque_fragment>`,
       );
   };
 }

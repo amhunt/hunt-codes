@@ -21,7 +21,7 @@ import {
 import { writeSilhouette } from "./outline";
 import { createVideoScreenTexture } from "../textures";
 import { hoverState } from "../../solarHover";
-import { applyGoldShimmer, createShimmerUniforms } from "./goldShimmer";
+import { applyShimmer, createShimmerUniforms } from "./goldShimmer";
 import InteractiveGlow from "./InteractiveGlow";
 
 /**
@@ -30,11 +30,11 @@ import InteractiveGlow from "./InteractiveGlow";
  * opposite the cone. On /home the whole body is one link — to
  * /projects-and-toys — reusing the asteroid link plumbing (BodyAnchors
  * overlay, hover freeze/brighten/outline, landing fade) via the same
- * config. On /home the body also pulses — a slow swell of head, legs and
- * beacon in step with the halo's breathing — so the one link out here
- * reads as alive; the pulse rests on hover and in the close-up. On
- * /projects-and-toys the camera closes in (CameraRig's
- * satellite perch) and the body's PARTS become the links: the antenna
+ * config. On /home a wave of energy also washes over the whole body
+ * every few seconds — a purple band (goldShimmer.ts) travelling from the
+ * beacon down the antenna cone, as if it were transmitting — so the one
+ * link out here reads as alive. On /projects-and-toys the camera closes
+ * in (CameraRig's satellite perch) and the body's PARTS become the links: the antenna
  * cone (the Zip blog post), a little video screen set into the head (the
  * Zip launch reel), a pen floating under the cone (SVG Studio) and a
  * mid-century vase standing on top of the head (/shop, the 3D print
@@ -80,14 +80,6 @@ const PEN_BASE_EMISSIVE = 0.4;
 const PEN_HOVER_EMISSIVE = 1.3;
 /** Slow the body roll well below the config spin (a stately tumble) */
 const ROLL_SPEED_SCALE = 0.35;
-/** The /home pulse: the body swells ±AMPLITUDE (a scale factor) at the
- *  halo's breathing rate (InteractiveGlow's PULSE_SPEED, same clock, so
- *  the swell peaks as the halo brightens). It eases in and out over
- *  EASE seconds — off while hovered (the outline is cut from a resting
- *  pose) and in the close-up — and stays off under reduced motion. */
-const PULSE_AMPLITUDE = 0.05;
-const PULSE_SPEED = 1.6;
-const PULSE_EASE_SECONDS = 0.4;
 
 /** The gold glint (goldShimmer.ts): one sweep every PERIOD, crossing the
  *  body — ±SPAN radii along the screen diagonal, lower left to upper
@@ -100,6 +92,21 @@ const SHIMMER_SPAN_RADII = 2;
 const SHIMMER_HALF_WIDTH_RADII = 0.35;
 const SHIMMER_STRENGTH = 0.5;
 const SHIMMER_STATIC_STRENGTH = 0.12;
+
+/** The /home energy wave (goldShimmer.ts too, a second band): one pulse
+ *  every PERIOD, running the length of the body along the leg axis —
+ *  from just past the beacon to just past the antenna tips — in SWEEP
+ *  seconds, then resting off the body until the next. It follows the
+ *  landing fade and eases away toward the close-up (the parts there
+ *  carry the gold glint instead). Under reduced motion it parks over
+ *  the body as a faint, steady tint. */
+const WAVE_PERIOD_SECONDS = 3.5;
+const WAVE_SWEEP_SECONDS = 1.1;
+const WAVE_HALF_WIDTH_RADII = 0.4;
+const WAVE_STRENGTH = 0.75;
+const WAVE_STATIC_STRENGTH = 0.12;
+const WAVE_COLOR = "#9e80f9";
+const WAVE_EASE_SECONDS = 0.6;
 
 /** The vase's silhouette — a LatheGeometry profile, [radius, height] in
  *  units of the head's radius, foot to lip: a low round belly drawn up
@@ -228,7 +235,6 @@ export default function Satellite({
 }) {
   const group = useRef<THREE.Group>(null); // orbit position + fade
   const rig = useRef<THREE.Group>(null); // aims the leg cone
-  const pulser = useRef<THREE.Group>(null); // the /home pulse (body + beacon)
   const body = useRef<THREE.Group>(null); // rolls about the leg axis
   const parts = useRef<THREE.Group>(null); // hidden while faded out
   const present = useRef<THREE.Group>(null); // faces the close-up perch
@@ -250,8 +256,8 @@ export default function Satellite({
   /** parts × body opacity: what the part halos follow */
   const partsShown = useRef(partsOpacity.current * opacity.current);
   const roll = useRef(0);
-  /** 0..1: how much of the pulse is showing (eased on/off) */
-  const pulseWeight = useRef(0);
+  /** 0..1: how much of the /home wave is showing (eased on/off) */
+  const waveWeight = useRef(bodyLink ? 1 : 0);
 
   const bodyRadius = config.radius * SATELLITE_BODY_RADIUS_RATIO;
   const legLength = config.radius * SATELLITE_LEG_LENGTH_RATIO;
@@ -280,6 +286,7 @@ export default function Satellite({
   );
 
   const shimmer = useMemo(() => createShimmerUniforms(), []);
+  const wave = useMemo(() => createShimmerUniforms(WAVE_COLOR), []);
   const materials = useMemo(() => {
     const set = {
       body: new THREE.MeshStandardMaterial({
@@ -354,19 +361,22 @@ export default function Satellite({
         transparent: true,
       }),
     };
-    // The link parts carry the gold glint (the legs are the antenna link;
-    // the head itself is not a link, so it stays plain)
+    // The /home wave crosses the whole body; the link parts carry the
+    // gold glint (the legs are the antenna link, so they take both; the
+    // head itself is not a link, so it gets no glint)
+    applyShimmer(set.body, [wave]);
+    applyShimmer(set.bulb, [wave]);
+    applyShimmer(set.leg, [wave, shimmer]);
     [
-      set.leg,
       set.bezel,
       set.display,
       set.penBarrel,
       set.penCap,
       set.penSteel,
       set.vase,
-    ].forEach((material) => applyGoldShimmer(material, shimmer));
+    ].forEach((material) => applyShimmer(material, [shimmer]));
     return set;
-  }, [shimmer]);
+  }, [shimmer, wave]);
   const bodyMaterials = useMemo(
     () => [materials.body, materials.leg, materials.bulb],
     [materials],
@@ -525,22 +535,6 @@ export default function Satellite({
         t % BLINK_PERIOD_SECONDS < BLINK_PERIOD_SECONDS * BLINK_ON_FRACTION;
     }
 
-    // The /home pulse: swell the body in step with the halo's breathing,
-    // easing the swell away on hover, in the close-up and under reduced
-    // motion (the parts hang off the rig, so they never pulse)
-    if (pulser.current) {
-      const pulsing = bodyLink && !bodyHovered && !prefersReducedMotion;
-      const weightStep = delta / PULSE_EASE_SECONDS;
-      pulseWeight.current = THREE.MathUtils.clamp(
-        pulseWeight.current + (pulsing ? weightStep : -weightStep),
-        0,
-        1,
-      );
-      const swell =
-        1 + PULSE_AMPLITUDE * pulseWeight.current * Math.sin(t * PULSE_SPEED);
-      pulser.current.scale.setScalar(swell);
-    }
-
     // Hover: wash the hovered thing out toward white. On /home that is
     // the whole body; in the close-up, just the hovered part.
     const ease = Math.min(delta * 6, 1);
@@ -608,6 +602,34 @@ export default function Satellite({
         shimmer.halfWidth.value = config.radius * SHIMMER_HALF_WIDTH_RADII;
         shimmer.strength.value = SHIMMER_STRENGTH * partsShown.current;
       }
+
+      // The /home energy wave: a band sliding along the leg axis, beacon
+      // to antenna tips, clear of the body at both ends of its run
+      const waveStep = delta / WAVE_EASE_SECONDS;
+      waveWeight.current = THREE.MathUtils.clamp(
+        waveWeight.current + (bodyLink ? waveStep : -waveStep),
+        0,
+        1,
+      );
+      wave.origin.value.copy(shimmer.origin.value);
+      wave.direction.value.copy(legsDir);
+      const waveShown = waveWeight.current * opacity.current;
+      if (prefersReducedMotion) {
+        wave.offset.value = 0;
+        wave.halfWidth.value = config.radius * 20;
+        wave.strength.value = WAVE_STATIC_STRENGTH * waveShown;
+      } else {
+        const halfWidth = config.radius * WAVE_HALF_WIDTH_RADII;
+        const start = -(bodyRadius * 1.2 + halfWidth);
+        const end = bodyRadius * 0.7 + legLength + halfWidth;
+        const sweep = Math.min(
+          (t % WAVE_PERIOD_SECONDS) / WAVE_SWEEP_SECONDS,
+          1,
+        );
+        wave.offset.value = THREE.MathUtils.lerp(start, end, sweep);
+        wave.halfWidth.value = halfWidth;
+        wave.strength.value = WAVE_STRENGTH * waveShown;
+      }
     }
 
     // Publish the parts' world centers for their DOM overlays
@@ -657,40 +679,32 @@ export default function Satellite({
         enabled={bodyLink}
       />
       <group ref={rig}>
-        {/* The /home pulse swells the body and its beacon together */}
-        <group ref={pulser}>
-          <group ref={body}>
+        <group ref={body}>
+          <mesh ref={head} material={materials.body} geometry={bodyGeometry} />
+          {legs.map((leg, i) => (
             <mesh
-              ref={head}
-              material={materials.body}
-              geometry={bodyGeometry}
-            />
-            {legs.map((leg, i) => (
-              <mesh
-                key={i}
-                ref={registerLeg}
-                material={materials.leg}
-                position={leg.position}
-                quaternion={leg.quaternion}
-              >
-                {/* tapered: thick at the attach point, thin at the tip */}
-                <cylinderGeometry
-                  args={[bodyRadius * 0.05, bodyRadius * 0.1, legLength, 6]}
-                />
-              </mesh>
-            ))}
-          </group>
-          {/* Blinking beacon capping the head, dead opposite the antenna
-              cone: on the roll axis, so it holds still while the legs
-              spin */}
-          <mesh
-            ref={bulb}
-            material={materials.bulb}
-            position={[0, 0, -bodyRadius * 1.05]}
-          >
-            <sphereGeometry args={[bodyRadius * 0.15, 12, 8]} />
-          </mesh>
+              key={i}
+              ref={registerLeg}
+              material={materials.leg}
+              position={leg.position}
+              quaternion={leg.quaternion}
+            >
+              {/* tapered: thick at the attach point, thin at the tip */}
+              <cylinderGeometry
+                args={[bodyRadius * 0.05, bodyRadius * 0.1, legLength, 6]}
+              />
+            </mesh>
+          ))}
         </group>
+        {/* Blinking beacon capping the head, dead opposite the antenna
+            cone: on the roll axis, so it holds still while the legs spin */}
+        <mesh
+          ref={bulb}
+          material={materials.bulb}
+          position={[0, 0, -bodyRadius * 1.05]}
+        >
+          <sphereGeometry args={[bodyRadius * 0.15, 12, 8]} />
+        </mesh>
         {/* The /projects-and-toys link parts (faded out elsewhere) */}
         <group ref={parts}>
           {/* The antenna cone IS the blog link: just its anchor + halo
