@@ -30,7 +30,10 @@ import InteractiveGlow from "./InteractiveGlow";
  * opposite the cone. On /home the whole body is one link — to
  * /projects-and-toys — reusing the asteroid link plumbing (BodyAnchors
  * overlay, hover freeze/brighten/outline, landing fade) via the same
- * config. On /projects-and-toys the camera closes in (CameraRig's
+ * config. On /home the body also pulses — a slow swell of head, legs and
+ * beacon in step with the halo's breathing — so the one link out here
+ * reads as alive; the pulse rests on hover and in the close-up. On
+ * /projects-and-toys the camera closes in (CameraRig's
  * satellite perch) and the body's PARTS become the links: the antenna
  * cone (the Zip blog post), a little video screen set into the head (the
  * Zip launch reel), a pen floating under the cone (SVG Studio) and a
@@ -77,6 +80,14 @@ const PEN_BASE_EMISSIVE = 0.4;
 const PEN_HOVER_EMISSIVE = 1.3;
 /** Slow the body roll well below the config spin (a stately tumble) */
 const ROLL_SPEED_SCALE = 0.35;
+/** The /home pulse: the body swells ±AMPLITUDE (a scale factor) at the
+ *  halo's breathing rate (InteractiveGlow's PULSE_SPEED, same clock, so
+ *  the swell peaks as the halo brightens). It eases in and out over
+ *  EASE seconds — off while hovered (the outline is cut from a resting
+ *  pose) and in the close-up — and stays off under reduced motion. */
+const PULSE_AMPLITUDE = 0.05;
+const PULSE_SPEED = 1.6;
+const PULSE_EASE_SECONDS = 0.4;
 
 /** The gold glint (goldShimmer.ts): one sweep every PERIOD, crossing the
  *  body — ±SPAN radii along the screen diagonal, lower left to upper
@@ -217,6 +228,7 @@ export default function Satellite({
 }) {
   const group = useRef<THREE.Group>(null); // orbit position + fade
   const rig = useRef<THREE.Group>(null); // aims the leg cone
+  const pulser = useRef<THREE.Group>(null); // the /home pulse (body + beacon)
   const body = useRef<THREE.Group>(null); // rolls about the leg axis
   const parts = useRef<THREE.Group>(null); // hidden while faded out
   const present = useRef<THREE.Group>(null); // faces the close-up perch
@@ -238,6 +250,8 @@ export default function Satellite({
   /** parts × body opacity: what the part halos follow */
   const partsShown = useRef(partsOpacity.current * opacity.current);
   const roll = useRef(0);
+  /** 0..1: how much of the pulse is showing (eased on/off) */
+  const pulseWeight = useRef(0);
 
   const bodyRadius = config.radius * SATELLITE_BODY_RADIUS_RATIO;
   const legLength = config.radius * SATELLITE_LEG_LENGTH_RATIO;
@@ -511,6 +525,22 @@ export default function Satellite({
         t % BLINK_PERIOD_SECONDS < BLINK_PERIOD_SECONDS * BLINK_ON_FRACTION;
     }
 
+    // The /home pulse: swell the body in step with the halo's breathing,
+    // easing the swell away on hover, in the close-up and under reduced
+    // motion (the parts hang off the rig, so they never pulse)
+    if (pulser.current) {
+      const pulsing = bodyLink && !bodyHovered && !prefersReducedMotion;
+      const weightStep = delta / PULSE_EASE_SECONDS;
+      pulseWeight.current = THREE.MathUtils.clamp(
+        pulseWeight.current + (pulsing ? weightStep : -weightStep),
+        0,
+        1,
+      );
+      const swell =
+        1 + PULSE_AMPLITUDE * pulseWeight.current * Math.sin(t * PULSE_SPEED);
+      pulser.current.scale.setScalar(swell);
+    }
+
     // Hover: wash the hovered thing out toward white. On /home that is
     // the whole body; in the close-up, just the hovered part.
     const ease = Math.min(delta * 6, 1);
@@ -627,32 +657,40 @@ export default function Satellite({
         enabled={bodyLink}
       />
       <group ref={rig}>
-        <group ref={body}>
-          <mesh ref={head} material={materials.body} geometry={bodyGeometry} />
-          {legs.map((leg, i) => (
+        {/* The /home pulse swells the body and its beacon together */}
+        <group ref={pulser}>
+          <group ref={body}>
             <mesh
-              key={i}
-              ref={registerLeg}
-              material={materials.leg}
-              position={leg.position}
-              quaternion={leg.quaternion}
-            >
-              {/* tapered: thick at the attach point, thin at the tip */}
-              <cylinderGeometry
-                args={[bodyRadius * 0.05, bodyRadius * 0.1, legLength, 6]}
-              />
-            </mesh>
-          ))}
+              ref={head}
+              material={materials.body}
+              geometry={bodyGeometry}
+            />
+            {legs.map((leg, i) => (
+              <mesh
+                key={i}
+                ref={registerLeg}
+                material={materials.leg}
+                position={leg.position}
+                quaternion={leg.quaternion}
+              >
+                {/* tapered: thick at the attach point, thin at the tip */}
+                <cylinderGeometry
+                  args={[bodyRadius * 0.05, bodyRadius * 0.1, legLength, 6]}
+                />
+              </mesh>
+            ))}
+          </group>
+          {/* Blinking beacon capping the head, dead opposite the antenna
+              cone: on the roll axis, so it holds still while the legs
+              spin */}
+          <mesh
+            ref={bulb}
+            material={materials.bulb}
+            position={[0, 0, -bodyRadius * 1.05]}
+          >
+            <sphereGeometry args={[bodyRadius * 0.15, 12, 8]} />
+          </mesh>
         </group>
-        {/* Blinking beacon capping the head, dead opposite the antenna
-            cone: on the roll axis, so it holds still while the legs spin */}
-        <mesh
-          ref={bulb}
-          material={materials.bulb}
-          position={[0, 0, -bodyRadius * 1.05]}
-        >
-          <sphereGeometry args={[bodyRadius * 0.15, 12, 8]} />
-        </mesh>
         {/* The /projects-and-toys link parts (faded out elsewhere) */}
         <group ref={parts}>
           {/* The antenna cone IS the blog link: just its anchor + halo
