@@ -9,8 +9,11 @@ import cx from "classnames";
  * undressed so each switch can paint its own scene on the track (sky and
  * clouds, a bouncing equaliser) via `children` and its own thumb art (sun
  * and moon, a speaker) via `thumb`. Radix mirrors `data-state="checked"`
- * onto both the root and the thumb, which is what the per-switch styles
- * key off.
+ * onto both the root and the thumb; the day/night styles key off it. (The
+ * music switch reads `aria-checked` instead: its tooltip trigger overwrites
+ * the root's `data-state` with open/closed, and only the thumb's survives.)
+ * `ref` (a plain prop in React 19) rides along in `...props`, so a Radix
+ * `asChild` parent — that tooltip trigger — can anchor to the button.
  */
 const SceneSwitch = ({
   className,
@@ -18,7 +21,7 @@ const SceneSwitch = ({
   thumb,
   children,
   ...props
-}: React.ComponentPropsWithoutRef<typeof Switch.Root> & {
+}: React.ComponentPropsWithRef<typeof Switch.Root> & {
   /** What rides on the thumb */
   thumb?: React.ReactNode;
   thumbClassName?: string;
