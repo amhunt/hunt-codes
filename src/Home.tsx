@@ -3,7 +3,7 @@ import Typed from "typed.js";
 import cx from "classnames";
 
 import { GitHub, Linkedin, Mail } from "react-feather";
-import { ShoppingBag, Wand2 } from "lucide-react";
+import { ShoppingBag } from "lucide-react";
 import useWindowSize from "./useWindowSize";
 import useScrollJourney from "./useScrollJourney";
 import SolarOverlays from "./SolarOverlays";
@@ -205,23 +205,6 @@ const Home = () => {
               <Tooltip disableHoverableContent>
                 <TooltipTrigger asChild>
                   <Link
-                    aria-label="SVG Studio"
-                    to="/draw"
-                    className={cx(
-                      "icon-pill flex size-12 items-center justify-center rounded-full p-1",
-                      isMedium && "order-1",
-                    )}
-                  >
-                    <Wand2 size={20} />
-                  </Link>
-                </TooltipTrigger>
-                <TooltipContent>
-                  <p>SVG Studio</p>
-                </TooltipContent>
-              </Tooltip>
-              <Tooltip disableHoverableContent>
-                <TooltipTrigger asChild>
-                  <Link
                     aria-label="Artifacts"
                     to="/shop"
                     className={cx(
@@ -233,7 +216,7 @@ const Home = () => {
                   </Link>
                 </TooltipTrigger>
                 <TooltipContent>
-                  <p>Artifacts</p>
+                  <p>Artifacts by Andy Shop — My 3d Printed Goods</p>
                 </TooltipContent>
               </Tooltip>
               <Tooltip
