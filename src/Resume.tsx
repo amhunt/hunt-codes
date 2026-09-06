@@ -11,6 +11,8 @@ import {
 } from "lucide-react";
 import { Link } from "react-router-dom";
 import useWindowSize from "./useWindowSize";
+import useScrollJourney from "./useScrollJourney";
+import { JOURNEY_STOPS } from "./scrollTransition";
 import LifeTimeline from "./LifeTimeline";
 import ZipVideoMoon from "./ZipVideoMoon";
 import { ZIP_BLOG_POST_URL } from "./workLinks";
@@ -124,6 +126,10 @@ const WorkCardBody = ({
 // leftward over the first SLIDE_RANGE_PX of the container's scroll
 const SLIDE_RANGE_PX = 100;
 const SLIDE_DISTANCE_PX = 128; // the old Tailwind -translate-x-32
+/** How far back toward /home (in journey stops, 0..1) the panel stays
+ *  solid, and where it has fully receded */
+const SCRUB_FADE_START = 0.05;
+const SCRUB_FADE_END = 0.5;
 
 const Resume = () => {
   const [opacity, setOpacity] = useState(false);
@@ -249,6 +255,41 @@ const Resume = () => {
     return () => clearTimeout(timer);
   }, []);
 
+  // The way back: scrolling up from the very top of the resume scrubs the
+  // camera back toward /home, the same journey that brought a scroller
+  // here (useScrollJourney's scroller gate keeps every other scroll
+  // native). The panel and the life bar recede with the scrub — solid for
+  // the first nudge, gone by halfway — written straight to the elements
+  // each frame, with their fade transitions switched off so they track
+  // the wheel rather than lag it. Inside the solid band nothing is
+  // written at all: the elements keep their stylesheet state (the mount
+  // fade, .video-hidden), so a change of heart that settles the journey
+  // back here hands them straight back. `data-receding` lets App.scss
+  // take the invisible chrome out of hit-testing and hide the scrollbar.
+  const scrollerRef = useRef<HTMLElement>(null);
+  const panelRef = useRef<HTMLDivElement>(null);
+  const timelineRef = useRef<HTMLDivElement>(null);
+  const recedeWithScrub = useCallback((progress: number) => {
+    const away = JOURNEY_STOPS.about - progress;
+    const fade =
+      (away - SCRUB_FADE_START) / (SCRUB_FADE_END - SCRUB_FADE_START);
+    const receding = fade > 0;
+    const opacity = Math.max(0, 1 - fade);
+    for (const el of [panelRef.current, timelineRef.current]) {
+      if (!el) continue;
+      el.style.transition = receding ? "none" : "";
+      el.style.opacity = receding ? String(opacity) : "";
+      el.toggleAttribute("data-receding", receding);
+    }
+    scrollerRef.current?.toggleAttribute("data-receding", receding);
+  }, []);
+  useScrollJourney(JOURNEY_STOPS.about, {
+    scroller: scrollerRef,
+    // A wheel over the playing reel must not carry the visitor off
+    enabled: !videoOpen,
+    onScrub: recedeWithScrub,
+  });
+
   return (
     <>
       {/* On phones the Home link takes the same corner slot and sizing as
@@ -266,6 +307,7 @@ const Resume = () => {
         </div>
       )}
       <main
+        ref={scrollerRef}
         className="resume-container"
         style={{ opacity: opacity ? 1 : 0 }}
         onScroll={handleScroll}
@@ -289,6 +331,7 @@ const Resume = () => {
           full width, and once it goes sticky that invisible strip rides
           over the resume and steals clicks from the text under it. */}
         <div
+          ref={panelRef}
           className={cx("resume-inner-container", videoOpen && "video-hidden")}
         >
           {/* md and up: pinned at its rest height (sticky top matches each
@@ -498,7 +541,7 @@ const Resume = () => {
       </main>
       {/* Outside <main> so it stays pinned to the bottom of the screen
           while the résumé scrolls behind it */}
-      <LifeTimeline visible={opacity} />
+      <LifeTimeline ref={timelineRef} visible={opacity} />
     </>
   );
 };

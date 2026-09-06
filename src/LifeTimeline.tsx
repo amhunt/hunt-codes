@@ -177,7 +177,15 @@ const FUTURE_KEY = "future";
 const ariaLabel = ({ title, org, dates }: Blurb) =>
   [title, org, dates].filter(Boolean).join(", ");
 
-const LifeTimeline = ({ visible }: { visible: boolean }) => {
+const LifeTimeline = ({
+  visible,
+  ref,
+}: {
+  visible: boolean;
+  /** The bar's root — Resume fades it along with the panel while the
+   *  visitor scrubs the camera back toward /home */
+  ref?: React.Ref<HTMLDivElement>;
+}) => {
   // Widths are percentages, so the pixel width of the track is the only
   // thing that decides whether a label fits. Watched rather than read on
   // render: the bar spans the viewport and resizes without a re-render.
@@ -266,6 +274,7 @@ const LifeTimeline = ({ visible }: { visible: boolean }) => {
 
   return (
     <div
+      ref={ref}
       className={cx("life-timeline", !visible && "life-timeline--hidden")}
       role="group"
       aria-label="Timeline of my life"
