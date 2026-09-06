@@ -88,6 +88,8 @@ const App = () => {
 
   usePauseAudioOnHideEventListener();
 
+  const isSynthRoute = window.location.pathname === "/synth";
+
   // Tint the mobile browser chrome (iOS Safari tab bar, Android status
   // bar) to match the active palette; day matches the top of the
   // App-background_day gradient
@@ -132,7 +134,7 @@ const App = () => {
             included: the site starts muted, so the landing is where
             visitors look for the music; mounted once, app-wide, the track
             carries across routes. */}
-        <SpaceJamSwitch />
+        {isSynthRoute ? null : <SpaceJamSwitch />}
         <BadgeLink isNightMode={isNightMode} />
         {/* App-level so the windshield frame and warp flash survive the
             rides' mid-flight route hops (/home → /journey → /home) —

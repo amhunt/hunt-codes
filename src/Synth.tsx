@@ -296,8 +296,7 @@ const Synth = () => {
         );
       })}
       <div className="synth-hint">
-        drag a planet to shape the sound · A–L plays notes · the sun runs the
-        beat
+        drag planets to adjust the synth settings · A–L keys play notes
       </div>
     </div>
   );
