@@ -133,7 +133,11 @@ checks cover all of the above exploit payloads.
   SSM parameter, and CloudWatch logs. Its environment sets
   `GENERATION_MODEL` (and may set `GENERATION_REASONING_EFFORT`), and those
   win over the defaults in `handler.mjs`. `deploy.sh` ships code only, and
-  `--environment` replaces the whole map, so a model change is:
+  `--environment` replaces the whole map, so a model change is the env update
+  below **and** `./server/deploy.sh` — the handler's request shape (token cap
+  name, reasoning fields) is model-specific, and a September 2026 outage was
+  exactly this: the env moved to gpt-5.6-terra while the deployed code still
+  sent gpt-4o's `max_tokens`, which the new model rejects with a 400.
 
   ```sh
   aws lambda update-function-configuration --profile andrew --region us-west-2 \
@@ -153,7 +157,8 @@ checks cover all of the above exploit payloads.
 
 - CloudFront: origin `draw-api` (the Function URL, 60s read timeout — the
   ceiling on generation time) + behavior `/api/*` with the managed
-  CachingDisabled + AllViewerExceptHostHeader policies, all methods.
+  CachingDisabled cache policy and the custom `hunt-codes-api-viewer-geo`
+  origin request policy (see "Why the per-visitor key isn't `x-forwarded-for`"), all methods.
 
 ## Deploying changes
 
