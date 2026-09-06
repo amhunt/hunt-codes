@@ -27,7 +27,7 @@ export const PUBLIC_ROUTES: PublicRoute[] = [
   { path: "/shop", title: "Artifacts | Andrew Hunt", priority: 0.5 },
   {
     path: "/projects-and-toys",
-    title: "Projects & Toys | Andrew Hunt",
+    title: "Projects / Toys | Andrew Hunt",
     priority: 0.5,
   },
 ];

@@ -216,7 +216,7 @@ const Home = () => {
                   </Link>
                 </TooltipTrigger>
                 <TooltipContent>
-                  <p>Artifacts by Andy Shop — My 3d Printed Goods</p>
+                  <p>Artifacts by Andy Shop — 3d Printed Goods</p>
                 </TooltipContent>
               </Tooltip>
               <Tooltip

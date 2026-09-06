@@ -130,8 +130,8 @@ const ProjectsAndToys = () => {
         </Link>
       </div>
       <main className={cx("projects-caption", captionShown && "show")}>
-        <h1>projects &amp; toys</h1>
-        <p>things I&rsquo;ve made — poke the satellite.</p>
+        <h1>Projects & toys</h1>
+        <p>Things I&rsquo;ve made - some for work, some for fun.</p>
       </main>
       {videoOpen ? (
         // While the reel plays the overlays are unmounted — BodyAnchors
