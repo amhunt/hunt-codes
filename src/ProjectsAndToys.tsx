@@ -45,8 +45,8 @@ import { ZIP_BLOG_POST_URL } from "./workLinks";
 const CAPTION_DELAY_MS = 2400;
 
 const PART_TOOLTIP = {
-  scroll: "Zip blog post",
-  screen: "Zip launch video",
+  scroll: "Zip - Engineering Blog Post",
+  screen: "Zip - Internal Brand Launch Video",
   pen: "SVG Studio",
   vase: "3D Print Store",
 } as const satisfies Record<SatellitePart, string>;
@@ -191,7 +191,7 @@ const ProjectsAndToys = () => {
                     type="button"
                     id={asteroidAnchorId("synthpad")}
                     className="satellite-link"
-                    aria-label="Space jam studio"
+                    aria-label="Space Synth"
                     onClick={() => {
                       ensureAudio();
                       startSynthJourney();
@@ -217,7 +217,7 @@ const ProjectsAndToys = () => {
                   </button>
                 </TooltipTrigger>
                 <TooltipContent updatePositionStrategy="always">
-                  <p>Space jam studio</p>
+                  <p>Space Synth</p>
                 </TooltipContent>
               </Tooltip>
             </TooltipProvider>

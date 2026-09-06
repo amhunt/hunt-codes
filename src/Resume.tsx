@@ -391,7 +391,7 @@ const Resume = () => {
               <Link className="work-card" to="/synth">
                 <WorkCardBody
                   icon={<AudioWaveform size={20} />}
-                  title="Space jam studio"
+                  title="Space Synth"
                   subtitle="A playable synth in a second solar system: the planets are knobs, your keyboard is the keys"
                 />
               </Link>
