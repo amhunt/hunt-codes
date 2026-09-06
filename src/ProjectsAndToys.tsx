@@ -28,9 +28,10 @@ import { ZIP_BLOG_POST_URL } from "./workLinks";
  * /projects-and-toys: the Sputnik satellite up close. The page IS the 3D
  * scene — the camera swoops in from /home (CameraRig's satellite perch)
  * and the satellite's parts fade in as the links (Satellite.tsx): the
- * antenna cone opens the Zip blog post, the screen on its head plays the
- * Zip launch reel, the pen floating under the cone is the SVG Studio and
- * the vase standing on top is the 3D print store. The canvases take no
+ * scroll floating off its antenna tips opens the Zip blog post, the
+ * screen on its head plays the Zip launch reel, the pen floating under
+ * the cone is the SVG Studio and the vase standing on top is the 3D
+ * print store. The canvases take no
  * pointer input, so each part gets an invisible fixed overlay here that
  * BodyAnchors glues to its projection every frame, with the same pulsing
  * silhouette outline the other link bodies use (`.satellite-link` in
@@ -44,7 +45,7 @@ import { ZIP_BLOG_POST_URL } from "./workLinks";
 const CAPTION_DELAY_MS = 2400;
 
 const PART_TOOLTIP = {
-  antenna: "Zip blog post",
+  scroll: "Zip blog post",
   screen: "Zip launch video",
   pen: "SVG Studio",
   vase: "3D Print Store",
@@ -138,10 +139,8 @@ const ProjectsAndToys = () => {
         <ZipVideoPopover onClose={() => setVideoOpen(false)} />
       ) : (
         <>
-          {/* Antenna first, the head parts after it: the cone's circle is
-              the biggest, so DOM order lets the small targets win where
-              they overlap */}
-          <PartLink part="antenna">
+          {/* The scroll (the blog post), floating off the antenna tips */}
+          <PartLink part="scroll">
             {({ outline, ...props }) => (
               <a
                 {...props}

@@ -63,14 +63,13 @@ const asteroidConfig = (asteroid: SolarPlanetConfig): BodyAnchorConfig => ({
 
 /** The satellite's part links on /projects-and-toys: Satellite publishes
  *  each part's world center per frame (satellitePartState — the parts
- *  ride its rig orientation). Sized to the part: the head parts get a
- *  roomy circle, the antenna a tighter one so it stays clear of the head
- *  (the cone is long and thin; its hover outline shows the true shape). */
+ *  ride its rig orientation). Each gets a roomy circle around its rough
+ *  extent (the hover outline shows the true shape). */
 const satellitePartConfig = (part: SatellitePart): BodyAnchorConfig => ({
   domId: satellitePartAnchorId(part),
   position: (_t, out) => out.copy(satellitePartState[part].position),
   radius: satellitePartState[part].radius,
-  ringScale: part === "antenna" ? 1.2 : 1.6,
+  ringScale: 1.6,
   minSizePx: 44,
   fadeInOnArrival: true,
 });

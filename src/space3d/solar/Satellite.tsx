@@ -21,7 +21,7 @@ import {
 import { writeSilhouette } from "./outline";
 import { createVideoScreenTexture } from "../textures";
 import { hoverState } from "../../solarHover";
-import { applyGoldShimmer, createShimmerUniforms } from "./goldShimmer";
+import { applyShimmer, createShimmerUniforms } from "./goldShimmer";
 import InteractiveGlow from "./InteractiveGlow";
 
 /**
@@ -30,12 +30,15 @@ import InteractiveGlow from "./InteractiveGlow";
  * opposite the cone. On /home the whole body is one link — to
  * /projects-and-toys — reusing the asteroid link plumbing (BodyAnchors
  * overlay, hover freeze/brighten/outline, landing fade) via the same
- * config. On /projects-and-toys the camera closes in (CameraRig's
- * satellite perch) and the body's PARTS become the links: the antenna
- * cone (the Zip blog post), a little video screen set into the head (the
- * Zip launch reel), a pen floating under the cone (SVG Studio) and a
- * mid-century vase standing on top of the head (/shop, the 3D print
- * store). The parts exist for that view only — they fade in on the way
+ * config. On /home a wave of energy also washes over the whole body
+ * every few seconds — a purple band (goldShimmer.ts) travelling from the
+ * beacon down the antenna cone, as if it were transmitting — so the one
+ * link out here reads as alive. On /projects-and-toys the camera closes
+ * in (CameraRig's satellite perch) and the body's PARTS become the links:
+ * a paper scroll floating off the antenna tips (the Zip blog post), a
+ * little video screen set into the head (the Zip launch reel), a pen
+ * floating under the cone (SVG Studio) and a mid-century vase standing
+ * on top of the head (/shop, the 3D print store). The parts exist for that view only — they fade in on the way
  * there and out on the way back — and each gets the Earth treatment on
  * hover: brighten, pulsing silhouette outline, an always-on halo. A gold
  * glint also sweeps across the parts every few seconds (goldShimmer.ts)
@@ -52,8 +55,8 @@ import InteractiveGlow from "./InteractiveGlow";
  * live in a "presentation" frame whose +Z faces the close-up perch and
  * whose +Y is that view's screen-up (satelliteViewFrame, the same
  * function CameraRig perches with), so their layout is designed in screen
- * terms — screen lower right, vase on top, pen under the cone — and lands
- * facing the camera by construction.
+ * terms — screen lower right, vase on top, pen under the cone, scroll
+ * off the tips — and lands facing the camera by construction.
  */
 
 const FADE_IN_SECONDS = 3;
@@ -89,6 +92,21 @@ const SHIMMER_SPAN_RADII = 2;
 const SHIMMER_HALF_WIDTH_RADII = 0.35;
 const SHIMMER_STRENGTH = 0.5;
 const SHIMMER_STATIC_STRENGTH = 0.12;
+
+/** The /home energy wave (goldShimmer.ts too, a second band): one pulse
+ *  every PERIOD, running the length of the body along the leg axis —
+ *  from just past the beacon to just past the antenna tips — in SWEEP
+ *  seconds, then resting off the body until the next. It follows the
+ *  landing fade and eases away toward the close-up (the parts there
+ *  carry the gold glint instead). Under reduced motion it parks over
+ *  the body as a faint, steady tint. */
+const WAVE_PERIOD_SECONDS = 3.5;
+const WAVE_SWEEP_SECONDS = 1.1;
+const WAVE_HALF_WIDTH_RADII = 0.4;
+const WAVE_STRENGTH = 0.75;
+const WAVE_STATIC_STRENGTH = 0.12;
+const WAVE_COLOR = "#9e80f9";
+const WAVE_EASE_SECONDS = 0.6;
 
 /** The vase's silhouette — a LatheGeometry profile, [radius, height] in
  *  units of the head's radius, foot to lip: a low round belly drawn up
@@ -133,6 +151,36 @@ const PEN_CAP_LENGTH = 0.34;
 const PEN_BOB = 0.05;
 const PEN_ROCK = 0.06;
 
+/** The scroll (the Zip blog post) floats off the antenna tips, upper
+ *  screen-right of the head, in the presentation frame like the pen: a
+ *  sheet of parchment unrolled between two rolls on wooden dowels, a
+ *  few lines of ink on its face. Its center in head radii from the
+ *  head's center and its slant (rad, a roll about Z); the dimensions are
+ *  head radii, the sheet's width along X and its height along Y. It
+ *  sits inside the tips' reach, so it stays in frame wherever they do. */
+const SCROLL_CENTER = { x: 3.25, y: 0.8, z: 0.1 };
+const SCROLL_SLANT = -0.18;
+const SCROLL_WIDTH = 0.9;
+const SCROLL_HEIGHT = 0.7;
+const SCROLL_SHEET_THICKNESS = 0.025;
+const SCROLL_ROLL_RADIUS = 0.1;
+const SCROLL_DOWEL_RADIUS = 0.04;
+const SCROLL_DOWEL_LENGTH = 1.2;
+/** Ink lines down the sheet: [width, y] in head radii (the first is a
+ *  short title line) */
+const SCROLL_INK_LINES: [number, number][] = [
+  [0.36, 0.2],
+  [0.6, 0.08],
+  [0.6, -0.04],
+  [0.5, -0.16],
+];
+const SCROLL_INK_HEIGHT = 0.03;
+const SCROLL_BOB = 0.04;
+const SCROLL_ROCK = 0.05;
+/** The scroll's self-glow (in its own colors), resting and hovered */
+const SCROLL_BASE_EMISSIVE = 0.5;
+const SCROLL_HOVER_EMISSIVE = 1.3;
+
 const prefersReducedMotion =
   typeof window !== "undefined" &&
   window.matchMedia?.("(prefers-reduced-motion: reduce)").matches;
@@ -142,12 +190,13 @@ const prefersReducedMotion =
  *  center, 90 = the limb), `azimuth` degrees counter-clockwise from
  *  screen-right. The antenna cone reaches off screen-right, the beacon
  *  (capping the head opposite it) peeks past the upper-left limb on its
- *  own, and the pen floats off the head (PEN_CENTER). The vase takes the
+ *  own, and the pen and the scroll float off the head (PEN_CENTER,
+ *  SCROLL_CENTER). The vase takes the
  *  top of the head — just short of the limb, so its foot visibly rests
  *  on the curve — where its axis is screen-up and it stands upright on
  *  screen; the screen fills the lower right. */
 const HEAD_PART_PLACEMENTS: Record<
-  Exclude<SatellitePart, "antenna" | "pen">,
+  Exclude<SatellitePart, "scroll" | "pen">,
   { polar: number; azimuth: number }
 > = {
   screen: { polar: 40, azimuth: -20 },
@@ -226,18 +275,22 @@ export default function Satellite({
   const vaseBody = useRef<THREE.Mesh>(null);
   const legMeshes = useRef<THREE.Mesh[]>([]);
   const penMeshes = useRef<THREE.Mesh[]>([]);
+  const scrollMeshes = useRef<THREE.Mesh[]>([]);
   const partAnchors = useRef<Record<SatellitePart, THREE.Object3D | null>>({
-    antenna: null,
+    scroll: null,
     screen: null,
     pen: null,
     vase: null,
   });
   const penPhase = useRef(0);
+  const scrollPhase = useRef(0);
   const opacity = useRef(visible ? 1 : 0);
   const partsOpacity = useRef(partsActive ? 1 : 0);
   /** parts × body opacity: what the part halos follow */
   const partsShown = useRef(partsOpacity.current * opacity.current);
   const roll = useRef(0);
+  /** 0..1: how much of the /home wave is showing (eased on/off) */
+  const waveWeight = useRef(bodyLink ? 1 : 0);
 
   const bodyRadius = config.radius * SATELLITE_BODY_RADIUS_RATIO;
   const legLength = config.radius * SATELLITE_LEG_LENGTH_RATIO;
@@ -250,6 +303,11 @@ export default function Satellite({
   const registerPen = useCallback((mesh: THREE.Mesh | null) => {
     if (mesh && !penMeshes.current.includes(mesh)) {
       penMeshes.current.push(mesh);
+    }
+  }, []);
+  const registerScroll = useCallback((mesh: THREE.Mesh | null) => {
+    if (mesh && !scrollMeshes.current.includes(mesh)) {
+      scrollMeshes.current.push(mesh);
     }
   }, []);
   const anchorRef = useMemo(
@@ -266,6 +324,7 @@ export default function Satellite({
   );
 
   const shimmer = useMemo(() => createShimmerUniforms(), []);
+  const wave = useMemo(() => createShimmerUniforms(WAVE_COLOR), []);
   const materials = useMemo(() => {
     const set = {
       body: new THREE.MeshStandardMaterial({
@@ -339,20 +398,52 @@ export default function Satellite({
         emissiveIntensity: VASE_BASE_EMISSIVE,
         transparent: true,
       }),
+      // The scroll floats on the shadowed side too: parchment, wooden
+      // dowels and ink in the site's purple, each glowing in its own
+      // color
+      parchment: new THREE.MeshStandardMaterial({
+        color: "#efe0bd",
+        metalness: 0,
+        roughness: 0.8,
+        emissive: "#efe0bd",
+        emissiveIntensity: SCROLL_BASE_EMISSIVE,
+        transparent: true,
+      }),
+      dowel: new THREE.MeshStandardMaterial({
+        color: "#8a5a34",
+        metalness: 0.05,
+        roughness: 0.7,
+        emissive: "#8a5a34",
+        emissiveIntensity: SCROLL_BASE_EMISSIVE * 0.8,
+        transparent: true,
+      }),
+      ink: new THREE.MeshStandardMaterial({
+        color: "#4a3a8c",
+        metalness: 0,
+        roughness: 0.9,
+        emissive: "#4a3a8c",
+        emissiveIntensity: SCROLL_BASE_EMISSIVE * 0.6,
+        transparent: true,
+      }),
     };
-    // The link parts carry the gold glint (the legs are the antenna link;
-    // the head itself is not a link, so it stays plain)
+    // The /home wave crosses the whole body; the link parts carry the
+    // gold glint (the body itself is not a link, so it gets no glint)
+    [set.body, set.leg, set.bulb].forEach((material) =>
+      applyShimmer(material, [wave]),
+    );
     [
-      set.leg,
       set.bezel,
       set.display,
       set.penBarrel,
       set.penCap,
       set.penSteel,
       set.vase,
-    ].forEach((material) => applyGoldShimmer(material, shimmer));
+      set.parchment,
+      set.dowel,
+      set.ink,
+    ].forEach((material) => applyShimmer(material, [shimmer]));
     return set;
-  }, [shimmer]);
+  }, [shimmer, wave]);
   const bodyMaterials = useMemo(
     () => [materials.body, materials.leg, materials.bulb],
     [materials],
@@ -365,6 +456,9 @@ export default function Satellite({
       materials.penCap,
       materials.penSteel,
       materials.vase,
+      materials.parchment,
+      materials.dowel,
+      materials.ink,
     ],
     [materials],
   );
@@ -405,10 +499,6 @@ export default function Satellite({
       }),
     [bodyRadius, legLength],
   );
-  /** The antenna link's anchor: the cone's midpoint, on its axis */
-  const antennaAxial =
-    (bodyRadius * 0.7 + legLength / 2) * Math.cos(SATELLITE_LEG_TILT);
-
   // Head parts, posed in the presentation frame (see HEAD_PART_PLACEMENTS)
   const poses = useMemo(() => {
     const screenDir = discDirection(HEAD_PART_PLACEMENTS.screen);
@@ -519,10 +609,7 @@ export default function Satellite({
         (target - material.emissiveIntensity) * ease;
     };
     glowTo(materials.body, bodyHovered ? HOVER_EMISSIVE : BASE_EMISSIVE);
-    glowTo(
-      materials.leg,
-      bodyHovered || partHovered === "antenna" ? HOVER_EMISSIVE : BASE_EMISSIVE,
-    );
+    glowTo(materials.leg, bodyHovered ? HOVER_EMISSIVE : BASE_EMISSIVE);
     glowTo(materials.bezel, partHovered === "screen" ? 0.6 : 0);
     materials.display.color.lerp(
       partHovered === "screen" ? HOVER_TINT : PLAIN_TINT,
@@ -537,6 +624,11 @@ export default function Satellite({
       materials.vase,
       partHovered === "vase" ? VASE_HOVER_EMISSIVE : VASE_BASE_EMISSIVE,
     );
+    const scrollGlow =
+      partHovered === "scroll" ? SCROLL_HOVER_EMISSIVE : SCROLL_BASE_EMISSIVE;
+    glowTo(materials.parchment, scrollGlow);
+    glowTo(materials.dowel, scrollGlow * 0.8);
+    glowTo(materials.ink, scrollGlow * 0.6);
 
     // The pen drifts — a slow bob and a rock of its slant — frozen while
     // hovered so the outline is cut from a still pose (and held still
@@ -553,6 +645,20 @@ export default function Satellite({
         PEN_CENTER.z * bodyRadius,
       );
       pen.rotation.z = PEN_SLANT + Math.sin(phase * 0.8) * PEN_ROCK;
+    }
+    // The scroll drifts the same way, on its own beat
+    const scroll = partAnchors.current.scroll;
+    if (scroll) {
+      if (partHovered !== "scroll" && !prefersReducedMotion) {
+        scrollPhase.current += delta;
+      }
+      const phase = scrollPhase.current + 2;
+      scroll.position.set(
+        SCROLL_CENTER.x * bodyRadius,
+        (SCROLL_CENTER.y + Math.sin(phase * 1.1) * SCROLL_BOB) * bodyRadius,
+        SCROLL_CENTER.z * bodyRadius,
+      );
+      scroll.rotation.z = SCROLL_SLANT + Math.sin(phase * 0.7) * SCROLL_ROCK;
     }
 
     // The gold glint: slide the band along the screen diagonal (camera
@@ -578,6 +684,34 @@ export default function Satellite({
         shimmer.halfWidth.value = config.radius * SHIMMER_HALF_WIDTH_RADII;
         shimmer.strength.value = SHIMMER_STRENGTH * partsShown.current;
       }
+
+      // The /home energy wave: a band sliding along the leg axis, beacon
+      // to antenna tips, clear of the body at both ends of its run
+      const waveStep = delta / WAVE_EASE_SECONDS;
+      waveWeight.current = THREE.MathUtils.clamp(
+        waveWeight.current + (bodyLink ? waveStep : -waveStep),
+        0,
+        1,
+      );
+      wave.origin.value.copy(shimmer.origin.value);
+      wave.direction.value.copy(legsDir);
+      const waveShown = waveWeight.current * opacity.current;
+      if (prefersReducedMotion) {
+        wave.offset.value = 0;
+        wave.halfWidth.value = config.radius * 20;
+        wave.strength.value = WAVE_STATIC_STRENGTH * waveShown;
+      } else {
+        const halfWidth = config.radius * WAVE_HALF_WIDTH_RADII;
+        const start = -(bodyRadius * 1.2 + halfWidth);
+        const end = bodyRadius * 0.7 + legLength + halfWidth;
+        const sweep = Math.min(
+          (t % WAVE_PERIOD_SECONDS) / WAVE_SWEEP_SECONDS,
+          1,
+        );
+        wave.offset.value = THREE.MathUtils.lerp(start, end, sweep);
+        wave.halfWidth.value = halfWidth;
+        wave.strength.value = WAVE_STRENGTH * waveShown;
+      }
     }
 
     // Publish the parts' world centers for their DOM overlays
@@ -599,8 +733,8 @@ export default function Satellite({
     }
     if (partHovered) {
       const meshes =
-        partHovered === "antenna"
-          ? legMeshes.current
+        partHovered === "scroll"
+          ? scrollMeshes.current
           : partHovered === "pen"
             ? penMeshes.current
             : [
@@ -655,16 +789,6 @@ export default function Satellite({
         </mesh>
         {/* The /projects-and-toys link parts (faded out elsewhere) */}
         <group ref={parts}>
-          {/* The antenna cone IS the blog link: just its anchor + halo
-              here, the legs themselves roll with the body above */}
-          <group ref={anchorRef.antenna} position={[0, 0, antennaAxial]}>
-            <InteractiveGlow
-              radius={legLength * 0.22}
-              opacityRef={partsShown}
-              enabled={partsActive}
-              strength={0.35}
-            />
-          </group>
           <group ref={present}>
             {/* The video screen: bezel + self-lit display */}
             <group
@@ -803,6 +927,93 @@ export default function Satellite({
               </mesh>
               <InteractiveGlow
                 radius={satellitePartState.pen.radius}
+                opacityRef={partsShown}
+                enabled={partsActive}
+                strength={0.35}
+              />
+            </group>
+            {/* The scroll (the Zip blog post), floating off the antenna
+                tips: a parchment sheet unrolled between two rolls on
+                wooden dowels (their axes along X, so the rolls lie
+                across the top and bottom edges), ink lines on its face.
+                The frame loop drives its pose (idle bob and rock) and
+                the group doubles as the anchor. */}
+            <group ref={anchorRef.scroll}>
+              <mesh ref={registerScroll} material={materials.parchment}>
+                <boxGeometry
+                  args={[
+                    SCROLL_WIDTH * bodyRadius,
+                    SCROLL_HEIGHT * bodyRadius,
+                    SCROLL_SHEET_THICKNESS * bodyRadius,
+                  ]}
+                />
+              </mesh>
+              {[1, -1].map((end) => (
+                <React.Fragment key={end}>
+                  {/* the roll: parchment curled around the dowel */}
+                  <mesh
+                    ref={registerScroll}
+                    material={materials.parchment}
+                    position={[
+                      0,
+                      ((end * SCROLL_HEIGHT) / 2) * bodyRadius,
+                      SCROLL_ROLL_RADIUS * 0.6 * bodyRadius,
+                    ]}
+                    rotation={[0, 0, Math.PI / 2]}
+                  >
+                    <cylinderGeometry
+                      args={[
+                        SCROLL_ROLL_RADIUS * bodyRadius,
+                        SCROLL_ROLL_RADIUS * bodyRadius,
+                        SCROLL_WIDTH * 1.04 * bodyRadius,
+                        16,
+                      ]}
+                    />
+                  </mesh>
+                  {/* the dowel, poking out past both ends of the roll */}
+                  <mesh
+                    ref={registerScroll}
+                    material={materials.dowel}
+                    position={[
+                      0,
+                      ((end * SCROLL_HEIGHT) / 2) * bodyRadius,
+                      SCROLL_ROLL_RADIUS * 0.6 * bodyRadius,
+                    ]}
+                    rotation={[0, 0, Math.PI / 2]}
+                  >
+                    <cylinderGeometry
+                      args={[
+                        SCROLL_DOWEL_RADIUS * bodyRadius,
+                        SCROLL_DOWEL_RADIUS * bodyRadius,
+                        SCROLL_DOWEL_LENGTH * bodyRadius,
+                        10,
+                      ]}
+                    />
+                  </mesh>
+                </React.Fragment>
+              ))}
+              {/* ink lines, sitting just proud of the sheet's face */}
+              {SCROLL_INK_LINES.map(([width, y], i) => (
+                <mesh
+                  key={i}
+                  material={materials.ink}
+                  position={[
+                    (width / 2 - SCROLL_WIDTH * 0.36) * bodyRadius,
+                    y * bodyRadius,
+                    SCROLL_SHEET_THICKNESS * 0.75 * bodyRadius,
+                  ]}
+                >
+                  <boxGeometry
+                    args={[
+                      width * bodyRadius,
+                      SCROLL_INK_HEIGHT * bodyRadius,
+                      SCROLL_SHEET_THICKNESS * 0.5 * bodyRadius,
+                    ]}
+                  />
+                </mesh>
+              ))}
+              <InteractiveGlow
+                radius={satellitePartState.scroll.radius}
                 opacityRef={partsShown}
                 enabled={partsActive}
                 strength={0.35}
