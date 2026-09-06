@@ -16,7 +16,7 @@ see `sha256Hex` in `src/SvgGenerator.tsx`) or the origin signature fails.
 
 | Route | What |
 | --- | --- |
-| `POST /api/draw` | `{name, prompt}` → moderate → generate (gpt-4o) → validate SVG → store → `{id, name, prompt, svg, createdAt}` |
+| `POST /api/draw` | `{name, prompt}` → moderate → generate (`GENERATION_MODEL`) → validate SVG → store → `{id, name, prompt, svg, createdAt}` |
 | `GET /api/drawings` | 12 most recent drawings (gallery) |
 | `GET /api/drawings/{id}` | one drawing; **410** when missing (CloudFront rewrites 403/404 into the SPA's index.html, so those statuses are unusable for the API) |
 | `GET /api/shop` | Andrew's active Etsy listings for `/shop` — `{shop, listings, fetchedAt, stale?}` (see "Etsy shop" below) |
@@ -49,9 +49,10 @@ stored or returned.
 
 - **Moderation first**: every `name + prompt` goes through OpenAI's free
   `omni-moderation-latest` endpoint *before* any billable model call.
-  Flagged input never reaches gpt-4o. Moderation errors fail closed.
-- **Safety identifier**: completions carry `user: hc-<hashed ip>` so OpenAI
-  attributes any abuse to the end user, not the account.
+  Flagged input never reaches the generation model. Moderation errors
+  fail closed.
+- **Safety identifier**: completions carry `safety_identifier: hc-<hashed ip>`
+  so OpenAI attributes any abuse to the end user, not the account.
 - **Rate limits** (env-tunable): `PER_IP_HOURLY_LIMIT` (default 10) and
   `DAILY_GLOBAL_LIMIT` (default 150 — the hard daily spend ceiling).
   DynamoDB atomic counters with TTL. `DAILY_GLOBAL_LIMIT` is the one that
@@ -116,7 +117,16 @@ checks cover all of the above exploit payloads.
 
 - Lambda `hunt-codes-draw-api` (nodejs22.x, 512MB, 65s timeout) + public
   Function URL; role `hunt-codes-draw-api-role` scoped to the table, the
-  SSM parameter, and CloudWatch logs.
+  SSM parameter, and CloudWatch logs. Its environment sets
+  `GENERATION_MODEL` (and may set `GENERATION_REASONING_EFFORT`), and those
+  win over the defaults in `handler.mjs`. `deploy.sh` ships code only, and
+  `--environment` replaces the whole map, so a model change is:
+
+  ```sh
+  aws lambda update-function-configuration --profile andrew --region us-west-2 \
+    --function-name hunt-codes-draw-api --no-cli-pager \
+    --environment 'Variables={GENERATION_MODEL=gpt-5.6-terra,GENERATION_REASONING_EFFORT=low,TABLE_NAME=hunt-codes-draw,OPENAI_KEY_PARAM=/hunt-codes/openai-api-key,DAILY_GLOBAL_LIMIT=150,PER_IP_HOURLY_LIMIT=10,ETSY_SHOP_ID=62597361,ETSY_SHOP_NAME=ArtifactAndy}'
+  ```
 - DynamoDB `hunt-codes-draw` (on-demand, TTL on `expiresAt`): counter items
   (`ip#…`, `budget#…`) expire; drawings (`drawing#<id>`) live forever and
   are listed via GSI `gsi1` (`gsi1pk="drawings"`, `gsi1sk=createdAt#id`).

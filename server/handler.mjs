@@ -11,10 +11,11 @@
  * - The OpenAI key lives in SSM SecureString `/hunt-codes/openai-api-key`;
  *   it is fetched once per container and never logged.
  * - Every prompt (and name) passes OpenAI's free moderation endpoint
- *   BEFORE touching a billable model — flagged input never reaches
- *   gpt-4o, which is what keeps the OpenAI account in good standing.
- *   Completions also carry a hashed-IP `user` identifier so any abuse
- *   that slips through is attributed to the end user, not the account.
+ *   BEFORE touching a billable model — flagged input never reaches the
+ *   generation model, which is what keeps the OpenAI account in good
+ *   standing. Completions also carry a hashed-IP safety identifier so
+ *   any abuse that slips through is attributed to the end user, not the
+ *   account.
  * - Abuse guards: per-viewer hourly limit + global daily budget, both
  *   plain DynamoDB counters with TTL. Fail closed on moderation errors.
  * - Generated SVG is checked against a tag/attribute allowlist before
@@ -45,7 +46,14 @@ const OPENAI_KEY_PARAM =
   process.env.OPENAI_KEY_PARAM || "/hunt-codes/openai-api-key";
 const PER_IP_HOURLY_LIMIT = Number(process.env.PER_IP_HOURLY_LIMIT || 10);
 const DAILY_GLOBAL_LIMIT = Number(process.env.DAILY_GLOBAL_LIMIT || 150);
-const GENERATION_MODEL = process.env.GENERATION_MODEL || "gpt-4o";
+// The Lambda's own environment also sets GENERATION_MODEL (see
+// server/README.md) and that value wins over this default — change both.
+const GENERATION_MODEL = process.env.GENERATION_MODEL || "gpt-5.6-terra";
+// GPT-5-series reasoning budget: "low" is enough to plan a composition and
+// keeps a drawing inside the 50s deadline; "none" is the escape hatch if a
+// future model turns out slower.
+const GENERATION_REASONING_EFFORT =
+  process.env.GENERATION_REASONING_EFFORT || "low";
 
 // Etsy seller-app credentials live in SSM as `keystring:shared_secret` —
 // Etsy's v3 API rejects the keystring alone ("Shared secret is required").
@@ -66,19 +74,32 @@ const PROMPT_MAX = 300;
 const SVG_MAX_BYTES = 150_000; // DynamoDB item ceiling is 400KB; stay well under
 const GALLERY_LIMIT = 12;
 
-// Same artist brief the frontend used when the key was browser-side.
-const SYSTEM_PROMPT = `You are an SVG artist. Create a beautiful, clean SVG illustration based on the user's description.
+// The artist brief. Written for a flat-vector look: the old brief asked
+// for stroked <path>s "for the drawing animation", but the page floats
+// whole shapes (buildAnimationCSS in src/SvgGenerator.tsx), it never
+// reveals strokes — that rule only bought coloring-book outlines. Every
+// element named here is on the allowlist below; <text>/<style> are
+// forbidden there too and unquoted attribute values are rejected, so the
+// brief spells those out rather than letting the model find out.
+const SYSTEM_PROMPT = `You are an illustrator producing polished flat-vector artwork as SVG.
 
-Rules:
-- Return ONLY valid SVG markup, no explanation, no markdown code fences, no other text
-- Use viewBox="0 0 400 400"
-- Prefer <path> elements with explicit stroke attributes for optimal drawing animation
-- Use vibrant, appealing colors that look good on a dark (#000) background
-- Keep the design clean, minimal, and recognizable
-- Set stroke-width between 2-4px
-- Include both stroke and fill on path elements where appropriate
-- Make the illustration detailed enough to be interesting but not overly complex
-- Do NOT use <text> elements`;
+Output
+- Reply with the SVG markup only: no explanation, no markdown fences, no XML declaration, no comments.
+- Root element: <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 400 400">.
+- Build from basic shapes (path, circle, ellipse, rect, polygon, polyline, line) and <g> groups, with <defs> holding any linearGradient, radialGradient, clipPath or mask. feGaussianBlur and feDropShadow filters are available for glow and shadow.
+- Every attribute value must be in double quotes. Never use <text>, <style>, <image>, <script>, foreignObject, or any external reference.
+
+Composition
+- Fill the whole frame: begin with a background (a gradient rect or a simple scene) and layer everything else back to front.
+- One clear subject fills roughly 60-70% of the frame and reads as a silhouette at thumbnail size.
+- Wrap each distinct object (sky, moon, cat, rocket, ground) in its own <g>.
+- 20-50 shapes in total: enough detail to be charming, not so many that it turns to noise. The page gently floats each shape on its own, so keep related detail inside a few larger shapes rather than many tiny fragments.
+
+Style
+- Flat vector with depth: gradients for lighting and volume, opacity for atmosphere, a soft glow or shadow only where it sells the scene.
+- Prefer filled shapes. Use strokes only where a line is part of the design, never as an outline around every shape.
+- A palette of 4-6 harmonious colors plus one or two highlights. Favor luminous, saturated color over muddy midtones and avoid pure-black fills.
+- Keep coordinates to whole numbers and path data short.`;
 
 const ddb = new DynamoDBClient({});
 const ssm = new SSMClient({});
@@ -372,11 +393,20 @@ const generateSvg = async (prompt, apiKey, ipHash, budgetMs) => {
         { role: "system", content: SYSTEM_PROMPT },
         { role: "user", content: prompt },
       ],
-      max_tokens: 4096,
-      temperature: 0.8,
+      // Reasoning tokens count against this cap too, so it sits well above
+      // any drawing the brief asks for; `truncated` below still catches a
+      // runaway.
+      max_completion_tokens: 8192,
+      reasoning_effort: GENERATION_REASONING_EFFORT,
+      // With reasoning on, the GPT-5 series rejects any temperature but the
+      // default (400). Only the "none" escape hatch samples freely, and
+      // there markup wants a cooler draw than the 1.0 default.
+      ...(GENERATION_REASONING_EFFORT === "none" ? { temperature: 0.5 } : {}),
+      // The reply is markup, not prose.
+      verbosity: "low",
       // Hashed end-user identifier — OpenAI's recommended way to keep one
       // abusive visitor from reflecting on the whole account.
-      user: `hc-${ipHash}`,
+      safety_identifier: `hc-${ipHash}`,
     },
     apiKey,
     budgetMs,
@@ -502,6 +532,15 @@ const handleDraw = async (event) => {
     ));
   } catch (err) {
     if (isUnavailable(err)) return unavailableResponse(err);
+    // The token cap is generous, so the deadline is what usually cuts an
+    // over-ambitious drawing short — the visitor should hear "simpler",
+    // not just "again", or they retry the same doomed prompt.
+    if (err?.name === "TimeoutError") {
+      console.log(JSON.stringify({ event: "generation_timeout", ipHash }));
+      return json(502, {
+        error: "the robot ran out of time — try again, or ask for something simpler",
+      });
+    }
     console.error("generation error", err);
     return json(502, { error: "the robot's pen jammed — try again" });
   }
