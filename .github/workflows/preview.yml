@@ -9,6 +9,11 @@ name: Preview
 on:
   pull_request:
     branches: [master]
+    # `edited` is the activity type a base-branch retarget arrives as. A
+    # stacked PR whose parent just merged is retargeted to master without a
+    # push, so on the default types it never got a preview. Title/body
+    # edits are the same type; the job condition below skips those.
+    types: [opened, synchronize, reopened, edited]
 
 concurrency:
   group: preview-${{ github.event.pull_request.number }}
@@ -21,8 +26,12 @@ permissions:
 jobs:
   preview:
     name: Workers preview
-    # Fork PRs have no access to the API token; skip rather than fail.
-    if: github.event.pull_request.head.repo.full_name == github.repository
+    # Fork PRs have no access to the API token; skip rather than fail. Of
+    # the `edited` events, only a base change (payload carries
+    # `changes.base`) is worth a build.
+    if: >-
+      github.event.pull_request.head.repo.full_name == github.repository &&
+      (github.event.action != 'edited' || github.event.changes.base.ref.from != '')
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
