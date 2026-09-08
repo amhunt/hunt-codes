@@ -1429,7 +1429,10 @@ li > ul > li {
     width: unset;
     max-width: min(360px, calc(100vw - 40px));
     top: unset;
-    bottom: calc(184px + env(safe-area-inset-bottom, 0px));
+    // Low enough to leave Earth's ABOUT ME ring a clear band above the
+    // pills, high enough that the scrim's fade clears the scroll hint
+    // (bottom 76px + ~54px tall)
+    bottom: calc(144px + env(safe-area-inset-bottom, 0px));
     min-width: 300px;
     transform: unset;
     // Breathing room for the ::before scrim below
@@ -1491,9 +1494,9 @@ li > ul > li {
   .sm-screen-summary-line {
     position: fixed;
     // Tucked just under the "andrewhunt" name letters (their box ends
-    // ~104px down at iPhone widths); tracks the same safe-area shift as
+    // ~116px down at iPhone widths); tracks the same safe-area shift as
     // .nameTitle
-    top: calc(120px + env(safe-area-inset-top, 0px));
+    top: calc(128px + env(safe-area-inset-top, 0px));
     width: 100%;
     // Wide enough that the 14px availability line stays on one line at
     // 360px+; the 300px cap it used to carry (max-w-75) wrapped it, and
@@ -1522,6 +1525,9 @@ li > ul > li {
 
   .nameTitle {
     --name-inset: 28px;
+    // A touch lower than the desktop 40px: the corner link ("Back to
+    // orbit" / Home) sits right above the letters on a phone
+    top: calc(52px + env(safe-area-inset-top, 0px));
   }
 
   .App-gg-bridge {
