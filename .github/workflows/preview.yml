@@ -1,0 +1,65 @@
+name: Preview
+
+# Every PR gets a Cloudflare Workers preview of the `staging` env (the
+# andysartifacts.com Worker): a version is uploaded but NOT deployed, so the
+# live site is untouched, and its *.workers.dev preview URL is posted on the PR.
+# Needs the CLOUDFLARE_API_TOKEN secret (Workers Scripts:Edit) and the
+# CLOUDFLARE_ACCOUNT_ID repo variable.
+
+on:
+  pull_request:
+    branches: [master]
+
+concurrency:
+  group: preview-${{ github.event.pull_request.number }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+  pull-requests: write
+
+jobs:
+  preview:
+    name: Workers preview
+    # Fork PRs have no access to the API token; skip rather than fail.
+    if: github.event.pull_request.head.repo.full_name == github.repository
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - run: corepack enable
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: yarn
+      - run: yarn install --immutable
+      - run: yarn build
+
+      - name: Upload preview version
+        id: upload
+        uses: cloudflare/wrangler-action@v3
+        with:
+          apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          accountId: ${{ vars.CLOUDFLARE_ACCOUNT_ID }}
+          # The alias gives each PR a stable URL that follows its latest push.
+          command: versions upload --env staging --preview-alias pr-${{ github.event.pull_request.number }}
+
+      - name: Comment preview URL
+        uses: actions/github-script@v7
+        env:
+          OUTPUT: ${{ steps.upload.outputs.command-output }}
+        with:
+          script: |
+            const urls = [...new Set(process.env.OUTPUT.match(/https:\/\/[\w.-]+\.workers\.dev\S*/g) ?? [])];
+            const marker = "<!-- workers-preview -->";
+            const body = urls.length
+              ? `${marker}\n**Preview** (staging env, andysartifacts.com build):\n${urls.map((u) => `- ${u}`).join("\n")}\n\n_Updated for ${context.payload.pull_request.head.sha.slice(0, 7)}._`
+              : `${marker}\nPreview upload ran but no preview URL was found in the wrangler output; check the workflow log.`;
+            const { owner, repo } = context.repo;
+            const issue_number = context.payload.pull_request.number;
+            const { data: comments } = await github.rest.issues.listComments({ owner, repo, issue_number, per_page: 100 });
+            const existing = comments.find((c) => c.body?.startsWith(marker));
+            if (existing) {
+              await github.rest.issues.updateComment({ owner, repo, comment_id: existing.id, body });
+            } else {
+              await github.rest.issues.createComment({ owner, repo, issue_number, body });
+            }
