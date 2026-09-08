@@ -7,6 +7,7 @@ import {
   AudioWaveform,
   Clapperboard,
   PenLine,
+  Satellite,
   Wand2,
 } from "lucide-react";
 import { Link } from "react-router-dom";
@@ -385,7 +386,9 @@ const Resume = () => {
                 Zip reel the moon opens and the one published post — whose
                 card replaced the /home blog asteroid — first, then the two
                 toys built for this site (also linked from /home), tagged
-                "Silly" so nobody mistakes the synth for client work. */}
+                "Silly" so nobody mistakes the synth for client work, and
+                the satellite close-up, which below lg has no other way in
+                (the Sputnik link body sits out of /home's scene there). */}
             <div className="work-samples">
               <button
                 type="button"
@@ -425,6 +428,13 @@ const Resume = () => {
                   icon={<AudioWaveform size={20} />}
                   title="Space Synth"
                   subtitle="A playable synth in a second solar system: the planets are knobs, your keyboard is the keys"
+                />
+              </Link>
+              <Link className="work-card" to="/projects-and-toys">
+                <WorkCardBody
+                  icon={<Satellite size={20} />}
+                  title="Projects & creations"
+                  subtitle="Sputnik up close: its parts are the doors to everything else on this site, plus an 808 for the synth"
                 />
               </Link>
             </div>

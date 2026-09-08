@@ -40,6 +40,11 @@ const typedOptions = {
 // in their UA, so this matches the whole family
 const isChromium = navigator.userAgent.includes("Chrome");
 
+// Touch screens: the copy tooltip says "tap", and its 2s reset doesn't
+// consult :hover — iOS Safari leaves an element hovered after a tap, which
+// kept the tooltip open (with the idle text) until the next tap
+const isTouch = window.matchMedia?.("(hover: none)").matches ?? false;
+
 // The arrival swoop lands at 2s and the content fade runs a beat past it;
 // the hint follows once the page has settled
 const HINT_DELAY_MS = 3800;
@@ -103,7 +108,8 @@ const Home = () => {
       copyResetTimer.current = setTimeout(() => {
         setCopied(false);
         pinCopyTooltipOpen.current = false;
-        const isHovering = copyTriggerRef.current?.matches(":hover") ?? false;
+        const isHovering =
+          !isTouch && (copyTriggerRef.current?.matches(":hover") ?? false);
         setCopyTooltipOpen(isHovering);
       }, 2000);
     } catch (err) {
@@ -166,91 +172,103 @@ const Home = () => {
               default skip grace), like native toolbar tooltips */}
           <TooltipProvider delayDuration={TOOLTIP_DELAY_MS}>
             {/* On md the pills wrap into two rows: contact links (LinkedIn,
-                GitHub, mail) on top, the work sample (SVG Studio) pushed
-                underneath via `order`; max-w-38 = three 48px pills + gaps.
-                Everywhere else it's one row in DOM order. */}
+                GitHub, mail) on top, the shop pushed underneath via `order`
+                on its slot; max-w-38 = three 48px pills + gaps. Everywhere
+                else it's one row in DOM order. */}
+            {/* Tooltips never open from a touch pointer, so on phones each
+                pill also carries a caption — the only name the shopping bag
+                (the one non-universal icon) gets there */}
             <div
               className={cx(
-                "flex items-center justify-end gap-1",
+                "flex items-start justify-end gap-1",
                 isMedium && "flex-wrap max-w-38",
               )}
             >
-              <Tooltip disableHoverableContent>
-                <TooltipTrigger asChild>
-                  <a
-                    aria-label="LinkedIn"
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    href="https://www.linkedin.com/in/andrewmhunt/"
-                    className="icon-pill flex size-12 items-center justify-center rounded-full p-1"
-                  >
-                    <Linkedin size={22} />
-                  </a>
-                </TooltipTrigger>
-                <TooltipContent>
-                  <p>LinkedIn</p>
-                </TooltipContent>
-              </Tooltip>
-              <Tooltip disableHoverableContent>
-                <TooltipTrigger asChild>
-                  <a
-                    aria-label="GitHub"
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    href="https://www.github.com/amhunt"
-                    className="icon-pill flex size-12 items-center justify-center rounded-full p-1"
-                  >
-                    <GitHub size={22} />
-                  </a>
-                </TooltipTrigger>
-                <TooltipContent>
-                  <p>GitHub</p>
-                </TooltipContent>
-              </Tooltip>
-              <Tooltip disableHoverableContent>
-                <TooltipTrigger asChild>
-                  <Link
-                    aria-label="Artifacts"
-                    to="/shop"
-                    className={cx(
-                      "icon-pill flex size-12 items-center justify-center rounded-full p-1",
-                      isMedium && "order-1",
-                    )}
-                  >
-                    <ShoppingBag size={20} />
-                  </Link>
-                </TooltipTrigger>
-                <TooltipContent>
-                  <p>Artifacts by Andy Shop — 3D Printed Goods</p>
-                </TooltipContent>
-              </Tooltip>
-              <Tooltip
-                disableHoverableContent
-                open={copyTooltipOpen}
-                onOpenChange={handleCopyTooltipOpenChange}
-              >
-                <TooltipTrigger asChild>
-                  <button
-                    type="button"
-                    ref={copyTriggerRef}
-                    aria-label="Copy email address andrew@hunt.codes"
-                    onPointerDown={() => pinCopyTooltip()}
-                    onClick={() => void handleCopy()}
-                    className="icon-pill flex size-12 items-center justify-center rounded-full p-1"
-                  >
-                    <Mail size={22} />
-                  </button>
-                </TooltipTrigger>
-                <TooltipContent
-                  onPointerDownOutside={(e) => e.preventDefault()}
+              <span className="icon-pill-slot">
+                <Tooltip disableHoverableContent>
+                  <TooltipTrigger asChild>
+                    <a
+                      aria-label="LinkedIn"
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      href="https://www.linkedin.com/in/andrewmhunt/"
+                      className="icon-pill flex size-12 items-center justify-center rounded-full p-1"
+                    >
+                      <Linkedin size={22} />
+                    </a>
+                  </TooltipTrigger>
+                  <TooltipContent>
+                    <p>LinkedIn</p>
+                  </TooltipContent>
+                </Tooltip>
+                {isSmall && <span className="icon-pill-caption">LinkedIn</span>}
+              </span>
+              <span className="icon-pill-slot">
+                <Tooltip disableHoverableContent>
+                  <TooltipTrigger asChild>
+                    <a
+                      aria-label="GitHub"
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      href="https://www.github.com/amhunt"
+                      className="icon-pill flex size-12 items-center justify-center rounded-full p-1"
+                    >
+                      <GitHub size={22} />
+                    </a>
+                  </TooltipTrigger>
+                  <TooltipContent>
+                    <p>GitHub</p>
+                  </TooltipContent>
+                </Tooltip>
+                {isSmall && <span className="icon-pill-caption">GitHub</span>}
+              </span>
+              <span className={cx("icon-pill-slot", isMedium && "order-1")}>
+                <Tooltip disableHoverableContent>
+                  <TooltipTrigger asChild>
+                    <Link
+                      aria-label="Artifacts"
+                      to="/shop"
+                      className="icon-pill flex size-12 items-center justify-center rounded-full p-1"
+                    >
+                      <ShoppingBag size={20} />
+                    </Link>
+                  </TooltipTrigger>
+                  <TooltipContent>
+                    <p>Artifacts by Andy Shop — 3D Printed Goods</p>
+                  </TooltipContent>
+                </Tooltip>
+                {isSmall && <span className="icon-pill-caption">Shop</span>}
+              </span>
+              <span className="icon-pill-slot">
+                <Tooltip
+                  disableHoverableContent
+                  open={copyTooltipOpen}
+                  onOpenChange={handleCopyTooltipOpenChange}
                 >
-                  <p>
-                    {copied
-                      ? "Email copied!"
-                      : "andrew@hunt.codes — click to copy"}
-                  </p>
-                </TooltipContent>
-              </Tooltip>
+                  <TooltipTrigger asChild>
+                    <button
+                      type="button"
+                      ref={copyTriggerRef}
+                      aria-label="Copy email address andrew@hunt.codes"
+                      onPointerDown={() => pinCopyTooltip()}
+                      onClick={() => void handleCopy()}
+                      className="icon-pill flex size-12 items-center justify-center rounded-full p-1"
+                    >
+                      <Mail size={22} />
+                    </button>
+                  </TooltipTrigger>
+                  <TooltipContent
+                    onPointerDownOutside={(e) => e.preventDefault()}
+                  >
+                    <p>
+                      {copied
+                        ? "Email copied!"
+                        : `andrew@hunt.codes — ${isTouch ? "tap" : "click"} to copy`}
+                    </p>
+                  </TooltipContent>
+                </Tooltip>
+                {isSmall && <span className="icon-pill-caption">Email</span>}
+              </span>
             </div>
           </TooltipProvider>
         </div>
