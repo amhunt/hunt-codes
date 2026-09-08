@@ -1,6 +1,6 @@
 import * as THREE from "three";
 
-import { createShimmerUniforms, type ShimmerUniforms } from "./goldShimmer";
+import { createShimmerUniforms, type ShimmerUniforms } from "./shimmerBand";
 
 /**
  * The "this is clickable" energy wave: a purple band in the site's accent
@@ -8,7 +8,7 @@ import { createShimmerUniforms, type ShimmerUniforms } from "./goldShimmer";
  * transmitting. It is the resting affordance — it says a body is a link
  * before the cursor ever reaches it, and it rides alongside the hover
  * treatment rather than replacing it. Built on the shimmer band
- * (goldShimmer.ts), so it is folded into the body's own materials and
+ * (shimmerBand.ts), so it is folded into the body's own materials and
  * follows their true shape and alpha instead of being a separate mesh.
  *
  * The satellite pulses one down its leg axis on /home; Earth pulses one

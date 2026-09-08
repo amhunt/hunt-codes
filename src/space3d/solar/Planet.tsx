@@ -8,7 +8,7 @@ import { createPlanetTexture } from "../textures";
 import { hoverState } from "../../solarHover";
 import { EARTH_ABOUT_OUTLINE_ID } from "../../solarAnchorIds";
 import { writeSilhouette } from "./outline";
-import { applyShimmer } from "./goldShimmer";
+import { applyShimmer } from "./shimmerBand";
 import { createEnergyWave } from "./energyWave";
 import AboutRing from "./AboutRing";
 import InteractiveGlow from "./InteractiveGlow";

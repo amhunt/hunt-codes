@@ -1,18 +1,16 @@
 import * as THREE from "three";
 
 /**
- * A band of light that sweeps across the satellite (Satellite.tsx): the
- * gold glint over its link parts on /projects-and-toys — the "these are
- * clickable" tell, independent of the hover wash — and the purple energy
- * wave that washes over the whole body every few seconds on /home.
- * Rather than a separate mesh it is folded into each part's own material
- * — a shader hook adds a soft band to the lit color wherever the surface
- * crosses a plane sliding across the body — so the sweep follows every
- * part's true shape (the tapered legs, the pen's barrel, the vase's
- * curve) and is masked by the part's own alpha. One shared uniform set
- * drives every part a band covers, so it crosses the whole satellite as
- * a single sweep; a material can carry several bands (the legs take
- * both), each with its own uniforms.
+ * A band of light that sweeps across a body: the mechanism the energy
+ * wave (energyWave.ts) is built on. Rather than a separate mesh it is
+ * folded into each part's own material — a shader hook adds a soft band
+ * to the lit color wherever the surface crosses a plane sliding across
+ * the body — so the sweep follows every part's true shape (the
+ * satellite's tapered legs, the pen's barrel, the vase's curve, Earth's
+ * globe) and is masked by the part's own alpha. One shared uniform set
+ * drives every part a band covers, so it crosses them all as a single
+ * sweep; a material can carry several bands (the satellite's legs take
+ * both its body wave and its parts wave), each with its own uniforms.
  */
 
 export interface ShimmerUniforms {
