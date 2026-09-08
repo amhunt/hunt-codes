@@ -16,3 +16,4 @@ Requires node ≥ 22 (see `.nvmrc`) and yarn via corepack.
 - `yarn test` — run tests (CI runs them via `bun test`)
 - `yarn serve` — serve the production build locally
 - `yarn deploy` — sync `build/` to S3 (hashed assets cached immutable, HTML/manifest no-cache)
+- `yarn deploy:staging` — build and deploy the Cloudflare Worker + static assets to andysartifacts.com, the 3D print shop domain that doubles as the staging copy; `/` lands on `/shop` there (see `wrangler.jsonc`)

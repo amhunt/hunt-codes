@@ -1,0 +1,5 @@
+# Cloudflare static-asset headers (parsed by Workers, never served).
+# Hashed build output is immutable; everything else (HTML, robots, sitemap,
+# manifest) keeps the platform default of public,max-age=0,must-revalidate + ETag.
+/static/*
+  Cache-Control: public, max-age=31536000, immutable
