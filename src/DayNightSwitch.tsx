@@ -8,9 +8,10 @@ import useWindowSize from "useWindowSize";
 // Sun/moon mode switch, after the classic light/dark toggle design
 // (dribbble.com/shots/14431115): a sky pill with drifting clouds and a
 // glowing sun thumb by day; a starry navy pill with a cratered moon
-// thumb by night. Checked = night. Hidden on the landing page; when the
-// visitor enters /home it fades in a beat after the camera swoop starts
-// (the .dns-hidden transition in App.scss carries the delay).
+// thumb by night. Checked = night. Hidden on the landing page and on
+// phones (a corner too crowded to spare); when the visitor enters /home
+// it fades in a beat after the camera swoop starts (the .dns-hidden
+// transition in App.scss carries the delay).
 const DayNightSwitch = ({
   isNightMode,
   onCheckedChange,
@@ -21,14 +22,16 @@ const DayNightSwitch = ({
   const { pathname } = useLocation();
   const size = useWindowSize();
   const onLanding = pathname === "/";
-  // /home below lg gives its corner back to the scene (part of the
+  // Phones sit the toggle out everywhere (night stays the default);
+  // /home below lg gives its corner back to the scene too (part of the
   // small-screen declutter alongside the moon and link-trio bodies)
+  const onPhone = size === "sm";
   const onNarrowHome = pathname === "/home" && size !== "lg";
   return (
     <SceneSwitch
       className={cx(
         "day-night-switch fixed right-12 top-4 z-[5000]",
-        (onLanding || onNarrowHome) && "dns-hidden",
+        (onLanding || onPhone || onNarrowHome) && "dns-hidden",
       )}
       checked={isNightMode}
       onCheckedChange={onCheckedChange}

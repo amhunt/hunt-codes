@@ -970,7 +970,7 @@ p {
 
 // /about's phone-width Home link floats over the scrolling résumé, unlike
 // /home's "Back to orbit" over the empty sky — so it gets a pill behind it,
-// in the life bar's slab colors, matching the day/night pill beside it.
+// in the life bar's slab colors, sized like the music pill.
 .resume-home-link > a {
   height: 34px;
   padding: 0 14px 0 10px;
