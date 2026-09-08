@@ -29,7 +29,10 @@
   "env": {
     "staging": {
       "name": "hunt-codes-staging",
+      // No workers.dev route for the live deployment (custom domains only), but
+      // every uploaded version gets a *.workers.dev preview URL for PR review.
       "workers_dev": false,
+      "preview_urls": true,
       "routes": [
         { "pattern": "andysartifacts.com", "custom_domain": true },
         { "pattern": "www.andysartifacts.com", "custom_domain": true }
