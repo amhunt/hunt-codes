@@ -35,6 +35,15 @@ the preview tool.
   these.
 - `yarn deploy` — S3 sync with `--profile andrew` (hashed assets immutable,
   HTML/manifest no-cache). Never deploy unprompted.
+- `corepack yarn deploy:staging` — builds and deploys the Cloudflare Worker
+  (`wrangler.jsonc`, entry `server/worker.mjs`) to **andysartifacts.com**,
+  Andrew's 3D print shop domain (artifactandy.com 301s there), which also
+  doubles as the staging copy of this build. On those hosts `/` 302s to
+  `/shop` (`ROOT_REDIRECT` var); production keeps the landing page. Static
+  assets come from `build/` with SPA fallback; `/api/*` currently proxies to
+  the prod CloudFront API. hunt.codes itself is still AWS; the plan lives in
+  `~/.claude/plans/consider-switching-this-app-dreamy-sunset.md`. Needs
+  `wrangler login` once per machine.
 - `./server/deploy.sh` — redeploy the `/api` Lambda after editing
   `server/handler.mjs` (no bundling; AWS SDK ships in the runtime)
 

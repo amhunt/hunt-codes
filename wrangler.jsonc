@@ -1,0 +1,46 @@
+// Cloudflare Worker config. `yarn deploy:staging` deploys the `staging` env to
+// andysartifacts.com (the 3D print shop domain; artifactandy.com 301s to it),
+// which doubles as the staging copy of the hunt.codes build. The top-level
+// (production) env is not routed anywhere yet (hunt.codes still lives on
+// CloudFront + S3 until Phase 3 of the migration).
+//
+// Note: `vars` are not inherited by environments, so they are repeated per env.
+{
+  "$schema": "node_modules/wrangler/config-schema.json",
+  "name": "hunt-codes",
+  "main": "server/worker.mjs",
+  "compatibility_date": "2026-09-01",
+  "compatibility_flags": ["nodejs_compat"],
+  "assets": {
+    "directory": "./build",
+    "binding": "ASSETS",
+    "not_found_handling": "single-page-application",
+    // Everything but the hashed build output goes through the Worker (host
+    // redirect, noindex on staging hosts, /api proxy); /static/* is served
+    // straight from the asset layer, which is free and skips the Worker.
+    "run_worker_first": ["/*", "!/static/*"]
+  },
+  "observability": { "enabled": true },
+  "vars": {
+    "PRIMARY_HOST": "www.hunt.codes",
+    "CANONICAL_HOST": "www.hunt.codes",
+    "API_ORIGIN": "https://www.hunt.codes"
+  },
+  "env": {
+    "staging": {
+      "name": "hunt-codes-staging",
+      "workers_dev": false,
+      "routes": [
+        { "pattern": "andysartifacts.com", "custom_domain": true },
+        { "pattern": "www.andysartifacts.com", "custom_domain": true }
+      ],
+      "vars": {
+        "PRIMARY_HOST": "andysartifacts.com",
+        "CANONICAL_HOST": "www.hunt.codes",
+        "API_ORIGIN": "https://www.hunt.codes",
+        // The shop domains open on the Etsy shop page, not the landing page.
+        "ROOT_REDIRECT": "/shop"
+      }
+    }
+  }
+}

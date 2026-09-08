@@ -12,6 +12,17 @@ the URL directly. One OAC quirk: CloudFront can't hash request bodies, so
 browser POSTs must send `x-amz-content-sha256` (hex SHA-256 of the body —
 see `sha256Hex` in `src/SvgGenerator.tsx`) or the origin signature fails.
 
+## Cloudflare staging copy
+
+[worker.mjs](worker.mjs) is the Cloudflare Worker behind andysartifacts.com, the
+3D print shop domain (artifactandy.com 301s there) that doubles as the staging
+copy of this build (`yarn deploy:staging`, config in `wrangler.jsonc`). On those
+hosts `/` 302s to `/shop`; production has no `ROOT_REDIRECT`. Otherwise it only
+serves the static build (SPA fallback) and proxies `/api/*` to
+`https://www.hunt.codes`, so the copy exercises this same Lambda; the API port
+to Workers + D1 is the next migration phase. Non-canonical hosts get
+`X-Robots-Tag: noindex`.
+
 ## Endpoints
 
 | Route | What |
