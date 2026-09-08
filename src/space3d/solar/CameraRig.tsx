@@ -53,6 +53,10 @@ const LANDING_SUN_DROP_VH = 15;
 // wide in the middle distance.
 const HOME_CAM_BEHIND = 1.6; // away from Earth
 const HOME_CAM_ABOVE = 5;
+// Phones perch a little higher: the sun's limb rides up under the scroll
+// hint at portrait aspects, and a higher perch drops it (Earth is
+// re-aimed to the same screen spot below, so only the sun moves)
+const HOME_CAM_ABOVE_PHONE_EXTRA = 0.25;
 const HOME_CAM_SIDE = 2; // camera right => sun apex drifts screen-left
 // Earth's screen spot: on lg+ screens, pixel offsets from the viewport
 // center; below that, fixed viewport fractions (same look, scaled down)
@@ -243,7 +247,9 @@ function computeGoal(
       .set(0, 0, 0)
       .addScaledVector(toEarth, -HOME_CAM_BEHIND)
       .addScaledVector(side, HOME_CAM_SIDE);
-    goalPos.y += HOME_CAM_ABOVE;
+    goalPos.y +=
+      HOME_CAM_ABOVE +
+      (viewport.width < SM_BREAKPOINT_PX ? HOME_CAM_ABOVE_PHONE_EXTRA : 0);
     // Aim so Earth lands right of and above the viewport center (aiming
     // left of / below a body pushes it right / up on screen)
     const persp = camera as THREE.PerspectiveCamera;

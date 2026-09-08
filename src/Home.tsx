@@ -126,8 +126,11 @@ const Home = () => {
       </div>
       <main className={cx("homeInfoContainer", logoOpacity === 1 && "show")}>
         <h1 className="sr-only">Andrew Hunt — home</h1>
+        {/* No max-width cap on the summary (App.scss sizes it to the
+            phone): at 300px the availability line wrapped, orphaned "2026",
+            and the extra line ran into Earth's ABOUT ME ring on short phones */}
         {isSmall && (
-          <div className="sm-screen-summary-line max-w-75 text-center">
+          <div className="sm-screen-summary-line text-center">
             Frontend Engineer ·{" "}
             {/* Keep the city pair together — at 240px this broke after the
                 strikethrough and orphaned "NYC" onto its own line, which
@@ -137,7 +140,8 @@ const Home = () => {
               NYC
             </span>
             <div className="availability-line">
-              consulting now · open to full-time, fall 2026
+              consulting now · open to full-time,{" "}
+              <span className="whitespace-nowrap">fall 2026</span>
             </div>
           </div>
         )}
@@ -152,7 +156,8 @@ const Home = () => {
                 NYC
               </div>
               <div className="availability-line">
-                consulting now · open to full-time, fall 2026
+                consulting now · open to full-time,{" "}
+                <span className="whitespace-nowrap">fall 2026</span>
               </div>
             </div>
           )}

@@ -870,7 +870,10 @@ p {
 }
 
 // On a phone the music switch (fixed bottom-left) shares the bottom band
-// with a centred caption, so the caption is lifted clear of it.
+// with a centred caption, so the caption is lifted clear of it. The band
+// is also where the sun's limb lands at portrait aspects, so the caption
+// and chevron carry a shadow to hold up over the orange (dark by night,
+// light by day, matching each palette's ink).
 @media (max-width: 767px) {
   .scroll-hint {
     bottom: 76px;
@@ -878,6 +881,21 @@ p {
 
   .scroll-hint-label {
     font-size: 11px;
+    text-shadow: 0 1px 4px rgba(0, 0, 0, 0.8);
+  }
+
+  .scroll-hint-chevron {
+    filter: drop-shadow(0 1px 3px rgba(0, 0, 0, 0.7));
+  }
+
+  .App.day {
+    .scroll-hint-label {
+      text-shadow: 0 1px 4px rgba(255, 255, 255, 0.85);
+    }
+
+    .scroll-hint-chevron {
+      filter: drop-shadow(0 1px 3px rgba(255, 255, 255, 0.8));
+    }
   }
 }
 
@@ -948,6 +966,22 @@ p {
       }
     }
   }
+}
+
+// /about's phone-width Home link floats over the scrolling résumé, unlike
+// /home's "Back to orbit" over the empty sky — so it gets a pill behind it,
+// in the life bar's slab colors, sized like the music pill.
+.resume-home-link > a {
+  height: 34px;
+  padding: 0 14px 0 10px;
+  border-radius: 17px;
+  background: rgba(6, 4, 22, 0.8);
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.25);
+}
+
+.App.day .resume-home-link > a {
+  background: rgba(255, 255, 255, 0.88);
+  box-shadow: 0 2px 6px rgba(80, 40, 120, 0.18);
 }
 
 // The "andrewhunt" name at the top of every page past the landing. This
@@ -1146,7 +1180,7 @@ li > ul > li {
   margin: 0;
 }
 
-// ─── Work samples (the /about cards) ────────────────────────────────
+// ─── Projects (the /about cards) ────────────────────────────────────
 // Clickable cards under the intro: two router links, one external link,
 // and a <button> (the Zip reel popover), all wearing the same class. The
 // global a/button rules paint links $purp and underline them on hover —
@@ -1159,6 +1193,8 @@ li > ul > li {
 }
 
 .work-card {
+  // For the corner tag
+  position: relative;
   display: flex;
   align-items: flex-start;
   gap: 14px;
@@ -1216,6 +1252,27 @@ li > ul > li {
 .work-card-external {
   flex: none;
   opacity: 0.7;
+}
+
+// Corner label on the toy cards ("Silly")
+.work-card-tag {
+  position: absolute;
+  top: 8px;
+  right: 10px;
+  padding: 2px 8px;
+  border-radius: 10px;
+  font-family: "Inconsolata", monospace;
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: #e8e6f5;
+  background: rgba(158, 128, 249, 0.28);
+}
+
+.App.day .work-card-tag {
+  color: $purp;
+  background: rgba(65, 37, 150, 0.12);
 }
 
 .work-card-subtitle {
@@ -1347,12 +1404,26 @@ li > ul > li {
 
 @media (max-width: $breakpoint-sm) {
   .resume-container {
-    padding-bottom: 240px;
+    // Room to scroll the last line clear of the corner medallion (no life
+    // bar on phones — see .life-timeline)
+    padding-bottom: 140px;
     padding-top: 40px;
   }
 
   .splitRow {
     display: unset;
+  }
+
+  // Experience/education headings: beside a location pill the title was
+  // squeezed to ~180px ("Independent Software Consultant, Argos" ran three
+  // lines). Let the pills wrap under the title instead of shrinking it.
+  .splitRow h3 {
+    flex-wrap: wrap;
+    gap: 6px 8px;
+
+    .location-pill {
+      margin-left: 0;
+    }
   }
 
   // The "things I care about" cards: two columns leave ~2 words per line
@@ -1383,7 +1454,10 @@ li > ul > li {
     width: unset;
     max-width: min(360px, calc(100vw - 40px));
     top: unset;
-    bottom: calc(184px + env(safe-area-inset-bottom, 0px));
+    // Low enough to leave Earth's ABOUT ME ring a clear band above the
+    // pills, high enough that the scrim's fade clears the scroll hint
+    // (bottom 76px + ~54px tall)
+    bottom: calc(144px + env(safe-area-inset-bottom, 0px));
     min-width: 300px;
     transform: unset;
     // Breathing room for the ::before scrim below
@@ -1445,10 +1519,14 @@ li > ul > li {
   .sm-screen-summary-line {
     position: fixed;
     // Tucked just under the "andrewhunt" name letters (their box ends
-    // ~104px down at iPhone widths); tracks the same safe-area shift as
+    // ~116px down at iPhone widths); tracks the same safe-area shift as
     // .nameTitle
-    top: calc(120px + env(safe-area-inset-top, 0px));
+    top: calc(128px + env(safe-area-inset-top, 0px));
     width: 100%;
+    // Wide enough that the 14px availability line stays on one line at
+    // 360px+; the 300px cap it used to carry (max-w-75) wrapped it, and
+    // the extra line collided with Earth's ABOUT ME ring on short phones
+    max-width: calc(100% - 32px);
     text-align: center;
     font-size: 20px;
     left: 50%;
@@ -1472,6 +1550,9 @@ li > ul > li {
 
   .nameTitle {
     --name-inset: 28px;
+    // A touch lower than the desktop 40px: the corner link ("Back to
+    // orbit" / Home) sits right above the letters on a phone
+    top: calc(52px + env(safe-area-inset-top, 0px));
   }
 
   .App-gg-bridge {
@@ -3794,12 +3875,11 @@ $switch-ease: cubic-bezier(0.45, 0.05, 0.25, 1.2);
     }
   }
 
+  // Phones sit the bar out: with the medallion and the music pill it
+  // took ~210px of a 812px screen, and most eras were too narrow for
+  // their labels anyway
   @media (max-width: $breakpoint-sm) {
-    // Above the (96px) medallion rather than beside it — a phone can't
-    // spare a third of the bar's width to sit next to it
-    --life-future-w: 68px;
-    padding-right: 12px;
-    bottom: calc(7rem + env(safe-area-inset-bottom, 0px));
+    display: none;
   }
 
   // A soft slab behind the whole thing. The bar floats over the résumé's
