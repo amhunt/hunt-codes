@@ -5,7 +5,12 @@ import { GLTFLoader } from "three/examples/jsm/loaders/GLTFLoader.js";
 
 import { SVGLoader } from "three/examples/jsm/loaders/SVGLoader.js";
 
-import { badgeHoverState } from "../badgeState";
+import {
+  BADGE_AIM_MS,
+  BADGE_LAUNCH_ANGLE_DEG,
+  badgeAimState,
+  badgeHoverState,
+} from "../badgeState";
 import badgeUrl from "../assets/hunt-codes-badge.glb";
 
 /**
@@ -27,7 +32,9 @@ import badgeUrl from "../assets/hunt-codes-badge.glb";
  * never takes pointer input. Hover flows through badgeHoverState, the
  * same plain-mutable-module pattern as solarHover: under the cursor the
  * coin grows a touch, slows its spin to half, and blinks its caret twice
- * as fast.
+ * as fast. A click comes through the same channel (badgeAimState): the
+ * spin pauses and the face swings onto the confetti's launch heading for
+ * the length of the volley, so the "A"s pour out of the coin's face.
  */
 
 // Monogram-local x: the "A" spans ~0–6.24, the caret bar ~6.97–8.33.
@@ -91,6 +98,24 @@ const HOVER_SCALE = 1.05;
 // Hover ease rate (per second): ~0.1s time constant, so the scale and
 // spin changes read as a short transition rather than a snap
 const HOVER_EASE_RATE = 10;
+/**
+ * Aim pose: on click the coin turns its face up the confetti's heading
+ * (up and to the left) and tips this far off the camera axis — enough to
+ * read as "pointed that way" while the signature stays legible.
+ */
+const AIM_TILT = THREE.MathUtils.degToRad(34);
+const AIM_HEADING = THREE.MathUtils.degToRad(BADGE_LAUNCH_ANGLE_DEG);
+/**
+ * The pose as Euler angles. In the default XYZ order the face normal
+ * (0, 0, 1) lands at (sin y, −cos y·sin x, cos y·cos x); solving that for
+ * the heading's direction tilted AIM_TILT off the axis gives:
+ */
+const AIM_YAW = Math.asin(Math.sin(AIM_TILT) * Math.cos(AIM_HEADING));
+const AIM_PITCH = Math.asin(
+  (-Math.sin(AIM_TILT) * Math.sin(AIM_HEADING)) / Math.cos(AIM_YAW),
+);
+/** Seconds for the swing — matches the confetti's own hold (BADGE_AIM_MS) */
+const AIM_S = BADGE_AIM_MS / 1000;
 /** Corner slot, matching the DOM link (App.scss .badge-link) */
 const SLOT_PX = 140;
 const SLOT_PX_SMALL = 96;
@@ -323,6 +348,13 @@ const BadgeMedallion = () => {
   const anchorRef = useRef<THREE.Group>(null);
   const spinRef = useRef<THREE.Group>(null);
   const hoverEase = useRef(0);
+  // The free spin keeps accumulating through the aim; what's rendered is
+  // that angle blended toward the pose, so the coin picks the spin back up
+  // where it would have been rather than snapping on release.
+  const spinAngle = useRef(0);
+  const aimEase = useRef(0);
+  const aimAngle = useRef(0);
+  const wasAiming = useRef(false);
   // Caret blink phase in half-periods. Accumulated from frame deltas
   // rather than read off the clock so the hover speed-up changes the
   // rate without jumping the phase.
@@ -361,10 +393,39 @@ const BadgeMedallion = () => {
     anchor.scale.setScalar(scale || 0.0001);
 
     if (!reducedMotion.current) {
-      spin.rotation.y +=
+      spinAngle.current +=
         delta *
         (SPIN_SPEED + (SPIN_SPEED_HOVER - SPIN_SPEED) * hoverEase.current);
     }
+
+    // Aim (a click, via badgeConfetti): swing the face onto the launch
+    // heading over AIM_S, hold it for the volley, then ease back
+    const aiming = badgeAimState.aiming && !reducedMotion.current;
+    // Take the short way round from wherever the spin happens to be. Only
+    // from a standing start: re-picking the target mid-swing (a click
+    // during the ease-back) could shift it a full turn and jump the coin.
+    if (aiming && !wasAiming.current && aimEase.current === 0) {
+      aimAngle.current =
+        spinAngle.current +
+        THREE.MathUtils.euclideanModulo(
+          AIM_YAW - spinAngle.current + Math.PI,
+          Math.PI * 2,
+        ) -
+        Math.PI;
+    }
+    wasAiming.current = aiming;
+    aimEase.current = THREE.MathUtils.clamp(
+      aimEase.current + (aiming ? delta / AIM_S : -delta / AIM_S),
+      0,
+      1,
+    );
+    const aim = 1 - Math.pow(1 - aimEase.current, 3); // ease-out cubic
+    spin.rotation.y = THREE.MathUtils.lerp(
+      spinAngle.current,
+      aimAngle.current,
+      aim,
+    );
+    spin.rotation.x = AIM_PITCH * aim;
     if (caretMaterial) {
       caretPhase.current +=
         (delta / CARET_HALF_PERIOD_S) *
