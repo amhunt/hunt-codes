@@ -297,7 +297,7 @@ const Resume = () => {
           put (body.video-mode hides .homePageBackLink) */}
       {isSmall && (
         <div
-          className="homePageBackLink"
+          className="homePageBackLink resume-home-link"
           style={{ opacity: opacity ? 1 : 0, transition: "opacity 1s ease" }}
         >
           <Link className="mt-4 flex items-center gap-1" to="/home">

@@ -870,7 +870,10 @@ p {
 }
 
 // On a phone the music switch (fixed bottom-left) shares the bottom band
-// with a centred caption, so the caption is lifted clear of it.
+// with a centred caption, so the caption is lifted clear of it. The band
+// is also where the sun's limb lands at portrait aspects, so the caption
+// and chevron carry a shadow to hold up over the orange (dark by night,
+// light by day, matching each palette's ink).
 @media (max-width: 767px) {
   .scroll-hint {
     bottom: 76px;
@@ -878,6 +881,21 @@ p {
 
   .scroll-hint-label {
     font-size: 11px;
+    text-shadow: 0 1px 4px rgba(0, 0, 0, 0.8);
+  }
+
+  .scroll-hint-chevron {
+    filter: drop-shadow(0 1px 3px rgba(0, 0, 0, 0.7));
+  }
+
+  .App.day {
+    .scroll-hint-label {
+      text-shadow: 0 1px 4px rgba(255, 255, 255, 0.85);
+    }
+
+    .scroll-hint-chevron {
+      filter: drop-shadow(0 1px 3px rgba(255, 255, 255, 0.8));
+    }
   }
 }
 
@@ -948,6 +966,22 @@ p {
       }
     }
   }
+}
+
+// /about's phone-width Home link floats over the scrolling résumé, unlike
+// /home's "Back to orbit" over the empty sky — so it gets a pill behind it,
+// in the life bar's slab colors, matching the day/night pill beside it.
+.resume-home-link > a {
+  height: 34px;
+  padding: 0 14px 0 10px;
+  border-radius: 17px;
+  background: rgba(6, 4, 22, 0.8);
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.25);
+}
+
+.App.day .resume-home-link > a {
+  background: rgba(255, 255, 255, 0.88);
+  box-shadow: 0 2px 6px rgba(80, 40, 120, 0.18);
 }
 
 // The "andrewhunt" name at the top of every page past the landing. This
@@ -1355,6 +1389,18 @@ li > ul > li {
     display: unset;
   }
 
+  // Experience/education headings: beside a location pill the title was
+  // squeezed to ~180px ("Independent Software Consultant, Argos" ran three
+  // lines). Let the pills wrap under the title instead of shrinking it.
+  .splitRow h3 {
+    flex-wrap: wrap;
+    gap: 6px 8px;
+
+    .location-pill {
+      margin-left: 0;
+    }
+  }
+
   // The "things I care about" cards: two columns leave ~2 words per line
   // at phone widths — stack them instead
   .hor-list {
@@ -1449,6 +1495,10 @@ li > ul > li {
     // .nameTitle
     top: calc(120px + env(safe-area-inset-top, 0px));
     width: 100%;
+    // Wide enough that the 14px availability line stays on one line at
+    // 360px+; the 300px cap it used to carry (max-w-75) wrapped it, and
+    // the extra line collided with Earth's ABOUT ME ring on short phones
+    max-width: calc(100% - 32px);
     text-align: center;
     font-size: 20px;
     left: 50%;
