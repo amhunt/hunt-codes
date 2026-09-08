@@ -22,6 +22,7 @@ import BadgeLink from "BadgeLink";
 import DayNightSwitch from "DayNightSwitch";
 import Landing from "Landing";
 import SpaceJamSwitch from "SpaceJamSwitch";
+import { installClickTracking, trackPageView } from "./analytics";
 import { NOT_FOUND_TITLE, ROUTE_TITLES, SITE_ORIGIN } from "./routes";
 
 // Pause audio when the page is hidden; resume on return whatever was
@@ -77,6 +78,8 @@ const RouteMeta = () => {
         "href",
         `${SITE_ORIGIN}${pathname === "/" ? "/" : pathname}`,
       );
+    // After the title, so GA files the view under the right page name
+    trackPageView(pathname);
   }, [pathname]);
   return null;
 };
@@ -87,6 +90,7 @@ const App = () => {
   const [isNightMode, setIsNightMode] = useState(true);
 
   usePauseAudioOnHideEventListener();
+  useEffect(installClickTracking, []);
 
   const isSynthRoute = window.location.pathname === "/synth";
 

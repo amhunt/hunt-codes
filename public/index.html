@@ -134,7 +134,8 @@
         dataLayer.push(arguments);
       }
       gtag("js", new Date());
-      gtag("config", "G-STPGJYV58F");
+      // The app sends page_view itself on every route change (src/analytics.ts)
+      gtag("config", "G-STPGJYV58F", { send_page_view: false });
     </script>
   </head>
   <body>
