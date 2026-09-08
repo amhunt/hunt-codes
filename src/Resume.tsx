@@ -95,14 +95,19 @@ const WorkCardBody = ({
   title,
   subtitle,
   external = false,
+  tag,
 }: {
   icon: React.ReactNode;
   title: string;
   subtitle: string;
   /** Opens in a new tab — flag it with the arrow */
   external?: boolean;
+  /** Corner label — "Silly" marks the toys, so the résumé's tone is
+   *  clear before a recruiter clicks into a synth */
+  tag?: string;
 }) => (
   <>
+    {tag && <span className="work-card-tag">{tag}</span>}
     <span className="work-card-icon" aria-hidden="true">
       {icon}
     </span>
@@ -375,26 +380,13 @@ const Resume = () => {
               .
             </p>
             <div className="resume-divider" />
-            <h2>Work samples</h2>
+            <h2>Projects</h2>
             {/* Proof for the intro's claims, up top where a skim lands: the
-                two toys built for this site (also linked from /home), the
-                Zip reel the moon opens, and the one published post — whose
-                card replaced the /home blog asteroid. */}
+                Zip reel the moon opens and the one published post — whose
+                card replaced the /home blog asteroid — first, then the two
+                toys built for this site (also linked from /home), tagged
+                "Silly" so nobody mistakes the synth for client work. */}
             <div className="work-samples">
-              <Link className="work-card" to="/draw">
-                <WorkCardBody
-                  icon={<Wand2 size={20} />}
-                  title="SVG Studio"
-                  subtitle="Describe a picture and an AI draws it as an animated SVG — plus a gallery of everyone's drawings"
-                />
-              </Link>
-              <Link className="work-card" to="/synth">
-                <WorkCardBody
-                  icon={<AudioWaveform size={20} />}
-                  title="Space Synth"
-                  subtitle="A playable synth in a second solar system: the planets are knobs, your keyboard is the keys"
-                />
-              </Link>
               <button
                 type="button"
                 className="work-card"
@@ -419,6 +411,22 @@ const Resume = () => {
                   subtitle="A post I wrote for Zip's engineering blog, 2023"
                 />
               </a>
+              <Link className="work-card" to="/draw">
+                <WorkCardBody
+                  tag="Silly"
+                  icon={<Wand2 size={20} />}
+                  title="SVG Studio"
+                  subtitle="Describe a picture and an AI draws it as an animated SVG — plus a gallery of everyone's drawings"
+                />
+              </Link>
+              <Link className="work-card" to="/synth">
+                <WorkCardBody
+                  tag="Silly"
+                  icon={<AudioWaveform size={20} />}
+                  title="Space Synth"
+                  subtitle="A playable synth in a second solar system: the planets are knobs, your keyboard is the keys"
+                />
+              </Link>
             </div>
             {/* Hidden until /journey gets more polish:
             <p className="journey-plug">

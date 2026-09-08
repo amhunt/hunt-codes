@@ -1180,7 +1180,7 @@ li > ul > li {
   margin: 0;
 }
 
-// ─── Work samples (the /about cards) ────────────────────────────────
+// ─── Projects (the /about cards) ────────────────────────────────────
 // Clickable cards under the intro: two router links, one external link,
 // and a <button> (the Zip reel popover), all wearing the same class. The
 // global a/button rules paint links $purp and underline them on hover —
@@ -1193,6 +1193,8 @@ li > ul > li {
 }
 
 .work-card {
+  // For the corner tag
+  position: relative;
   display: flex;
   align-items: flex-start;
   gap: 14px;
@@ -1250,6 +1252,27 @@ li > ul > li {
 .work-card-external {
   flex: none;
   opacity: 0.7;
+}
+
+// Corner label on the toy cards ("Silly")
+.work-card-tag {
+  position: absolute;
+  top: 8px;
+  right: 10px;
+  padding: 2px 8px;
+  border-radius: 10px;
+  font-family: "Inconsolata", monospace;
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: #e8e6f5;
+  background: rgba(158, 128, 249, 0.28);
+}
+
+.App.day .work-card-tag {
+  color: $purp;
+  background: rgba(65, 37, 150, 0.12);
 }
 
 .work-card-subtitle {
@@ -1381,7 +1404,9 @@ li > ul > li {
 
 @media (max-width: $breakpoint-sm) {
   .resume-container {
-    padding-bottom: 240px;
+    // Room to scroll the last line clear of the corner medallion (no life
+    // bar on phones — see .life-timeline)
+    padding-bottom: 140px;
     padding-top: 40px;
   }
 
@@ -3850,12 +3875,11 @@ $switch-ease: cubic-bezier(0.45, 0.05, 0.25, 1.2);
     }
   }
 
+  // Phones sit the bar out: with the medallion and the music pill it
+  // took ~210px of a 812px screen, and most eras were too narrow for
+  // their labels anyway
   @media (max-width: $breakpoint-sm) {
-    // Above the (96px) medallion rather than beside it — a phone can't
-    // spare a third of the bar's width to sit next to it
-    --life-future-w: 68px;
-    padding-right: 12px;
-    bottom: calc(7rem + env(safe-area-inset-bottom, 0px));
+    display: none;
   }
 
   // A soft slab behind the whole thing. The bar floats over the résumé's
