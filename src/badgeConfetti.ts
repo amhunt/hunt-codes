@@ -1,5 +1,10 @@
 import type { confetti } from "@tsparticles/confetti";
 
+import {
+  BADGE_AIM_MS,
+  BADGE_LAUNCH_ANGLE_DEG,
+  badgeAimState,
+} from "./badgeState";
 import { loadCelebration } from "./celebration";
 
 /**
@@ -12,6 +17,10 @@ import { loadCelebration } from "./celebration";
  * keeps the streaming-cannon look without running continuously. The
  * custom shape follows the docs' "Custom Shapes" recipe: an SVG image
  * with `replaceColor`, so each "A" takes a confetti color.
+ *
+ * A click first turns the coin's face onto that same heading
+ * (badgeAimState → BadgeMedallion) and holds the volley for the swing,
+ * so the "A"s look like they're coming off the face of the coin.
  */
 
 /** How long each click keeps the cannon firing */
@@ -53,6 +62,11 @@ const DRAIN_POLL_MS = 400;
 const DRAIN_MAX_MS = 10_000;
 
 type ConfettiContainer = NonNullable<Awaited<ReturnType<typeof confetti>>>;
+
+const waitUntil = (time: number) =>
+  new Promise((resolve) =>
+    window.setTimeout(resolve, Math.max(0, time - performance.now())),
+  );
 
 const prefersReducedMotion = () =>
   window.matchMedia("(prefers-reduced-motion: reduce)").matches;
@@ -96,13 +110,18 @@ export const fireBadgeConfetti = (origin: { x: number; y: number }) => {
   // A click mid-drain keeps the container up for the new volley
   window.clearTimeout(drainTimer);
   volleysInFlight++;
+  // The coin swings onto the launch heading while the (possibly cold)
+  // engine chunks load, and holds it until the last volley has been fired
+  badgeAimState.aiming = true;
   const settle = () => {
     volleysInFlight--;
-    if (volleysInFlight === 0) teardownWhenDrained();
+    if (volleysInFlight > 0) return;
+    badgeAimState.aiming = false;
+    teardownWhenDrained();
   };
   const options = {
     particleCount: PARTICLES_PER_FRAME,
-    angle: 120,
+    angle: BADGE_LAUNCH_ANGLE_DEG,
     spread: 55,
     origin,
     colors: COLORS,
@@ -112,8 +131,11 @@ export const fireBadgeConfetti = (origin: { x: number; y: number }) => {
     zIndex: Z_INDEX,
   };
   void (async () => {
+    const aimedAt = performance.now() + BADGE_AIM_MS;
     try {
       const { confetti } = await loadCelebration();
+      // Nothing leaves the face until the coin has finished turning
+      await waitUntil(aimedAt);
       // The first call builds the container (and, on the session's first
       // click, pulls in the engine's lazy chunks) — start the clock only
       // once it exists, or the whole volley queues up behind it and lands

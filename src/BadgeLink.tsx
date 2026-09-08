@@ -1,5 +1,5 @@
 import React, { useEffect } from "react";
-import { Link, useLocation } from "react-router-dom";
+import { useLocation } from "react-router-dom";
 
 import { fireBadgeConfetti, preloadBadgeConfetti } from "./badgeConfetti";
 import { badgeHoverState } from "./badgeState";
@@ -10,12 +10,13 @@ import useReducedMotion from "./useReducedMotion";
  * itself is drawn by space3d/BadgeMedallion in the star canvas, which
  * never takes pointer input). Hovering perks the coin up (BadgeMedallion
  * reads badgeHoverState per frame) and clicking fires a volley of
- * signature confetti from it (badgeConfetti). Everywhere but the landing
- * page the coin also doubles as the site's wordmark: clicking it flies
- * you back to the solar system. On the landing page you're already
- * there, so it's a plain button and the confetti is the whole show —
- * which means under prefers-reduced-motion (no confetti) the landing coin
- * goes back to being decorative rather than a button that does nothing.
+ * signature confetti from it (badgeConfetti) — that's the whole job. It
+ * used to double as the site's wordmark and fly you back to the solar
+ * system, but the click now aims the coin and pours confetti off its
+ * face, and navigating mid-volley cuts that short; every page carries its
+ * own back link anyway. Under prefers-reduced-motion (no confetti) there
+ * is nothing to click, so the coin goes back to being decorative rather
+ * than a button that does nothing.
  */
 const BadgeLink = ({ isNightMode }: { isNightMode: boolean }) => {
   const { pathname } = useLocation();
@@ -25,14 +26,15 @@ const BadgeLink = ({ isNightMode }: { isNightMode: boolean }) => {
   // in the same case (Space3DBackground) — an invisible hit target over
   // other content would hijack clicks.
   const visible =
-    (isLanding && !reducedMotion) ||
-    pathname === "/synth" ||
-    pathname === "/journey" ||
-    pathname === "/about" ||
-    pathname.startsWith("/draw") ||
-    pathname === "/shop" ||
-    pathname === "/projects-and-toys" ||
-    (pathname === "/home" && isNightMode);
+    !reducedMotion &&
+    (isLanding ||
+      pathname === "/synth" ||
+      pathname === "/journey" ||
+      pathname === "/about" ||
+      pathname.startsWith("/draw") ||
+      pathname === "/shop" ||
+      pathname === "/projects-and-toys" ||
+      (pathname === "/home" && isNightMode));
 
   // The hit target can vanish without a pointerleave — flipping to day
   // mode on /home hides it, a route change swaps the element — so don't
@@ -64,30 +66,13 @@ const BadgeLink = ({ isNightMode }: { isNightMode: boolean }) => {
     },
   };
 
-  if (isLanding) {
-    return (
-      <button
-        type="button"
-        className="badge-link"
-        aria-label="Fire the confetti"
-        {...hoverProps}
-        onClick={(e) => fire(e.currentTarget)}
-      />
-    );
-  }
-
   return (
-    <Link
-      to="/"
+    <button
+      type="button"
       className="badge-link"
-      aria-label="hunt.codes — back to the solar system"
+      aria-label="Fire the confetti"
       {...hoverProps}
-      onClick={(e) => {
-        fire(e.currentTarget);
-        // Navigating away doesn't fire pointerleave — don't leave the
-        // coin stuck in its hover state
-        badgeHoverState.hovered = false;
-      }}
+      onClick={(e) => fire(e.currentTarget)}
     />
   );
 };
