@@ -16,7 +16,10 @@ on:
     types: [opened, synchronize, reopened, edited]
 
 concurrency:
-  group: preview-${{ github.event.pull_request.number }}
+  # One build per PR, newest wins. An `edited` event the job below will
+  # skip (title/body, no base change) gets a group of its own — in the
+  # shared group it would cancel an in-flight build for nothing.
+  group: preview-${{ github.event.pull_request.number }}${{ github.event.action == 'edited' && github.event.changes.base.ref.from == '' && format('-noop-{0}', github.run_id) || '' }}
   cancel-in-progress: true
 
 permissions:
