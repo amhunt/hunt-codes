@@ -1,4 +1,4 @@
-import React, { useEffect, useMemo, useRef } from "react";
+import React, { useCallback, useEffect, useMemo, useRef } from "react";
 import { useFrame, useThree } from "@react-three/fiber";
 import * as THREE from "three";
 
@@ -8,6 +8,8 @@ import { createPlanetTexture } from "../textures";
 import { hoverState } from "../../solarHover";
 import { EARTH_ABOUT_OUTLINE_ID } from "../../solarAnchorIds";
 import { writeSilhouette } from "./outline";
+import { applyShimmer } from "./goldShimmer";
+import { createEnergyWave } from "./energyWave";
 import AboutRing from "./AboutRing";
 import InteractiveGlow from "./InteractiveGlow";
 import earthMapUrl from "../../assets/earth.jpg";
@@ -17,8 +19,17 @@ import earthMapUrl from "../../assets/earth.jpg";
  * Textures are the shared procedural canvas maps; Earth gets a faint
  * back-side atmosphere shell. Positions come from the shared clock so
  * the camera rig can compute the same orbit for its Earth perch. Earth
- * also carries the curved "ABOUT ME" link label (space3d AboutRing).
+ * also carries the curved "ABOUT ME" link label (space3d AboutRing), the
+ * clickable-body halo and — on /home, where it is the link — the shared
+ * purple energy wave (energyWave.ts), the same affordance the satellite
+ * pulses down its antennas.
  */
+/** Earth's energy wave: it rises up the screen across the globe, a hair
+ *  wider and softer than the satellite's (Earth is a big, textured
+ *  surface — a tight band over it reads as a seam rather than a pulse),
+ *  and clear of the limb at both ends of its run. */
+const WAVE_HALF_WIDTH_RADII = 0.55;
+const WAVE_STRENGTH = 0.5;
 /** Fade duration for the landing-intro reveal */
 const REVEAL_SECONDS = 0.8;
 
@@ -26,6 +37,10 @@ const REVEAL_SECONDS = 0.8;
 // map x color x sunlight) brightens, while the night side — lit almost
 // entirely by the emissive earthshine — barely moves
 const EARTH_SUNLIT_BOOST = new THREE.Color(1.45, 1.45, 1.45);
+
+/** Per-frame scratch (screen-up for the wave) and a fallback center */
+const camUp = new THREE.Vector3();
+const ORIGIN = new THREE.Vector3();
 
 export default function Planet({
   config,
@@ -60,6 +75,31 @@ export default function Planet({
   // Atmosphere base opacity (hover-eased); multiplied by the reveal so the
   // fade-in and the hover swell compose instead of fighting each other
   const atmosphereBase = useRef(0.16);
+
+  const wave = useMemo(
+    () =>
+      createEnergyWave({
+        radius: config.radius,
+        halfWidthRadii: WAVE_HALF_WIDTH_RADII,
+        strength: WAVE_STRENGTH,
+      }),
+    [config.radius],
+  );
+  // The wave is folded into Earth's own surface material, so it is masked
+  // by the globe's shape and reveal alpha. The material is built in JSX,
+  // so hook the band on when the ref lands (and recompile: by then the
+  // material may already have a program).
+  const shimmered = useRef(false);
+  const setSurfaceMaterial = useCallback(
+    (material: THREE.MeshStandardMaterial | null) => {
+      surfaceMaterial.current = material;
+      if (!material || config.kind !== "earth" || shimmered.current) return;
+      shimmered.current = true;
+      applyShimmer(material, [wave.uniforms]);
+      material.needsUpdate = true;
+    },
+    [config.kind, wave],
+  );
 
   const gl = useThree((s) => s.gl);
   // Grazing views (the /about perch looks across Earth's limb) need real
@@ -169,6 +209,18 @@ export default function Planet({
     }
 
     if (config.kind === "earth") {
+      // The energy wave rises up the screen over the globe while the
+      // /about link is live (home view only, like the halo)
+      camUp.setFromMatrixColumn(camera.matrixWorld, 1);
+      wave.update({
+        time: clock.elapsedTime,
+        delta,
+        active: aboutActive,
+        opacity: revealOpacity.current,
+        origin: group.current?.position ?? ORIGIN,
+        direction: camUp,
+      });
+
       // Ease the glow up while the "About Me" ring/planet is hovered:
       // the atmosphere shell thickens and the earthshine brightens
       const hovered = hoverState.earth;
@@ -212,7 +264,11 @@ export default function Planet({
               {/* Earth gets double the segments: the /about perch sits so
                   close that 48 shows flat spots on the limb */}
               <sphereGeometry
-                args={[config.radius, config.kind === "earth" ? 96 : 48, config.kind === "earth" ? 96 : 48]}
+                args={[
+                  config.radius,
+                  config.kind === "earth" ? 96 : 48,
+                  config.kind === "earth" ? 96 : 48,
+                ]}
               />
               {config.kind === "earth" ? (
                 // Earth self-illuminates faintly (its own map as the
@@ -221,7 +277,7 @@ export default function Planet({
                 // reads as earthshine so oceans/land stay recognizable in
                 // the dark.
                 <meshStandardMaterial
-                  ref={surfaceMaterial}
+                  ref={setSurfaceMaterial}
                   map={texture}
                   color={EARTH_SUNLIT_BOOST}
                   roughness={0.95}
