@@ -21,7 +21,8 @@ import {
 import { writeSilhouette } from "./outline";
 import { createVideoScreenTexture } from "../textures";
 import { hoverState } from "../../solarHover";
-import { applyShimmer, createShimmerUniforms } from "./goldShimmer";
+import { applyShimmer } from "./shimmerBand";
+import { createEnergyWave } from "./energyWave";
 import InteractiveGlow from "./InteractiveGlow";
 
 /**
@@ -31,19 +32,19 @@ import InteractiveGlow from "./InteractiveGlow";
  * /projects-and-toys — reusing the asteroid link plumbing (BodyAnchors
  * overlay, hover freeze/brighten/outline, landing fade) via the same
  * config. On /home a wave of energy also washes over the whole body
- * every few seconds — a purple band (goldShimmer.ts) travelling from the
- * beacon down the antenna cone, as if it were transmitting — so the one
- * link out here reads as alive. On /projects-and-toys the camera closes
+ * every few seconds — the shared purple energy wave (energyWave.ts),
+ * travelling from the beacon down the antenna cone as if it were
+ * transmitting — so the one link out here reads as alive. On /projects-and-toys the camera closes
  * in (CameraRig's satellite perch) and the body's PARTS become the links:
  * a paper scroll floating off the antenna tips (the Zip blog post), a
  * little video screen set into the head (the Zip launch reel), a pen
  * floating under the cone (SVG Studio) and a mid-century vase standing
  * on top of the head (/shop, the 3D print store). The parts exist for that view only — they fade in on the way
  * there and out on the way back — and each gets the Earth treatment on
- * hover: brighten, pulsing silhouette outline, an always-on halo. A gold
- * glint also sweeps across the parts every few seconds (goldShimmer.ts)
- * so the clickable pieces stand out from the head they sit on, hovered
- * or not.
+ * hover: brighten, pulsing silhouette outline, an always-on halo. The
+ * same energy wave sweeps across the parts every few seconds — across
+ * the screen there rather than down the antennas — so the clickable
+ * pieces stand out from the head they sit on, hovered or not.
  *
  * Orientation: the home camera co-rotates with Earth's orbit, so a fixed
  * world heading would slowly wheel around on screen. The rig therefore
@@ -81,32 +82,25 @@ const PEN_HOVER_EMISSIVE = 1.3;
 /** Slow the body roll well below the config spin (a stately tumble) */
 const ROLL_SPEED_SCALE = 0.35;
 
-/** The gold glint (goldShimmer.ts): one sweep every PERIOD, crossing the
- *  body — ±SPAN radii along the screen diagonal, lower left to upper
- *  right — in SWEEP seconds, then resting off the body until the next.
- *  Under reduced motion the band parks over everything as a faint,
- *  steady gilt instead. */
-const SHIMMER_PERIOD_SECONDS = 3;
-const SHIMMER_SWEEP_SECONDS = 1.1;
-const SHIMMER_SPAN_RADII = 2;
-const SHIMMER_HALF_WIDTH_RADII = 0.35;
-const SHIMMER_STRENGTH = 0.5;
-const SHIMMER_STATIC_STRENGTH = 0.12;
+/** The parts' energy wave (energyWave.ts, the same affordance the body
+ *  carries on /home): it crosses everything — ±SPAN radii along the
+ *  screen diagonal, lower left to upper right — because the parts are
+ *  scattered around the head rather than strung along one axis. Its
+ *  reach is set per frame from the camera, so it sweeps the layout as
+ *  the eye reads it. */
+const PARTS_WAVE_PERIOD_SECONDS = 3;
+const PARTS_WAVE_SPAN_RADII = 2;
+const PARTS_WAVE_HALF_WIDTH_RADII = 0.35;
+const PARTS_WAVE_STRENGTH = 0.5;
 
-/** The /home energy wave (goldShimmer.ts too, a second band): one pulse
- *  every PERIOD, running the length of the body along the leg axis —
- *  from just past the beacon to just past the antenna tips — in SWEEP
- *  seconds, then resting off the body until the next. It follows the
+/** The /home energy wave (energyWave.ts, the shared clickable-body
+ *  affordance): it runs the length of the body along the leg axis, from
+ *  just past the beacon to just past the antenna tips. It follows the
  *  landing fade and eases away toward the close-up (the parts there
- *  carry the gold glint instead). Under reduced motion it parks over
- *  the body as a faint, steady tint. */
-const WAVE_PERIOD_SECONDS = 3.5;
-const WAVE_SWEEP_SECONDS = 1.1;
-const WAVE_HALF_WIDTH_RADII = 0.4;
-const WAVE_STRENGTH = 0.75;
-const WAVE_STATIC_STRENGTH = 0.12;
-const WAVE_COLOR = "#9e80f9";
-const WAVE_EASE_SECONDS = 0.6;
+ *  carry their own sweep instead). */
+const WAVE_START_RADII = -SATELLITE_BODY_RADIUS_RATIO * 1.2;
+const WAVE_END_RADII =
+  SATELLITE_BODY_RADIUS_RATIO * 0.7 + SATELLITE_LEG_LENGTH_RATIO;
 
 /** The vase's silhouette — a LatheGeometry profile, [radius, height] in
  *  units of the head's radius, foot to lip: a low round belly drawn up
@@ -219,6 +213,7 @@ const perchUp = new THREE.Vector3();
 const frameMatrix = new THREE.Matrix4();
 const frameQuat = new THREE.Quaternion();
 const rigInverse = new THREE.Quaternion();
+const bodyCenter = new THREE.Vector3();
 const camRight = new THREE.Vector3();
 const camUp = new THREE.Vector3();
 
@@ -289,8 +284,6 @@ export default function Satellite({
   /** parts × body opacity: what the part halos follow */
   const partsShown = useRef(partsOpacity.current * opacity.current);
   const roll = useRef(0);
-  /** 0..1: how much of the /home wave is showing (eased on/off) */
-  const waveWeight = useRef(bodyLink ? 1 : 0);
 
   const bodyRadius = config.radius * SATELLITE_BODY_RADIUS_RATIO;
   const legLength = config.radius * SATELLITE_LEG_LENGTH_RATIO;
@@ -323,8 +316,27 @@ export default function Satellite({
     [],
   );
 
-  const shimmer = useMemo(() => createShimmerUniforms(), []);
-  const wave = useMemo(() => createShimmerUniforms(WAVE_COLOR), []);
+  const partsWave = useMemo(
+    () =>
+      createEnergyWave({
+        radius: config.radius,
+        periodSeconds: PARTS_WAVE_PERIOD_SECONDS,
+        halfWidthRadii: PARTS_WAVE_HALF_WIDTH_RADII,
+        strength: PARTS_WAVE_STRENGTH,
+        startRadii: -PARTS_WAVE_SPAN_RADII,
+        endRadii: PARTS_WAVE_SPAN_RADII,
+      }),
+    [config.radius],
+  );
+  const wave = useMemo(
+    () =>
+      createEnergyWave({
+        radius: config.radius,
+        startRadii: WAVE_START_RADII,
+        endRadii: WAVE_END_RADII,
+      }),
+    [config.radius],
+  );
   const materials = useMemo(() => {
     const set = {
       body: new THREE.MeshStandardMaterial({
@@ -426,10 +438,11 @@ export default function Satellite({
         transparent: true,
       }),
     };
-    // The /home wave crosses the whole body; the link parts carry the
-    // gold glint (the body itself is not a link, so it gets no glint)
+    // The body's wave runs down the antennas on /home; the link parts
+    // get their own sweep on /projects-and-toys (the body is not a link
+    // there, so it takes no part in that one)
     [set.body, set.leg, set.bulb].forEach((material) =>
-      applyShimmer(material, [wave]),
+      applyShimmer(material, [wave.uniforms]),
     );
     [
       set.bezel,
@@ -441,9 +454,9 @@ export default function Satellite({
       set.parchment,
       set.dowel,
       set.ink,
-    ].forEach((material) => applyShimmer(material, [shimmer]));
+    ].forEach((material) => applyShimmer(material, [partsWave.uniforms]));
     return set;
-  }, [shimmer, wave]);
+  }, [partsWave, wave]);
   const bodyMaterials = useMemo(
     () => [materials.body, materials.leg, materials.bulb],
     [materials],
@@ -661,57 +674,33 @@ export default function Satellite({
       scroll.rotation.z = SCROLL_SLANT + Math.sin(phase * 0.7) * SCROLL_ROCK;
     }
 
-    // The gold glint: slide the band along the screen diagonal (camera
-    // right + up) across the body, then rest it off the body until the
-    // next sweep. Follows the parts' reveal, so /home never glints.
     if (group.current) {
-      group.current.getWorldPosition(shimmer.origin.value);
+      group.current.getWorldPosition(bodyCenter);
+
+      // The parts' wave: a band sliding along the screen diagonal
+      // (camera right + up) across the whole layout. It follows the
+      // parts' reveal, so /home never sees it.
       camRight.setFromMatrixColumn(camera.matrixWorld, 0);
       camUp.setFromMatrixColumn(camera.matrixWorld, 1);
-      shimmer.direction.value.copy(camRight).add(camUp).normalize();
-      const span = config.radius * SHIMMER_SPAN_RADII;
-      if (prefersReducedMotion) {
-        // A band wide enough to cover the whole body evenly
-        shimmer.offset.value = 0;
-        shimmer.halfWidth.value = span * 20;
-        shimmer.strength.value = SHIMMER_STATIC_STRENGTH * partsShown.current;
-      } else {
-        const sweep = Math.min(
-          (t % SHIMMER_PERIOD_SECONDS) / SHIMMER_SWEEP_SECONDS,
-          1,
-        );
-        shimmer.offset.value = THREE.MathUtils.lerp(-span, span, sweep);
-        shimmer.halfWidth.value = config.radius * SHIMMER_HALF_WIDTH_RADII;
-        shimmer.strength.value = SHIMMER_STRENGTH * partsShown.current;
-      }
+      partsWave.update({
+        time: t,
+        delta,
+        active: true,
+        opacity: partsShown.current,
+        origin: bodyCenter,
+        direction: camRight.add(camUp).normalize(),
+      });
 
       // The /home energy wave: a band sliding along the leg axis, beacon
       // to antenna tips, clear of the body at both ends of its run
-      const waveStep = delta / WAVE_EASE_SECONDS;
-      waveWeight.current = THREE.MathUtils.clamp(
-        waveWeight.current + (bodyLink ? waveStep : -waveStep),
-        0,
-        1,
-      );
-      wave.origin.value.copy(shimmer.origin.value);
-      wave.direction.value.copy(legsDir);
-      const waveShown = waveWeight.current * opacity.current;
-      if (prefersReducedMotion) {
-        wave.offset.value = 0;
-        wave.halfWidth.value = config.radius * 20;
-        wave.strength.value = WAVE_STATIC_STRENGTH * waveShown;
-      } else {
-        const halfWidth = config.radius * WAVE_HALF_WIDTH_RADII;
-        const start = -(bodyRadius * 1.2 + halfWidth);
-        const end = bodyRadius * 0.7 + legLength + halfWidth;
-        const sweep = Math.min(
-          (t % WAVE_PERIOD_SECONDS) / WAVE_SWEEP_SECONDS,
-          1,
-        );
-        wave.offset.value = THREE.MathUtils.lerp(start, end, sweep);
-        wave.halfWidth.value = halfWidth;
-        wave.strength.value = WAVE_STRENGTH * waveShown;
-      }
+      wave.update({
+        time: t,
+        delta,
+        active: bodyLink,
+        opacity: opacity.current,
+        origin: bodyCenter,
+        direction: legsDir,
+      });
     }
 
     // Publish the parts' world centers for their DOM overlays
