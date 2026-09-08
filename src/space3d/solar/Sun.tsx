@@ -7,6 +7,7 @@ import { SUN_SIZE, SUN_SURFACE_RADIUS } from "../../landingScene";
 import { hoverState } from "../../solarHover";
 import { scrollTransitionState } from "../../scrollTransition";
 import { createSunGlowTexture } from "../textures";
+import { wireState } from "./wireSkin";
 import {
   createSunCoronaMaterial,
   createSunSurfaceMaterial,
@@ -32,11 +33,23 @@ import {
  * would span the whole frame and wash out the stars, so that view shrinks
  * it to hug the limb.
  */
-// Surface brightness multipliers (shader uTint; components >1 push the
-// palette toward white). Day mode reads noticeably brighter/whiter
-// against the light gradient; night gets a subtler lift.
-const DAY_TINT = new THREE.Color(1.55, 1.55, 1.7);
-const NIGHT_TINT = new THREE.Color(1.12, 1.12, 1.15);
+// Surface brightness multiplier (shader uTint; components >1 push the
+// palette toward white). Mesh view stays at 1: the tint multiplies the
+// photosphere's gold, and anything brighter blows out the blue the mesh
+// branch mixes in on top of it.
+const SATELLITE_TINT = new THREE.Color(1.12, 1.12, 1.15);
+const MESH_TINT = new THREE.Color(1, 1, 1);
+
+// The corona keeps its shape in mesh view — same shell, same
+// impact-parameter limb math, same eruptions — and only changes color.
+const CORONA_INNER = new THREE.Color("#ffd27a");
+const CORONA_OUTER = new THREE.Color("#ff7a1a");
+const CORONA_MESH_INNER = new THREE.Color("#dff2ff");
+const CORONA_MESH_OUTER = new THREE.Color("#4aa8ff");
+// The wide ambience sprite is a warm-white texture; tinting the material
+// is what cools it (the texture itself is shared)
+const GLOW_WARM = new THREE.Color("#ffffff");
+const GLOW_MESH = new THREE.Color("#8fd0ff");
 
 /** How far the flare corona's nominal rim extends past the limb, CSS px */
 const FLARE_RING_PX = 24;
@@ -52,7 +65,9 @@ const ENTER_SURFACE_OFFSET = 0.2 * SUN_RADIUS;
 const ENTER_RING_OUTER_RADIUS = 200 * SUN_SIZE;
 const ENTER_FONT = retroFloralFont(ENTER_FONT_SIZE_SVG);
 const ENTER_TEXT_COLOR = new THREE.Color("#ffffff");
-const ENTER_DAY_COLOR = new THREE.Color("#412596");
+// Mesh view keeps the label bright — the old dark purple was there to
+// read against the light sky this view replaced
+const ENTER_MESH_COLOR = new THREE.Color("#dff2ff");
 const ENTER_HOVER_COLOR = new THREE.Color("#9e80f9");
 /** Fade duration for the landing-intro reveal of the ENTER label */
 const ENTER_REVEAL_SECONDS = 0.8;
@@ -76,10 +91,10 @@ function orientLetter(quaternion: THREE.Quaternion, angle: number) {
 
 /** Curved "ENTER" text above the sun, matching the landing SVG textPath. */
 function EnterRing({
-  isNightMode,
+  isSatelliteView,
   revealed,
 }: {
-  isNightMode: boolean;
+  isSatelliteView: boolean;
   /** Fades the label in (the landing intro reveals it after the planets) */
   revealed: boolean;
 }) {
@@ -158,7 +173,7 @@ function EnterRing({
     // ~40% of the scrub so it doesn't hang mid-swoop (and fade it back
     // if the visitor scrolls up)
     const scrubFade = 1 - Math.min(1, scrollTransitionState.progress * 2.5);
-    const base = isNightMode ? ENTER_TEXT_COLOR : ENTER_DAY_COLOR;
+    const base = isSatelliteView ? ENTER_TEXT_COLOR : ENTER_MESH_COLOR;
     const target = hoverState.sun ? ENTER_HOVER_COLOR : base;
     const ease = Math.min(1, delta * 10);
     for (const { material } of letters) {
@@ -188,14 +203,14 @@ function EnterRing({
 export default function Sun({
   targetScale = 1,
   targetGlowScale = 6,
-  isNightMode,
+  isSatelliteView,
   showEnterRing = false,
   enterRevealed = true,
 }: {
   targetScale?: number;
   /** Glow sprite size as a multiple of SUN_RADIUS (eased) */
   targetGlowScale?: number;
-  isNightMode: boolean;
+  isSatelliteView: boolean;
   /** Landing-only curved "ENTER" link label */
   showEnterRing?: boolean;
   /** Fades the ENTER label in during the landing intro */
@@ -242,9 +257,23 @@ export default function Sun({
     }
     // Ease the brightness so the mode toggle doesn't pop
     (surfaceMaterial.uniforms.uTint.value as THREE.Color).lerp(
-      isNightMode ? NIGHT_TINT : DAY_TINT,
+      isSatelliteView ? SATELLITE_TINT : MESH_TINT,
       ease,
     );
+    // The scene-wide crossfade drives the star's own wire cage, and takes
+    // the corona and the wide glow sprite from amber to plasma blue with
+    // it
+    const meshAmount = wireState.amount;
+    surfaceMaterial.uniforms.uMesh.value = meshAmount;
+    (coronaMaterial.uniforms.uColorInner.value as THREE.Color)
+      .copy(CORONA_INNER)
+      .lerp(CORONA_MESH_INNER, meshAmount);
+    (coronaMaterial.uniforms.uColorOuter.value as THREE.Color)
+      .copy(CORONA_OUTER)
+      .lerp(CORONA_MESH_OUTER, meshAmount);
+    if (glow.current) {
+      glow.current.material.color.copy(GLOW_WARM).lerp(GLOW_MESH, meshAmount);
+    }
 
     // Flare corona shell: the limb alignment is baked into the shader
     // (per-fragment impact parameter — see sunShaders.ts), so the only
@@ -301,7 +330,10 @@ export default function Sun({
       </group>
       {showEnterRing && (
         <group ref={enterScaler}>
-          <EnterRing isNightMode={isNightMode} revealed={enterRevealed} />
+          <EnterRing
+            isSatelliteView={isSatelliteView}
+            revealed={enterRevealed}
+          />
         </group>
       )}
     </>

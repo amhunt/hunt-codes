@@ -19,9 +19,9 @@ import Synth from "./Synth";
 import SvgGenerator from "./SvgGenerator";
 import AppBackground from "AppBackground";
 import BadgeLink from "BadgeLink";
-import DayNightSwitch from "DayNightSwitch";
 import Landing from "Landing";
 import SpaceJamSwitch from "SpaceJamSwitch";
+import ViewModeSwitch from "ViewModeSwitch";
 import { installClickTracking, trackPageView } from "./analytics";
 import { NOT_FOUND_TITLE, ROUTE_TITLES, SITE_ORIGIN } from "./routes";
 
@@ -84,10 +84,23 @@ const RouteMeta = () => {
   return null;
 };
 
+/** Remembers the visitor's pick between the two scene views */
+const VIEW_STORAGE_KEY = "hunt-codes-scene-view";
+
 const App = () => {
   const [showBridge, setShowBridge] = useState(false);
-  // The whole app is night until the visitor flips the moon/sun switch
-  const [isNightMode, setIsNightMode] = useState(true);
+  // The scene opens in satellite view — the photographed solar system —
+  // until the visitor flips the corner switch to mesh. Remembered across
+  // visits: a named view that resets on every reload reads as a bug.
+  // (Same guarded read as the drawing studio's: storage throws outright
+  // in a browser set to block site data.)
+  const [isSatelliteView, setIsSatelliteView] = useState(() => {
+    try {
+      return window.localStorage.getItem(VIEW_STORAGE_KEY) !== "mesh";
+    } catch {
+      return true;
+    }
+  });
 
   usePauseAudioOnHideEventListener();
   useEffect(installClickTracking, []);
@@ -95,13 +108,21 @@ const App = () => {
   const isSynthRoute = window.location.pathname === "/synth";
 
   // Tint the mobile browser chrome (iOS Safari tab bar, Android status
-  // bar) to match the active palette; day matches the top of the
-  // App-background_day gradient
+  // bar) to match the active view; mesh matches the top of the
+  // App-background_mesh ground
   useEffect(() => {
     document
       .querySelector('meta[name="theme-color"]')
-      ?.setAttribute("content", isNightMode ? "#000000" : "#ffc2d9");
-  }, [isNightMode]);
+      ?.setAttribute("content", isSatelliteView ? "#000000" : "#050f22");
+    try {
+      window.localStorage.setItem(
+        VIEW_STORAGE_KEY,
+        isSatelliteView ? "satellite" : "mesh",
+      );
+    } catch {
+      // A browser blocking site data just means the view won't persist
+    }
+  }, [isSatelliteView]);
 
   // fade home content in once mounted
   useEffect(() => {
@@ -112,13 +133,16 @@ const App = () => {
   }, []);
 
   return (
-    <div className={cx("App", isNightMode ? "night" : "day")}>
+    <div className={cx("App", isSatelliteView ? "satellite" : "mesh")}>
       <Router>
         <RouteMeta />
-        <AppBackground showBridge={showBridge} isNightMode={isNightMode} />
-        <DayNightSwitch
-          isNightMode={isNightMode}
-          onCheckedChange={setIsNightMode}
+        <AppBackground
+          showBridge={showBridge}
+          isSatelliteView={isSatelliteView}
+        />
+        <ViewModeSwitch
+          isSatelliteView={isSatelliteView}
+          onChange={setIsSatelliteView}
         />
         <Routes>
           <Route path="/" element={<Landing />} />
@@ -139,7 +163,7 @@ const App = () => {
             visitors look for the music; mounted once, app-wide, the track
             carries across routes. */}
         {isSynthRoute ? null : <SpaceJamSwitch />}
-        <BadgeLink isNightMode={isNightMode} />
+        <BadgeLink isSatelliteView={isSatelliteView} />
         {/* App-level so the windshield frame and warp flash survive the
             rides' mid-flight route hops (/home → /journey → /home) —
             per-page mounts cut the flash short at every navigation */}

@@ -20,7 +20,7 @@ $breakpoint-lg: 1280px;
 // readable in the combinations the original per-route styling never had
 // to handle: home content on a black night sky, and the night-designed
 // pages (landing, about, draw) on the light day gradient.
-.App.night {
+.App {
   .homeInfoContainer,
   .sm-screen-summary-line {
     color: #e8e6f5;
@@ -33,138 +33,6 @@ $breakpoint-lg: 1280px;
 
   .homePageBackLink > a {
     color: $purp-light;
-  }
-}
-
-.App.day {
-  .resume-container {
-    // Soft near-black on the opaque white panel but gentler, matching the site's soft aesthetic
-    color: #24203a;
-  }
-
-  .svg-generator-title,
-  .svg-generator-input,
-  .svg-generator-signature input {
-    color: #222;
-  }
-
-  .svg-generator-subtitle {
-    color: rgba(20, 20, 40, 0.7);
-  }
-
-  // The composer's purple is tuned for the night sky — by day a lighter
-  // lavender wash keeps the dark text legible over the pastel gradient
-  .svg-generator-composer {
-    background: rgba(158, 128, 249, 0.32);
-    border-color: rgba(65, 37, 150, 0.3);
-
-    // This override outranks the base :focus-within, so restate the focus
-    // ring here or the panel never shows one by day
-    &:focus-within {
-      border-color: $purp;
-      box-shadow: 0 0 24px rgba(65, 37, 150, 0.25);
-    }
-  }
-
-  // The small, faint text needs a heavier hand over the lavender than it
-  // did over the old white wash: 0.72 clears 4.5:1, 0.6 landed at ~3.8:1
-  .svg-generator-input::placeholder,
-  .svg-generator-signature input::placeholder {
-    color: rgba(20, 20, 40, 0.72);
-  }
-
-  .svg-generator-signature {
-    color: rgba(20, 20, 40, 0.68);
-
-    input {
-      border-bottom-color: rgba(0, 0, 0, 0.5);
-
-      // Same specificity trap as the composer's focus ring
-      &:focus {
-        border-bottom-color: $purp;
-      }
-    }
-  }
-
-  .svg-generator-counter {
-    color: rgba(20, 20, 40, 0.72);
-
-    // The night orange is lost on lavender (and this rule outranks the
-    // base .is-full anyway) — a rust that still reads as a warning
-    &.is-full {
-      color: #7c2d12;
-    }
-  }
-
-  .svg-generator-ideas-label,
-  .svg-generator-gallery-title,
-  .svg-generator-loading-hint {
-    color: rgba(20, 20, 40, 0.65);
-  }
-
-  .svg-generator-idea,
-  .svg-generator-action {
-    color: rgba(20, 20, 40, 0.65);
-    border-color: rgba(0, 0, 0, 0.2);
-
-    &:hover {
-      color: $purp;
-      border-color: $purp;
-    }
-  }
-
-  .svg-generator-loading {
-    background: rgba(255, 255, 255, 0.35);
-    border-color: rgba(0, 0, 0, 0.15);
-  }
-
-  .svg-generator-loading-line {
-    color: rgba(20, 20, 40, 0.7);
-  }
-
-  .svg-generator-caption-text {
-    color: rgba(20, 20, 40, 0.7);
-  }
-
-  // The cards stay dark in both palettes, but 0.45 black composites to a
-  // mid-gray over the day gradient — deepen it so the white names hold up
-  .svg-generator-gallery-card {
-    background: rgba(0, 0, 0, 0.8);
-  }
-
-  .svg-generator-error {
-    color: #c62828;
-  }
-
-  // White pill text washes out on the frosted-white day panel
-  .tool-pill {
-    color: $purp;
-  }
-
-  // Rainbow keyframes composite to pale pastels over the white panel —
-  // dark text stays legible through the whole cycle
-  .interest-pill {
-    color: #24203a;
-    background-color: #cdbcff;
-  }
-
-  // .inverse links are tuned for the night sky — swap back to the standard
-  // day link colors on the white panel
-  .inverse {
-    color: $purp;
-
-    &:hover {
-      color: #010c73;
-    }
-  }
-
-  // The cyan icon-circle fill is invisible over the cream gradient
-  .icon-pill {
-    background: rgba(65, 37, 150, 0.12);
-
-    &:hover {
-      background: rgba(65, 37, 150, 0.24);
-    }
   }
 }
 
@@ -201,26 +69,26 @@ $breakpoint-lg: 1280px;
 }
 
 // ─── /journey: the story crawl ────────────────
-// Deep space even in day mode — additive warp streaks and gold text
-// read as nothing on the pink sky. Same forced-night trick as
-// body.rocket-journey below; the palette toggle rests during the show.
+// Bare black in both views: the crawl's gold text and the additive warp
+// streaks want an empty sky, and mesh view's graticule would compete
+// with them. Same forced-backdrop trick as body.rocket-journey below;
+// the view switch rests during the show.
 body.journey-mode {
-  .App-background_day,
+  .App-background_mesh,
   .App-gg-bridge,
   .gg-fog-layer {
     opacity: 0 !important;
   }
 
-  .App-background_day,
   .gg-fog-drift {
     animation: none !important;
   }
 
-  .App-background_night {
+  .App-background_satellite {
     opacity: 1 !important;
   }
 
-  .day-night-switch {
+  .view-mode-switch {
     opacity: 0;
     pointer-events: none;
     transition: opacity 0.5s ease;
@@ -774,7 +642,6 @@ p {
   // trigger vestibular discomfort.
   .gg-fog-drift,
   .interest-pill,
-  .App-background_day,
   .body-outline-pulse,
   .scroll-hint-chevron,
   .sjs-bar,
@@ -853,21 +720,6 @@ p {
   color: $purp-light;
 }
 
-// White-on-pink washes out over the day gradient
-.App.day {
-  .scroll-hint {
-    color: $purp;
-  }
-
-  .scroll-hint-label {
-    color: rgba(36, 32, 58, 0.9);
-  }
-
-  .scroll-hint:hover .scroll-hint-label {
-    color: $purp;
-  }
-}
-
 // On a phone the music switch (fixed bottom-left) shares the bottom band
 // with a centred caption, so the caption is lifted clear of it. The band
 // is also where the sun's limb lands at portrait aspects, so the caption
@@ -885,16 +737,6 @@ p {
 
   .scroll-hint-chevron {
     filter: drop-shadow(0 1px 3px rgba(0, 0, 0, 0.7));
-  }
-
-  .App.day {
-    .scroll-hint-label {
-      text-shadow: 0 1px 4px rgba(255, 255, 255, 0.85);
-    }
-
-    .scroll-hint-chevron {
-      filter: drop-shadow(0 1px 3px rgba(255, 255, 255, 0.8));
-    }
   }
 }
 
@@ -976,11 +818,6 @@ p {
   border-radius: 17px;
   background: rgba(6, 4, 22, 0.8);
   box-shadow: 0 2px 6px rgba(0, 0, 0, 0.25);
-}
-
-.App.day .resume-home-link > a {
-  background: rgba(255, 255, 255, 0.88);
-  box-shadow: 0 2px 6px rgba(80, 40, 120, 0.18);
 }
 
 // The "andrewhunt" name at the top of every page past the landing. This
@@ -1138,13 +975,6 @@ li > ul > li {
   }
 }
 
-.App.day .resume-panel {
-  // More opaque + a soft shadow so the panel separates from the very bright
-  // pink-to-white day gradient and the dark body text keeps its contrast
-  background: rgba(255, 255, 255, 0.88);
-  box-shadow: 0 8px 24px rgba(80, 40, 120, 0.12);
-}
-
 .splitRow {
   display: flex;
   justify-content: space-between;
@@ -1289,32 +1119,11 @@ li > ul > li {
   background: rgba(158, 128, 249, 0.28);
 }
 
-.App.day .work-card-tag {
-  color: $purp;
-  background: rgba(65, 37, 150, 0.12);
-}
-
 .work-card-subtitle {
   font-size: 0.85rem;
   line-height: 1.45;
   font-weight: 400;
   opacity: 0.8;
-}
-
-.App.day .work-card {
-  border-color: rgba(65, 37, 150, 0.18);
-  background: rgba(65, 37, 150, 0.06);
-
-  &:hover,
-  &:focus-visible {
-    border-color: $purp;
-    background: rgba(65, 37, 150, 0.12);
-  }
-}
-
-.App.day .work-card-icon {
-  background: rgba(65, 37, 150, 0.12);
-  color: $purp;
 }
 
 .interest-pill {
@@ -1382,8 +1191,8 @@ li > ul > li {
   transition: scale 0.15s ease;
 }
 
-// Doubled class beats `.App.day .interest-pill` (day mode's dark pill text)
-// so the hover goes white-on-rainbow in both palettes
+// Doubled class so the hover goes white-on-rainbow whatever the pill's
+// own color is
 .pill.easter-egg-pill:hover,
 .pill.easter-egg-pill:focus-visible {
   color: #fff;
@@ -1527,12 +1336,8 @@ li > ul > li {
     }
   }
 
-  .App.night .homeInfoContainer::before {
+  .App .homeInfoContainer::before {
     background: rgba(2, 2, 12, 0.78);
-  }
-
-  .App.day .homeInfoContainer::before {
-    background: rgba(255, 252, 250, 0.78);
   }
 
   .sm-screen-summary-line {
@@ -1648,12 +1453,6 @@ button {
   }
 }
 
-// Darker focus ring on the light day background for adequate contrast
-.App.day a:focus-visible,
-.App.day button:focus-visible {
-  outline-color: $purp;
-}
-
 li {
   padding-bottom: 8px;
 }
@@ -1734,7 +1533,7 @@ a:hover {
   }
 }
 
-.App-background_night {
+.App-background_satellite {
   // A bare black backdrop; the WebGL star field renders on top and its hue
   // rotation happens in the shader, so no GPU-filter animation here.
   background-color: black;
@@ -1816,10 +1615,6 @@ a:hover {
 .satellite-link:hover .body-outline,
 .satellite-link:focus-visible .body-outline {
   opacity: 1;
-}
-
-.App.day .body-outline .body-outline-base {
-  stroke: $purp;
 }
 
 @keyframes body-outline-pulse {
@@ -1923,10 +1718,6 @@ a:hover {
   }
 }
 
-.App.day .projects-caption {
-  color: #24203a;
-}
-
 // ─── Zip brand-video popover (ZipVideoMoon) ────────────────
 // While the video plays, `video-mode` on <body> hides everything except
 // the stars: the solar canvas, the name letters, the mode toggle, the
@@ -1937,7 +1728,7 @@ a:hover {
 body.video-mode {
   .solar-canvas,
   .nameTitle,
-  .day-night-switch,
+  .view-mode-switch,
   .music-toggle,
   .homePageBackLink,
   .life-timeline,
@@ -1957,13 +1748,14 @@ body.video-mode {
 // ─── Lightspeed rides (rocket → /journey, 808 transits) ────────────────
 // While a ride plays, `rocket-journey` on <body> (rocketJourney.ts)
 // hides the page chrome — same pattern as video-mode — and reveals the
-// cockpit windshield frame. It also forces the night backdrop: the warp
-// streaks are additive light and need a black sky, even in day mode.
+// cockpit windshield frame. It also forces the bare black backdrop: the
+// warp streaks are additive light and want an empty sky, so mesh view's
+// graticule sits the ride out.
 body.rocket-journey {
   .homeInfoContainer,
   .homePageBackLink,
   .nameTitle,
-  .day-night-switch,
+  .view-mode-switch,
   .music-toggle,
   .asteroid-link,
   .satellite-link,
@@ -1987,21 +1779,19 @@ body.rocket-journey {
       visibility 0s linear 0.5s;
   }
 
-  .App-background_day,
+  .App-background_mesh,
   .App-gg-bridge,
   .gg-fog-layer {
     opacity: 0 !important;
   }
 
-  // Same rule as .App-background_day.off below: a fullscreen filter
-  // animation must not keep running on an invisible layer — and the ride
-  // is the heaviest GPU load on the site
-  .App-background_day,
+  // A fullscreen animation must not keep running on an invisible layer —
+  // and the ride is the heaviest GPU load on the site
   .gg-fog-drift {
     animation: none !important;
   }
 
-  .App-background_night {
+  .App-background_satellite {
     opacity: 1 !important;
   }
 }
@@ -2090,10 +1880,6 @@ body.rocket-journey #rocket-cockpit {
   }
 }
 
-.App.day .synthBackLink button {
-  color: $purp;
-}
-
 .synth-knob {
   position: fixed;
   visibility: hidden;
@@ -2145,10 +1931,6 @@ body.rocket-journey #rocket-cockpit {
   }
 }
 
-.App.day .synth-knob-arc .synth-knob-track {
-  stroke: rgba(20, 20, 40, 0.28);
-}
-
 .synth-knob-label {
   position: absolute;
   top: 100%;
@@ -2158,10 +1940,6 @@ body.rocket-journey #rocket-cockpit {
   letter-spacing: 0.08em;
   white-space: nowrap;
   color: #e8e6f5;
-}
-
-.App.day .synth-knob-label {
-  color: #2a2140;
 }
 
 // The sun's overlay doubles as the arpeggiator's play/pause switch
@@ -2205,10 +1983,6 @@ body.rocket-journey #rocket-cockpit {
   @media (min-width: $breakpoint-md) {
     bottom: 16px;
   }
-}
-
-.App.day .synth-hint {
-  color: rgba(30, 22, 60, 0.7);
 }
 
 .resume-inner-container {
@@ -2262,10 +2036,6 @@ body.rocket-journey #rocket-cockpit {
   color: #cfcbe4;
 }
 
-.App.day .zip-video-caption {
-  color: #3a3454;
-}
-
 .zip-video-close {
   position: absolute;
   top: -44px;
@@ -2281,14 +2051,6 @@ body.rocket-journey #rocket-cockpit {
   }
 }
 
-.App.day .zip-video-close {
-  color: #24203a;
-
-  &:hover {
-    color: #000000;
-  }
-}
-
 @keyframes zipVideoIn {
   from {
     opacity: 0;
@@ -2300,221 +2062,26 @@ body.rocket-journey #rocket-cockpit {
   }
 }
 
-.App-background_day {
-  // Gentle full-spectrum hue drift on the pastel day gradient (the night
-  // layer's stars animate in-shader instead). Disabled under
-  // prefers-reduced-motion, and removed entirely while the layer is faded
-  // out in night mode — a fullscreen filter animation keeps the layer on
-  // the (GPU) filtered compositing path even at opacity 0.
-  animation: 20s linear infinite alternate starsHueAnim;
-
-  &.off {
-    animation: none;
-  }
-
-  background: linear-gradient(
-    168deg,
-    hsl(337.38, 100%, 88.04%) 0%,
-    hsl(337.38, 100%, 88.04%) 1%,
-    hsl(337.4, 100%, 88.18%) 1%,
-    hsl(337.4, 100%, 88.18%) 2%,
-    hsl(337.43, 100%, 88.32%) 2%,
-    hsl(337.43, 100%, 88.32%) 3%,
-    hsl(337.46, 100%, 88.46%) 3%,
-    hsl(337.46, 100%, 88.46%) 4%,
-    hsl(337.48, 100%, 88.59%) 4%,
-    hsl(337.48, 100%, 88.59%) 5%,
-    hsl(337.51, 100%, 88.73%) 5%,
-    hsl(337.51, 100%, 88.73%) 6%,
-    hsl(337.53, 100%, 88.87%) 6%,
-    hsl(337.53, 100%, 88.87%) 7%,
-    hsl(337.56, 100%, 89.01%) 7%,
-    hsl(337.56, 100%, 89.01%) 8%,
-    hsl(337.58, 100%, 89.14%) 8%,
-    hsl(337.58, 100%, 89.14%) 9%,
-    hsl(337.61, 100%, 89.28%) 9%,
-    hsl(337.61, 100%, 89.28%) 10%,
-    hsl(337.63, 100%, 89.41%) 10%,
-    hsl(337.63, 100%, 89.41%) 11%,
-    hsl(337.65, 100%, 89.55%) 11%,
-    hsl(337.65, 100%, 89.55%) 12%,
-    hsl(337.68, 100%, 89.68%) 12%,
-    hsl(337.68, 100%, 89.68%) 13%,
-    hsl(337.7, 100%, 89.82%) 13%,
-    hsl(337.7, 100%, 89.82%) 14%,
-    hsl(337.73, 100%, 89.95%) 14%,
-    hsl(337.73, 100%, 89.95%) 15%,
-    hsl(337.75, 100%, 90.08%) 15%,
-    hsl(337.75, 100%, 90.08%) 16%,
-    hsl(337.77, 100%, 90.21%) 16%,
-    hsl(337.77, 100%, 90.21%) 17%,
-    hsl(337.8, 100%, 90.35%) 17%,
-    hsl(337.8, 100%, 90.35%) 18%,
-    hsl(337.82, 100%, 90.48%) 18%,
-    hsl(337.82, 100%, 90.48%) 19%,
-    hsl(337.84, 100%, 90.61%) 19%,
-    hsl(337.84, 100%, 90.61%) 20%,
-    hsl(337.87, 100%, 90.74%) 20%,
-    hsl(337.87, 100%, 90.74%) 21%,
-    hsl(337.89, 100%, 90.87%) 21%,
-    hsl(337.89, 100%, 90.87%) 22%,
-    hsl(337.91, 100%, 91%) 22%,
-    hsl(337.91, 100%, 91%) 23%,
-    hsl(337.93, 100%, 91.13%) 23%,
-    hsl(337.93, 100%, 91.13%) 24%,
-    hsl(337.96, 100%, 91.26%) 24%,
-    hsl(337.96, 100%, 91.26%) 25%,
-    hsl(337.98, 100%, 91.39%) 25%,
-    hsl(337.98, 100%, 91.39%) 26%,
-    hsl(338, 100%, 91.52%) 26%,
-    hsl(338, 100%, 91.52%) 27%,
-    hsl(338.02, 100%, 91.64%) 27%,
-    hsl(338.02, 100%, 91.64%) 28%,
-    hsl(338.04, 100%, 91.77%) 28%,
-    hsl(338.04, 100%, 91.77%) 29%,
-    hsl(338.06, 100%, 91.9%) 29%,
-    hsl(338.06, 100%, 91.9%) 30%,
-    hsl(338.09, 100%, 92.02%) 30%,
-    hsl(338.09, 100%, 92.02%) 31%,
-    hsl(338.11, 100%, 92.15%) 31%,
-    hsl(338.11, 100%, 92.15%) 32%,
-    hsl(338.13, 100%, 92.28%) 32%,
-    hsl(338.13, 100%, 92.28%) 33%,
-    hsl(338.15, 100%, 92.4%) 33%,
-    hsl(338.15, 100%, 92.4%) 34%,
-    hsl(338.17, 100%, 92.53%) 34%,
-    hsl(338.17, 100%, 92.53%) 35%,
-    hsl(338.19, 100%, 92.65%) 35%,
-    hsl(338.19, 100%, 92.65%) 36%,
-    hsl(338.21, 100%, 92.78%) 36%,
-    hsl(338.21, 100%, 92.78%) 37%,
-    hsl(338.23, 100%, 92.9%) 37%,
-    hsl(338.23, 100%, 92.9%) 38%,
-    hsl(338.25, 100%, 93.03%) 38%,
-    hsl(338.25, 100%, 93.03%) 39%,
-    hsl(338.27, 100%, 93.15%) 39%,
-    hsl(338.27, 100%, 93.15%) 40%,
-    hsl(338.29, 100%, 93.27%) 40%,
-    hsl(338.29, 100%, 93.27%) 41%,
-    hsl(338.31, 100%, 93.39%) 41%,
-    hsl(338.31, 100%, 93.39%) 42%,
-    hsl(338.33, 100%, 93.52%) 42%,
-    hsl(338.33, 100%, 93.52%) 43%,
-    hsl(338.35, 100%, 93.64%) 43%,
-    hsl(338.35, 100%, 93.64%) 44%,
-    hsl(338.37, 100%, 93.76%) 44%,
-    hsl(338.37, 100%, 93.76%) 45%,
-    hsl(338.39, 100%, 93.88%) 45%,
-    hsl(338.39, 100%, 93.88%) 46%,
-    hsl(338.41, 100%, 94%) 46%,
-    hsl(338.41, 100%, 94%) 47%,
-    hsl(338.43, 100%, 94.12%) 47%,
-    hsl(338.43, 100%, 94.12%) 48%,
-    hsl(338.45, 100%, 94.24%) 48%,
-    hsl(338.45, 100%, 94.24%) 49%,
-    hsl(338.47, 100%, 94.36%) 49%,
-    hsl(338.47, 100%, 94.36%) 50%,
-    hsl(338.49, 100%, 94.48%) 50%,
-    hsl(338.49, 100%, 94.48%) 51%,
-    hsl(338.5, 100%, 94.6%) 51%,
-    hsl(338.5, 100%, 94.6%) 52%,
-    hsl(338.52, 100%, 94.72%) 52%,
-    hsl(338.52, 100%, 94.72%) 53%,
-    hsl(338.54, 100%, 94.84%) 53%,
-    hsl(338.54, 100%, 94.84%) 54%,
-    hsl(338.56, 100%, 94.96%) 54%,
-    hsl(338.56, 100%, 94.96%) 55%,
-    hsl(338.58, 100%, 95.08%) 55%,
-    hsl(338.58, 100%, 95.08%) 56%,
-    hsl(338.6, 100%, 95.2%) 56%,
-    hsl(338.6, 100%, 95.2%) 57%,
-    hsl(338.61, 100%, 95.31%) 57%,
-    hsl(338.61, 100%, 95.31%) 58%,
-    hsl(338.63, 100%, 95.43%) 58%,
-    hsl(338.63, 100%, 95.43%) 59%,
-    hsl(338.65, 100%, 95.55%) 59%,
-    hsl(338.65, 100%, 95.55%) 60%,
-    hsl(338.67, 100%, 95.66%) 60%,
-    hsl(338.67, 100%, 95.66%) 61%,
-    hsl(338.69, 100%, 95.78%) 61%,
-    hsl(338.69, 100%, 95.78%) 62%,
-    hsl(338.7, 100%, 95.9%) 62%,
-    hsl(338.7, 100%, 95.9%) 63%,
-    hsl(338.72, 100%, 96.01%) 63%,
-    hsl(338.72, 100%, 96.01%) 64%,
-    hsl(338.74, 100%, 96.13%) 64%,
-    hsl(338.74, 100%, 96.13%) 65%,
-    hsl(338.76, 100%, 96.24%) 65%,
-    hsl(338.76, 100%, 96.24%) 66%,
-    hsl(338.77, 100%, 96.36%) 66%,
-    hsl(338.77, 100%, 96.36%) 67%,
-    hsl(338.79, 100%, 96.47%) 67%,
-    hsl(338.79, 100%, 96.47%) 68%,
-    hsl(338.81, 100%, 96.59%) 68%,
-    hsl(338.81, 100%, 96.59%) 69%,
-    hsl(338.82, 100%, 96.7%) 69%,
-    hsl(338.82, 100%, 96.7%) 70%,
-    hsl(338.84, 100%, 96.81%) 70%,
-    hsl(338.84, 100%, 96.81%) 71%,
-    hsl(338.86, 100%, 96.93%) 71%,
-    hsl(338.86, 100%, 96.93%) 72%,
-    hsl(338.87, 100%, 97.04%) 72%,
-    hsl(338.87, 100%, 97.04%) 73%,
-    hsl(338.89, 100%, 97.15%) 73%,
-    hsl(338.89, 100%, 97.15%) 74%,
-    hsl(338.91, 100%, 97.27%) 74%,
-    hsl(338.91, 100%, 97.27%) 75%,
-    hsl(338.92, 100%, 97.38%) 75%,
-    hsl(338.92, 100%, 97.38%) 76%,
-    hsl(338.94, 100%, 97.49%) 76%,
-    hsl(338.94, 100%, 97.49%) 77%,
-    hsl(338.96, 100%, 97.6%) 77%,
-    hsl(338.96, 100%, 97.6%) 78%,
-    hsl(338.97, 100%, 97.71%) 78%,
-    hsl(338.97, 100%, 97.71%) 79%,
-    hsl(338.99, 100%, 97.83%) 79%,
-    hsl(338.99, 100%, 97.83%) 80%,
-    hsl(339, 100%, 97.94%) 80%,
-    hsl(339, 100%, 97.94%) 81%,
-    hsl(339.02, 100%, 98.05%) 81%,
-    hsl(339.02, 100%, 98.05%) 82%,
-    hsl(339.04, 100%, 98.16%) 82%,
-    hsl(339.04, 100%, 98.16%) 83%,
-    hsl(339.05, 100%, 98.27%) 83%,
-    hsl(339.05, 100%, 98.27%) 84%,
-    hsl(339.07, 100%, 98.38%) 84%,
-    hsl(339.07, 100%, 98.38%) 85%,
-    hsl(339.08, 100%, 98.49%) 85%,
-    hsl(339.08, 100%, 98.49%) 86%,
-    hsl(339.1, 100%, 98.6%) 86%,
-    hsl(339.1, 100%, 98.6%) 87%,
-    hsl(339.11, 100%, 98.71%) 87%,
-    hsl(339.11, 100%, 98.71%) 88%,
-    hsl(339.13, 100%, 98.82%) 88%,
-    hsl(339.13, 100%, 98.82%) 89%,
-    hsl(339.14, 100%, 98.92%) 89%,
-    hsl(339.14, 100%, 98.92%) 90%,
-    hsl(339.16, 100%, 99.03%) 90%,
-    hsl(339.16, 100%, 99.03%) 91%,
-    hsl(339.17, 100%, 99.14%) 91%,
-    hsl(339.17, 100%, 99.14%) 92%,
-    hsl(339.19, 100%, 99.25%) 92%,
-    hsl(339.19, 100%, 99.25%) 93%,
-    hsl(339.2, 100%, 99.36%) 93%,
-    hsl(339.2, 100%, 99.36%) 94%,
-    hsl(339.22, 100%, 99.47%) 94%,
-    hsl(339.22, 100%, 99.47%) 95%,
-    hsl(339.23, 100%, 99.57%) 95%,
-    hsl(339.23, 100%, 99.57%) 96%,
-    hsl(339.25, 100%, 99.68%) 96%,
-    hsl(339.25, 100%, 99.68%) 97%,
-    hsl(339.26, 100%, 99.79%) 97%,
-    hsl(339.26, 100%, 99.79%) 98%,
-    hsl(339.28, 100%, 99.89%) 98%,
-    hsl(339.28, 100%, 99.89%) 99%,
-    hsl(0, 0%, 100%) 99%,
-    hsl(0, 0%, 100%) 100%
-  );
+.App-background_mesh {
+  // Mesh view's ground: a faint graticule over a deep midnight-blue
+  // radial, so the wire scene sits on something that reads as a chart
+  // rather than on flat black. Static paint — no fullscreen filter
+  // animation (the pink gradient this replaced ran a 20s hue-rotate,
+  // which on a committed blue-white palette would cycle it through green
+  // and magenta) and so nothing here for the reduced-motion block or the
+  // two ride guards to switch off.
+  background:
+    repeating-linear-gradient(
+      0deg,
+      rgba(120, 190, 255, 0.05) 0 1px,
+      transparent 1px 64px
+    ),
+    repeating-linear-gradient(
+      90deg,
+      rgba(120, 190, 255, 0.05) 0 1px,
+      transparent 1px 64px
+    ),
+    radial-gradient(120% 90% at 50% 8%, #0a1b33 0%, #050f22 55%, #02060f 100%);
 }
 
 @keyframes fadeIn {
@@ -2594,195 +2161,133 @@ $switch-ease: cubic-bezier(0.45, 0.05, 0.25, 1.2);
   }
 }
 
-// ─── Day/Night Switch (DayNightSwitch.tsx) ─────────────────
-// Sun/moon toggle after dribbble.com/shots/14431115: sky + clouds with a
-// glowing sun thumb (unchecked/day), starry navy with a cratered moon
-// thumb (checked/night).
+// ─── Scene view switch (ViewModeSwitch.tsx) ────────────────
+// The Satellite/Mesh layer chip, after the one every maps app parks in a
+// corner: a dark glass pill holding two labelled segments with a
+// travelling highlight behind the active one. Unlike the pill switches
+// above it carries its own chassis — two words need the width, and the
+// segments are buttons rather than a Radix switch.
 
-.day-night-switch {
+.view-mode-switch {
   // Positioned by the Tailwind classes on the component (fixed top-right).
   // viewport-fit=cover extends the page under notches/rounded corners, so
-  // nudge the toggle inside the safe area on phones.
+  // nudge the switch inside the safe area on phones.
   top: calc(1rem + env(safe-area-inset-top, 0px));
   right: calc(3rem + env(safe-area-inset-right, 0px));
-  // lg+: the toggle joins the music switch in a bottom-left control row
+  // lg+: the switch joins the music toggle in a bottom-left control row
   // instead of floating alone in the top-right corner. The left offset is
   // the music switch's right edge (1rem in, one switch wide) plus a gap;
-  // see .music-toggle below.
+  // see .music-toggle below. Only that switch's width feeds the sum, so
+  // this chip's own width is free to change.
   @media (min-width: $breakpoint-lg) {
     top: auto;
     right: auto;
     left: calc(1rem + #{$switch-width} + 20px + env(safe-area-inset-left, 0px));
     bottom: calc(1rem + env(safe-area-inset-bottom, 0px));
   }
-  background: #5fa8e3;
+  // No `position` here: the component's Tailwind `fixed` sets it, and a
+  // fixed element is already the containing block the indicator's
+  // absolute positioning needs. Declaring `relative` in this file would
+  // win the cascade and unpin the switch.
+  display: flex;
+  align-items: center;
+  padding: 3px;
+  border-radius: 999px;
+  background: rgba(9, 18, 36, 0.72);
+  border: 1px solid rgba(150, 200, 255, 0.22);
+  box-shadow:
+    inset 0 1px 1px rgba(255, 255, 255, 0.08),
+    0 2px 8px rgba(0, 0, 0, 0.35);
   opacity: 1;
   // The 1.5s opacity delay is the fade-in after leaving the landing page:
-  // the camera swoop leads, then the toggle appears
-  transition:
-    background 500ms ease,
-    opacity 800ms ease 1500ms;
+  // the camera swoop leads, then the switch appears
+  transition: opacity 800ms ease 1500ms;
 
-  &.dns-hidden {
+  &.vms-hidden {
     // Hidden on the landing page; disappear instantly (no delay) so
     // navigating back to space doesn't leave it lingering
     opacity: 0;
     pointer-events: none;
-    // Leave the tab order once the fade completes — an invisible toggle
+    // Leave the tab order once the fade completes — an invisible control
     // shouldn't take keyboard focus (unhide flips back instantly, so the
     // base rule's delayed fade-in is unaffected)
     visibility: hidden;
     transition:
-      background 500ms ease,
       opacity 200ms ease,
       visibility 0s linear 200ms;
   }
-
-  &[data-state="checked"] {
-    background: #2b3560;
-  }
 }
 
-// Day and night dressing layers crossfade with the flip
-.dns-scene {
+// The travelling highlight. Both segments are the same width, so it
+// slides its own width across; the overshoot matches the pill switches'
+// thumb.
+.vms-indicator {
   position: absolute;
-  inset: 0;
-  transition: opacity 500ms ease;
-}
-
-.dns-scene-day {
-  opacity: 1;
-
-  [data-state="checked"] & {
-    opacity: 0;
-  }
-}
-
-.dns-scene-night {
-  opacity: 0;
-
-  [data-state="checked"] & {
-    opacity: 1;
-  }
-}
-
-// Puffy clouds: a rounded strip with two blob "humps" via box-shadow
-.dns-cloud {
-  position: absolute;
-  background: #fff;
+  top: 3px;
+  bottom: 3px;
+  left: 3px;
+  width: calc(50% - 3px);
   border-radius: 999px;
-  box-shadow: 0 1px 2px rgba(0, 60, 120, 0.2);
+  background: linear-gradient(
+    180deg,
+    rgba(191, 230, 255, 0.28),
+    rgba(120, 180, 255, 0.16)
+  );
+  border: 1px solid rgba(191, 230, 255, 0.45);
+  box-shadow: 0 0 10px rgba(120, 200, 255, 0.35);
+  transition: transform 500ms $switch-ease;
 }
 
-.dns-cloud-1 {
-  width: 22px;
-  height: 7px;
-  right: 8px;
-  bottom: 8px;
+.vms-indicator-end {
+  transform: translateX(100%);
+}
 
-  &::before {
-    content: "";
-    position: absolute;
-    width: 9px;
-    height: 9px;
-    border-radius: 50%;
-    background: inherit;
-    top: -5px;
-    left: 5px;
+.vms-option {
+  position: relative;
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  padding: 5px 13px;
+  // The highlight is half the track and slides by exactly its own width,
+  // so the two segments have to measure the same — `flex: 1 1 0` sizes
+  // them from a zero basis and splits the space evenly instead of
+  // letting "Satellite" run wider than "Mesh". The floor is what the
+  // track's width comes from, so it has to clear the longer word.
+  flex: 1 1 0;
+  min-width: 104px;
+  justify-content: center;
+  border-radius: 999px;
+  font-size: 12px;
+  font-weight: 600;
+  letter-spacing: 0.02em;
+  white-space: nowrap;
+  color: rgba(198, 216, 240, 0.72);
+  background: none;
+  // The global `button:hover` underline would draw a line under the
+  // label; these read as tabs, not links
+  text-decoration: none;
+  transition: color 300ms ease;
+
+  &[aria-pressed="true"] {
+    color: #eaf6ff;
   }
-}
 
-.dns-cloud-2 {
-  width: 14px;
-  height: 5px;
-  right: 26px;
-  top: 7px;
-  opacity: 0.8;
-}
-
-.dns-star {
-  position: absolute;
-  background: #fff;
-  border-radius: 50%;
-  box-shadow: 0 0 3px rgba(255, 255, 255, 0.8);
-}
-
-.dns-star-1 {
-  width: 3px;
-  height: 3px;
-  left: 10px;
-  top: 8px;
-}
-
-.dns-star-2 {
-  width: 2px;
-  height: 2px;
-  left: 22px;
-  top: 18px;
-}
-
-.dns-star-3 {
-  width: 2px;
-  height: 2px;
-  left: 30px;
-  top: 7px;
-}
-
-.dns-star-4 {
-  width: 3px;
-  height: 3px;
-  left: 16px;
-  bottom: 6px;
-}
-
-// The sun by day, the moon by night
-.dns-thumb {
-  background: radial-gradient(circle at 35% 35%, #ffe484, #ffc933 70%);
-  box-shadow:
-    0 0 6px 2px rgba(255, 200, 60, 0.6),
-    inset -2px -2px 4px rgba(200, 120, 0, 0.35);
-
-  &[data-state="checked"] {
-    background: #e6e3dc;
-    box-shadow:
-      0 0 6px 1px rgba(230, 235, 255, 0.35),
-      inset -2px -2px 4px rgba(90, 95, 120, 0.45);
+  &:hover {
+    color: #eaf6ff;
+    text-decoration: none;
   }
-}
 
-// Moon craters, only visible on the night thumb
-.dns-crater {
-  position: absolute;
-  border-radius: 50%;
-  background: rgba(140, 145, 165, 0.55);
-  box-shadow: inset 1px 1px 1px rgba(70, 75, 95, 0.5);
-  opacity: 0;
-  transition: opacity 400ms ease;
-
-  [data-state="checked"] & {
-    opacity: 1;
+  // The global button:focus-visible ring sets a 4px radius, which squares
+  // a segment off inside the round track — same fix the pill switches
+  // carry
+  &:focus-visible {
+    border-radius: 999px;
   }
-}
 
-.dns-crater-1 {
-  width: 8px;
-  height: 8px;
-  left: 5px;
-  top: 5px;
-}
-
-.dns-crater-2 {
-  width: 5px;
-  height: 5px;
-  right: 5px;
-  top: 11px;
-}
-
-.dns-crater-3 {
-  width: 4px;
-  height: 4px;
-  left: 9px;
-  bottom: 4px;
+  svg {
+    // The label carries the meaning; the glyph is a quiet marker beside it
+    opacity: 0.85;
+  }
 }
 
 // ─── Space jam switch (SpaceJamSwitch.tsx) ─────────────────
@@ -3621,14 +3126,6 @@ $switch-ease: cubic-bezier(0.45, 0.05, 0.25, 1.2);
   }
 }
 
-.App.day .not-found-page {
-  color: #24203a;
-
-  a {
-    color: $purp;
-  }
-}
-
 // The artifacts shop (/shop). Bare-bones for now — a fixed, scrolling
 // layer over the scene so the listings are legible in both palettes; the
 // real design pass comes later. No backdrop-filter (see .resume-panel).
@@ -3815,24 +3312,6 @@ $switch-ease: cubic-bezier(0.45, 0.05, 0.25, 1.2);
   opacity: 0.7;
 }
 
-.App.day .shop-page {
-  color: #24203a;
-
-  a {
-    color: $purp;
-  }
-
-  // The night palette's pale green vanishes on the white cards
-  h2 {
-    color: #2f7a44;
-  }
-
-  .shop-listing {
-    background: rgba(255, 255, 255, 0.88);
-    box-shadow: 0 8px 24px rgba(80, 40, 120, 0.12);
-  }
-}
-
 // ─── The life bar (/about) ─────────────────────────────────────────────
 // One strip along the bottom of the screen where every era is as wide as
 // it was long (LifeTimeline.tsx). Fixed rather than parked in the résumé
@@ -3843,10 +3322,7 @@ $switch-ease: cubic-bezier(0.45, 0.05, 0.25, 1.2);
 // The band spans the whole viewport width (its slab runs edge to edge);
 // the bar inside is inset by clearances: `padding-right` keeps it off the
 // corner medallion (140px, bottom-right), `bottom` off the music switch and
-// — at lg — the day/night switch that joins it in that corner.
-//
-// Everything the day palette changes is a custom property here, so the
-// .App.day block below is only values.
+// — at lg — the Satellite/Mesh switch that joins it in that corner.
 .life-timeline {
   // The future tail's width — shared by the bar and the axis so the
   // "now" tick stays on the boundary
@@ -4133,22 +3609,6 @@ $switch-ease: cubic-bezier(0.45, 0.05, 0.25, 1.2);
 
 .life-axis-now {
   font-style: italic;
-}
-
-.App.day .life-timeline {
-  --life-slab: 255 255 255;
-  --life-slab-a: 0.88;
-  --life-bar-shadow: rgba(80, 40, 120, 0.22);
-  --life-tick: rgba(36, 32, 58, 0.75);
-  --life-tick-rule: rgba(36, 32, 58, 0.3);
-  --life-tick-shadow: rgba(255, 255, 255, 0.95);
-  // Off-white on the white day slab vanishes — go lilac, and let the
-  // label glow purple instead of white
-  --life-future-bg: rgba(120, 90, 220, 0.16);
-  --life-future-bg-hover: rgba(120, 90, 220, 0.26);
-  --life-future-ink: #{$purp};
-  --life-glow-core: #{rgba($purp-light, 0.9)};
-  --life-glow-halo: #{rgba($purp-light, 0.6)};
 }
 
 // The rich tooltip. Radix portals it to <body>, outside .App, so it can

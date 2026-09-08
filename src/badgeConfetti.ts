@@ -26,7 +26,7 @@ import { loadCelebration } from "./celebration";
 /** How long each click keeps the cannon firing */
 const VOLLEY_MS = 500;
 const PARTICLES_PER_FRAME = 3;
-/** Racing green (the day-mode name), cream, and the hover lavender */
+/** Racing green (the wordmark's own green), cream, and the hover lavender */
 const COLORS = ["#004225", "#f5ecd6", "#ab8ffd"];
 /**
  * public/signature-a.svg — the favicon's "A" (also extruded onto the coin

@@ -33,8 +33,10 @@ const ABOUT_RING_SCALE = 1.55; // BodyAnchors overlay diameter multiple
 const ABOUT_PATH_RADIUS_FRAC = 41 / 50; // text path radius within the overlay
 const ABOUT_FONT_FRAC = ABOUT_FONT_SIZE / 100; // font size as a viewBox fraction
 
-const NIGHT_COLOR = new THREE.Color("#ffffff");
-const DAY_COLOR = new THREE.Color("#412596");
+// The label was dark purple for the old light sky; mesh view is dark
+// too, so it takes the wire palette's blue-white instead
+const SATELLITE_COLOR = new THREE.Color("#ffffff");
+const MESH_COLOR = new THREE.Color("#dff2ff");
 const HOVER_COLOR = new THREE.Color("#9e80f9");
 
 const xAxis = new THREE.Vector3();
@@ -58,11 +60,11 @@ function orientLetter(quaternion: THREE.Quaternion, angle: number) {
 
 export default function AboutRing({
   active,
-  isNightMode,
+  isSatelliteView,
 }: {
   /** True on the home view — the label fades in once the camera settles */
   active: boolean;
-  isNightMode: boolean;
+  isSatelliteView: boolean;
 }) {
   const group = useRef<THREE.Group>(null);
   const opacity = useRef(0);
@@ -134,7 +136,7 @@ export default function AboutRing({
     opacity.current +=
       (targetOpacity - opacity.current) * Math.min(1, delta * 4);
 
-    const base = isNightMode ? NIGHT_COLOR : DAY_COLOR;
+    const base = isSatelliteView ? SATELLITE_COLOR : MESH_COLOR;
     const targetColor = hoverState.earth ? HOVER_COLOR : base;
     const colorEase = Math.min(1, delta * 10);
     for (const { material } of letters) {

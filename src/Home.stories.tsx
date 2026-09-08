@@ -54,7 +54,7 @@ export const ExtraLarge: Story = {
   globals: { viewport: { value: "xl" } },
 };
 
-/** Day palette at laptop width — every page has to hold up in both. */
-export const LargeDay: Story = {
-  globals: { viewport: { value: "lg" }, palette: "day" },
+/** Mesh view at laptop width — every page has to hold up in both. */
+export const LargeMesh: Story = {
+  globals: { viewport: { value: "lg" }, palette: "mesh" },
 };

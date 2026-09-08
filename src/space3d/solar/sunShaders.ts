@@ -75,15 +75,30 @@ const SURFACE_VERTEX = /* glsl */ `
 
 // Palette matches the old canvas texture (#ffb824 base, #ff6a00 embers,
 // #fff3c4 highlights) plus a deep umbral tone for the dark spots.
+// A raw ShaderMaterial gets none of three's built-in chunks, so the wire
+// grid brings its own PI and its own line function (the built-in
+// materials get theirs from wireSkin.ts via <common>).
+const SUN_WIRE_GLSL = /* glsl */ `
+  #define SUN_PI 3.141592653589793
+
+  float sunWire(float coord) {
+    float w = min(fwidth(coord), 0.35);
+    float d = abs(fract(coord - 0.5) - 0.5) / max(w, 1e-4);
+    return 1.0 - smoothstep(0.0, 1.4, d);
+  }
+`;
+
 const SURFACE_FRAGMENT = /* glsl */ `
   uniform float uTime;
   uniform vec3 uTint;
+  uniform float uMesh;
   varying vec3 vObjPos;
   varying vec3 vViewNormal;
   varying vec3 vViewPos;
 
   ${""}
   __NOISE__
+  __SUNWIRE__
 
   void main() {
     vec3 p = normalize(vObjPos);
@@ -111,9 +126,33 @@ const SURFACE_FRAGMENT = /* glsl */ `
     float ndv = clamp(dot(normalize(vViewNormal), normalize(-vViewPos)), 0.0, 1.0);
     col *= mix(0.58, 1.0, pow(ndv, 0.55));
 
-    gl_FragColor = vec4(col * uTint, 1.0);
+    col *= uTint;
+
+    // Mesh view: the star keeps churning, but the fbm stops being a
+    // photosphere and becomes brightness variation read *through* a wire
+    // cage — the convection cells survive as the scan's contour data.
+    // The sun is the one body that stays solid: its depth buffer is what
+    // culls the far half of the corona shell, so it can't stop writing
+    // depth without the flares wrapping around the wrong side.
+    if (uMesh > 0.0) {
+      float latC = (asin(clamp(p.y, -1.0, 1.0)) / SUN_PI + 0.5) * 26.0;
+      float lonC = (atan(p.z, p.x) / (2.0 * SUN_PI) + 0.5) * 34.0;
+      float pole = 1.0 - smoothstep(0.86, 0.995, abs(p.y));
+      float wire = max(sunWire(latC), sunWire(lonC) * pole);
+      vec3 MESH_DEEP = vec3(0.024, 0.075, 0.153);  // #06131f
+      vec3 MESH_HOT  = vec3(0.812, 0.945, 1.0);    // #cff1ff
+      vec3 meshCol =
+        MESH_DEEP
+        + MESH_HOT * wire * (0.55 + 0.75 * smoothstep(0.25, 0.82, v))
+        + MESH_HOT * pow(1.0 - ndv, 3.0) * 0.5;
+      col = mix(col, meshCol, uMesh);
+    }
+
+    gl_FragColor = vec4(col, 1.0);
   }
-`.replace("__NOISE__", NOISE_GLSL);
+`
+  .replace("__NOISE__", NOISE_GLSL)
+  .replace("__SUNWIRE__", SUN_WIRE_GLSL);
 
 export function createSunSurfaceMaterial(): THREE.ShaderMaterial {
   return new THREE.ShaderMaterial({
@@ -121,8 +160,10 @@ export function createSunSurfaceMaterial(): THREE.ShaderMaterial {
     fragmentShader: SURFACE_FRAGMENT,
     uniforms: {
       uTime: { value: 0 },
-      // Written per frame by Sun (day/night tint lerp)
+      // Written per frame by Sun (view tint lerp)
       uTint: { value: new THREE.Color(1, 1, 1) },
+      // Written per frame by Sun, from the shared satellite/mesh crossfade
+      uMesh: { value: 0 },
     },
   });
 }

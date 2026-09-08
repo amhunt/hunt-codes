@@ -1,5 +1,7 @@
 import * as THREE from "three";
 
+import { registerMaterialHook } from "./materialHooks";
+
 /**
  * A band of light that sweeps across a body: the mechanism the energy
  * wave (energyWave.ts) is built on. Rather than a separate mesh it is
@@ -72,40 +74,32 @@ const fragmentBody = (i: number) => /* glsl */ `
 `;
 
 /** Hook one or more bands into a built-in material (MeshBasic /
- *  MeshStandard). Call before the material's first render. */
+ *  MeshStandard). Call before the material's first render. Composes with
+ *  the wire skin (materialHooks.ts) — the band is added after it, so it
+ *  sweeps over the wires rather than under them. */
 export function applyShimmer(
   material: THREE.Material,
   bands: ShimmerUniforms[],
 ): void {
-  // Three keys its program cache on this hook's source text, which is
-  // the same for every band count — so name the count, or a one-band
-  // material would be handed a two-band program (or the reverse)
-  material.customProgramCacheKey = () => `shimmer:${bands.length}`;
-  material.onBeforeCompile = (shader) => {
-    bands.forEach((uniforms, i) => {
-      shader.uniforms[`uShimmerOrigin${i}`] = uniforms.origin;
-      shader.uniforms[`uShimmerDirection${i}`] = uniforms.direction;
-      shader.uniforms[`uShimmerOffset${i}`] = uniforms.offset;
-      shader.uniforms[`uShimmerHalfWidth${i}`] = uniforms.halfWidth;
-      shader.uniforms[`uShimmerStrength${i}`] = uniforms.strength;
-      shader.uniforms[`uShimmerColor${i}`] = uniforms.color;
-    });
-    const headers = bands.map((_, i) => fragmentHeader(i)).join("");
-    const bodies = bands.map((_, i) => fragmentBody(i)).join("");
-    shader.vertexShader = shader.vertexShader
-      .replace("#include <common>", `#include <common>${VERTEX_HEADER}`)
-      .replace(
-        "#include <project_vertex>",
-        `#include <project_vertex>${VERTEX_BODY}`,
-      );
-    shader.fragmentShader = shader.fragmentShader
-      .replace(
-        "#include <common>",
-        `#include <common>${FRAGMENT_VARYING}${headers}`,
-      )
-      .replace(
-        "#include <opaque_fragment>",
-        `${bodies}#include <opaque_fragment>`,
-      );
-  };
+  const uniforms: Record<string, THREE.IUniform> = {};
+  bands.forEach((band, i) => {
+    uniforms[`uShimmerOrigin${i}`] = band.origin;
+    uniforms[`uShimmerDirection${i}`] = band.direction;
+    uniforms[`uShimmerOffset${i}`] = band.offset;
+    uniforms[`uShimmerHalfWidth${i}`] = band.halfWidth;
+    uniforms[`uShimmerStrength${i}`] = band.strength;
+    uniforms[`uShimmerColor${i}`] = band.color;
+  });
+  registerMaterialHook(material, {
+    // The band count is part of the key: the GLSL below is generated per
+    // band, so a one-band material must not be handed a two-band program
+    key: `shimmer:${bands.length}`,
+    order: "add",
+    uniforms,
+    vertexHeader: VERTEX_HEADER,
+    vertexBody: VERTEX_BODY,
+    fragmentHeader:
+      FRAGMENT_VARYING + bands.map((_, i) => fragmentHeader(i)).join(""),
+    fragmentBody: bands.map((_, i) => fragmentBody(i)).join(""),
+  });
 }

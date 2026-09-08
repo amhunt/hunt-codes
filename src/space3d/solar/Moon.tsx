@@ -1,4 +1,4 @@
-import React, { useEffect, useMemo, useRef } from "react";
+import React, { useCallback, useEffect, useMemo, useRef } from "react";
 import { useFrame, useThree } from "@react-three/fiber";
 import * as THREE from "three";
 import { DecalGeometry } from "three/examples/jsm/geometries/DecalGeometry.js";
@@ -6,6 +6,7 @@ import { DecalGeometry } from "three/examples/jsm/geometries/DecalGeometry.js";
 import { EARTH, MOON, planetPosition } from "./constants";
 import { applyOffAxisSquash } from "./offAxisSquash";
 import { JOURNEY_STOPS, scrollTransitionState } from "../../scrollTransition";
+import { applyWireSkin } from "./wireSkin";
 import { MOON_VIDEO_OUTLINE_ID } from "../../solarAnchorIds";
 import { writeSilhouette } from "./outline";
 import { createLogoBadgeTexture } from "../textures";
@@ -64,6 +65,21 @@ export default function Moon({
   const squashCounterRotate = useRef<THREE.Group>(null);
   const mesh = useRef<THREE.Mesh>(null);
   const surfaceMaterial = useRef<THREE.MeshStandardMaterial>(null);
+  // Mesh view's wire skin, hooked on when the JSX material's ref lands.
+  // The moon's hover is nothing but an earthshine lift, so it has to feed
+  // the wires — otherwise hovering the video link does nothing in mesh
+  // view.
+  const patched = useRef(false);
+  const setSurfaceMaterial = useCallback(
+    (material: THREE.MeshStandardMaterial | null) => {
+      surfaceMaterial.current = material;
+      if (!material || patched.current) return;
+      patched.current = true;
+      applyWireSkin(material, { lon: 24, lat: 16, hover: true });
+      material.needsUpdate = true;
+    },
+    [],
+  );
   const orbitMaterial = useRef<THREE.LineBasicMaterial>(null);
   const revealOpacity = useRef(revealed ? 1 : 0);
 
@@ -237,7 +253,7 @@ export default function Moon({
           <group ref={squashCounterRotate}>
             <mesh ref={mesh} geometry={geometry}>
               <meshStandardMaterial
-                ref={surfaceMaterial}
+                ref={setSurfaceMaterial}
                 map={texture}
                 roughness={1}
                 metalness={0}

@@ -5,7 +5,7 @@ import StarField from "./StarField";
 import BadgeMedallion from "./BadgeMedallion";
 import SolarScene from "./solar/SolarScene";
 
-// Night-mode star opacity on the landing page (home/about run at 1)
+// Star opacity on the landing page (home/about run at 1)
 const LANDING_STAR_OPACITY = 0.8;
 
 /**
@@ -22,8 +22,7 @@ const LANDING_STAR_OPACITY = 0.8;
  *   projection (landing/home only).
  *
  * Scenes hide themselves when their DOM anchor is absent, and StarField
- * gates its layers invisible once fully faded, so a day-mode canvas
- * draws almost nothing.
+ * gates its layers invisible once fully faded.
  */
 
 /**
@@ -45,7 +44,7 @@ class BadgeBoundary extends React.Component<
 }
 
 const Space3DBackground = ({
-  isNightMode,
+  isSatelliteView,
   isLanding,
   isHomePage,
   isAboutPage,
@@ -54,7 +53,7 @@ const Space3DBackground = ({
   isJourneyPage,
   onJourneyNavigate,
 }: {
-  isNightMode: boolean;
+  isSatelliteView: boolean;
   isLanding: boolean;
   isHomePage: boolean;
   isAboutPage: boolean;
@@ -70,19 +69,20 @@ const Space3DBackground = ({
     <>
       <SpaceCanvas>
         {/* The landing page runs its stars 20% dimmer — the glyph field is
-            the whole view there and read a touch loud at full strength */}
+            the whole view there and read a touch loud at full strength.
+            Both views keep their stars: mesh view's ground is dark too,
+            and off the landing page the star field is what draws the
+            "andrewhunt" header. */}
         <StarField
           isLanding={isLanding}
-          opacityTarget={
-            isNightMode ? (isLanding ? LANDING_STAR_OPACITY : 1) : 0
-          }
+          opacityTarget={isLanding ? LANDING_STAR_OPACITY : 1}
         />
         {/* The corner "hunt.codes" medallion rides the star canvas rather
             than bringing its own WebGL context (three contexts tripped
             Chrome's per-domain cap and strobed the stars). Hidden only
-            where something else owns the corner: day-mode /home (the
+            where something else owns the corner: mesh-view /home (the
             Golden Gate Bridge). */}
-        {!(isHomePage && !isNightMode) && (
+        {!(isHomePage && !isSatelliteView) && (
           <BadgeBoundary>
             <Suspense fallback={null}>
               <BadgeMedallion />
@@ -110,7 +110,7 @@ const Space3DBackground = ({
                       ? "projects"
                       : "home"
           }
-          isNightMode={isNightMode}
+          isSatelliteView={isSatelliteView}
           onNavigate={onJourneyNavigate}
         />
       )}

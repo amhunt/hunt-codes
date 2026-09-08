@@ -63,7 +63,7 @@ const SETTLED_ENTRANCES = `
   .scroll-hint-chevron {
     animation: none !important;
   }
-  .day-night-switch {
+  .view-mode-switch {
     transition: none !important;
   }
 `;
@@ -74,26 +74,27 @@ const preview: Preview = {
     viewport: { options: VIEWPORTS },
     controls: { expanded: true },
   },
-  // Night is the site's default palette; the toolbar switch flips stories
-  // to day so both can be checked (App.scss keys off .App.night/.App.day)
+  // Satellite is the site's default view; the toolbar switch flips
+  // stories to mesh so both can be checked (App.scss keys off
+  // .App.satellite/.App.mesh)
   globalTypes: {
     palette: {
-      description: "Day/night palette",
+      description: "Scene view",
       toolbar: {
-        title: "Palette",
-        icon: "sun",
+        title: "View",
+        icon: "globe",
         items: [
-          { value: "night", title: "Night" },
-          { value: "day", title: "Day" },
+          { value: "satellite", title: "Satellite" },
+          { value: "mesh", title: "Mesh" },
         ],
         dynamicTitle: true,
       },
     },
   },
-  initialGlobals: { palette: "night" },
+  initialGlobals: { palette: "satellite" },
   decorators: [
     (Story, context) => {
-      const palette = (context.globals.palette as string) ?? "night";
+      const palette = (context.globals.palette as string) ?? "satellite";
       return (
         <MemoryRouter initialEntries={["/home"]}>
           <style>{SETTLED_ENTRANCES}</style>
@@ -104,9 +105,9 @@ const preview: Preview = {
               // In the real app this is the WebGL canvases showing through,
               // which stories leave out on purpose. Without standing in for
               // them the page is white-on-white and unreadable — these are
-              // the two palettes' backdrop colours (see the theme-color
+              // the two views' backdrop colours (see the theme-color
               // switch in App.tsx).
-              background: palette === "day" ? "#ffc2d9" : "#000",
+              background: palette === "mesh" ? "#050f22" : "#000",
             }}
           >
             <Story />

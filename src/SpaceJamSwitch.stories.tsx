@@ -2,14 +2,14 @@ import React, { useState } from "react";
 import type { Meta, StoryObj } from "@storybook/react";
 import { expect, spyOn, userEvent, within } from "storybook/test";
 
-import DayNightSwitch from "./DayNightSwitch";
+import ViewModeSwitch from "./ViewModeSwitch";
 import SpaceJamSwitch from "./SpaceJamSwitch";
 
 /**
  * The bottom-left music switch, with its muted (red-slashed speaker,
  * flatline) and playing (speaker, bouncing equaliser) dressings. Hovering
  * or focusing it shows the "Play space jams" / "Pause space jams" tooltip.
- * The toolbar palette switch (`.App.day` / `.App.night`) shows it over
+ * The toolbar view switch (`.App.satellite` / `.App.mesh`) shows it over
  * both backdrops.
  *
  * Flipping the switch by hand plays the real track (`public/` is served
@@ -50,29 +50,29 @@ export const Playing: Story = {
   },
 };
 
-/** Day palette, muted — the charcoal track over the pastel sky. */
-export const MutedDay: Story = {
-  globals: { palette: "day" },
+/** Mesh view, muted — the charcoal track over the wire-scene ground. */
+export const MutedMesh: Story = {
+  globals: { palette: "mesh" },
 };
 
 const ControlRow = () => {
-  const [isNightMode, setIsNightMode] = useState(true);
+  const [isSatelliteView, setIsSatelliteView] = useState(true);
   return (
     <>
       <SpaceJamSwitch />
-      <DayNightSwitch
-        isNightMode={isNightMode}
-        onCheckedChange={setIsNightMode}
+      <ViewModeSwitch
+        isSatelliteView={isSatelliteView}
+        onChange={setIsSatelliteView}
       />
     </>
   );
 };
 
 /**
- * Laptop width, where the day/night switch leaves the top-right corner
- * and joins the music switch in a bottom-left control row. Checks the two
- * sit level and the gap between them (`.day-night-switch`'s lg `left` is
- * the switch's width plus a gap).
+ * Laptop width, where the Satellite/Mesh switch leaves the top-right
+ * corner and joins the music switch in a bottom-left control row. Checks
+ * the two sit level and the gap between them (`.view-mode-switch`'s lg
+ * `left` is the music switch's width plus a gap).
  */
 export const ControlRowLarge: Story = {
   globals: { viewport: { value: "lg" } },
