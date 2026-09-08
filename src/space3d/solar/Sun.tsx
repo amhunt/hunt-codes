@@ -37,7 +37,7 @@ import {
 // palette toward white). Mesh view stays at 1: the tint multiplies the
 // photosphere's gold, and anything brighter blows out the blue the mesh
 // branch mixes in on top of it.
-const SATELLITE_TINT = new THREE.Color(1.12, 1.12, 1.15);
+const SPACE_TINT = new THREE.Color(1.12, 1.12, 1.15);
 const MESH_TINT = new THREE.Color(1, 1, 1);
 
 // The corona keeps its shape in mesh view — same shell, same
@@ -91,10 +91,10 @@ function orientLetter(quaternion: THREE.Quaternion, angle: number) {
 
 /** Curved "ENTER" text above the sun, matching the landing SVG textPath. */
 function EnterRing({
-  isSatelliteView,
+  isSpaceView,
   revealed,
 }: {
-  isSatelliteView: boolean;
+  isSpaceView: boolean;
   /** Fades the label in (the landing intro reveals it after the planets) */
   revealed: boolean;
 }) {
@@ -173,7 +173,7 @@ function EnterRing({
     // ~40% of the scrub so it doesn't hang mid-swoop (and fade it back
     // if the visitor scrolls up)
     const scrubFade = 1 - Math.min(1, scrollTransitionState.progress * 2.5);
-    const base = isSatelliteView ? ENTER_TEXT_COLOR : ENTER_MESH_COLOR;
+    const base = isSpaceView ? ENTER_TEXT_COLOR : ENTER_MESH_COLOR;
     const target = hoverState.sun ? ENTER_HOVER_COLOR : base;
     const ease = Math.min(1, delta * 10);
     for (const { material } of letters) {
@@ -203,14 +203,14 @@ function EnterRing({
 export default function Sun({
   targetScale = 1,
   targetGlowScale = 6,
-  isSatelliteView,
+  isSpaceView,
   showEnterRing = false,
   enterRevealed = true,
 }: {
   targetScale?: number;
   /** Glow sprite size as a multiple of SUN_RADIUS (eased) */
   targetGlowScale?: number;
-  isSatelliteView: boolean;
+  isSpaceView: boolean;
   /** Landing-only curved "ENTER" link label */
   showEnterRing?: boolean;
   /** Fades the ENTER label in during the landing intro */
@@ -257,7 +257,7 @@ export default function Sun({
     }
     // Ease the brightness so the mode toggle doesn't pop
     (surfaceMaterial.uniforms.uTint.value as THREE.Color).lerp(
-      isSatelliteView ? SATELLITE_TINT : MESH_TINT,
+      isSpaceView ? SPACE_TINT : MESH_TINT,
       ease,
     );
     // The scene-wide crossfade drives the star's own wire cage, and takes
@@ -330,10 +330,7 @@ export default function Sun({
       </group>
       {showEnterRing && (
         <group ref={enterScaler}>
-          <EnterRing
-            isSatelliteView={isSatelliteView}
-            revealed={enterRevealed}
-          />
+          <EnterRing isSpaceView={isSpaceView} revealed={enterRevealed} />
         </group>
       )}
     </>

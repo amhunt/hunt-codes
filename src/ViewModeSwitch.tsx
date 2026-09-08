@@ -1,15 +1,19 @@
 import React from "react";
 import { useLocation } from "react-router-dom";
 import cx from "classnames";
-import { GlobeIcon, SatelliteIcon } from "lucide-react";
+import { GlobeIcon, StarIcon } from "lucide-react";
 
 import useWindowSize from "useWindowSize";
 
 /**
  * The scene's view switch, borrowed from the layer chip every maps app
- * puts in a corner: **Satellite** is the photographed solar system —
- * Blue Marble Earth, a cratered moon, a churning gold sun — and **Mesh**
+ * puts in a corner: **Space** is the photographed solar system — Blue
+ * Marble Earth, a cratered moon, a churning gold sun — and **Mesh**
  * redraws every body in the scene as a glowing blue-white lattice.
+ *
+ * ("Space" rather than "Satellite", which the maps metaphor would have
+ * suggested: this scene already has a satellite in it — Sputnik, the
+ * /projects-and-toys link — so the word was spoken for.)
  *
  * Both words stay visible rather than hiding behind an icon: the two
  * views are equals, and a lone pill gives no hint that a second one
@@ -23,16 +27,16 @@ import useWindowSize from "useWindowSize";
  * the delay).
  */
 const ViewModeSwitch = ({
-  isSatelliteView,
+  isSpaceView,
   onChange,
 }: {
-  isSatelliteView: boolean;
-  onChange: (isSatellite: boolean) => void;
+  isSpaceView: boolean;
+  onChange: (isSpace: boolean) => void;
 }) => {
   const { pathname } = useLocation();
   const size = useWindowSize();
   const onLanding = pathname === "/";
-  // Phones sit the switch out everywhere (satellite stays the default);
+  // Phones sit the switch out everywhere (space stays the default);
   // /home below lg gives its corner back to the scene too (part of the
   // small-screen declutter alongside the moon and link-trio bodies)
   const onPhone = size === "sm";
@@ -50,21 +54,21 @@ const ViewModeSwitch = ({
           one slides rather than blinking across */}
       <span
         aria-hidden
-        className={cx("vms-indicator", !isSatelliteView && "vms-indicator-end")}
+        className={cx("vms-indicator", !isSpaceView && "vms-indicator-end")}
       />
       <button
         type="button"
         className="vms-option"
-        aria-pressed={isSatelliteView}
+        aria-pressed={isSpaceView}
         onClick={() => onChange(true)}
       >
-        <SatelliteIcon size={14} aria-hidden />
-        Satellite
+        <StarIcon size={14} aria-hidden />
+        Space
       </button>
       <button
         type="button"
         className="vms-option"
-        aria-pressed={!isSatelliteView}
+        aria-pressed={!isSpaceView}
         onClick={() => onChange(false)}
       >
         <GlobeIcon size={14} aria-hidden />

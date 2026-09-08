@@ -9,7 +9,7 @@ import SpaceJamSwitch from "./SpaceJamSwitch";
  * The bottom-left music switch, with its muted (red-slashed speaker,
  * flatline) and playing (speaker, bouncing equaliser) dressings. Hovering
  * or focusing it shows the "Play space jams" / "Pause space jams" tooltip.
- * The toolbar view switch (`.App.satellite` / `.App.mesh`) shows it over
+ * The toolbar view switch (`.App.space` / `.App.mesh`) shows it over
  * both backdrops.
  *
  * Flipping the switch by hand plays the real track (`public/` is served
@@ -56,20 +56,17 @@ export const MutedMesh: Story = {
 };
 
 const ControlRow = () => {
-  const [isSatelliteView, setIsSatelliteView] = useState(true);
+  const [isSpaceView, setIsSpaceView] = useState(true);
   return (
     <>
       <SpaceJamSwitch />
-      <ViewModeSwitch
-        isSatelliteView={isSatelliteView}
-        onChange={setIsSatelliteView}
-      />
+      <ViewModeSwitch isSpaceView={isSpaceView} onChange={setIsSpaceView} />
     </>
   );
 };
 
 /**
- * Laptop width, where the Satellite/Mesh switch leaves the top-right
+ * Laptop width, where the Space/Mesh switch leaves the top-right
  * corner and joins the music switch in a bottom-left control row. Checks
  * the two sit level and the gap between them (`.view-mode-switch`'s lg
  * `left` is the music switch's width plus a gap).

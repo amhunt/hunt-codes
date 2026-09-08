@@ -44,7 +44,7 @@ class BadgeBoundary extends React.Component<
 }
 
 const Space3DBackground = ({
-  isSatelliteView,
+  isSpaceView,
   isLanding,
   isHomePage,
   isAboutPage,
@@ -53,7 +53,7 @@ const Space3DBackground = ({
   isJourneyPage,
   onJourneyNavigate,
 }: {
-  isSatelliteView: boolean;
+  isSpaceView: boolean;
   isLanding: boolean;
   isHomePage: boolean;
   isAboutPage: boolean;
@@ -82,7 +82,7 @@ const Space3DBackground = ({
             Chrome's per-domain cap and strobed the stars). Hidden only
             where something else owns the corner: mesh-view /home (the
             Golden Gate Bridge). */}
-        {!(isHomePage && !isSatelliteView) && (
+        {!(isHomePage && !isSpaceView) && (
           <BadgeBoundary>
             <Suspense fallback={null}>
               <BadgeMedallion />
@@ -110,7 +110,7 @@ const Space3DBackground = ({
                       ? "projects"
                       : "home"
           }
-          isSatelliteView={isSatelliteView}
+          isSpaceView={isSpaceView}
           onNavigate={onJourneyNavigate}
         />
       )}

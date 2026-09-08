@@ -18,7 +18,7 @@ import useReducedMotion from "./useReducedMotion";
  * is nothing to click, so the coin goes back to being decorative rather
  * than a button that does nothing.
  */
-const BadgeLink = ({ isSatelliteView }: { isSatelliteView: boolean }) => {
+const BadgeLink = ({ isSpaceView }: { isSpaceView: boolean }) => {
   const { pathname } = useLocation();
   const reducedMotion = useReducedMotion();
   const isLanding = pathname === "/";
@@ -34,7 +34,7 @@ const BadgeLink = ({ isSatelliteView }: { isSatelliteView: boolean }) => {
       pathname.startsWith("/draw") ||
       pathname === "/shop" ||
       pathname === "/projects-and-toys" ||
-      (pathname === "/home" && isSatelliteView));
+      (pathname === "/home" && isSpaceView));
 
   // The hit target can vanish without a pointerleave — flipping to mesh
   // view on /home hides it, a route change swaps the element — so don't

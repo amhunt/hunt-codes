@@ -40,11 +40,11 @@ const ORBIT_MESH_COLOR = "#bfe6ff";
 
 const SolarScene = ({
   view,
-  isSatelliteView,
+  isSpaceView,
   onNavigate,
 }: {
   view: SolarView;
-  isSatelliteView: boolean;
+  isSpaceView: boolean;
   /** Router navigation for the lightspeed journeys (threaded through the
    *  canvas boundary — router context doesn't cross into R3F) */
   onNavigate: (to: string) => void;
@@ -112,13 +112,13 @@ const SolarScene = ({
       <ambientLight intensity={0.14} />
       {/* Eases the whole scene between the two views (one shared uniform)
           and flips the bodies' blend state on the way in and out */}
-      <WireDriver meshView={!isSatelliteView} />
+      <WireDriver meshView={!isSpaceView} />
       {/* From the home sun-perch the full glow would fill the frame and
           wash out the stars (and the crisp flare corona) — shrink it to
           hug the limb there */}
       <Sun
         targetGlowScale={view === "home" || isProjects ? 2.2 : 4}
-        isSatelliteView={isSatelliteView}
+        isSpaceView={isSpaceView}
         showEnterRing={isLanding}
         enterRevealed={enterRevealed}
       />
@@ -129,9 +129,9 @@ const SolarScene = ({
           // hunt-codes-3's faint white rings. Mesh view brings them
           // forward instead of pushing them back: on a wire scene the
           // orbits are the structure, not background chrome.
-          orbitColor={isSatelliteView ? "#ffffff" : ORBIT_MESH_COLOR}
-          orbitOpacity={isSatelliteView ? 0.28 : 0.5}
-          isSatelliteView={isSatelliteView}
+          orbitColor={isSpaceView ? "#ffffff" : ORBIT_MESH_COLOR}
+          orbitOpacity={isSpaceView ? 0.28 : 0.5}
+          isSpaceView={isSpaceView}
           aboutActive={view === "home"}
           revealed={planetsRevealed}
           closeUp={view === "about"}
@@ -144,8 +144,8 @@ const SolarScene = ({
           along the scroll scrub as well as the timed swoop (Moon reads the
           journey progress itself) — where it becomes the video link. */}
       <Moon
-        orbitColor={isSatelliteView ? "#ffffff" : ORBIT_MESH_COLOR}
-        orbitOpacity={isSatelliteView ? 0.28 : 0.5}
+        orbitColor={isSpaceView ? "#ffffff" : ORBIT_MESH_COLOR}
+        orbitOpacity={isSpaceView ? 0.28 : 0.5}
         revealed={view === "about"}
         // The video link needs the moon actually on screen AND clickable:
         // /about above phone widths (on phones the panel is full-bleed
@@ -200,7 +200,7 @@ const SolarScene = ({
       <DrumPad config={SYNTH_PAD} visible={isProjects && !isPhone} />
       {/* The second solar system, far below this one: six knob-planets
           around a beat-pulsing sun (the space synth) */}
-      {view === "synth" && <SynthSystem isSatelliteView={isSatelliteView} />}
+      {view === "synth" && <SynthSystem isSpaceView={isSpaceView} />}
       {/* The /journey cruise: the rocket ride's warp — open-space flight
           behind the story crawl, ended by the cockpit's "End trip" */}
       {view === "journey" && <JourneyCruise navigate={onNavigate} />}

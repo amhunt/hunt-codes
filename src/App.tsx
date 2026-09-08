@@ -89,12 +89,12 @@ const VIEW_STORAGE_KEY = "hunt-codes-scene-view";
 
 const App = () => {
   const [showBridge, setShowBridge] = useState(false);
-  // The scene opens in satellite view — the photographed solar system —
+  // The scene opens in space view — the photographed solar system —
   // until the visitor flips the corner switch to mesh. Remembered across
   // visits: a named view that resets on every reload reads as a bug.
   // (Same guarded read as the drawing studio's: storage throws outright
   // in a browser set to block site data.)
-  const [isSatelliteView, setIsSatelliteView] = useState(() => {
+  const [isSpaceView, setIsSpaceView] = useState(() => {
     try {
       return window.localStorage.getItem(VIEW_STORAGE_KEY) !== "mesh";
     } catch {
@@ -113,16 +113,16 @@ const App = () => {
   useEffect(() => {
     document
       .querySelector('meta[name="theme-color"]')
-      ?.setAttribute("content", isSatelliteView ? "#000000" : "#050f22");
+      ?.setAttribute("content", isSpaceView ? "#000000" : "#050f22");
     try {
       window.localStorage.setItem(
         VIEW_STORAGE_KEY,
-        isSatelliteView ? "satellite" : "mesh",
+        isSpaceView ? "space" : "mesh",
       );
     } catch {
       // A browser blocking site data just means the view won't persist
     }
-  }, [isSatelliteView]);
+  }, [isSpaceView]);
 
   // fade home content in once mounted
   useEffect(() => {
@@ -133,17 +133,11 @@ const App = () => {
   }, []);
 
   return (
-    <div className={cx("App", isSatelliteView ? "satellite" : "mesh")}>
+    <div className={cx("App", isSpaceView ? "space" : "mesh")}>
       <Router>
         <RouteMeta />
-        <AppBackground
-          showBridge={showBridge}
-          isSatelliteView={isSatelliteView}
-        />
-        <ViewModeSwitch
-          isSatelliteView={isSatelliteView}
-          onChange={setIsSatelliteView}
-        />
+        <AppBackground showBridge={showBridge} isSpaceView={isSpaceView} />
+        <ViewModeSwitch isSpaceView={isSpaceView} onChange={setIsSpaceView} />
         <Routes>
           <Route path="/" element={<Landing />} />
           <Route path="/home" element={<Home />} />
@@ -163,7 +157,7 @@ const App = () => {
             visitors look for the music; mounted once, app-wide, the track
             carries across routes. */}
         {isSynthRoute ? null : <SpaceJamSwitch />}
-        <BadgeLink isSatelliteView={isSatelliteView} />
+        <BadgeLink isSpaceView={isSpaceView} />
         {/* App-level so the windshield frame and warp flash survive the
             rides' mid-flight route hops (/home → /journey → /home) —
             per-page mounts cut the flash short at every navigation */}

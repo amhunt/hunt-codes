@@ -47,7 +47,7 @@ export default function Planet({
   config,
   orbitColor,
   orbitOpacity,
-  isSatelliteView = true,
+  isSpaceView = true,
   aboutActive = false,
   revealed = true,
   closeUp = false,
@@ -55,9 +55,9 @@ export default function Planet({
   config: SolarPlanetConfig;
   orbitColor: string;
   orbitOpacity: number;
-  /** Drives the Earth "ABOUT ME" label color (white in satellite view,
+  /** Drives the Earth "ABOUT ME" label color (white in space view,
    *  blue-white in mesh) */
-  isSatelliteView?: boolean;
+  isSpaceView?: boolean;
   /** Show the Earth "ABOUT ME" label (home view only) */
   aboutActive?: boolean;
   /** Fades the planet + its orbit ring in (landing intro) */
@@ -100,7 +100,7 @@ export default function Planet({
       // Earth carries the /about perch, so it gets a finer grid — at that
       // range a 20-meridian globe reads as a beach ball. It also folds
       // hover into its wires, because the atmosphere shell that carries
-      // the hover in satellite view is faded out in mesh view (below).
+      // the hover in space view is faded out in mesh view (below).
       applyWireSkin(
         material,
         config.kind === "earth"
@@ -338,7 +338,7 @@ export default function Planet({
             the group (not the squash wrapper) so it stays put over Earth. */}
         {config.kind === "earth" && (
           <>
-            <AboutRing active={aboutActive} isSatelliteView={isSatelliteView} />
+            <AboutRing active={aboutActive} isSpaceView={isSpaceView} />
             {/* clickable-body affordance halo (the /about link, home only;
                 a lighter touch than the small rocks — Earth is big) */}
             <InteractiveGlow

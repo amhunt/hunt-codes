@@ -74,9 +74,9 @@ const preview: Preview = {
     viewport: { options: VIEWPORTS },
     controls: { expanded: true },
   },
-  // Satellite is the site's default view; the toolbar switch flips
+  // Space is the site's default view; the toolbar switch flips
   // stories to mesh so both can be checked (App.scss keys off
-  // .App.satellite/.App.mesh)
+  // .App.space/.App.mesh)
   globalTypes: {
     palette: {
       description: "Scene view",
@@ -84,17 +84,17 @@ const preview: Preview = {
         title: "View",
         icon: "globe",
         items: [
-          { value: "satellite", title: "Satellite" },
+          { value: "space", title: "Space" },
           { value: "mesh", title: "Mesh" },
         ],
         dynamicTitle: true,
       },
     },
   },
-  initialGlobals: { palette: "satellite" },
+  initialGlobals: { palette: "space" },
   decorators: [
     (Story, context) => {
-      const palette = (context.globals.palette as string) ?? "satellite";
+      const palette = (context.globals.palette as string) ?? "space";
       return (
         <MemoryRouter initialEntries={["/home"]}>
           <style>{SETTLED_ENTRANCES}</style>

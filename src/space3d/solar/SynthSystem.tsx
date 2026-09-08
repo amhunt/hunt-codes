@@ -296,11 +296,7 @@ function KnobPlanet({
   );
 }
 
-export default function SynthSystem({
-  isSatelliteView,
-}: {
-  isSatelliteView: boolean;
-}) {
+export default function SynthSystem({ isSpaceView }: { isSpaceView: boolean }) {
   const size = useThree((s) => s.size);
   const sun = useRef<THREE.Mesh>(null);
   const sunMaterial = useRef<THREE.MeshStandardMaterial>(null);
@@ -402,7 +398,7 @@ export default function SynthSystem({
           key={spec.param}
           spec={spec}
           index={i}
-          orbitColor={isSatelliteView ? "#ffffff" : "#bfe6ff"}
+          orbitColor={isSpaceView ? "#ffffff" : "#bfe6ff"}
           reveal={reveal}
         />
       ))}

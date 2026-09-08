@@ -162,7 +162,7 @@ export function createSunSurfaceMaterial(): THREE.ShaderMaterial {
       uTime: { value: 0 },
       // Written per frame by Sun (view tint lerp)
       uTint: { value: new THREE.Color(1, 1, 1) },
-      // Written per frame by Sun, from the shared satellite/mesh crossfade
+      // Written per frame by Sun, from the shared space/mesh crossfade
       uMesh: { value: 0 },
     },
   });

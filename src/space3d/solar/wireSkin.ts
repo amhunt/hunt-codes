@@ -27,7 +27,7 @@ import { registerMaterialHook } from "./materialHooks";
  * back.)
  */
 
-/** 0 = satellite view (bodies untouched), 1 = fully meshed. The switch
+/** 0 = space view (bodies untouched), 1 = fully meshed. The switch
  *  eases this across ~700ms; every skinned material reads the same
  *  uniform object, so one write per frame moves the whole scene. */
 export const wireState = { amount: 0, target: 0 };

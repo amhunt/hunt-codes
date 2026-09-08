@@ -72,12 +72,15 @@ the preview tool.
   supplies each page's tab title. A new public page goes in that list
   (title + priority) and gets its `<Route>` in `App.tsx`.
 
-Satellite/Mesh is a user toggle in `App.tsx` (satellite default,
-remembered in `localStorage`, `.App.satellite` / `.App.mesh` on the root):
-satellite is the photographed scene, mesh redraws every 3D body as a
-glowing blue-white wire lattice over a dark graticule ground. Both grounds
-are dark, so the two share one palette — there are no per-view text
-overrides left, and `.App.mesh` carries only the backdrop.
+Space/Mesh is a user toggle in `App.tsx` (space default, remembered in
+`localStorage`, `.App.space` / `.App.mesh` on the root): space is the
+photographed scene, mesh redraws every 3D body as a glowing blue-white
+wire lattice over a dark graticule ground. Both grounds are dark, so the
+two share one palette — there are no per-view text overrides left, and
+`.App.mesh` carries only the backdrop. The view is called "space", not
+"satellite", because the scene already has a satellite in it (Sputnik,
+the /projects-and-toys link) — don't rename the `SATELLITE_*` constants
+or `satellite-link`, which are that body.
 
 Mesh view is a shader patch, not a material swap or wireframe geometry
 (`solar/wireSkin.ts`): `EdgesGeometry` returns zero segments on a sphere

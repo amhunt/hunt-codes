@@ -4,7 +4,7 @@ import { useFrame, useThree } from "@react-three/fiber";
 import { setSceneWireMode, wireState, wireUniforms } from "./wireSkin";
 
 /**
- * Drives the satellite/mesh crossfade for the whole scene: one uniform
+ * Drives the space/mesh crossfade for the whole scene: one uniform
  * write per frame moves every skinned body at once (they all share the
  * `uWire` uniform object), and the blend-state flip runs once per mode
  * change rather than per frame.

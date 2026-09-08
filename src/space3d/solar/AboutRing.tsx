@@ -35,7 +35,7 @@ const ABOUT_FONT_FRAC = ABOUT_FONT_SIZE / 100; // font size as a viewBox fractio
 
 // The label was dark purple for the old light sky; mesh view is dark
 // too, so it takes the wire palette's blue-white instead
-const SATELLITE_COLOR = new THREE.Color("#ffffff");
+const SPACE_COLOR = new THREE.Color("#ffffff");
 const MESH_COLOR = new THREE.Color("#dff2ff");
 const HOVER_COLOR = new THREE.Color("#9e80f9");
 
@@ -60,11 +60,11 @@ function orientLetter(quaternion: THREE.Quaternion, angle: number) {
 
 export default function AboutRing({
   active,
-  isSatelliteView,
+  isSpaceView,
 }: {
   /** True on the home view — the label fades in once the camera settles */
   active: boolean;
-  isSatelliteView: boolean;
+  isSpaceView: boolean;
 }) {
   const group = useRef<THREE.Group>(null);
   const opacity = useRef(0);
@@ -136,7 +136,7 @@ export default function AboutRing({
     opacity.current +=
       (targetOpacity - opacity.current) * Math.min(1, delta * 4);
 
-    const base = isSatelliteView ? SATELLITE_COLOR : MESH_COLOR;
+    const base = isSpaceView ? SPACE_COLOR : MESH_COLOR;
     const targetColor = hoverState.earth ? HOVER_COLOR : base;
     const colorEase = Math.min(1, delta * 10);
     for (const { material } of letters) {

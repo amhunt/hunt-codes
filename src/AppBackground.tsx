@@ -55,12 +55,11 @@ for (const c of andrewHunt) {
 
 const AppBackground = ({
   showBridge,
-  isSatelliteView,
+  isSpaceView,
 }: {
   showBridge: boolean;
-  /** User-toggled (App.tsx's Satellite/Mesh switch); satellite is the
-   *  default */
-  isSatelliteView: boolean;
+  /** User-toggled (App.tsx's Space/Mesh switch); space is the default */
+  isSpaceView: boolean;
 }) => {
   const size = useWindowSize();
   const location = useLocation();
@@ -151,21 +150,21 @@ const AppBackground = ({
         className={cx(
           "App-background",
           "App-background_mesh",
-          isSatelliteView ? "off" : "on",
+          isSpaceView ? "off" : "on",
         )}
       />
       <div
         className={cx(
           "App-background",
-          "App-background_satellite",
+          "App-background_space",
           "webgl",
-          isSatelliteView ? "on" : "off",
+          isSpaceView ? "on" : "off",
         )}
       />
       <BackgroundErrorBoundary>
         <Suspense fallback={null}>
           <Space3DBackground
-            isSatelliteView={isSatelliteView}
+            isSpaceView={isSpaceView}
             isLanding={isLanding}
             isHomePage={isHomePage}
             isAboutPage={isAboutPage}
@@ -181,12 +180,12 @@ const AppBackground = ({
           {/* <RetroMac /> */}
           <img
             className={`App-gg-bridge ${
-              showBridge && !isSatelliteView ? "App-gg-bridge-opaque" : ""
+              showBridge && !isSpaceView ? "App-gg-bridge-opaque" : ""
             }`}
             src={GoldenGate}
             alt="Golden Gate Bridge"
           />
-          <GoldenGateFog visible={showBridge && !isSatelliteView} />
+          <GoldenGateFog visible={showBridge && !isSpaceView} />
         </>
       )}
     </>
