@@ -105,6 +105,13 @@ interface WireSkinOptions {
   grid?: "sphere" | "box";
   /** "box" only: cell size, in the geometry's own units */
   pitch?: number;
+  /** Light the wires from the sun (the world origin): the side facing it
+   *  runs at full brightness and the far side drops to WIRE_NIGHT, with
+   *  a soft terminator between — mesh view's take on the day/night the
+   *  space view gets from its point light. Planets and the moon only;
+   *  hardware that isn't in orbit (the satellite's parts, the synth,
+   *  the corner coin) has no business being sunlit. */
+  sunlit?: boolean;
   /** Meridians around the body ("sphere") */
   lon?: number;
   /** Parallels from pole to pole ("sphere") */
@@ -200,10 +207,16 @@ vWireNormal = normalize( normalMatrix * normal );
 vWireView = ( modelViewMatrix * vec4( transformed, 1.0 ) ).xyz;
 `;
 
+/** The far side's share of the wire brightness under `sunlit` — dark
+ *  enough to read as night at a glance, light enough that the lattice
+ *  still shows through (the space view's shadow side is near-black). */
+const WIRE_NIGHT = 0.22;
+
 const fragmentBody = (
   hover: boolean,
   twoTone: boolean,
   box: boolean,
+  sunlit: boolean,
 ) => /* glsl */ `
 {
   vec3 wireN = normalize( vWireObj );
@@ -233,6 +246,19 @@ const fragmentBody = (
   }
   float wireFacing = abs( dot( normalize( vWireNormal ), normalize( -vWireView ) ) );
   float wireGain = uWireGain;
+  float wireDay = 1.0;
+  ${
+    sunlit
+      ? /* glsl */ `
+  // Day side toward the sun at the world origin, in view space (the
+  // normal here is view-space too). A wide terminator, so the fall-off
+  // wraps a little past the limb instead of cutting the globe in half.
+  vec3 wireSunView = ( viewMatrix * vec4( 0.0, 0.0, 0.0, 1.0 ) ).xyz;
+  float wireSunFacing =
+    dot( normalize( vWireNormal ), normalize( wireSunView - vWireView ) );
+  wireDay = mix( ${WIRE_NIGHT.toFixed(2)}, 1.0, smoothstep( -0.25, 0.45, wireSunFacing ) );`
+      : ``
+  }
   ${
     hover
       ? // The hover brighten every clickable body already eases on
@@ -256,9 +282,12 @@ const fragmentBody = (
   );`
       : ``
   }
+  // The rim keeps half its light on the night side so the silhouette
+  // never disappears against the sky
   vec3 wireLit =
     uWireColor * wireBodyTint *
-    ( wireLine * wireGain + pow( 1.0 - wireFacing, 3.0 ) * uWireRim );
+    ( wireLine * wireGain * wireDay
+      + pow( 1.0 - wireFacing, 3.0 ) * uWireRim * ( 0.5 + 0.5 * wireDay ) );
   outgoingLight = mix( outgoingLight, wireLit, uWire );
   // Alpha is left alone on purpose. Under additive blending it scales
   // what the body contributes, and it is also the ONLY thing hiding the
@@ -318,6 +347,7 @@ export function applyWireSkin(
   {
     grid = "sphere",
     pitch = 1,
+    sunlit = false,
     lon = 24,
     lat = 16,
     gain = 0.95,
@@ -332,7 +362,7 @@ export function applyWireSkin(
   registerMaterialHook(material, {
     // All three terms change the generated GLSL, so all three have to
     // name themselves here — three caches programs on this string
-    key: `wire:${hover ? "hover" : "plain"}:${twoTone ? "blob" : "flat"}:${grid}`,
+    key: `wire:${hover ? "hover" : "plain"}:${twoTone ? "blob" : "flat"}:${grid}:${sunlit ? "sunlit" : "flat-lit"}`,
     order: "replace",
     uniforms: {
       uWire: wireUniforms.uWire,
@@ -359,7 +389,7 @@ export function applyWireSkin(
     vertexHeader: VERTEX_HEADER,
     vertexBody: VERTEX_BODY,
     fragmentHeader: fragmentHeader(twoTone),
-    fragmentBody: fragmentBody(hover, twoTone, box),
+    fragmentBody: fragmentBody(hover, twoTone, box, sunlit),
   });
   material.userData.wireSkin = true;
   setMeshProps(material, wireState.target > 0);

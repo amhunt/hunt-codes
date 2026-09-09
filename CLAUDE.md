@@ -88,7 +88,9 @@ and `material.wireframe` on Earth's 96x96 globe is 54,720 segments of
 haze. `applyWireSkin` folds a derivative-based lat/long grid (or, with
 `grid: "box"`, a cartesian lattice — flat and boxy parts like the
 scroll and the 808 read as a web under lat/long) plus a fresnel rim
-into each body's own material, and the bodies go additive
+into each body's own material — and, for the planets and moon
+(`sunlit`), dims the wires on the side facing away from the sun at the
+world origin — and the bodies go additive
 with `depthWrite` off so they are genuinely see-through. One shared
 `uWire` uniform crossfades the whole scene; `solar/WireDriver.tsx` is
 mounted once per canvas (the corner coin lives in the star canvas and
