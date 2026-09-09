@@ -8,6 +8,8 @@ import {
   ChevronRight,
 } from "lucide-react";
 
+import useCameraSettled from "./useCameraSettled";
+
 /**
  * The artifacts shop: Andrew's Etsy listings, fetched through
  * GET /api/shop (see server/handler.mjs). Checkout stays on Etsy — every
@@ -225,8 +227,12 @@ const Shop = () => {
 
   const shopUrl = state.status === "ready" ? state.data.shop.url : SHOP_URL;
 
+  // The page holds off until the camera has landed on its moon perch,
+  // then comes in through a short blur (App.scss .shop-page--arriving)
+  const cameraSettled = useCameraSettled();
+
   return (
-    <main className="shop-page">
+    <main className={cx("shop-page", !cameraSettled && "shop-page--arriving")}>
       <Link className="flex items-center gap-1" to="/home">
         <ArrowLeftCircleIcon className="starIcon" size={16} />
         <span>home</span>

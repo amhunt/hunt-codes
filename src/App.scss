@@ -3199,6 +3199,21 @@ body.life-timeline-present {
 // scrolling layer over the scene so the listings stay legible above it;
 // the real design pass comes later. No backdrop-filter (see .resume-panel).
 .shop-page {
+  // Arrival: the page waits for the camera's swoop to land (Shop.tsx,
+  // useCameraSettled), then comes in through a 200ms blur + fade. A
+  // one-shot transition on a content-height layer — not one of the
+  // looping fullscreen filters the reduced-motion block turns off.
+  // `filter: none` at rest so the page doesn't keep a filter layer
+  // over the canvases after it has arrived.
+  transition:
+    opacity 200ms ease,
+    filter 200ms ease;
+
+  &.shop-page--arriving {
+    opacity: 0;
+    filter: blur(12px);
+    pointer-events: none;
+  }
   position: fixed;
   inset: 0;
   z-index: 5;
