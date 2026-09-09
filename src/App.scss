@@ -8,6 +8,7 @@ $green-light-transparent: #20880035;
 $breakpoint-sm: 768px;
 $breakpoint-md: 1000px;
 $breakpoint-lg: 1280px;
+$breakpoint-xl: 1440px;
 
 .App {
   cursor: pointer;
@@ -653,7 +654,9 @@ p {
   .svg-generator-svg-wrapper img,
   // The life bar's "future" tail: its drifting sheen and breathing glow
   .life-seg--future::before,
-  .life-seg-label--future {
+  .life-seg-label--future,
+  // The shop's loading shimmer (/artifacts)
+  .shop-skeleton {
     animation: none !important;
   }
 }
@@ -3148,7 +3151,7 @@ $switch-ease: cubic-bezier(0.45, 0.05, 0.25, 1.2);
   // Rothefight (the shop's display face) runs small and tight for its
   // point size, so it needs more of both than the old mono heading
   h1 {
-    margin: 16px 0 12px;
+    margin: 16px 0 20px;
     font-family: "Rothefight", "Inconsolata", monospace;
     font-size: 52px;
     font-weight: 400;
@@ -3176,12 +3179,16 @@ $switch-ease: cubic-bezier(0.45, 0.05, 0.25, 1.2);
     line-height: 1.5;
   }
 
-  // Listing titles: a notch smaller than the body copy, in a very light
-  // green so they stand apart from the purple links
+  // Listing titles: Righteous rather than the heading's Rothefight — it
+  // holds up at card size and through a long wrapped title. Very light
+  // green, so they stand apart from the purple links.
   h2 {
-    margin: 8px 0 0;
-    font-size: 14px;
-    font-weight: 700;
+    margin: 12px 0 4px;
+    font-family: "Righteous", "Inconsolata", monospace;
+    font-size: 18px;
+    font-weight: 400;
+    letter-spacing: 0.3px;
+    line-height: 1.35;
     color: #d3f9dd;
   }
 
@@ -3204,14 +3211,80 @@ $switch-ease: cubic-bezier(0.45, 0.05, 0.25, 1.2);
   }
 }
 
+// Fixed column counts rather than auto-fill: the cards are meant to read
+// big, so the grid steps 1 → 2 → 3 and lets each one take the width that
+// leaves rather than packing in as many as fit.
 .shop-listings {
   list-style: none;
   margin: 24px 0 0;
   padding: 0;
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
-  gap: 24px;
-  max-width: 960px;
+  grid-template-columns: 1fr;
+  // Without this every card in a row grows to match the tallest — one
+  // expanded blurb would leave its neighbours full of dead space
+  align-items: start;
+  gap: 28px;
+  max-width: 1240px;
+
+  @media (min-width: $breakpoint-sm) {
+    grid-template-columns: repeat(2, 1fr);
+  }
+
+  @media (min-width: $breakpoint-xl) {
+    grid-template-columns: repeat(3, 1fr);
+  }
+}
+
+// The loading row: card-shaped shimmers, trimmed to whatever fits on one
+// line at the current breakpoint
+.shop-skeletons {
+  .shop-skeleton {
+    margin: 0;
+    padding: 0;
+    // Roughly a real card: 4:3 photo over title, price, blurb and link
+    aspect-ratio: 5 / 6;
+    border-radius: 12px;
+    background: linear-gradient(
+        100deg,
+        rgba(255, 255, 255, 0) 20%,
+        rgba(255, 255, 255, 0.09) 45%,
+        rgba(255, 255, 255, 0) 70%
+      )
+      rgba(8, 6, 28, 0.82);
+    background-size: 220% 100%;
+    background-repeat: no-repeat;
+    animation: shop-skeleton-shimmer 1.6s ease-in-out infinite;
+  }
+
+  // Only ever one row: the third goes below xl, the second below sm
+  .shop-skeleton:nth-child(3) {
+    display: none;
+  }
+
+  .shop-skeleton:nth-child(2) {
+    display: none;
+  }
+
+  @media (min-width: $breakpoint-sm) {
+    .shop-skeleton:nth-child(2) {
+      display: block;
+    }
+  }
+
+  @media (min-width: $breakpoint-xl) {
+    .shop-skeleton:nth-child(3) {
+      display: block;
+    }
+  }
+}
+
+@keyframes shop-skeleton-shimmer {
+  from {
+    background-position: 160% 0;
+  }
+  to {
+    background-position: -60% 0;
+  }
 }
 
 .shop-listing {
@@ -3221,6 +3294,65 @@ $switch-ease: cubic-bezier(0.45, 0.05, 0.25, 1.2);
   padding: 12px;
   border-radius: 12px;
   background: rgba(8, 6, 28, 0.82);
+}
+
+// Etsy's own listing copy. Collapsed it's clamped to two lines; expanded
+// it scrolls inside the card rather than stretching it past its
+// neighbours — these run to a couple of thousand characters.
+.shop-listing-blurb {
+  margin-top: 6px;
+
+  p {
+    margin: 0;
+    font-size: 13px;
+    line-height: 1.45;
+    // Etsy authors these with real line breaks; keep them once the whole
+    // thing is on screen
+    white-space: pre-line;
+    color: #c8c4de;
+    display: -webkit-box;
+    -webkit-box-orient: vertical;
+    -webkit-line-clamp: 2;
+    overflow: hidden;
+  }
+
+  &.is-expanded p {
+    -webkit-line-clamp: unset;
+    max-height: 15em;
+    overflow-y: auto;
+  }
+}
+
+// "Expand" / "Collapse": a link in everything but semantics — it toggles
+// state, so it's a button. Collapse hangs back until the card is hovered
+// (or the button is focused), which keeps it from competing with the Etsy
+// link once the blurb is open.
+.shop-page .shop-listing-toggle {
+  margin-top: 2px;
+  padding: 0;
+  border: 0;
+  background: none;
+  font: inherit;
+  font-size: 13px;
+  color: #c9b6ff;
+  text-decoration: underline;
+  transition: opacity 0.15s ease;
+}
+
+.shop-listing-blurb.is-expanded .shop-listing-toggle {
+  opacity: 0;
+}
+
+.shop-listing:hover .shop-listing-blurb.is-expanded .shop-listing-toggle,
+.shop-listing-blurb.is-expanded .shop-listing-toggle:focus-visible {
+  opacity: 1;
+}
+
+// No hover to reveal it on touch, so leave Collapse showing there
+@media (hover: none) {
+  .shop-listing-blurb.is-expanded .shop-listing-toggle {
+    opacity: 1;
+  }
 }
 
 // The "Etsy ↗" link under each listing: the arrow rides inline in the

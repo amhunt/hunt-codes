@@ -766,6 +766,12 @@ const normalizeListing = (listing) => {
   return {
     id,
     title: decodeEntities(listing.title),
+    // v3 `description` is plain text (`rich_description` is the HTML one),
+    // so the page can render it as text. Etsy's own line breaks are kept —
+    // the card shows the first couple of lines and expands to the rest.
+    description: listing.description
+      ? decodeEntities(listing.description).trim()
+      : null,
     // With variations Etsy reports the lowest option's price
     price: listing.price ? formatPrice(listing.price) : null,
     hasVariations: Boolean(listing.has_variations),
