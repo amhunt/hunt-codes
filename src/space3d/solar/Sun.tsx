@@ -265,6 +265,10 @@ export default function Sun({
     // with it
     const meshAmount = wireState.amount;
     surfaceMaterial.uniforms.uMesh.value = meshAmount;
+    // Hover turns the disco ball's spots up (sunShaders.ts uHover); eased
+    // on the same clock as the corona's surge below
+    const hover = surfaceMaterial.uniforms.uHover;
+    hover.value += ((hoverState.sun ? 1 : 0) - (hover.value as number)) * ease;
     (coronaMaterial.uniforms.uColorInner.value as THREE.Color)
       .copy(CORONA_INNER)
       .lerp(CORONA_MESH_INNER, meshAmount);
