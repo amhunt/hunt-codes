@@ -79,6 +79,8 @@ const AppBackground = ({
     location.pathname.includes("about") ||
     location.pathname.includes("draw") ||
     location.pathname.includes("artifacts");
+  // The shop, which keeps the name stars but parks their roving highlight
+  const isArtifactsPage = location.pathname.includes("artifacts");
   // The satellite close-up (the Sputnik link's destination)
   const isProjectsPage = location.pathname.includes("projects");
   // The synth solar system (the 808-pad easter egg's destination)
@@ -92,8 +94,9 @@ const AppBackground = ({
   useEffect(() => {
     // The name header this drives (the star field's NameStars) only
     // renders off the landing page, so don't fire a 5x/sec state update
-    // + re-render on the landing route.
-    if (isLanding) return;
+    // + re-render on the landing route. /artifacts keeps the stars and
+    // their twinkle but not the roving letter, so it sits this out too.
+    if (isLanding || isArtifactsPage) return;
     // On /synth the ticker keeps time with the music instead of the
     // clock: every audible note — arp step or keyboard press — advances
     // the highlighted letter (and silence holds it still). Everywhere
@@ -107,13 +110,15 @@ const AppBackground = ({
       setHighlightedCharIdx((idx) => (idx + 1) % nameArr.length);
     }, 200);
     return () => clearInterval(interval);
-  }, [isLanding, isSynthPage]);
+  }, [isLanding, isArtifactsPage, isSynthPage]);
 
   // Mirror the highlight for the WebGL name stars, which read it per frame
-  // rather than having the ticker re-render the memo'd canvas tree
+  // rather than having the ticker re-render the memo'd canvas tree. -1 on
+  // /artifacts: without it the letter the ticker stopped on would stay
+  // swollen and lit for the whole visit.
   useEffect(() => {
-    nameHighlightState.letter = highlightedCharIdx;
-  }, [highlightedCharIdx]);
+    nameHighlightState.letter = isArtifactsPage ? -1 : highlightedCharIdx;
+  }, [highlightedCharIdx, isArtifactsPage]);
 
   return (
     <>
