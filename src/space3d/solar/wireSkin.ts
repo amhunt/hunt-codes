@@ -28,9 +28,17 @@ import { registerMaterialHook } from "./materialHooks";
  */
 
 /** 0 = space view (bodies untouched), 1 = fully meshed. The switch
- *  eases this across ~700ms; every skinned material reads the same
+ *  eases this across WIRE_FADE_MS; every skinned material reads the same
  *  uniform object, so one write per frame moves the whole scene. */
-export const wireState = { amount: 0, target: 0 };
+export const wireState = {
+  amount: 0,
+  target: 0,
+  /** Where the running fade started from, and when (performance.now) */
+  from: 0,
+  changedAt: 0,
+};
+
+const WIRE_FADE_MS = 700;
 
 /** The blue-white every body's wires start from, and that every `tint`
  *  multiplies. */
@@ -42,6 +50,33 @@ export const wireUniforms = {
   /** Brightness of the rim light at the limb */
   uWireRim: { value: 0.55 },
 };
+
+/** Point the crossfade at a view. A no-op when already headed there, so
+ *  every driver can call it on its own mode change. */
+export function setWireTarget(target: 0 | 1): void {
+  if (wireState.target === target) return;
+  wireState.from = wireState.amount;
+  wireState.target = target;
+  wireState.changedAt = performance.now();
+}
+
+/**
+ * Advance the crossfade to `now`. Driven off the clock rather than a
+ * per-frame delta so it doesn't matter how many canvases call it in a
+ * frame: the solar scene and the star canvas (the corner coin) each run
+ * a WireDriver, and both land on the same value. Ease-out cubic, so the
+ * switch reads as a quick commit that settles.
+ */
+export function stepWireFade(now: number): void {
+  if (wireState.amount === wireState.target) return;
+  const t = Math.min(1, (now - wireState.changedAt) / WIRE_FADE_MS);
+  wireState.amount =
+    t >= 1
+      ? wireState.target
+      : wireState.from +
+        (wireState.target - wireState.from) * (1 - (1 - t) ** 3);
+  wireUniforms.uWire.value = wireState.amount;
+}
 
 /**
  * The `tint` that lands a body's wires ON `target` rather than somewhere

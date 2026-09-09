@@ -88,7 +88,10 @@ and `material.wireframe` on Earth's 96x96 globe is 54,720 segments of
 haze. `applyWireSkin` folds a derivative-based lat/long grid plus a
 fresnel rim into each body's own material, and the bodies go additive
 with `depthWrite` off so they are genuinely see-through. One shared
-`uWire` uniform crossfades the whole scene (`solar/WireDriver.tsx`).
+`uWire` uniform crossfades the whole scene; `solar/WireDriver.tsx` is
+mounted once per canvas (the corner coin lives in the star canvas and
+takes the skin too, mark excepted), and the fade runs off the clock so
+the two drivers agree.
 A material has only one `onBeforeCompile`, so the wire skin and the
 energy wave both register through `solar/materialHooks.ts`, which keeps
 them in a defined order (wires first, band on top) and builds a cache key

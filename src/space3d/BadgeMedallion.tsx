@@ -12,6 +12,7 @@ import {
   badgeHoverState,
 } from "../badgeState";
 import badgeUrl from "../assets/hunt-codes-badge.glb";
+import { applyWireSkin, wireState } from "./solar/wireSkin";
 
 /**
  * The "hunt.codes" medallion (the exported coin from three-d-stage),
@@ -35,6 +36,12 @@ import badgeUrl from "../assets/hunt-codes-badge.glb";
  * as fast. A click comes through the same channel (badgeAimState): the
  * spin pauses and the face swings onto the confetti's launch heading for
  * the length of the volley, so the "A"s pour out of the coin's face.
+ *
+ * Mesh view: the coin body takes the wire skin like the planets (white
+ * wires, see-through), while the signature and its caret are the one
+ * solid thing left on it, and go neon green. The star canvas runs its
+ * own WireDriver for the flip; the mark's colour is lerped here per
+ * frame off the same shared fade.
  */
 
 // Monogram-local x: the "A" spans ~0–6.24, the caret bar ~6.97–8.33.
@@ -86,6 +93,13 @@ const buildSignatureGeometry = (
   geo.translate(to.x - from.x, to.y - from.y, letterBox.min.z - box.min.z);
   return geo;
 };
+// The mark's colour and glow at either end of the space/mesh fade:
+// white with a touch of glow (the signature stroke is far thinner than
+// the block "A" it replaced, so it needs the lift to stay legible at
+// 140px), then neon green glowing hard
+const MARK_SPACE = new THREE.Color("#ffffff");
+const MARK_MESH = new THREE.Color("#39ff14");
+const MARK_GLOW_MESH = 1;
 // Match a text caret's cadence: ~530ms visible, ~530ms hidden.
 const CARET_HALF_PERIOD_S = 0.53;
 // Hover doubles the blink rate
@@ -176,6 +190,17 @@ const partitionTriangles = (
   return { hit: build(hit), miss: build(miss) };
 };
 
+/** A material for the signature or its caret, with its space-view glow */
+type Mark = { material: THREE.MeshStandardMaterial; glow: number };
+
+/** Lerp a mark between its space and mesh looks. `mesh` is the shared
+ *  crossfade, 0..1. */
+const tintMark = ({ material, glow }: Mark, mesh: number) => {
+  material.color.copy(MARK_SPACE).lerp(MARK_MESH, mesh);
+  material.emissive.copy(MARK_SPACE).lerp(MARK_MESH, mesh);
+  material.emissiveIntensity = glow + (MARK_GLOW_MESH - glow) * mesh;
+};
+
 // Split the monogram into the "A" and the caret bar by centroid x (the two
 // are cleanly separated in monogram-local space).
 const splitMonogram = (
@@ -205,7 +230,7 @@ const BadgeMedallion = () => {
   // Clone so the cached GLTF stays pristine, split the monogram, recenter
   // the coin on the origin, and measure it so the frame loop can scale it
   // to the corner slot in CSS pixels.
-  const { object, caretMaterial, coinDiameter } = useMemo(() => {
+  const { object, marks, caretMaterial, coinDiameter } = useMemo(() => {
     const root = gltf.scene.clone(true);
 
     // The monogram is authored only on the front face — find it (plus the
@@ -237,8 +262,11 @@ const BadgeMedallion = () => {
     // them so the face is just the signature.
     rivetMeshes.forEach((mesh) => mesh.removeFromParent());
 
-    // A holder (not a bare `let`) so its type survives the closures above.
+    // Holders (not bare `let`s) so their types survive the closures above.
     const caret: { material: THREE.MeshStandardMaterial | null } = {
+      material: null,
+    };
+    const signature: { material: THREE.MeshStandardMaterial | null } = {
       material: null,
     };
 
@@ -259,18 +287,19 @@ const BadgeMedallion = () => {
       mono.geometry = buildSignatureGeometry(
         parts.letter.boundingBox as THREE.Box3,
       );
-      // White, with its own glow: the signature stroke is far thinner than
-      // the block "A", so it needs the lift to stay legible at 140px.
+      // The signature's own material; tintMark paints it per frame (see
+      // MARK_SPACE) — it starts out white with its own glow
       const sigMat = (mono.material as THREE.MeshStandardMaterial).clone();
-      sigMat.color.set("#ffffff");
-      sigMat.emissive.set("#ffffff");
+      sigMat.color.set(MARK_SPACE);
+      sigMat.emissive.set(MARK_SPACE);
       sigMat.emissiveIntensity = 0.35;
       mono.material = sigMat;
-      // The caret is its own white, blinking material (a separate clone so
+      signature.material = sigMat;
+      // The caret is its own blinking material (a separate clone so
       // toggling its opacity leaves the "A" fully lit).
       const caretMat = (mono.material as THREE.MeshStandardMaterial).clone();
-      caretMat.color.set("#ffffff");
-      caretMat.emissive.set("#ffffff");
+      caretMat.color.set(MARK_SPACE);
+      caretMat.emissive.set(MARK_SPACE);
       caretMat.emissiveIntensity = 0.4;
       caretMat.transparent = true;
       caret.material = caretMat;
@@ -334,12 +363,37 @@ const BadgeMedallion = () => {
       face.add(new THREE.Mesh(parts.miss, indigo));
     }
 
+    // Mesh view: everything on the coin but the mark takes the wire skin
+    // — the planets' default white wires — and goes see-through with
+    // them. The signature and caret stay solid (and turn green per frame
+    // instead), so they're the two materials left out. Materials are
+    // shared between meshes (the rim, the mirrored back face), so skin
+    // each one once.
+    const marks: Mark[] = [];
+    if (signature.material)
+      marks.push({ material: signature.material, glow: 0.35 });
+    if (caret.material) marks.push({ material: caret.material, glow: 0.4 });
+    const skinned = new Set<THREE.Material>(marks.map((m) => m.material));
+    root.traverse((child) => {
+      const mesh = child as THREE.Mesh;
+      if (!mesh.isMesh) return;
+      const materials = Array.isArray(mesh.material)
+        ? mesh.material
+        : [mesh.material];
+      for (const material of materials) {
+        if (skinned.has(material)) continue;
+        skinned.add(material);
+        applyWireSkin(material);
+      }
+    });
+
     const bounds = new THREE.Box3().setFromObject(root);
     const center = bounds.getCenter(new THREE.Vector3());
     root.position.sub(center);
     const sphere = bounds.getBoundingSphere(new THREE.Sphere());
     return {
       object: root,
+      marks,
       caretMaterial: caret.material,
       coinDiameter: sphere.radius * 2 || 1,
     };
@@ -426,6 +480,8 @@ const BadgeMedallion = () => {
       aim,
     );
     spin.rotation.x = AIM_PITCH * aim;
+    // The mark rides the shared space/mesh fade: white to neon green
+    for (const mark of marks) tintMark(mark, wireState.amount);
     if (caretMaterial) {
       caretPhase.current +=
         (delta / CARET_HALF_PERIOD_S) *

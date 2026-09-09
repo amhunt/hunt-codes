@@ -2316,6 +2316,29 @@ $switch-ease: cubic-bezier(0.45, 0.05, 0.25, 1.2);
   left: calc(1rem + env(safe-area-inset-left, 0px));
 }
 
+// /about pins the life timeline to the bottom edge (LifeTimeline puts the
+// class on <body> while mounted), so the bottom-left controls climb above
+// it: the band (34px bar + 18px axis + 6px padding) plus its slab's 14px
+// fade-up, plus the usual 1rem. Phones hide the timeline and keep the
+// corner; below lg the Space/Mesh switch is top-right anyway.
+$timeline-band-clearance: 72px;
+body.life-timeline-present {
+  @media (min-width: #{$breakpoint-sm + 1px}) {
+    .music-toggle {
+      bottom: calc(
+        #{$timeline-band-clearance} + 1rem + env(safe-area-inset-bottom, 0px)
+      );
+    }
+  }
+  @media (min-width: $breakpoint-lg) {
+    .view-mode-switch {
+      bottom: calc(
+        #{$timeline-band-clearance} + 1rem + env(safe-area-inset-bottom, 0px)
+      );
+    }
+  }
+}
+
 .space-jam-switch {
   background: #34333f;
   transition: background 500ms ease;
@@ -3514,10 +3537,12 @@ $switch-ease: cubic-bezier(0.45, 0.05, 0.25, 1.2);
 // panel (z 4) and the canvases (z 2), under the Radix tooltip portals
 // (z 50) it opens above itself.
 //
-// The band spans the whole viewport width (its slab runs edge to edge);
-// the bar inside is inset by clearances: `padding-right` keeps it off the
-// corner medallion (140px, bottom-right), `bottom` off the music switch and
-// — at lg — the Space/Mesh switch that joins it in that corner.
+// The band spans the whole viewport width (its slab runs edge to edge)
+// and sits on the bottom edge of the screen; the bar inside is inset by
+// `padding-right` to keep it off the corner medallion (140px,
+// bottom-right). The music switch and — at lg — the Space/Mesh switch
+// that joins it in the other corner climb above the band while it's
+// mounted (`body.life-timeline-present`, next to .music-toggle).
 .life-timeline {
   // The future tail's width — shared by the bar and the axis so the
   // "now" tick stays on the boundary
@@ -3537,7 +3562,9 @@ $switch-ease: cubic-bezier(0.45, 0.05, 0.25, 1.2);
   position: fixed;
   left: 0;
   right: 0;
-  bottom: calc(3.25rem + env(safe-area-inset-bottom, 0px));
+  bottom: env(safe-area-inset-bottom, 0px);
+  // A little air under the year ticks so they don't sit on the edge
+  padding-bottom: 6px;
   padding-right: 160px;
   z-index: 6;
   font-family: "Inconsolata", monospace;

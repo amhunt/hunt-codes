@@ -201,6 +201,14 @@ const LifeTimeline = ({
     return () => observer.disconnect();
   }, []);
 
+  // The band sits on the bottom edge of the screen, so while it's mounted
+  // the bottom-left controls climb above it (App.scss, next to
+  // .music-toggle, keys off this class)
+  useEffect(() => {
+    document.body.classList.add("life-timeline-present");
+    return () => document.body.classList.remove("life-timeline-present");
+  }, []);
+
   const segments = useMemo(
     () =>
       layout.map((cell) => {
