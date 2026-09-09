@@ -35,8 +35,8 @@ import {
  */
 // Surface brightness multiplier (shader uTint; components >1 push the
 // palette toward white). Mesh view stays at 1: the tint multiplies the
-// photosphere's gold, and the mesh branch mixes its own colour in on top
-// of it anyway.
+// photosphere's gold, and the mirror-ball branch mixes its own colour in
+// on top of it anyway.
 const SPACE_TINT = new THREE.Color(1.12, 1.12, 1.15);
 const MESH_TINT = new THREE.Color(1, 1, 1);
 
@@ -260,9 +260,9 @@ export default function Sun({
       isSpaceView ? SPACE_TINT : MESH_TINT,
       ease,
     );
-    // The scene-wide crossfade drives the star's own wire cage, and takes
-    // the corona and the wide glow sprite from amber to plasma blue with
-    // it
+    // The scene-wide crossfade turns the star into its mirror ball, and
+    // takes the corona and the wide glow sprite from amber to neon yellow
+    // with it
     const meshAmount = wireState.amount;
     surfaceMaterial.uniforms.uMesh.value = meshAmount;
     (coronaMaterial.uniforms.uColorInner.value as THREE.Color)

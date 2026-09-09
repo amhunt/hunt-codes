@@ -147,10 +147,11 @@ const Resume = () => {
   // Clicking the "Product Easter Eggs" pill fires the full celebration
   // (lazy-loaded to keep it all off /about's critical path): the
   // ribbons.js.org "Confetti + Ribbons" combo — confetti raining from the
-  // top edge while ribbon waves flow across — with ~EGG_RAIN_COUNT easter
-  // eggs falling scattered through the rain. Each library reuses one shared
-  // container across calls; unmount clears the timers and destroys the
-  // containers so nothing outlives the page.
+  // top edge while ribbon waves flow across — with up to EGG_RAIN_COUNT
+  // easter eggs (fewer on narrow windows) falling scattered through the
+  // rain. Each library reuses one shared container across calls; unmount
+  // clears the timers and destroys the containers so nothing outlives the
+  // page.
   const confettiContainer = useRef<{ destroy: () => void }>(undefined);
   const ribbonsContainer = useRef<{ destroy: () => void }>(undefined);
   const celebrationTimers = useRef<number[]>([]);
@@ -162,11 +163,17 @@ const Resume = () => {
       const animationEnd = Date.now() + CELEBRATION_MS;
 
       // Pre-pick which rain ticks also drop an easter egg, so exactly
-      // EGG_RAIN_COUNT eggs fall scattered across the whole window
+      // eggCount eggs fall scattered across the celebration. The eggs sit
+      // out the first EGG_RAIN_DELAY_MS: they drop fast enough that a
+      // spread over the whole window lands a good share of them before
+      // the ribbons show up
       const totalTicks = Math.floor(CELEBRATION_MS / RAIN_TICK_MS);
+      const firstEggTick = Math.floor(EGG_RAIN_DELAY_MS / RAIN_TICK_MS);
+      const eggSpan = totalTicks - firstEggTick;
+      const eggCount = Math.min(eggCountForWidth(window.innerWidth), eggSpan);
       const eggTicks = new Set<number>();
-      while (eggTicks.size < EGG_RAIN_COUNT) {
-        eggTicks.add(Math.floor(Math.random() * totalTicks));
+      while (eggTicks.size < eggCount) {
+        eggTicks.add(firstEggTick + Math.floor(Math.random() * eggSpan));
       }
 
       let tick = 0;
@@ -587,13 +594,26 @@ const CELEBRATION_MS = 6000;
 // The demo rains every 50ms; 70ms thins the confetti ~30%
 const RAIN_TICK_MS = 70;
 
-// Easter eggs mixed into the rain across the full celebration
+// Easter eggs mixed into the rain: EGG_RAIN_COUNT of them on a
+// laptop-wide (EGG_RAIN_FULL_WIDTH_PX) or wider window, scaling down with
+// the width to half that on a phone, where fourteen crowd the screen
 const EGG_RAIN_COUNT = 14;
+const EGG_RAIN_FULL_WIDTH_PX = 1280;
+const EGG_RAIN_MIN_SHARE = 0.5;
+const eggCountForWidth = (width: number) =>
+  Math.round(
+    EGG_RAIN_COUNT *
+      Math.max(EGG_RAIN_MIN_SHARE, Math.min(1, width / EGG_RAIN_FULL_WIDTH_PX)),
+  );
+// How far into the rain the first egg can drop (see releaseEggs)
+const EGG_RAIN_DELAY_MS = 1000;
 // Egg size range (confetti scalar). Bigger eggs fall faster: each egg's
-// gravity is scalar × EGG_GRAVITY_PER_SCALE (the rain pieces use 1.2)
+// gravity is scalar × EGG_GRAVITY_PER_SCALE, so 3–6 against the rain's
+// 1.2. tsParticles decays velocity 0.9× a frame, which makes the settled
+// fall speed linear in gravity — doubling this doubles how fast they drop
 const EGG_MIN_SCALE = 2.5;
 const EGG_MAX_SCALE = 5;
-const EGG_GRAVITY_PER_SCALE = 0.6;
+const EGG_GRAVITY_PER_SCALE = 1.2;
 
 const interests = [
   "3D Printing",

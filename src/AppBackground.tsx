@@ -16,6 +16,11 @@ import useWindowSize from "useWindowSize";
 import { onSynthNote } from "./synthAudio";
 import { nameHighlightState } from "./nameHighlight";
 import { NAME_TITLE_ID } from "./solarAnchorIds";
+
+/** The Golden Gate bridge + fog on /home is parked for now — the asset,
+ *  the fog component and the .App-gg-bridge styles all stay, so flipping
+ *  this brings it back as it was. */
+const SHOW_GOLDEN_GATE = false;
 // import RetroMac from "./RetroMac";
 
 // Loaded on demand so three.js ships as its own chunk
@@ -181,7 +186,7 @@ const AppBackground = ({
           />
         </Suspense>
       </BackgroundErrorBoundary>
-      {isHomePage && (
+      {isHomePage && SHOW_GOLDEN_GATE && (
         <>
           {/* <RetroMac /> */}
           <img
