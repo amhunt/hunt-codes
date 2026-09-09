@@ -10,17 +10,17 @@ import React, {
 import { useLocation, useNavigate } from "react-router-dom";
 import cx from "classnames";
 
-import GoldenGate from "./gg-bridge.png";
-import GoldenGateFog from "./GoldenGateFog";
+// The Golden Gate bridge + Karl the Fog on /home are parked for now — the
+// asset, GoldenGateFog.tsx and the .App-gg-bridge / .gg-fog styles all
+// stay, so uncommenting these two imports and the block below (and
+// re-destructuring `showBridge`) brings it back as it was.
+// import GoldenGate from "./gg-bridge.png";
+// import GoldenGateFog from "./GoldenGateFog";
 import useWindowSize from "useWindowSize";
 import { onSynthNote } from "./synthAudio";
 import { nameHighlightState } from "./nameHighlight";
 import { NAME_TITLE_ID } from "./solarAnchorIds";
 
-/** The Golden Gate bridge + fog on /home is parked for now — the asset,
- *  the fog component and the .App-gg-bridge styles all stay, so flipping
- *  this brings it back as it was. */
-const SHOW_GOLDEN_GATE = false;
 // import RetroMac from "./RetroMac";
 
 // Loaded on demand so three.js ships as its own chunk
@@ -59,9 +59,9 @@ for (const c of andrewHunt) {
 }
 
 const AppBackground = ({
-  showBridge,
   isSpaceView,
 }: {
+  /** Fades the (currently parked) Golden Gate in a beat after mount */
   showBridge: boolean;
   /** User-toggled (App.tsx's Space/Mesh switch); space is the default */
   isSpaceView: boolean;
@@ -186,9 +186,10 @@ const AppBackground = ({
           />
         </Suspense>
       </BackgroundErrorBoundary>
-      {isHomePage && SHOW_GOLDEN_GATE && (
+      {/* Parked: the Golden Gate (see the commented imports up top)
+      {isHomePage && (
         <>
-          {/* <RetroMac /> */}
+          <RetroMac />
           <img
             className={`App-gg-bridge ${
               showBridge && !isSpaceView ? "App-gg-bridge-opaque" : ""
@@ -199,6 +200,7 @@ const AppBackground = ({
           <GoldenGateFog visible={showBridge && !isSpaceView} />
         </>
       )}
+      */}
     </>
   );
 };

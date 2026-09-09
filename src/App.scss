@@ -1239,6 +1239,9 @@ li > ul > li {
     // bar on phones — see .life-timeline)
     padding-bottom: 140px;
     padding-top: 40px;
+    // Keep the panel off the screen edges (it has no moon gutter here)
+    padding-left: calc(12px + env(safe-area-inset-left, 0px));
+    padding-right: calc(12px + env(safe-area-inset-right, 0px));
   }
 
   .splitRow {
@@ -2207,8 +2210,8 @@ $switch-ease: cubic-bezier(0.45, 0.05, 0.25, 1.2);
   transition: opacity 800ms ease 1500ms;
 
   &.vms-hidden {
-    // Hidden on the landing page; disappear instantly (no delay) so
-    // navigating back to space doesn't leave it lingering
+    // Hidden on phones and narrow /home; disappear instantly (no delay)
+    // so navigating there doesn't leave it lingering
     opacity: 0;
     pointer-events: none;
     // Leave the tab order once the fade completes — an invisible control
@@ -2314,6 +2317,14 @@ $switch-ease: cubic-bezier(0.45, 0.05, 0.25, 1.2);
 .music-toggle {
   bottom: calc(1rem + env(safe-area-inset-bottom, 0px));
   left: calc(1rem + env(safe-area-inset-left, 0px));
+}
+
+// Phones hide the music switch everywhere but /projects-and-toys (the
+// synth page's neighbour, where the jams are the point). Hidden, not
+// unmounted: the <audio> lives inside the switch, so unmounting it would
+// stop the music on the way to the next page.
+.music-toggle-hidden {
+  display: none;
 }
 
 // /about pins the life timeline to the bottom edge (LifeTimeline puts the

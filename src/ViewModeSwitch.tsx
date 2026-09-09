@@ -21,10 +21,10 @@ import useWindowSize from "useWindowSize";
  * announces itself as on/off, which is the wrong shape for two named
  * views.
  *
- * Hidden on the landing page and on phones (a corner too crowded to
- * spare); when the visitor enters /home it fades in a beat after the
- * camera swoop starts (the .vms-hidden transition in App.scss carries
- * the delay).
+ * Shown on the landing page at every size. Elsewhere phones sit it out
+ * (a corner too crowded to spare), as does /home below lg; when it comes
+ * back it fades in a beat after the camera swoop starts (the .vms-hidden
+ * transition in App.scss carries the delay).
  */
 const ViewModeSwitch = ({
   isSpaceView,
@@ -36,9 +36,11 @@ const ViewModeSwitch = ({
   const { pathname } = useLocation();
   const size = useWindowSize();
   const onLanding = pathname === "/";
-  // Phones sit the switch out everywhere (space stays the default);
-  // /home below lg gives its corner back to the scene too (part of the
-  // small-screen declutter alongside the moon and link-trio bodies)
+  // Off the landing page, phones sit the switch out (space stays the
+  // default), and /home below lg gives its corner back to the scene too
+  // (part of the small-screen declutter alongside the moon and link-trio
+  // bodies). The landing page keeps it at every size — it's the one
+  // place a visitor is invited to play with the scene.
   const onPhone = size === "sm";
   const onNarrowHome = pathname === "/home" && size !== "lg";
   return (
@@ -47,7 +49,7 @@ const ViewModeSwitch = ({
       aria-label="Scene view"
       className={cx(
         "view-mode-switch fixed right-12 top-4 z-[5000]",
-        (onLanding || onPhone || onNarrowHome) && "vms-hidden",
+        !onLanding && (onPhone || onNarrowHome) && "vms-hidden",
       )}
     >
       {/* The travelling highlight sits behind both labels, so the active
