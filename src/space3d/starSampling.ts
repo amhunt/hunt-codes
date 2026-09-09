@@ -197,8 +197,27 @@ export const generateStarsForLetters = (
 export const starPhrases = ["HUNT.CODES", "BUILT WITH ♥", "BY ANDREW HUNT"];
 export const starPhrasesSmall = ["ANDREW", "HUNT", "CODES ★"];
 
-/** Landing text stars start scattered up to this far from their glyph */
-export const INTRO_SCATTER_PX = 200;
+/**
+ * Where a landing text star starts before it flies in: a point in the
+ * band just outside the viewport, uniform over the whole band, so the
+ * stars converge on the title from every side — top, bottom, left and
+ * right alike — rather than scattering around the glyphs. The band is
+ * INTRO_SPAWN_BAND of the longer viewport edge deep. Rejection-sampled
+ * from the enclosing rectangle; the band is two thirds of it, so this
+ * rarely loops more than once.
+ */
+export const INTRO_SPAWN_BAND = 0.3;
+export function introSpawnPoint(
+  width: number,
+  height: number,
+): { x: number; y: number } {
+  const band = Math.max(width, height) * INTRO_SPAWN_BAND;
+  for (;;) {
+    const x = -band + Math.random() * (width + 2 * band);
+    const y = -band + Math.random() * (height + 2 * band);
+    if (x < 0 || x > width || y < 0 || y > height) return { x, y };
+  }
+}
 
 // Background star densities: ~1-2 stars per ten thousand pixels
 const BACKGROUND_DENSITY_LANDING = 0.0002;
