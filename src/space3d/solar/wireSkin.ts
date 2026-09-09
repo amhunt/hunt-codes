@@ -150,6 +150,11 @@ interface WireSkinOptions {
    *  than a cage: the mirror coin, whose stacked faces and rims blow out
    *  to white under additive blending. */
   solid?: boolean;
+  /** Let this share (0..1) of the material's own lit colour through
+   *  under the wires — the parchment's cream, the 808's pad colours — so
+   *  a part reads as a translucent version of its space-view self rather
+   *  than bare lines. 0 (the default) is pure wires. */
+  keep?: number;
   /** An even glow between the wires, in the body's tint, as a share of
    *  full wire brightness — what makes a body read as a lit surface
    *  rather than an empty cage. Earth gets this for free from its dense
@@ -189,6 +194,7 @@ uniform float uWireLon;
 uniform float uWirePitch;
 uniform float uWireGain;
 uniform float uWireFill;
+uniform float uWireKeep;
 uniform vec3 uWireTint;
 
 float wireGridLine( float coord ) {
@@ -382,7 +388,9 @@ const fragmentBody = (
     uWireColor * wireBodyTint *
     ( ( wireLine * wireGain + uWireFill ) * wireDay
       + pow( 1.0 - wireFacing, 3.0 ) * uWireRim * ( 0.5 + 0.5 * wireDay ) )
-    + wireMirror;
+    + wireMirror
+    // A share of the part's own shading, so it keeps its colour
+    + outgoingLight * uWireKeep;
   outgoingLight = mix( outgoingLight, wireLit, uWire );
   // Alpha is left alone on purpose. Under additive blending it scales
   // what the body contributes, and it is also the ONLY thing hiding the
@@ -449,6 +457,7 @@ export function applyWireSkin(
     lat = 16,
     gain = 0.95,
     fill = 0,
+    keep = 0,
     mirror,
     solid = false,
     hover = false,
@@ -474,6 +483,7 @@ export function applyWireSkin(
       uWirePitch: { value: pitch },
       uWireGain: { value: gain },
       uWireFill: { value: fill },
+      uWireKeep: { value: keep },
       ...(mirror
         ? {
             uMirrorLight0: { value: mirror.lights[0].position.clone() },
