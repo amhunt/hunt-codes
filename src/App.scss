@@ -2195,11 +2195,12 @@ $switch-ease: cubic-bezier(0.45, 0.05, 0.25, 1.2);
 }
 
 // ─── Scene view switch (ViewModeSwitch.tsx) ────────────────
-// The Space/Mesh layer chip, after the one every maps app parks in a
-// corner: a dark glass pill holding two labelled segments with a
-// travelling highlight behind the active one. Unlike the pill switches
-// above it carries its own chassis — two words need the width, and the
-// segments are buttons rather than a Radix switch.
+// The Space/Mesh switch, dressed like the music switch beside it: the
+// same charcoal track, the same inset shading and 34px height, and the
+// active segment sits on the same flat light disc the speaker rides —
+// stretched to a pill, sliding across. Unlike the pill switches it
+// carries its own chassis: two words need the width, and the segments
+// are buttons rather than a Radix switch.
 
 .view-mode-switch {
   // Positioned by the Tailwind classes on the component (fixed top-right).
@@ -2223,14 +2224,16 @@ $switch-ease: cubic-bezier(0.45, 0.05, 0.25, 1.2);
   // absolute positioning needs. Declaring `relative` in this file would
   // win the cascade and unpin the switch.
   display: flex;
-  align-items: center;
-  padding: 3px;
-  border-radius: 999px;
-  background: rgba(9, 18, 36, 0.72);
-  border: 1px solid rgba(150, 200, 255, 0.22);
+  align-items: stretch;
+  height: $switch-height;
+  padding: $switch-pad;
+  border-radius: $switch-height;
+  // .space-jam-switch's resting track, and .scene-switch's shell shading
+  background: #34333f;
   box-shadow:
-    inset 0 1px 1px rgba(255, 255, 255, 0.08),
-    0 2px 8px rgba(0, 0, 0, 0.35);
+    inset 0 2px 4px rgba(0, 0, 0, 0.35),
+    inset 0 -1px 2px rgba(255, 255, 255, 0.35),
+    0 2px 6px rgba(0, 0, 0, 0.25);
   opacity: 1;
   // The 1.5s opacity delay is the fade-in after leaving the landing page:
   // the camera swoop leads, then the switch appears
@@ -2251,23 +2254,18 @@ $switch-ease: cubic-bezier(0.45, 0.05, 0.25, 1.2);
   }
 }
 
-// The travelling highlight. Both segments are the same width, so it
-// slides its own width across; the overshoot matches the pill switches'
-// thumb.
+// The travelling thumb: .sjs-thumb's flat disc, pill-shaped. Both
+// segments are the same width, so it slides its own width across; the
+// overshoot matches the pill switches' thumb.
 .vms-indicator {
   position: absolute;
-  top: 3px;
-  bottom: 3px;
-  left: 3px;
-  width: calc(50% - 3px);
+  top: $switch-pad;
+  bottom: $switch-pad;
+  left: $switch-pad;
+  width: calc(50% - #{$switch-pad});
   border-radius: 999px;
-  background: linear-gradient(
-    180deg,
-    rgba(191, 230, 255, 0.28),
-    rgba(120, 180, 255, 0.16)
-  );
-  border: 1px solid rgba(191, 230, 255, 0.45);
-  box-shadow: 0 0 10px rgba(120, 200, 255, 0.35);
+  background: #f3f1f8;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.4);
   transition: transform 500ms $switch-ease;
 }
 
@@ -2295,7 +2293,9 @@ $switch-ease: cubic-bezier(0.45, 0.05, 0.25, 1.2);
   font-weight: 600;
   letter-spacing: 0.02em;
   white-space: nowrap;
-  color: rgba(198, 216, 240, 0.72);
+  // Light on the charcoal track; the active one rides the light thumb,
+  // so it takes the speaker's ink instead
+  color: rgba(243, 241, 248, 0.7);
   background: none;
   // The global `button:hover` underline would draw a line under the
   // label; these read as tabs, not links
@@ -2303,12 +2303,16 @@ $switch-ease: cubic-bezier(0.45, 0.05, 0.25, 1.2);
   transition: color 300ms ease;
 
   &[aria-pressed="true"] {
-    color: #eaf6ff;
+    color: #24203a;
   }
 
   &:hover {
-    color: #eaf6ff;
+    color: #f3f1f8;
     text-decoration: none;
+  }
+
+  &[aria-pressed="true"]:hover {
+    color: #24203a;
   }
 
   // The global button:focus-visible ring sets a 4px radius, which squares
