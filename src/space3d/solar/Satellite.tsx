@@ -40,7 +40,7 @@ import InteractiveGlow from "./InteractiveGlow";
  * a paper scroll floating off the antenna tips (the Zip blog post), a
  * little video screen set into the head (the Zip launch reel), a pen
  * floating under the cone (SVG Studio) and a mid-century vase standing
- * on top of the head (/shop, the 3D print store). The parts exist for that view only — they fade in on the way
+ * on top of the head (/artifacts, the 3D print store). The parts exist for that view only — they fade in on the way
  * there and out on the way back — and each gets the Earth treatment on
  * hover: brighten, pulsing silhouette outline, an always-on halo. The
  * same energy wave sweeps across the parts every few seconds — across

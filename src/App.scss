@@ -3127,9 +3127,9 @@ $switch-ease: cubic-bezier(0.45, 0.05, 0.25, 1.2);
   }
 }
 
-// The artifacts shop (/shop). Bare-bones for now — a fixed, scrolling
-// layer over the scene so the listings are legible in both palettes; the
-// real design pass comes later. No backdrop-filter (see .resume-panel).
+// The artifacts shop (/artifacts). Bare-bones for now — a fixed,
+// scrolling layer over the scene so the listings stay legible above it;
+// the real design pass comes later. No backdrop-filter (see .resume-panel).
 .shop-page {
   position: fixed;
   inset: 0;
@@ -3192,17 +3192,23 @@ $switch-ease: cubic-bezier(0.45, 0.05, 0.25, 1.2);
 }
 
 .shop-listing {
+  // The base layer indents every li by 1rem (index.css); without this the
+  // grid sits 16px right of the heading above it
+  margin: 0;
   padding: 12px;
   border-radius: 12px;
   background: rgba(8, 6, 28, 0.82);
 }
 
 // The "Etsy ↗" link under each listing: the arrow rides inline in the
-// link's own color
-.shop-listing-link {
+// link's own color. Lighter than the page's $purp-light accent — the card
+// sits over the scene at 82% opacity, and the darker purple lost contrast
+// wherever something bright (the sun, Earth) showed through behind it.
+.shop-page .shop-listing-link {
   display: inline-flex;
   align-items: center;
   gap: 2px;
+  color: #c9b6ff;
 }
 
 // Listing photos: a scroll-snap strip (swipe on touch, the arrows on a

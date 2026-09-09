@@ -5,7 +5,7 @@
  *   POST /api/draw            — generate + persist a drawing
  *   GET  /api/drawings        — recent drawings for the gallery
  *   GET  /api/drawings/{id}   — one drawing (permalink)
- *   GET  /api/shop            — Andrew's Etsy listings for the /shop page
+ *   GET  /api/shop            — Andrew's Etsy listings for /artifacts
  *
  * Design notes:
  * - The OpenAI key lives in SSM SecureString `/hunt-codes/openai-api-key`;
@@ -668,7 +668,7 @@ const handleListDrawings = async () => {
 // ---------------------------------------------------------------------------
 // Etsy shop — GET /api/shop
 //
-// The /shop page lists Andrew's own Etsy listings. Only public v3
+// The /artifacts page lists Andrew's own Etsy listings. Only public v3
 // endpoints are used (no OAuth): one call for the shop's active listing
 // ids, one batch call for titles/prices/images. Checkout stays on Etsy —
 // every listing links out.

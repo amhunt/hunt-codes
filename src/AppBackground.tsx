@@ -73,12 +73,12 @@ const AppBackground = ({
   }, []);
 
   const isHomePage = location.pathname.includes("home");
-  // /draw and /shop share the about-page background (Earth + moon in the
-  // 3D scene)
+  // /draw and /artifacts share the about-page background (Earth + moon in
+  // the 3D scene)
   const isAboutPage =
     location.pathname.includes("about") ||
     location.pathname.includes("draw") ||
-    location.pathname.includes("shop");
+    location.pathname.includes("artifacts");
   // The satellite close-up (the Sputnik link's destination)
   const isProjectsPage = location.pathname.includes("projects");
   // The synth solar system (the 808-pad easter egg's destination)

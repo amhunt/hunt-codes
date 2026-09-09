@@ -32,7 +32,7 @@ const BadgeLink = ({ isSpaceView }: { isSpaceView: boolean }) => {
       pathname === "/journey" ||
       pathname === "/about" ||
       pathname.startsWith("/draw") ||
-      pathname === "/shop" ||
+      pathname === "/artifacts" ||
       pathname === "/projects-and-toys" ||
       (pathname === "/home" && isSpaceView));
 

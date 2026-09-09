@@ -175,7 +175,7 @@ const ProjectsAndToys = () => {
           </PartLink>
           <PartLink part="vase">
             {({ outline, ...props }) => (
-              <Link {...props} to="/shop">
+              <Link {...props} to="/artifacts">
                 {outline}
               </Link>
             )}

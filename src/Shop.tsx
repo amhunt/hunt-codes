@@ -11,7 +11,7 @@ import {
 /**
  * The artifacts shop: Andrew's Etsy listings, fetched through
  * GET /api/shop (see server/handler.mjs). Checkout stays on Etsy — every
- * item links out.
+ * item links out. Lives at /artifacts (/shop redirects there).
  *
  * Deliberately unstyled beyond legibility for now; a design pass comes
  * later.
@@ -161,7 +161,7 @@ const Shop = () => {
         <ArrowLeftCircleIcon className="starIcon" size={16} />
         <span>home</span>
       </Link>
-      <h1>artifacts</h1>
+      <h1>Artifacts by Andy</h1>
       <p>
         small things I make, sold over on{" "}
         <a href={shopUrl} target="_blank" rel="noopener noreferrer">
