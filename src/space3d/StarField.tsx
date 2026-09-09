@@ -25,7 +25,7 @@ import {
   generateBackgroundStars,
   generateStarsForLetters,
   generateStarsForText,
-  INTRO_SCATTER_PX,
+  introSpawnPoint,
   starPhrases,
   starPhrasesSmall,
   type SampledStar,
@@ -447,15 +447,13 @@ const TextStars = ({
         positions[i * 2] = targets[i].x;
         positions[i * 2 + 1] = targets[i].y;
       } else {
-        // Landing intro: scatter around the glyphs, then assemble
-        positions[i * 2] =
-          targets[i].x +
-          Math.random() * INTRO_SCATTER_PX * 2 -
-          INTRO_SCATTER_PX;
-        positions[i * 2 + 1] =
-          targets[i].y +
-          Math.random() * INTRO_SCATTER_PX * 2 -
-          INTRO_SCATTER_PX;
+        // Landing intro: start just outside the viewport, on every side,
+        // then fly in toward the title. The glide's 10px-per-tick cap
+        // means the farthest stars take a few seconds to land, which is
+        // the effect — a stream converging on the centre.
+        const spawn = introSpawnPoint(width, height);
+        positions[i * 2] = spawn.x;
+        positions[i * 2 + 1] = spawn.y;
       }
     }
 
@@ -494,7 +492,7 @@ const TextStars = ({
     const sim = simRef.current;
     const deltaMs = Math.min(delta * 1000, 100);
     sim.elapsedMs += deltaMs;
-    // Legacy choreography: stars sit scattered for 2s before assembling
+    // Legacy choreography: stars hold off-screen for 2s before flying in
     if (sim.elapsedMs < STAR_INTRO_DELAY_MS) return;
 
     // Phrase cycle: advance every 10s, 3 times total, ending on phrase 0

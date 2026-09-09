@@ -1,0 +1,11 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" role="img" aria-label="Untapped">
+  <!-- The Untapped (fka Jumpstart) mark: a ring, a bar with its top-left
+       and bottom-right corners rounded, and two dots. Redrawn as vectors
+       from the raster logo so it scales and carries no background. -->
+  <g fill="#e5495b">
+    <circle cx="256" cy="256" r="230" fill="none" stroke="#e5495b" stroke-width="42"/>
+    <path d="M258 150 H300 V318 A42 42 0 0 1 258 360 H216 V192 A42 42 0 0 1 258 150 Z"/>
+    <circle cx="366" cy="182" r="40"/>
+    <circle cx="148" cy="324" r="40"/>
+  </g>
+</svg>

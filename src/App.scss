@@ -645,6 +645,7 @@ p {
   .interest-pill,
   .body-outline-pulse,
   .scroll-hint-chevron,
+  .back-to-orbit-chevron,
   .sjs-bar,
   .svg-generator-spinner,
   .svg-generator-loading-dots span,
@@ -809,6 +810,32 @@ p {
         fill: $purp;
       }
     }
+  }
+}
+
+// /home's "Back to orbit": a chevron and a 48px galaxy, no caption (the
+// label is a tooltip). The whole link is the hover target, so the chevron
+// bounces whether the cursor is on it or on the galaxy.
+.back-to-orbit {
+  border-radius: 999px;
+  padding: 4px 6px 4px 2px;
+
+  .back-to-orbit-chevron {
+    flex: none;
+    margin-right: -2px;
+  }
+
+  &:hover .back-to-orbit-chevron {
+    animation: orbit-chevron-bounce 600ms ease-in-out infinite alternate;
+  }
+}
+
+@keyframes orbit-chevron-bounce {
+  from {
+    transform: translateX(0);
+  }
+  to {
+    transform: translateX(-5px);
   }
 }
 
@@ -1239,6 +1266,9 @@ li > ul > li {
     // bar on phones — see .life-timeline)
     padding-bottom: 140px;
     padding-top: 40px;
+    // Keep the panel off the screen edges (it has no moon gutter here)
+    padding-left: calc(12px + env(safe-area-inset-left, 0px));
+    padding-right: calc(12px + env(safe-area-inset-right, 0px));
   }
 
   .splitRow {
@@ -1598,14 +1628,14 @@ a:hover {
 
   .body-outline-base {
     stroke: $purp-light;
-    stroke-width: 2px;
+    stroke-width: 1.25px;
   }
 
   .body-outline-pulse {
     stroke: #ffffff;
-    stroke-width: 2.5px;
+    stroke-width: 1.5px;
     stroke-dasharray: 12 88;
-    animation: body-outline-pulse 1.8s linear infinite;
+    animation: body-outline-pulse 0.8s linear infinite;
   }
 }
 
@@ -2165,11 +2195,12 @@ $switch-ease: cubic-bezier(0.45, 0.05, 0.25, 1.2);
 }
 
 // ─── Scene view switch (ViewModeSwitch.tsx) ────────────────
-// The Space/Mesh layer chip, after the one every maps app parks in a
-// corner: a dark glass pill holding two labelled segments with a
-// travelling highlight behind the active one. Unlike the pill switches
-// above it carries its own chassis — two words need the width, and the
-// segments are buttons rather than a Radix switch.
+// The Space/Mesh switch, dressed like the music switch beside it: the
+// same charcoal track, the same inset shading and 34px height, and the
+// active segment sits on the same flat light disc the speaker rides —
+// stretched to a pill, sliding across. Unlike the pill switches it
+// carries its own chassis: two words need the width, and the segments
+// are buttons rather than a Radix switch.
 
 .view-mode-switch {
   // Positioned by the Tailwind classes on the component (fixed top-right).
@@ -2193,22 +2224,24 @@ $switch-ease: cubic-bezier(0.45, 0.05, 0.25, 1.2);
   // absolute positioning needs. Declaring `relative` in this file would
   // win the cascade and unpin the switch.
   display: flex;
-  align-items: center;
-  padding: 3px;
-  border-radius: 999px;
-  background: rgba(9, 18, 36, 0.72);
-  border: 1px solid rgba(150, 200, 255, 0.22);
+  align-items: stretch;
+  height: $switch-height;
+  padding: $switch-pad;
+  border-radius: $switch-height;
+  // .space-jam-switch's resting track, and .scene-switch's shell shading
+  background: #34333f;
   box-shadow:
-    inset 0 1px 1px rgba(255, 255, 255, 0.08),
-    0 2px 8px rgba(0, 0, 0, 0.35);
+    inset 0 2px 4px rgba(0, 0, 0, 0.35),
+    inset 0 -1px 2px rgba(255, 255, 255, 0.35),
+    0 2px 6px rgba(0, 0, 0, 0.25);
   opacity: 1;
   // The 1.5s opacity delay is the fade-in after leaving the landing page:
   // the camera swoop leads, then the switch appears
   transition: opacity 800ms ease 1500ms;
 
   &.vms-hidden {
-    // Hidden on the landing page; disappear instantly (no delay) so
-    // navigating back to space doesn't leave it lingering
+    // Hidden on phones and narrow /home; disappear instantly (no delay)
+    // so navigating there doesn't leave it lingering
     opacity: 0;
     pointer-events: none;
     // Leave the tab order once the fade completes — an invisible control
@@ -2221,23 +2254,18 @@ $switch-ease: cubic-bezier(0.45, 0.05, 0.25, 1.2);
   }
 }
 
-// The travelling highlight. Both segments are the same width, so it
-// slides its own width across; the overshoot matches the pill switches'
-// thumb.
+// The travelling thumb: .sjs-thumb's flat disc, pill-shaped. Both
+// segments are the same width, so it slides its own width across; the
+// overshoot matches the pill switches' thumb.
 .vms-indicator {
   position: absolute;
-  top: 3px;
-  bottom: 3px;
-  left: 3px;
-  width: calc(50% - 3px);
+  top: $switch-pad;
+  bottom: $switch-pad;
+  left: $switch-pad;
+  width: calc(50% - #{$switch-pad});
   border-radius: 999px;
-  background: linear-gradient(
-    180deg,
-    rgba(191, 230, 255, 0.28),
-    rgba(120, 180, 255, 0.16)
-  );
-  border: 1px solid rgba(191, 230, 255, 0.45);
-  box-shadow: 0 0 10px rgba(120, 200, 255, 0.35);
+  background: #f3f1f8;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.4);
   transition: transform 500ms $switch-ease;
 }
 
@@ -2265,7 +2293,9 @@ $switch-ease: cubic-bezier(0.45, 0.05, 0.25, 1.2);
   font-weight: 600;
   letter-spacing: 0.02em;
   white-space: nowrap;
-  color: rgba(198, 216, 240, 0.72);
+  // Light on the charcoal track; the active one rides the light thumb,
+  // so it takes the speaker's ink instead
+  color: rgba(243, 241, 248, 0.7);
   background: none;
   // The global `button:hover` underline would draw a line under the
   // label; these read as tabs, not links
@@ -2273,12 +2303,16 @@ $switch-ease: cubic-bezier(0.45, 0.05, 0.25, 1.2);
   transition: color 300ms ease;
 
   &[aria-pressed="true"] {
-    color: #eaf6ff;
+    color: #24203a;
   }
 
   &:hover {
-    color: #eaf6ff;
+    color: #f3f1f8;
     text-decoration: none;
+  }
+
+  &[aria-pressed="true"]:hover {
+    color: #24203a;
   }
 
   // The global button:focus-visible ring sets a 4px radius, which squares
@@ -2314,6 +2348,37 @@ $switch-ease: cubic-bezier(0.45, 0.05, 0.25, 1.2);
 .music-toggle {
   bottom: calc(1rem + env(safe-area-inset-bottom, 0px));
   left: calc(1rem + env(safe-area-inset-left, 0px));
+}
+
+// Phones hide the music switch everywhere but /projects-and-toys (the
+// synth page's neighbour, where the jams are the point). Hidden, not
+// unmounted: the <audio> lives inside the switch, so unmounting it would
+// stop the music on the way to the next page.
+.music-toggle-hidden {
+  display: none;
+}
+
+// /about pins the life timeline to the bottom edge (LifeTimeline puts the
+// class on <body> while mounted), so the bottom-left controls climb above
+// it: the band (34px bar + 18px axis + 6px padding) plus its slab's 14px
+// fade-up, plus the usual 1rem. Phones hide the timeline and keep the
+// corner; below lg the Space/Mesh switch is top-right anyway.
+$timeline-band-clearance: 72px;
+body.life-timeline-present {
+  @media (min-width: #{$breakpoint-sm + 1px}) {
+    .music-toggle {
+      bottom: calc(
+        #{$timeline-band-clearance} + 1rem + env(safe-area-inset-bottom, 0px)
+      );
+    }
+  }
+  @media (min-width: $breakpoint-lg) {
+    .view-mode-switch {
+      bottom: calc(
+        #{$timeline-band-clearance} + 1rem + env(safe-area-inset-bottom, 0px)
+      );
+    }
+  }
 }
 
 .space-jam-switch {
@@ -3514,14 +3579,19 @@ $switch-ease: cubic-bezier(0.45, 0.05, 0.25, 1.2);
 // panel (z 4) and the canvases (z 2), under the Radix tooltip portals
 // (z 50) it opens above itself.
 //
-// The band spans the whole viewport width (its slab runs edge to edge);
-// the bar inside is inset by clearances: `padding-right` keeps it off the
-// corner medallion (140px, bottom-right), `bottom` off the music switch and
-// — at lg — the Space/Mesh switch that joins it in that corner.
+// The band spans the whole viewport width (its slab runs edge to edge)
+// and sits on the bottom edge of the screen; the bar inside is inset by
+// `padding-right` to keep it off the corner medallion (140px,
+// bottom-right). The music switch and — at lg — the Space/Mesh switch
+// that joins it in the other corner climb above the band while it's
+// mounted (`body.life-timeline-present`, next to .music-toggle).
 .life-timeline {
   // The future tail's width — shared by the bar and the axis so the
   // "now" tick stays on the boundary
-  --life-future-w: 96px;
+  --life-future-w: 192px;
+  // The childhood stub on the left, off the time axis (LifeTimeline's
+  // cellWidth subtracts it before sharing the track out by years)
+  --life-child-w: 32px;
   --life-slab: 6 4 22;
   --life-slab-a: 0.8;
   --life-bar-shadow: rgba(0, 0, 0, 0.45);
@@ -3537,7 +3607,9 @@ $switch-ease: cubic-bezier(0.45, 0.05, 0.25, 1.2);
   position: fixed;
   left: 0;
   right: 0;
-  bottom: calc(3.25rem + env(safe-area-inset-bottom, 0px));
+  bottom: env(safe-area-inset-bottom, 0px);
+  // A little air under the year ticks so they don't sit on the edge
+  padding-bottom: 6px;
   padding-right: 160px;
   z-index: 6;
   font-family: "Inconsolata", monospace;
@@ -3667,13 +3739,27 @@ $switch-ease: cubic-bezier(0.45, 0.05, 0.25, 1.2);
 // left edge of the bar is not 1995. Its label right-aligns so it lands in
 // the solid half rather than dissolving into the fade.
 .life-seg--open {
+  flex: 0 0 var(--life-child-w);
   justify-content: flex-end;
-  padding-right: 10px;
-  mask-image: linear-gradient(to right, transparent 0%, #000 50%);
-  -webkit-mask-image: linear-gradient(to right, transparent 0%, #000 50%);
+  padding: 0 3px 0 0;
+  // A short fade off the left edge — long enough to say "keeps going",
+  // short enough to leave the word legible in a 32px stub
+  mask-image: linear-gradient(to right, transparent 0%, #000 28%);
+  -webkit-mask-image: linear-gradient(to right, transparent 0%, #000 28%);
+
+  // "Child" at the bar's 11px face with tracking is ~31px — a hair too
+  // wide for the stub, so it drops a point and loses the tracking
+  .life-seg-label {
+    font-size: 10px;
+    letter-spacing: 0;
+  }
 }
 
 .life-seg-label {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  min-width: 0;
   font-size: 11px;
   font-weight: 700;
   letter-spacing: 0.3px;
@@ -3684,6 +3770,20 @@ $switch-ease: cubic-bezier(0.45, 0.05, 0.25, 1.2);
   text-shadow: 0 1px 2px rgba(0, 0, 0, 0.35);
 }
 
+// The company mark before a work era's title, straight on the segment:
+// height is fixed and width follows the mark's aspect (the Zip wordmark
+// runs wider than the two square marks). The engineer eras are lighter
+// purples than the rest of the ramp so the coral and red marks read
+// against them; Zip's wordmark is filled white for the same reason (its
+// own purple would vanish on the bar). Same shadow as the label text.
+.life-seg-logo {
+  flex: none;
+  height: 16px;
+  width: auto;
+  object-fit: contain;
+  filter: drop-shadow(0 1px 2px rgba(0, 0, 0, 0.35));
+}
+
 // ─ The future tail ─
 // A translucent slot after today that fades out to the right — the ghost
 // of a segment that hasn't happened yet. Two loops keep it unsettled: a
@@ -3692,7 +3792,7 @@ $switch-ease: cubic-bezier(0.45, 0.05, 0.25, 1.2);
 .life-seg--future {
   position: relative;
   flex: 0 0 var(--life-future-w);
-  padding: 0 14px 0 8px;
+  padding: 0 14px 0 22px;
   background: var(--life-future-bg);
   mask-image: linear-gradient(to right, #000 25%, transparent 96%);
   -webkit-mask-image: linear-gradient(to right, #000 25%, transparent 96%);
@@ -3774,8 +3874,11 @@ $switch-ease: cubic-bezier(0.45, 0.05, 0.25, 1.2);
   flex: 0 0 var(--life-future-w);
 }
 
-.life-axis-year,
-.life-axis-open {
+.life-axis-cell--open {
+  flex: 0 0 var(--life-child-w);
+}
+
+.life-axis-year {
   position: absolute;
   top: 0;
   height: 12px;
@@ -3793,13 +3896,6 @@ $switch-ease: cubic-bezier(0.45, 0.05, 0.25, 1.2);
   left: 0;
   padding-left: 5px;
   border-left: 1px solid var(--life-tick-rule);
-}
-
-// Sits under the faded end of the childhood segment, which is exactly
-// what it labels: the part of the bar that ran off the screen
-.life-axis-open {
-  left: 6px;
-  opacity: 0.75;
 }
 
 .life-axis-now {

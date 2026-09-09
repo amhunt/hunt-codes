@@ -7,6 +7,10 @@ import {
   TooltipProvider,
   TooltipTrigger,
 } from "./ui/tooltip";
+import airbnbLogo from "./assets/logos/airbnb.svg";
+import princetonLogo from "./assets/logos/princeton.svg";
+import untappedLogo from "./assets/logos/untapped.svg";
+import zipLogo from "./assets/logos/zip.svg";
 
 /** Decimal year, so era widths are plain subtraction */
 const ym = (year: number, month: number) => year + (month - 1) / 12;
@@ -27,6 +31,13 @@ type Blurb = {
 type Era = Blurb & {
   /** Segment fill. Life eras share a color; work walks up the purple ramp */
   color: string;
+  /** Company mark shown in the bar — three eras are all "Engineer", and
+   *  the logo is what tells them apart at a glance */
+  logo?: string;
+  /** What the bar says next to the logo, when it isn't the title: a
+   *  company name, or `null` for logo only (Zip's mark is its name). The
+   *  tooltip and aria-label always carry the title. */
+  label?: string | null;
   start: number;
   /** Left off for the era still running — it grows to today on its own */
   end?: number;
@@ -55,6 +66,7 @@ const eras: Era[] = [
   {
     title: "College",
     org: "Princeton University",
+    logo: princetonLogo,
     location: "New Jersey",
     dates: "September 2013 – June 2017",
     blurb:
@@ -66,33 +78,39 @@ const eras: Era[] = [
   {
     title: "Engineer",
     org: "Airbnb",
+    logo: airbnbLogo,
+    label: "Airbnb",
     location: "San Francisco",
     dates: "2017 – 2020",
     blurb:
       "Pricing and availability across Experiences, 20+ A/B tests, and the org's migration to TypeScript.",
-    color: "#5b3ec4",
+    color: "#7a5ce6",
     start: ym(2017, 7),
     end: ym(2020, 7),
   },
   {
     title: "Engineer",
     org: "Untapped (fka Jumpstart)",
+    logo: untappedLogo,
+    label: "Jumpstart",
     location: "San Francisco",
     dates: "2020 – 2021",
     blurb:
       "Launched the Recruiter Analytics platform and led the frontend platform group.",
-    color: "#7a4fd0",
+    color: "#9d78f5",
     start: ym(2020, 7),
     end: ym(2021, 7),
   },
   {
     title: "Staff Engineer",
     org: "Zip",
+    logo: zipLogo,
+    label: null,
     location: "San Francisco",
     dates: "2021 – 2025",
     blurb:
       "Four years on the procurement platform: shared components, CI and DevX, build and deploy, 99% type safety.",
-    color: "#4a2f9e",
+    color: "#6b4ad8",
     start: ym(2021, 7),
     end: ym(2025, 2),
   },
@@ -121,11 +139,14 @@ const future: Blurb = {
 };
 
 /**
- * Where the visible bar starts. Everything before it is off-screen inside
- * the childhood segment, which is the point: at true scale childhood is
- * over half a life so far, and the interesting part is the right end.
+ * Where the time axis starts: the first era that isn't `openStart`.
+ * Childhood sits off the axis as a fixed-width stub on the left (see
+ * --life-child-w) — at true scale it's over half a life so far, and the
+ * interesting part is the right end, which now gets the whole track.
  */
-const VISIBLE_START = ym(2010, 7);
+const VISIBLE_START = Math.min(
+  ...eras.filter((era) => !era.openStart).map((era) => era.start),
+);
 
 /**
  * Inconsolata's advance is half its size, so an 11px label is ~5.6px a
@@ -134,6 +155,9 @@ const VISIBLE_START = ym(2010, 7);
  */
 const LABEL_PX_PER_CHAR = 5.6;
 const LABEL_PADDING_PX = 16;
+/** A logo plus its gap, when the era has one (.life-seg-logo). Sized for
+ *  the widest mark, Zip's wordmark (16px tall, ~24px wide). */
+const LABEL_LOGO_PX = 30;
 /**
  * Labels may break onto two lines (the bar is tall enough for exactly
  * two), so the gate is the longer half of the best two-line split rather
@@ -151,8 +175,6 @@ const twoLineChars = (title: string) => {
 };
 /** A year tick needs room for four digits and its rule */
 const MIN_YEAR_PX = 42;
-/** The childhood segment fades over its left half (see .life-seg--open) */
-const OPEN_START_LABEL_FRACTION = 0.5;
 
 // The geometry never changes after load (the running era ends at this
 // month), so it's laid out once: each era's share of the track and the
@@ -161,16 +183,33 @@ const OPEN_START_LABEL_FRACTION = 0.5;
 const now = new Date();
 const today = ym(now.getFullYear(), now.getMonth() + 1);
 const span = today - VISIBLE_START;
+/** The bar text for an era: its label if it has one, else its title */
+const barText = (era: Era) =>
+  era.label === undefined ? era.title : (era.label ?? "");
+
 const layout = eras.map((era) => ({
   era,
-  width:
-    (((era.end ?? today) - Math.max(era.start, VISIBLE_START)) / span) * 100,
-  labelMinPx:
-    (twoLineChars(era.title) * LABEL_PX_PER_CHAR + LABEL_PADDING_PX) /
-    (era.openStart ? OPEN_START_LABEL_FRACTION : 1),
+  /** Share of the time axis (the track less the childhood stub), as a
+   *  percentage; the stub itself has none */
+  width: era.openStart
+    ? 0
+    : (((era.end ?? today) - Math.max(era.start, VISIBLE_START)) / span) * 100,
+  // The stub always shows its word: it's sized for it (.life-seg--open
+  // sets a smaller face), and the fit gate has nothing to measure it
+  // against since its width comes from CSS
+  labelMinPx: era.openStart
+    ? 0
+    : twoLineChars(barText(era)) * LABEL_PX_PER_CHAR +
+      LABEL_PADDING_PX +
+      (era.logo ? LABEL_LOGO_PX : 0),
   year: Math.floor(era.start),
   key: `${era.title}-${era.dates}`,
 }));
+
+/** A cell's width: its share of the axis, which is the track less the
+ *  childhood stub (the stub's own width comes from CSS) */
+const cellWidth = (width: number, openStart?: boolean) =>
+  openStart ? undefined : `calc((100% - var(--life-child-w)) * ${width / 100})`;
 
 const FUTURE_KEY = "future";
 
@@ -201,6 +240,14 @@ const LifeTimeline = ({
     return () => observer.disconnect();
   }, []);
 
+  // The band sits on the bottom edge of the screen, so while it's mounted
+  // the bottom-left controls climb above it (App.scss, next to
+  // .music-toggle, keys off this class)
+  useEffect(() => {
+    document.body.classList.add("life-timeline-present");
+    return () => document.body.classList.remove("life-timeline-present");
+  }, []);
+
   const segments = useMemo(
     () =>
       layout.map((cell) => {
@@ -222,6 +269,22 @@ const LifeTimeline = ({
   const [openKey, setOpenKey] = useState<string | null>(null);
   const wasOpen = useRef(false);
 
+  // Tap-off closes. Radix dismisses the card on a pointer-down outside
+  // it, but on touch it waits for the follow-up click (browsers delay
+  // that ~300ms), so close on the pointer-down itself and the tap on the
+  // résumé feels immediate. A tap on another segment is left to that
+  // segment's own toggle; one on the open card leaves it up.
+  useEffect(() => {
+    if (openKey === null) return;
+    const onPointerDown = (event: PointerEvent) => {
+      const target = event.target as Element | null;
+      if (target?.closest(".life-seg, .life-tip-card")) return;
+      setOpenKey(null);
+    };
+    document.addEventListener("pointerdown", onPointerDown);
+    return () => document.removeEventListener("pointerdown", onPointerDown);
+  }, [openKey]);
+
   /** One segment: a tooltip-triggering button plus its card */
   const segment = (
     key: string,
@@ -241,7 +304,14 @@ const LifeTimeline = ({
           onPointerDown={() => {
             wasOpen.current = openKey === key;
           }}
-          onClick={() => setOpenKey(wasOpen.current ? null : key)}
+          onClick={(event) => {
+            // Our toggle is the one that decides. Radix composes its own
+            // close-on-click after this handler and skips it once the
+            // event is default-prevented — without that, a tap that
+            // should open could be closed again in the same click.
+            event.preventDefault();
+            setOpenKey(wasOpen.current ? null : key);
+          }}
           {...props}
         >
           {children}
@@ -292,11 +362,17 @@ const LifeTimeline = ({
                 era,
                 {
                   className: cx("life-seg", era.openStart && "life-seg--open"),
-                  style: { width: `${width}%`, background: era.color },
+                  style: {
+                    width: cellWidth(width, era.openStart),
+                    background: era.color,
+                  },
                 },
                 showLabel && (
                   <span className="life-seg-label" aria-hidden="true">
-                    {era.title}
+                    {era.logo && (
+                      <img className="life-seg-logo" src={era.logo} alt="" />
+                    )}
+                    {barText(era) && <span>{barText(era)}</span>}
                   </span>
                 ),
               ),
@@ -312,21 +388,22 @@ const LifeTimeline = ({
           )}
         </div>
       </TooltipProvider>
-      {/* Year rules line up with the segment boundaries above. The first
-          era's start is off-screen, so it gets the "keeps going" note
-          instead of a tick; the future tail's tick is today. */}
+      {/* Year rules line up with the segment boundaries above. The
+          childhood stub gets no tick (its start is decades off the axis);
+          the future tail's tick is today. */}
       <div className="life-timeline-axis" aria-hidden="true">
         <div className="life-timeline-track">
-          {segments.map(({ width, showYear, year, key }, i) => (
+          {segments.map(({ era, width, showYear, year, key }) => (
             <span
-              className="life-axis-cell"
+              className={cx(
+                "life-axis-cell",
+                era.openStart && "life-axis-cell--open",
+              )}
               key={key}
-              style={{ width: `${width}%` }}
+              style={{ width: cellWidth(width, era.openStart) }}
             >
-              {i === 0 ? (
-                <span className="life-axis-open">← {year}</span>
-              ) : (
-                showYear && <span className="life-axis-year">{year}</span>
+              {!era.openStart && showYear && (
+                <span className="life-axis-year">{year}</span>
               )}
             </span>
           ))}

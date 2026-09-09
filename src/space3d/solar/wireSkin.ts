@@ -28,9 +28,17 @@ import { registerMaterialHook } from "./materialHooks";
  */
 
 /** 0 = space view (bodies untouched), 1 = fully meshed. The switch
- *  eases this across ~700ms; every skinned material reads the same
+ *  eases this across WIRE_FADE_MS; every skinned material reads the same
  *  uniform object, so one write per frame moves the whole scene. */
-export const wireState = { amount: 0, target: 0 };
+export const wireState = {
+  amount: 0,
+  target: 0,
+  /** Where the running fade started from, and when (performance.now) */
+  from: 0,
+  changedAt: 0,
+};
+
+const WIRE_FADE_MS = 700;
 
 /** The blue-white every body's wires start from, and that every `tint`
  *  multiplies. */
@@ -42,6 +50,33 @@ export const wireUniforms = {
   /** Brightness of the rim light at the limb */
   uWireRim: { value: 0.55 },
 };
+
+/** Point the crossfade at a view. A no-op when already headed there, so
+ *  every driver can call it on its own mode change. */
+export function setWireTarget(target: 0 | 1): void {
+  if (wireState.target === target) return;
+  wireState.from = wireState.amount;
+  wireState.target = target;
+  wireState.changedAt = performance.now();
+}
+
+/**
+ * Advance the crossfade to `now`. Driven off the clock rather than a
+ * per-frame delta so it doesn't matter how many canvases call it in a
+ * frame: the solar scene and the star canvas (the corner coin) each run
+ * a WireDriver, and both land on the same value. Ease-out cubic, so the
+ * switch reads as a quick commit that settles.
+ */
+export function stepWireFade(now: number): void {
+  if (wireState.amount === wireState.target) return;
+  const t = Math.min(1, (now - wireState.changedAt) / WIRE_FADE_MS);
+  wireState.amount =
+    t >= 1
+      ? wireState.target
+      : wireState.from +
+        (wireState.target - wireState.from) * (1 - (1 - t) ** 3);
+  wireUniforms.uWire.value = wireState.amount;
+}
 
 /**
  * The `tint` that lands a body's wires ON `target` rather than somewhere
@@ -61,9 +96,25 @@ export function wireTint(target: THREE.ColorRepresentation): THREE.Color {
 }
 
 interface WireSkinOptions {
-  /** Meridians around the body */
+  /** How the lattice is laid out. "sphere" (the default) is lat/long
+   *  lines from the object-space direction — right for globes and
+   *  round-ish bodies. On a flat or boxy part those lines all converge on
+   *  the part's centre and read as a web; "box" draws a cartesian lattice
+   *  instead, lines wherever object-space x, y or z crosses a multiple of
+   *  `pitch`, so a sheet gets a grid and a cylinder gets rings. */
+  grid?: "sphere" | "box";
+  /** "box" only: cell size, in the geometry's own units */
+  pitch?: number;
+  /** Light the wires from the sun (the world origin): the side facing it
+   *  runs at full brightness and the far side drops to WIRE_NIGHT, with
+   *  a soft terminator between — mesh view's take on the day/night the
+   *  space view gets from its point light. Planets and the moon only;
+   *  hardware that isn't in orbit (the satellite's parts, the synth,
+   *  the corner coin) has no business being sunlit. */
+  sunlit?: boolean;
+  /** Meridians around the body ("sphere") */
   lon?: number;
-  /** Parallels from pole to pole */
+  /** Parallels from pole to pole ("sphere") */
   lat?: number;
   /** Peak brightness of a wire */
   gain?: number;
@@ -96,6 +147,7 @@ uniform vec3 uWireColor;
 uniform float uWireRim;
 uniform float uWireLat;
 uniform float uWireLon;
+uniform float uWirePitch;
 uniform float uWireGain;
 uniform vec3 uWireTint;
 
@@ -155,9 +207,33 @@ vWireNormal = normalize( normalMatrix * normal );
 vWireView = ( modelViewMatrix * vec4( transformed, 1.0 ) ).xyz;
 `;
 
-const fragmentBody = (hover: boolean, twoTone: boolean) => /* glsl */ `
+/** The far side's share of the wire brightness under `sunlit` — dark
+ *  enough to read as night at a glance, light enough that the lattice
+ *  still shows through (the space view's shadow side is near-black). */
+const WIRE_NIGHT = 0.22;
+
+const fragmentBody = (
+  hover: boolean,
+  twoTone: boolean,
+  box: boolean,
+  sunlit: boolean,
+) => /* glsl */ `
 {
   vec3 wireN = normalize( vWireObj );
+  ${
+    box
+      ? /* glsl */ `
+  // Cartesian lattice: a line wherever x, y or z crosses a cell boundary.
+  // Offset half a cell so a boundary never sits on the geometry's own
+  // centre planes (where a whole face would light up). A face's normal
+  // axis is constant across it, so its derivative is zero and that term
+  // drops out by itself.
+  vec3 wireCell = vWireObj / uWirePitch + 0.5;
+  float wireLine = max(
+    max( wireGridLine( wireCell.x ), wireGridLine( wireCell.y ) ),
+    wireGridLine( wireCell.z )
+  );`
+      : /* glsl */ `
   float wireLatC = ( asin( clamp( wireN.y, -1.0, 1.0 ) ) / PI + 0.5 ) * uWireLat;
   float wireLonC = ( atan( wireN.z, wireN.x ) / ( 2.0 * PI ) + 0.5 ) * uWireLon;
   // Meridians crowd together at the poles — fade them out before they
@@ -166,9 +242,23 @@ const fragmentBody = (hover: boolean, twoTone: boolean) => /* glsl */ `
   float wireLine = max(
     wireGridLine( wireLatC ),
     wireGridLine( wireLonC ) * wirePole
-  );
+  );`
+  }
   float wireFacing = abs( dot( normalize( vWireNormal ), normalize( -vWireView ) ) );
   float wireGain = uWireGain;
+  float wireDay = 1.0;
+  ${
+    sunlit
+      ? /* glsl */ `
+  // Day side toward the sun at the world origin, in view space (the
+  // normal here is view-space too). A wide terminator, so the fall-off
+  // wraps a little past the limb instead of cutting the globe in half.
+  vec3 wireSunView = ( viewMatrix * vec4( 0.0, 0.0, 0.0, 1.0 ) ).xyz;
+  float wireSunFacing =
+    dot( normalize( vWireNormal ), normalize( wireSunView - vWireView ) );
+  wireDay = mix( ${WIRE_NIGHT.toFixed(2)}, 1.0, smoothstep( -0.25, 0.45, wireSunFacing ) );`
+      : ``
+  }
   ${
     hover
       ? // The hover brighten every clickable body already eases on
@@ -192,9 +282,12 @@ const fragmentBody = (hover: boolean, twoTone: boolean) => /* glsl */ `
   );`
       : ``
   }
+  // The rim keeps half its light on the night side so the silhouette
+  // never disappears against the sky
   vec3 wireLit =
     uWireColor * wireBodyTint *
-    ( wireLine * wireGain + pow( 1.0 - wireFacing, 3.0 ) * uWireRim );
+    ( wireLine * wireGain * wireDay
+      + pow( 1.0 - wireFacing, 3.0 ) * uWireRim * ( 0.5 + 0.5 * wireDay ) );
   outgoingLight = mix( outgoingLight, wireLit, uWire );
   // Alpha is left alone on purpose. Under additive blending it scales
   // what the body contributes, and it is also the ONLY thing hiding the
@@ -252,6 +345,9 @@ function setMeshProps(material: THREE.Material, on: boolean): void {
 export function applyWireSkin(
   material: THREE.Material,
   {
+    grid = "sphere",
+    pitch = 1,
+    sunlit = false,
     lon = 24,
     lat = 16,
     gain = 0.95,
@@ -262,10 +358,11 @@ export function applyWireSkin(
   }: WireSkinOptions = {},
 ): void {
   const twoTone = tintAlt !== undefined;
+  const box = grid === "box";
   registerMaterialHook(material, {
-    // Both terms change the generated GLSL, so both have to name
-    // themselves here — three caches programs on this string
-    key: `wire:${hover ? "hover" : "plain"}:${twoTone ? "blob" : "flat"}`,
+    // All three terms change the generated GLSL, so all three have to
+    // name themselves here — three caches programs on this string
+    key: `wire:${hover ? "hover" : "plain"}:${twoTone ? "blob" : "flat"}:${grid}:${sunlit ? "sunlit" : "flat-lit"}`,
     order: "replace",
     uniforms: {
       uWire: wireUniforms.uWire,
@@ -273,6 +370,7 @@ export function applyWireSkin(
       uWireRim: wireUniforms.uWireRim,
       uWireLat: { value: lat },
       uWireLon: { value: lon },
+      uWirePitch: { value: pitch },
       uWireGain: { value: gain },
       uWireTint: { value: new THREE.Color(tint) },
       ...(twoTone
@@ -291,7 +389,7 @@ export function applyWireSkin(
     vertexHeader: VERTEX_HEADER,
     vertexBody: VERTEX_BODY,
     fragmentHeader: fragmentHeader(twoTone),
-    fragmentBody: fragmentBody(hover, twoTone),
+    fragmentBody: fragmentBody(hover, twoTone, box, sunlit),
   });
   material.userData.wireSkin = true;
   setMeshProps(material, wireState.target > 0);

@@ -54,12 +54,15 @@ const ORIGIN = new THREE.Vector3();
  * map.
  */
 const wireSkinFor = (kind: SolarPlanetConfig["kind"]) => {
+  // Every planet is lit from the sun in mesh view too (wireSkin `sunlit`)
+  const sunlit = true;
   if (kind === "earth") {
     // Earth carries the /about perch, so it gets a finer grid — at that
     // range a 20-meridian globe reads as a beach ball. It also folds
     // hover into its wires, because the atmosphere shell that carries the
     // hover in space view is faded out in mesh view.
     return {
+      sunlit,
       lon: 36,
       lat: 24,
       hover: true,
@@ -72,17 +75,35 @@ const wireSkinFor = (kind: SolarPlanetConfig["kind"]) => {
   if (kind === "mars") {
     // A shade darker than pure neon red, but still redder and brighter
     // than Mercury's rust
-    return { lon: 20, lat: 14, gain: 0.72, tint: wireTint("#e8231a") };
+    return {
+      sunlit,
+      lon: 20,
+      lat: 14,
+      gain: 0.72,
+      tint: wireTint("#e8231a"),
+    };
   }
   if (kind === "mercury") {
     // Rust: brownish red, neon-ish
-    return { lon: 20, lat: 14, gain: 0.72, tint: wireTint("#c2472a") };
+    return {
+      sunlit,
+      lon: 20,
+      lat: 14,
+      gain: 0.72,
+      tint: wireTint("#c2472a"),
+    };
   }
   if (kind === "venus") {
     // The shared blue-white leaned a touch toward yellow-beige
-    return { lon: 20, lat: 14, gain: 0.85, tint: wireTint("#eadfbf") };
+    return {
+      sunlit,
+      lon: 20,
+      lat: 14,
+      gain: 0.85,
+      tint: wireTint("#eadfbf"),
+    };
   }
-  return { lon: 20, lat: 14, gain: 0.85 };
+  return { sunlit, lon: 20, lat: 14, gain: 0.85 };
 };
 
 export default function Planet({

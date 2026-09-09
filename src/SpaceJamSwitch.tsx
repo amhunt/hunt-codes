@@ -1,7 +1,10 @@
 import React, { useEffect, useRef, useState } from "react";
+import { useLocation } from "react-router-dom";
+import cx from "classnames";
 import { Volume2Icon } from "lucide-react";
 
 import SceneSwitch from "ui/SceneSwitch";
+import useWindowSize from "useWindowSize";
 import SpeakerMutedIcon from "ui/SpeakerMutedIcon";
 import {
   Tooltip,
@@ -24,11 +27,18 @@ import {
  * `playing` also follows the element's own play/pause events, so a pause
  * from elsewhere (App.tsx pauses it while the tab is hidden) or a refused
  * play() leaves the switch honest about what's audible.
+ *
+ * Phones only show the switch on /projects-and-toys; elsewhere it's
+ * hidden with CSS rather than unmounted, so a track started there keeps
+ * playing across the rest of the site.
  */
 const SpaceJamSwitch = () => {
   const [mounted, setMounted] = useState(false);
   const [playing, setPlaying] = useState(false);
   const audioRef = useRef<HTMLAudioElement>(null);
+  const { pathname } = useLocation();
+  const size = useWindowSize();
+  const hiddenOnPhone = size === "sm" && pathname !== "/projects-and-toys";
 
   // Runs after the first flip mounts the element, then on every flip
   useEffect(() => {
@@ -53,7 +63,10 @@ const SpaceJamSwitch = () => {
             <SceneSwitch
               // music-toggle: hook for the video-mode / rocket-journey
               // hiding rules and the bottom-left placement (App.scss)
-              className="music-toggle space-jam-switch fixed bottom-4 left-4 z-5000"
+              className={cx(
+                "music-toggle space-jam-switch fixed bottom-4 left-4 z-5000",
+                hiddenOnPhone && "music-toggle-hidden",
+              )}
               checked={playing}
               onCheckedChange={(on) => {
                 setMounted(true);

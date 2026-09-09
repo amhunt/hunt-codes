@@ -4,6 +4,7 @@ import SpaceCanvas from "./SpaceCanvas";
 import StarField from "./StarField";
 import BadgeMedallion from "./BadgeMedallion";
 import SolarScene from "./solar/SolarScene";
+import WireDriver from "./solar/WireDriver";
 
 // Star opacity on the landing page (home/about run at 1)
 const LANDING_STAR_OPACITY = 0.8;
@@ -94,6 +95,11 @@ const Space3DBackground = ({
             </Suspense>
           </BadgeBoundary>
         )}
+        {/* The coin takes the wire skin in mesh view, so this canvas
+            needs its own driver to flip its materials (the solar scene's
+            only walks its own scene graph). Both advance one shared,
+            clock-based fade. */}
+        <WireDriver meshView={!isSpaceView} />
       </SpaceCanvas>
       {(isLanding ||
         isHomePage ||
