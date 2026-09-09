@@ -37,8 +37,11 @@ import { applyWireSkin, wireState } from "./solar/wireSkin";
  * spin pauses and the face swings onto the confetti's launch heading for
  * the length of the volley, so the "A"s pour out of the coin's face.
  *
- * Mesh view: the coin body takes the wire skin like the planets (white
- * wires, see-through), while the signature and its caret are the one
+ * Mesh view: the coin body takes the wire skin on a square lattice, and
+ * every cell between the wires is a mirror facet — the disco sun's look —
+ * lit by two spots fixed on the screen, one straight below the coin and
+ * one straight to its right (the star canvas's camera never moves, so
+ * view space is screen space). The signature and its caret are the one
  * solid thing left on it, and go neon green. The star canvas runs its
  * own WireDriver for the flip; the mark's colour is lerped here per
  * frame off the same shared fade.
@@ -100,6 +103,14 @@ const buildSignatureGeometry = (
 const MARK_SPACE = new THREE.Color("#ffffff");
 const MARK_MESH = new THREE.Color("#39ff14");
 const MARK_GLOW_MESH = 1;
+// Mesh view's lattice: cells across the coin's diameter
+const COIN_WIRE_CELLS = 9;
+// The two spots on the mirror facets, view (= screen) space: straight
+// below the coin and straight to its right, tipped a little toward the
+// viewer so the facets that face them halfway can exist on a flat coin
+const COIN_LIGHT_BELOW = new THREE.Vector3(0, -1, 0.35);
+const COIN_LIGHT_RIGHT = new THREE.Vector3(1, 0, 0.35);
+const COIN_LIGHT_COLOR = "#fff1d6";
 // Match a text caret's cadence: ~530ms visible, ~530ms hidden.
 const CARET_HALF_PERIOD_S = 0.53;
 // Hover doubles the blink rate
@@ -363,12 +374,19 @@ const BadgeMedallion = () => {
       face.add(new THREE.Mesh(parts.miss, indigo));
     }
 
+    const bounds = new THREE.Box3().setFromObject(root);
+    const center = bounds.getCenter(new THREE.Vector3());
+    root.position.sub(center);
+    const sphere = bounds.getBoundingSphere(new THREE.Sphere());
+    const coinDiameter = sphere.radius * 2 || 1;
+
     // Mesh view: everything on the coin but the mark takes the wire skin
-    // — the planets' default white wires — and goes see-through with
-    // them. The signature and caret stay solid (and turn green per frame
-    // instead), so they're the two materials left out. Materials are
-    // shared between meshes (the rim, the mirrored back face), so skin
-    // each one once.
+    // — white wires on a square lattice, COIN_WIRE_CELLS across the coin,
+    // every cell a mirror facet lit by the two screen-fixed spots — and
+    // goes see-through with the planets. The signature and caret stay
+    // solid (and turn green per frame instead), so they're the two
+    // materials left out. Materials are shared between meshes (the rim,
+    // the mirrored back face), so skin each one once.
     const marks: Mark[] = [];
     if (signature.material)
       marks.push({ material: signature.material, glow: 0.35 });
@@ -383,19 +401,24 @@ const BadgeMedallion = () => {
       for (const material of materials) {
         if (skinned.has(material)) continue;
         skinned.add(material);
-        applyWireSkin(material);
+        applyWireSkin(material, {
+          grid: "box",
+          pitch: coinDiameter / COIN_WIRE_CELLS,
+          mirror: {
+            lights: [
+              { direction: COIN_LIGHT_BELOW, color: COIN_LIGHT_COLOR },
+              { direction: COIN_LIGHT_RIGHT, color: COIN_LIGHT_COLOR },
+            ],
+          },
+        });
       }
     });
 
-    const bounds = new THREE.Box3().setFromObject(root);
-    const center = bounds.getCenter(new THREE.Vector3());
-    root.position.sub(center);
-    const sphere = bounds.getBoundingSphere(new THREE.Sphere());
     return {
       object: root,
       marks,
       caretMaterial: caret.material,
-      coinDiameter: sphere.radius * 2 || 1,
+      coinDiameter,
     };
   }, [gltf]);
 
