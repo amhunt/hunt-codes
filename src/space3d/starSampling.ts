@@ -122,6 +122,17 @@ const percentageWidthOfText = 0.8;
 const percentageWidthOfSpacing = 0.1;
 const percentageWidthForSidePadding = 0.05;
 
+/**
+ * Where the landing title's glyphs end, in CSS px from the top: the
+ * letters hang ~1.5x their average width below LANDING_TEXT_TOP_PX (see
+ * generateStarsForLetter's averageLetterHeight), and the average width
+ * is the 80% text band shared across the phrase's characters. For DOM
+ * chrome that wants to sit just under the title.
+ */
+export const landingTextBottomPx = (text: string, windowWidth: number) =>
+  LANDING_TEXT_TOP_PX +
+  ((percentageWidthOfText * windowWidth) / text.length) * 1.5;
+
 /** The landing title's layout: 80% of the viewport width of glyphs, 10%
  *  of letter spacing, 5% of padding each side. */
 const landingTextLayout = (

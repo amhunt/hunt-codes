@@ -34,6 +34,7 @@ import {
 } from "./starSampling";
 import { domToWorldX, domToWorldY, Z_STARS } from "./SpaceCanvas";
 import { starPanState } from "./starPan";
+import { setLandingPhrase } from "../landingPhrase";
 import { JOURNEY_BODY_CLASS, journeyState } from "../rocketJourney";
 import { nameHighlightState } from "../nameHighlight";
 import { NAME_TITLE_ID } from "../solarAnchorIds";
@@ -410,6 +411,11 @@ const TextStars = ({
   const [phraseIdx, setPhraseIdx] = useState(0);
   const phrases = isSmall ? starPhrasesSmall : starPhrases;
   const phrase = phrases[phraseIdx % phrases.length];
+  // Publish the phrase for DOM chrome outside the canvas (the
+  // "(and Claude)" caption, AndClaude.tsx)
+  useEffect(() => {
+    setLandingPhrase(isLanding ? phrase : "");
+  }, [isLanding, phrase]);
 
   // Off the landing page there are no text stars, but the component stays
   // mounted so the intro/phrase choreography doesn't replay on every

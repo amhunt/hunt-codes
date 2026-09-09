@@ -4,6 +4,7 @@ import { SunInternals } from "SunSvg";
 import { hoverState } from "./solarHover";
 import useScrollJourney from "./useScrollJourney";
 import ScrollHint from "./ScrollHint";
+import AndClaude from "./AndClaude";
 import { SUN_RADIUS_OFFSET, SUN_SIZE } from "./landingScene";
 import { JOURNEY_STOPS } from "./scrollTransition";
 
@@ -70,6 +71,8 @@ const Landing = () => {
           </Link>
         </svg>
       </div>
+      {/* "(and Claude)" under the title while the stars spell BUILT WITH ♥ */}
+      <AndClaude />
       {/* Gentle nudge that the page scrolls; disappears once it has done
           its job (the visitor scrubs) */}
       <ScrollHint

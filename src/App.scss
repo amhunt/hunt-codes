@@ -69,6 +69,34 @@ $breakpoint-xl: 1440px;
   }
 }
 
+// "(and Claude)" under the landing title (AndClaude.tsx): blurs in once
+// the stars have spelled BUILT WITH ♥, blurs out as they leave. Above the
+// star canvas (z 2), never in the way of the sun link.
+.and-claude {
+  position: fixed;
+  left: 0;
+  right: 0;
+  margin: 0;
+  z-index: 3;
+  pointer-events: none;
+  text-align: center;
+  font-family: "Meow Script", "Brush Script MT", cursive;
+  font-size: 24px;
+  line-height: 1;
+  color: #f3efff;
+  text-shadow: 0 0 10px rgba($purp-light, 0.9);
+  opacity: 0;
+  filter: blur(10px);
+  transition:
+    opacity 600ms ease,
+    filter 600ms ease;
+
+  &.and-claude--shown {
+    opacity: 1;
+    filter: none;
+  }
+}
+
 // ─── /journey: the story crawl ────────────────
 // Bare black in both views: the crawl's gold text and the additive warp
 // streaks want an empty sky, and mesh view's graticule would compete
