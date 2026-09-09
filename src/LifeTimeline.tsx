@@ -31,9 +31,13 @@ type Blurb = {
 type Era = Blurb & {
   /** Segment fill. Life eras share a color; work walks up the purple ramp */
   color: string;
-  /** Company mark shown before the title in the bar — three eras are all
-   *  "Engineer", and the logo is what tells them apart at a glance */
+  /** Company mark shown in the bar — three eras are all "Engineer", and
+   *  the logo is what tells them apart at a glance */
   logo?: string;
+  /** What the bar says next to the logo, when it isn't the title: a
+   *  company name, or `null` for logo only (Zip's mark is its name). The
+   *  tooltip and aria-label always carry the title. */
+  label?: string | null;
   start: number;
   /** Left off for the era still running — it grows to today on its own */
   end?: number;
@@ -75,6 +79,7 @@ const eras: Era[] = [
     title: "Engineer",
     org: "Airbnb",
     logo: airbnbLogo,
+    label: "Airbnb",
     location: "San Francisco",
     dates: "2017 – 2020",
     blurb:
@@ -87,6 +92,7 @@ const eras: Era[] = [
     title: "Engineer",
     org: "Untapped (fka Jumpstart)",
     logo: untappedLogo,
+    label: "Jumpstart",
     location: "San Francisco",
     dates: "2020 – 2021",
     blurb:
@@ -99,6 +105,7 @@ const eras: Era[] = [
     title: "Staff Engineer",
     org: "Zip",
     logo: zipLogo,
+    label: null,
     location: "San Francisco",
     dates: "2021 – 2025",
     blurb:
@@ -176,6 +183,10 @@ const MIN_YEAR_PX = 42;
 const now = new Date();
 const today = ym(now.getFullYear(), now.getMonth() + 1);
 const span = today - VISIBLE_START;
+/** The bar text for an era: its label if it has one, else its title */
+const barText = (era: Era) =>
+  era.label === undefined ? era.title : (era.label ?? "");
+
 const layout = eras.map((era) => ({
   era,
   /** Share of the time axis (the track less the childhood stub), as a
@@ -186,7 +197,7 @@ const layout = eras.map((era) => ({
   // The stub never fits a label — it's tooltip-only
   labelMinPx: era.openStart
     ? Infinity
-    : twoLineChars(era.title) * LABEL_PX_PER_CHAR +
+    : twoLineChars(barText(era)) * LABEL_PX_PER_CHAR +
       LABEL_PADDING_PX +
       (era.logo ? LABEL_LOGO_PX : 0),
   year: Math.floor(era.start),
@@ -359,7 +370,7 @@ const LifeTimeline = ({
                     {era.logo && (
                       <img className="life-seg-logo" src={era.logo} alt="" />
                     )}
-                    <span>{era.title}</span>
+                    {barText(era) && <span>{barText(era)}</span>}
                   </span>
                 ),
               ),
