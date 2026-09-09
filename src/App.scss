@@ -3736,9 +3736,19 @@ body.life-timeline-present {
 // the solid half rather than dissolving into the fade.
 .life-seg--open {
   flex: 0 0 var(--life-child-w);
-  padding: 0;
-  mask-image: linear-gradient(to right, transparent 0%, #000 60%);
-  -webkit-mask-image: linear-gradient(to right, transparent 0%, #000 60%);
+  justify-content: flex-end;
+  padding: 0 3px 0 0;
+  // A short fade off the left edge — long enough to say "keeps going",
+  // short enough to leave the word legible in a 32px stub
+  mask-image: linear-gradient(to right, transparent 0%, #000 28%);
+  -webkit-mask-image: linear-gradient(to right, transparent 0%, #000 28%);
+
+  // "Child" at the bar's 11px face with tracking is ~31px — a hair too
+  // wide for the stub, so it drops a point and loses the tracking
+  .life-seg-label {
+    font-size: 10px;
+    letter-spacing: 0;
+  }
 }
 
 .life-seg-label {

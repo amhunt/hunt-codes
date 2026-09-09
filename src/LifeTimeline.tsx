@@ -194,9 +194,11 @@ const layout = eras.map((era) => ({
   width: era.openStart
     ? 0
     : (((era.end ?? today) - Math.max(era.start, VISIBLE_START)) / span) * 100,
-  // The stub never fits a label — it's tooltip-only
+  // The stub always shows its word: it's sized for it (.life-seg--open
+  // sets a smaller face), and the fit gate has nothing to measure it
+  // against since its width comes from CSS
   labelMinPx: era.openStart
-    ? Infinity
+    ? 0
     : twoLineChars(barText(era)) * LABEL_PX_PER_CHAR +
       LABEL_PADDING_PX +
       (era.logo ? LABEL_LOGO_PX : 0),
