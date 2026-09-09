@@ -7,6 +7,9 @@ import {
   TooltipProvider,
   TooltipTrigger,
 } from "./ui/tooltip";
+import airbnbLogo from "./assets/logos/airbnb.svg";
+import untappedLogo from "./assets/logos/untapped.svg";
+import zipLogo from "./assets/logos/zip.svg";
 
 /** Decimal year, so era widths are plain subtraction */
 const ym = (year: number, month: number) => year + (month - 1) / 12;
@@ -27,6 +30,9 @@ type Blurb = {
 type Era = Blurb & {
   /** Segment fill. Life eras share a color; work walks up the purple ramp */
   color: string;
+  /** Company mark shown before the title in the bar — three eras are all
+   *  "Engineer", and the logo is what tells them apart at a glance */
+  logo?: string;
   start: number;
   /** Left off for the era still running — it grows to today on its own */
   end?: number;
@@ -66,6 +72,7 @@ const eras: Era[] = [
   {
     title: "Engineer",
     org: "Airbnb",
+    logo: airbnbLogo,
     location: "San Francisco",
     dates: "2017 – 2020",
     blurb:
@@ -77,6 +84,7 @@ const eras: Era[] = [
   {
     title: "Engineer",
     org: "Untapped (fka Jumpstart)",
+    logo: untappedLogo,
     location: "San Francisco",
     dates: "2020 – 2021",
     blurb:
@@ -88,6 +96,7 @@ const eras: Era[] = [
   {
     title: "Staff Engineer",
     org: "Zip",
+    logo: zipLogo,
     location: "San Francisco",
     dates: "2021 – 2025",
     blurb:
@@ -134,6 +143,9 @@ const VISIBLE_START = ym(2010, 7);
  */
 const LABEL_PX_PER_CHAR = 5.6;
 const LABEL_PADDING_PX = 16;
+/** A logo chip plus its gap, when the era has one (.life-seg-logo). Sized
+ *  for the widest chip, Zip's wordmark. */
+const LABEL_LOGO_PX = 28;
 /**
  * Labels may break onto two lines (the bar is tall enough for exactly
  * two), so the gate is the longer half of the best two-line split rather
@@ -166,7 +178,9 @@ const layout = eras.map((era) => ({
   width:
     (((era.end ?? today) - Math.max(era.start, VISIBLE_START)) / span) * 100,
   labelMinPx:
-    (twoLineChars(era.title) * LABEL_PX_PER_CHAR + LABEL_PADDING_PX) /
+    (twoLineChars(era.title) * LABEL_PX_PER_CHAR +
+      LABEL_PADDING_PX +
+      (era.logo ? LABEL_LOGO_PX : 0)) /
     (era.openStart ? OPEN_START_LABEL_FRACTION : 1),
   year: Math.floor(era.start),
   key: `${era.title}-${era.dates}`,
@@ -304,7 +318,10 @@ const LifeTimeline = ({
                 },
                 showLabel && (
                   <span className="life-seg-label" aria-hidden="true">
-                    {era.title}
+                    {era.logo && (
+                      <img className="life-seg-logo" src={era.logo} alt="" />
+                    )}
+                    <span>{era.title}</span>
                   </span>
                 ),
               ),
