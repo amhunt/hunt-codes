@@ -106,15 +106,36 @@ const SUN_WIRE_GLSL = /* glsl */ `
 
 // The mirror ball's knobs. Rows of tiles pole to pole (the equator gets
 // twice as many around); how far a tile's normal may wander, radians;
-// the spin, radians per second (a real one turns a couple of rpm); and
-// the palette — gold for the mirrors, a warm room for them to reflect,
-// spotlights and specks well over 1 so the glints bloom. Written raw to
-// an sRGB target like the rest of this file, so they're tuned by eye,
-// not by physics.
+// the spin, radians per second (a real one turns a couple of rpm); the
+// spots — a few lights aimed at the ball from fixed spots in WORLD
+// space (the direction each shines from, unit length, and its colour),
+// with a beam the tiles' reflections have to land inside; and the
+// palette — gold for the mirrors, a warm room for them to reflect, spot
+// brightness well over 1 so the glints bloom. Written raw to an sRGB
+// target like the rest of this file, so they're tuned by eye, not by
+// physics.
 const DISCO_GLSL = /* glsl */ `
   #define DISCO_ROWS 26.0
-  #define DISCO_TILT 0.14
+  #define DISCO_TILT 0.2
   #define DISCO_SPIN 0.3
+  #define DISCO_LIGHT_COUNT 4
+  const vec3 DISCO_LIGHT_DIR[DISCO_LIGHT_COUNT] = vec3[DISCO_LIGHT_COUNT](
+    vec3(-0.62, 0.72, 0.31),   // high, camera-left
+    vec3(0.70, 0.52, -0.49),   // high, right and behind
+    vec3(0.22, 0.38, 0.90),    // low, in front
+    vec3(-0.35, -0.55, -0.76)  // under the ball — a limb glint from above
+  );
+  const vec3 DISCO_LIGHT_COL[DISCO_LIGHT_COUNT] = vec3[DISCO_LIGHT_COUNT](
+    vec3(1.0, 0.98, 0.9),
+    vec3(1.0, 0.88, 0.66),
+    vec3(0.85, 0.95, 1.0),
+    vec3(1.0, 0.94, 0.8)
+  );
+  // cos 24deg: a reflection this far off a spot is dark; cos 8deg: dead
+  // on, full brightness. Between them is where the tile wobble makes a
+  // highlight patchy.
+  #define DISCO_BEAM_EDGE 0.91
+  #define DISCO_BEAM_CORE 0.99
   #define DISCO_GOLD vec3(1.0, 0.82, 0.28)
   #define DISCO_ROOM_LIGHT vec3(1.25, 1.15, 0.9)
   #define DISCO_ROOM_DARK vec3(0.32, 0.24, 0.1)
@@ -171,9 +192,9 @@ const SURFACE_FRAGMENT = /* glsl */ `
     // sphere is tiled the way a real one is glued — rows of square
     // mirrors, fewer per row toward the poles — and every tile is a flat
     // mirror with its own slightly-off normal, reflecting a procedural
-    // "room" (warm from above, a few spotlights, a scatter of specks)
-    // that hangs in view space, so the glints hold still while the ball
-    // turns under them and hand off tile to tile. One reflection per
+    // "room": a warm gradient, plus a few spots fixed in world space, so
+    // the glints hold still while the ball turns under them and hand off
+    // tile to tile the way a real one twinkles. One reflection per
     // TILE, not per fragment: the tile's centre stands in for the
     // fragment, so each mirror is one flat colour and the ball reads as
     // a mosaic rather than a smooth chrome sphere. The sun stays solid
@@ -237,17 +258,19 @@ const SURFACE_FRAGMENT = /* glsl */ `
 
       // The room in the mirrors: warm from above, dim below...
       vec3 env = mix(DISCO_ROOM_DARK, DISCO_ROOM_LIGHT, R.y * 0.5 + 0.5);
-      // ...a few spotlights around the camera (+z is toward it), whose
-      // glints land on whichever tiles face them halfway...
-      env += DISCO_SPOT * (
-          pow(max(dot(R, normalize(vec3(-0.45, 0.65, 0.6))), 0.0), 48.0)
-        + pow(max(dot(R, normalize(vec3(0.55, 0.3, 0.75))), 0.0), 48.0)
-        + pow(max(dot(R, normalize(vec3(0.05, -0.55, 0.85))), 0.0), 64.0) * 0.8
-      );
-      // ...and specks: a sparse hash over the reflected direction, so a
-      // scatter of tiles flash white and pass it along as the ball turns
-      float speck = hash13(floor(R * 11.0) + vec3(3.3));
-      env += smoothstep(0.93, 0.985, speck) * 2.2;
+      // ...and the spots, the way a mirror ball actually works: each is
+      // fixed in world space (it stays put while the ball turns and while
+      // the camera moves between views), and a tile lights up only while
+      // its reflection of the camera lands inside that spot's beam. The
+      // per-tile wobble breaks each highlight into a patchy cluster and
+      // the spin marches tiles through it — that's the twinkle, with no
+      // randomness on top.
+      mat3 viewRot = mat3(viewMatrix);
+      for (int i = 0; i < DISCO_LIGHT_COUNT; i++) {
+        vec3 L = normalize(viewRot * DISCO_LIGHT_DIR[i]);
+        env += DISCO_LIGHT_COL[i] * DISCO_SPOT
+          * smoothstep(DISCO_BEAM_EDGE, DISCO_BEAM_CORE, dot(R, L));
+      }
 
       // Gold mirror: the reflection, tinted. Tiles turned away from the
       // camera go dim — their bit of room is the darker one anyway.
