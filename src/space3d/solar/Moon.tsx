@@ -80,7 +80,7 @@ export default function Moon({
       surfaceMaterial.current = material;
       if (!material || patched.current) return;
       patched.current = true;
-      applyWireSkin(material, { lon: 24, lat: 16, hover: true });
+      applyWireSkin(material, { lon: 24, lat: 16, hover: true, gain: 0.75 });
       material.needsUpdate = true;
     },
     [],

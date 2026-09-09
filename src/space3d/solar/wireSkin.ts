@@ -32,12 +32,33 @@ import { registerMaterialHook } from "./materialHooks";
  *  uniform object, so one write per frame moves the whole scene. */
 export const wireState = { amount: 0, target: 0 };
 
+/** The blue-white every body's wires start from, and that every `tint`
+ *  multiplies. */
+const WIRE_BASE = new THREE.Color("#bfe6ff");
+
 export const wireUniforms = {
   uWire: { value: 0 },
-  uWireColor: { value: new THREE.Color("#bfe6ff") },
+  uWireColor: { value: WIRE_BASE.clone() },
   /** Brightness of the rim light at the limb */
   uWireRim: { value: 0.55 },
 };
+
+/**
+ * The `tint` that lands a body's wires ON `target` rather than somewhere
+ * underneath it: tints multiply the shared blue-white, so a body that
+ * wants a specific colour divides by it first. Components above 1 fall
+ * out of that naturally (red needs ~1.34 to survive a base with only
+ * 0.75 red in it) and are exactly what makes the neon bodies read as
+ * neon — the shader has headroom above white.
+ */
+export function wireTint(target: THREE.ColorRepresentation): THREE.Color {
+  const c = new THREE.Color(target);
+  return new THREE.Color(
+    c.r / WIRE_BASE.r,
+    c.g / WIRE_BASE.g,
+    c.b / WIRE_BASE.b,
+  );
+}
 
 interface WireSkinOptions {
   /** Meridians around the body */
@@ -49,8 +70,16 @@ interface WireSkinOptions {
   /** Pulls this body's wires off the shared blue-white toward a color of
    *  its own. The satellite's four part-links are told apart at that
    *  scale by hue as much as by shape, so they keep a trace of it —
-   *  multiplied, not replaced, so everything still reads as one palette. */
+   *  multiplied, not replaced, so everything still reads as one palette.
+   *  Pass `wireTint("#rrggbb")` to name the final colour instead. */
   tint?: THREE.ColorRepresentation;
+  /** A second tint, painted over blobby patches of the body — Earth's
+   *  abstract land against its sea. Both tints ride object space, so the
+   *  patches spin with the globe instead of swimming across it. */
+  tintAlt?: THREE.ColorRepresentation;
+  /** Roughly the share of the surface `tintAlt` takes, 0..1. Rough on
+   *  purpose: it's a threshold on a noise field, not a measured area. */
+  tintAltCoverage?: number;
   /** Fold the material's emissive (the hover brighten every clickable
    *  body already animates) into the wire brightness. MeshStandard only —
    *  `totalEmissiveRadiance` doesn't exist in the basic material's
@@ -58,7 +87,7 @@ interface WireSkinOptions {
   hover?: boolean;
 }
 
-const FRAGMENT_HEADER = /* glsl */ `
+const fragmentHeader = (twoTone: boolean) => /* glsl */ `
 varying vec3 vWireObj;
 varying vec3 vWireNormal;
 varying vec3 vWireView;
@@ -79,6 +108,39 @@ float wireGridLine( float coord ) {
   float d = abs( fract( coord - 0.5 ) - 0.5 ) / max( w, 1e-4 );
   return 1.0 - smoothstep( 0.0, 1.4, d );
 }
+${
+  twoTone
+    ? /* glsl */ `
+uniform vec3 uWireTintAlt;
+uniform float uWireAltCut;
+
+// Value noise on the object-space direction — cheap, no texture, and
+// stable per fragment, which is all the blobs need
+float wireHash( vec3 p ) {
+  return fract( sin( dot( p, vec3( 127.1, 311.7, 74.7 ) ) ) * 43758.5453 );
+}
+
+float wireNoise( vec3 p ) {
+  vec3 i = floor( p );
+  vec3 f = fract( p );
+  f = f * f * ( 3.0 - 2.0 * f );
+  return mix(
+    mix(
+      mix( wireHash( i + vec3( 0.0, 0.0, 0.0 ) ), wireHash( i + vec3( 1.0, 0.0, 0.0 ) ), f.x ),
+      mix( wireHash( i + vec3( 0.0, 1.0, 0.0 ) ), wireHash( i + vec3( 1.0, 1.0, 0.0 ) ), f.x ),
+      f.y
+    ),
+    mix(
+      mix( wireHash( i + vec3( 0.0, 0.0, 1.0 ) ), wireHash( i + vec3( 1.0, 0.0, 1.0 ) ), f.x ),
+      mix( wireHash( i + vec3( 0.0, 1.0, 1.0 ) ), wireHash( i + vec3( 1.0, 1.0, 1.0 ) ), f.x ),
+      f.y
+    ),
+    f.z
+  );
+}
+`
+    : ``
+}
 `;
 
 const VERTEX_HEADER = /* glsl */ `
@@ -93,7 +155,7 @@ vWireNormal = normalize( normalMatrix * normal );
 vWireView = ( modelViewMatrix * vec4( transformed, 1.0 ) ).xyz;
 `;
 
-const fragmentBody = (hover: boolean) => /* glsl */ `
+const fragmentBody = (hover: boolean, twoTone: boolean) => /* glsl */ `
 {
   vec3 wireN = normalize( vWireObj );
   float wireLatC = ( asin( clamp( wireN.y, -1.0, 1.0 ) ) / PI + 0.5 ) * uWireLat;
@@ -115,8 +177,23 @@ const fragmentBody = (hover: boolean) => /* glsl */ `
         `wireGain *= 1.0 + 1.8 * clamp( length( totalEmissiveRadiance ), 0.0, 1.0 );`
       : ``
   }
+  vec3 wireBodyTint = uWireTint;
+  ${
+    twoTone
+      ? /* glsl */ `
+  // Two octaves is enough for continent-sized patches with a ragged edge.
+  // The cut is a plain threshold, so coverage is approximate by design.
+  float wireBlob =
+    wireNoise( wireN * 2.6 ) * 0.65 + wireNoise( wireN * 5.9 ) * 0.35;
+  wireBodyTint = mix(
+    uWireTint,
+    uWireTintAlt,
+    smoothstep( uWireAltCut - 0.05, uWireAltCut + 0.05, wireBlob )
+  );`
+      : ``
+  }
   vec3 wireLit =
-    uWireColor * uWireTint *
+    uWireColor * wireBodyTint *
     ( wireLine * wireGain + pow( 1.0 - wireFacing, 3.0 ) * uWireRim );
   outgoingLight = mix( outgoingLight, wireLit, uWire );
   // Alpha is left alone on purpose. Under additive blending it scales
@@ -180,11 +257,15 @@ export function applyWireSkin(
     gain = 0.95,
     hover = false,
     tint = "#ffffff",
+    tintAlt,
+    tintAltCoverage = 1 / 3,
   }: WireSkinOptions = {},
 ): void {
+  const twoTone = tintAlt !== undefined;
   registerMaterialHook(material, {
-    // The hover term is the only thing that varies the generated GLSL
-    key: `wire:${hover ? "hover" : "plain"}`,
+    // Both terms change the generated GLSL, so both have to name
+    // themselves here — three caches programs on this string
+    key: `wire:${hover ? "hover" : "plain"}:${twoTone ? "blob" : "flat"}`,
     order: "replace",
     uniforms: {
       uWire: wireUniforms.uWire,
@@ -194,11 +275,23 @@ export function applyWireSkin(
       uWireLon: { value: lon },
       uWireGain: { value: gain },
       uWireTint: { value: new THREE.Color(tint) },
+      ...(twoTone
+        ? {
+            uWireTintAlt: { value: new THREE.Color(tintAlt) },
+            // The field is nowhere near uniform over 0..1 — two octaves
+            // of value noise pile up around 0.5 (measured range ≈
+            // 0.11..0.89 over the sphere), so the obvious `1 - coverage`
+            // cut misses badly: 2/3 paints 13% of the globe, not 33%.
+            // This is a linear fit to the measured quantiles, within
+            // about a point across the range worth asking for.
+            uWireAltCut: { value: 0.5 + (0.5 - tintAltCoverage) * 0.385 },
+          }
+        : {}),
     },
     vertexHeader: VERTEX_HEADER,
     vertexBody: VERTEX_BODY,
-    fragmentHeader: FRAGMENT_HEADER,
-    fragmentBody: fragmentBody(hover),
+    fragmentHeader: fragmentHeader(twoTone),
+    fragmentBody: fragmentBody(hover, twoTone),
   });
   material.userData.wireSkin = true;
   setMeshProps(material, wireState.target > 0);

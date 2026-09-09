@@ -139,12 +139,16 @@ const SURFACE_FRAGMENT = /* glsl */ `
       float lonC = (atan(p.z, p.x) / (2.0 * SUN_PI) + 0.5) * 34.0;
       float pole = 1.0 - smoothstep(0.86, 0.995, abs(p.y));
       float wire = max(sunWire(latC), sunWire(lonC) * pole);
-      vec3 MESH_DEEP = vec3(0.024, 0.075, 0.153);  // #06131f
-      vec3 MESH_HOT  = vec3(0.812, 0.945, 1.0);    // #cff1ff
+      // The star is the one body that reads as a light source in this
+      // view, so its wires run hot: MESH_HOT sits above 1 on purpose,
+      // which is what makes the cage bloom rather than sit flat like the
+      // planets'.
+      vec3 MESH_DEEP = vec3(0.125, 0.098, 0.008);  // a dim ember, not black
+      vec3 MESH_HOT  = vec3(1.35, 1.18, 0.16);     // neon yellow, overdriven
       vec3 meshCol =
         MESH_DEEP
-        + MESH_HOT * wire * (0.55 + 0.75 * smoothstep(0.25, 0.82, v))
-        + MESH_HOT * pow(1.0 - ndv, 3.0) * 0.5;
+        + MESH_HOT * wire * (0.7 + 0.9 * smoothstep(0.25, 0.82, v))
+        + MESH_HOT * pow(1.0 - ndv, 3.0) * 0.75;
       col = mix(col, meshCol, uMesh);
     }
 
