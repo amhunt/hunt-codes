@@ -91,13 +91,13 @@ const wireSkinFor = (kind: SolarPlanetConfig["kind"]) => {
     };
   }
   if (kind === "mercury") {
-    // Rust: brownish red, neon-ish
+    // Tan: brown leaning to sand, still neon-ish
     return {
       sunlit,
       lon: 20,
       lat: 14,
       gain: 0.72,
-      tint: wireTint("#c2472a"),
+      tint: wireTint("#c4864a"),
     };
   }
   if (kind === "venus") {
