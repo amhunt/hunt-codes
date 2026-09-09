@@ -3145,12 +3145,35 @@ $switch-ease: cubic-bezier(0.45, 0.05, 0.25, 1.2);
     padding-right: 96px;
   }
 
+  // Rothefight (the shop's display face) runs small and tight for its
+  // point size, so it needs more of both than the old mono heading
   h1 {
-    margin: 16px 0 4px;
-    font-size: 32px;
-    font-weight: 700;
-    letter-spacing: 2px;
+    margin: 16px 0 12px;
+    font-family: "Rothefight", "Inconsolata", monospace;
+    font-size: 52px;
+    font-weight: 400;
+    letter-spacing: 3px;
+    // Rothefight's loops overshoot its em box top and bottom; 1.1 let the
+    // descenders land on the standfirst below
+    line-height: 1.35;
     text-shadow: 0 0 24px $purp-light-transparent;
+  }
+
+  // "by Andy" sits back from "Artifacts" — same face, dimmer ink, and no
+  // glow of its own
+  .shop-title-byline {
+    color: #8f88b8;
+    text-shadow: none;
+  }
+
+  // The standfirst: the one bit of copy that has to carry, so it runs
+  // bigger and heavier than the rest of the page
+  .shop-intro {
+    max-width: 62ch;
+    margin: 0 0 4px;
+    font-size: 18px;
+    font-weight: 700;
+    line-height: 1.5;
   }
 
   // Listing titles: a notch smaller than the body copy, in a very light

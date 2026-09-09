@@ -21,6 +21,13 @@
   font-display: swap;
 }
 
+/* Display font for the shop's headings (/artifacts) */
+@font-face {
+  font-family: "Rothefight";
+  src: url("./ROTHEFIGHT.otf") format("opentype");
+  font-display: swap;
+}
+
 body {
   margin: 0;
   padding: 0;

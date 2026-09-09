@@ -161,13 +161,16 @@ const Shop = () => {
         <ArrowLeftCircleIcon className="starIcon" size={16} />
         <span>home</span>
       </Link>
-      <h1>Artifacts by Andy</h1>
-      <p>
-        small things I make, sold over on{" "}
+      <h1>
+        Artifacts <span className="shop-title-byline">by Andy</span>
+      </h1>
+      <p className="shop-intro">
+        3D-Printed Goods - made by me! To learn about an item or to submit an
+        order, click the{" "}
         <a href={shopUrl} target="_blank" rel="noopener noreferrer">
           Etsy
-        </a>
-        .
+        </a>{" "}
+        link. More products to come soon.
       </p>
 
       {state.status === "loading" && <p>warming up the replicator…</p>}
