@@ -118,6 +118,11 @@ interface WireSkinOptions {
   lat?: number;
   /** Peak brightness of a wire */
   gain?: number;
+  /** An even glow between the wires, in the body's tint, as a share of
+   *  full wire brightness — what makes a body read as a lit surface
+   *  rather than an empty cage. Earth gets this for free from its dense
+   *  grid hazing at screen size; the coarser bodies take it explicitly. */
+  fill?: number;
   /** Pulls this body's wires off the shared blue-white toward a color of
    *  its own. The satellite's four part-links are told apart at that
    *  scale by hue as much as by shape, so they keep a trace of it —
@@ -149,6 +154,7 @@ uniform float uWireLat;
 uniform float uWireLon;
 uniform float uWirePitch;
 uniform float uWireGain;
+uniform float uWireFill;
 uniform vec3 uWireTint;
 
 float wireGridLine( float coord ) {
@@ -286,7 +292,7 @@ const fragmentBody = (
   // never disappears against the sky
   vec3 wireLit =
     uWireColor * wireBodyTint *
-    ( wireLine * wireGain * wireDay
+    ( ( wireLine * wireGain + uWireFill ) * wireDay
       + pow( 1.0 - wireFacing, 3.0 ) * uWireRim * ( 0.5 + 0.5 * wireDay ) );
   outgoingLight = mix( outgoingLight, wireLit, uWire );
   // Alpha is left alone on purpose. Under additive blending it scales
@@ -351,6 +357,7 @@ export function applyWireSkin(
     lon = 24,
     lat = 16,
     gain = 0.95,
+    fill = 0,
     hover = false,
     tint = "#ffffff",
     tintAlt,
@@ -372,6 +379,7 @@ export function applyWireSkin(
       uWireLon: { value: lon },
       uWirePitch: { value: pitch },
       uWireGain: { value: gain },
+      uWireFill: { value: fill },
       uWireTint: { value: new THREE.Color(tint) },
       ...(twoTone
         ? {

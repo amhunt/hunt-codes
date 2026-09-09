@@ -7,6 +7,7 @@ import { EARTH, MOON, planetPosition } from "./constants";
 import { applyOffAxisSquash } from "./offAxisSquash";
 import { JOURNEY_STOPS, scrollTransitionState } from "../../scrollTransition";
 import { applyWireSkin } from "./wireSkin";
+import { PLANET_WIRE_FILL } from "./Planet";
 import { MOON_VIDEO_OUTLINE_ID } from "../../solarAnchorIds";
 import { writeSilhouette } from "./outline";
 import { createLogoBadgeTexture } from "../textures";
@@ -82,6 +83,7 @@ export default function Moon({
       patched.current = true;
       applyWireSkin(material, {
         sunlit: true,
+        fill: PLANET_WIRE_FILL,
         lon: 24,
         lat: 16,
         hover: true,
