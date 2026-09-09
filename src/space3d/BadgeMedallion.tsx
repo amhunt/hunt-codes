@@ -105,12 +105,17 @@ const MARK_MESH = new THREE.Color("#39ff14");
 const MARK_GLOW_MESH = 1;
 // Mesh view's lattice: cells across the coin's diameter
 const COIN_WIRE_CELLS = 9;
-// The two spots on the mirror facets, view (= screen) space: straight
-// below the coin and straight to its right, tipped a little toward the
-// viewer so the facets that face them halfway can exist on a flat coin
-const COIN_LIGHT_BELOW = new THREE.Vector3(0, -1, 0.35);
-const COIN_LIGHT_RIGHT = new THREE.Vector3(1, 0, 0.35);
+// The two spots on the mirror facets: point lights in view (= screen)
+// space, in coin units (the authored coin is 1.0 across, so 0.5 is its
+// rim) — one just below the coin, one just right of it, held a little
+// toward the viewer. Their glints gather on the facets nearest them.
+const COIN_LIGHT_BELOW = new THREE.Vector3(0, -0.62, 0.3);
+const COIN_LIGHT_RIGHT = new THREE.Vector3(0.62, 0, 0.3);
 const COIN_LIGHT_COLOR = "#fff1d6";
+// How far a cell's mirror may tilt off the coin's face. A flat face
+// needs real tilt for any cell to face a spot halfway; this reads as a
+// hand-tiled disco surface rather than a polished one.
+const COIN_FACET_TILT = 0.6;
 // Match a text caret's cadence: ~530ms visible, ~530ms hidden.
 const CARET_HALF_PERIOD_S = 0.53;
 // Hover doubles the blink rate
@@ -404,11 +409,16 @@ const BadgeMedallion = () => {
         applyWireSkin(material, {
           grid: "box",
           pitch: coinDiameter / COIN_WIRE_CELLS,
+          // Solid, not the bodies' additive see-through: the coin's front
+          // and back faces, rims and edge band stack, and added together
+          // they blew out to a white disc
+          solid: true,
           mirror: {
             lights: [
-              { direction: COIN_LIGHT_BELOW, color: COIN_LIGHT_COLOR },
-              { direction: COIN_LIGHT_RIGHT, color: COIN_LIGHT_COLOR },
+              { position: COIN_LIGHT_BELOW, color: COIN_LIGHT_COLOR },
+              { position: COIN_LIGHT_RIGHT, color: COIN_LIGHT_COLOR },
             ],
+            tilt: COIN_FACET_TILT,
           },
         });
       }

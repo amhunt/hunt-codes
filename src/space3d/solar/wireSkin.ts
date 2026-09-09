@@ -96,9 +96,12 @@ export function wireTint(target: THREE.ColorRepresentation): THREE.Color {
 }
 
 export interface WireMirrorLight {
-  /** The direction the light shines FROM, view space (+x right, +y up,
-   *  +z toward the viewer); normalised on the way in */
-  direction: THREE.Vector3;
+  /** Where the light sits: a view-space offset (+x right, +y up, +z
+   *  toward the viewer) from the object's origin, in the geometry's own
+   *  units — so a light "just below the coin" is written in coin radii
+   *  and rides the coin wherever it's anchored. A point light, not a
+   *  direction: that's what gathers its glints on the facets nearest it. */
+  position: THREE.Vector3;
   color: THREE.ColorRepresentation;
 }
 
@@ -141,6 +144,12 @@ interface WireSkinOptions {
    *  should read as polished metal. Light directions are VIEW space; in
    *  the fixed-camera star canvas that is screen space. */
   mirror?: WireMirrorOptions;
+  /** Keep the material solid in mesh view — normal blending, depth
+   *  written, its own side setting — instead of the additive see-through
+   *  the bodies take. For hardware that should read as an object rather
+   *  than a cage: the mirror coin, whose stacked faces and rims blow out
+   *  to white under additive blending. */
+  solid?: boolean;
   /** An even glow between the wires, in the body's tint, as a share of
    *  full wire brightness — what makes a body read as a lit surface
    *  rather than an empty cage. Earth gets this for free from its dense
@@ -170,6 +179,8 @@ const fragmentHeader = (twoTone: boolean, mirror: boolean) => /* glsl */ `
 varying vec3 vWireObj;
 varying vec3 vWireNormal;
 varying vec3 vWireView;
+varying vec3 vWireOriginView;
+varying float vWireScale;
 uniform float uWire;
 uniform vec3 uWireColor;
 uniform float uWireRim;
@@ -240,12 +251,19 @@ const VERTEX_HEADER = /* glsl */ `
 varying vec3 vWireObj;
 varying vec3 vWireNormal;
 varying vec3 vWireView;
+varying vec3 vWireOriginView;
+varying float vWireScale;
 `;
 
+// The origin and uniform scale are for the mirror's point lights, which
+// are placed relative to the object in its own units; constant over the
+// mesh, so interpolation leaves them alone
 const VERTEX_BODY = /* glsl */ `
 vWireObj = transformed;
 vWireNormal = normalize( normalMatrix * normal );
 vWireView = ( modelViewMatrix * vec4( transformed, 1.0 ) ).xyz;
+vWireOriginView = ( modelViewMatrix * vec4( 0.0, 0.0, 0.0, 1.0 ) ).xyz;
+vWireScale = length( modelViewMatrix[0].xyz );
 `;
 
 /** The far side's share of the wire brightness under `sunlit` — dark
@@ -343,9 +361,14 @@ const fragmentBody = (
     vec3 facetN = normalize( normalize( vWireNormal ) + facetWobble * uMirrorTilt );
     vec3 facetEye = normalize( -vWireView );
     vec3 facetR = reflect( -facetEye, facetN );
-    vec3 facetEnv = mix( vec3( 0.08, 0.08, 0.11 ), vec3( 0.5, 0.5, 0.56 ), facetR.y * 0.5 + 0.5 );
-    facetEnv += uMirrorColor0 * smoothstep( 0.86, 0.985, dot( facetR, uMirrorLight0 ) );
-    facetEnv += uMirrorColor1 * smoothstep( 0.86, 0.985, dot( facetR, uMirrorLight1 ) );
+    vec3 facetEnv = mix( vec3( 0.10, 0.10, 0.13 ), vec3( 0.58, 0.58, 0.64 ), facetR.y * 0.5 + 0.5 );
+    // The spots are points near the object: the direction to each one
+    // changes across the surface, so the facets nearest a spot are the
+    // ones that can face it halfway, and its glints gather there
+    vec3 facetToLight0 = normalize( vWireOriginView + uMirrorLight0 * vWireScale - vWireView );
+    vec3 facetToLight1 = normalize( vWireOriginView + uMirrorLight1 * vWireScale - vWireView );
+    facetEnv += uMirrorColor0 * smoothstep( 0.86, 0.985, dot( facetR, facetToLight0 ) );
+    facetEnv += uMirrorColor1 * smoothstep( 0.86, 0.985, dot( facetR, facetToLight1 ) );
     wireMirror =
       uWireColor * wireBodyTint * facetEnv * uMirrorGain
       * ( 0.3 + 0.7 * max( dot( facetN, facetEye ), 0.0 ) )
@@ -381,6 +404,8 @@ interface SkinnedState {
 const original = new WeakMap<THREE.Material, SkinnedState>();
 
 function setMeshProps(material: THREE.Material, on: boolean): void {
+  // Solid hardware keeps its own blend state in both views
+  if (material.userData.wireSolid) return;
   let base = original.get(material);
   if (!base) {
     base = {
@@ -425,6 +450,7 @@ export function applyWireSkin(
     gain = 0.95,
     fill = 0,
     mirror,
+    solid = false,
     hover = false,
     tint = "#ffffff",
     tintAlt,
@@ -450,12 +476,8 @@ export function applyWireSkin(
       uWireFill: { value: fill },
       ...(mirror
         ? {
-            uMirrorLight0: {
-              value: mirror.lights[0].direction.clone().normalize(),
-            },
-            uMirrorLight1: {
-              value: mirror.lights[1].direction.clone().normalize(),
-            },
+            uMirrorLight0: { value: mirror.lights[0].position.clone() },
+            uMirrorLight1: { value: mirror.lights[1].position.clone() },
             uMirrorColor0: { value: new THREE.Color(mirror.lights[0].color) },
             uMirrorColor1: { value: new THREE.Color(mirror.lights[1].color) },
             uMirrorTilt: { value: mirror.tilt ?? 0.16 },
@@ -482,6 +504,7 @@ export function applyWireSkin(
     fragmentBody: fragmentBody(hover, twoTone, box, sunlit, mirrored),
   });
   material.userData.wireSkin = true;
+  material.userData.wireSolid = solid;
   setMeshProps(material, wireState.target > 0);
 }
 
