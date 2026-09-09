@@ -100,7 +100,8 @@ all: its own surface shader crossfades to a gold mirror ball (the `uMesh`
 branch in `solar/sunShaders.ts` — procedural tiles reflecting a
 procedural room, since the scene has no environment map), and it stays
 solid because its depth buffer is what culls the far half of the corona
-shell.
+shell. The neon wire cage it replaced is still compiled in behind
+`MESH_SUN_STYLE` / the `uMeshStyle` uniform, parked for an easter egg.
 
 ## 3D architecture (src/space3d/)
 
