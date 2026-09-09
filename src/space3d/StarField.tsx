@@ -431,6 +431,10 @@ const TextStars = ({
     numCloseToCursor: 0,
     elapsedMs: 0,
     transitions: 0,
+    /** Whether the first phrase has fully assembled — every star on its
+     *  glyph. Cursor gravity waits for it, so the fly-in can't be pulled
+     *  off course; once true it stays true. */
+    formed: false,
   });
   // Live star positions (DOM px, xy pairs); written every frame, read by
   // the next phrase's useMemo for carry-over. The memo itself stays pure —
@@ -524,9 +528,12 @@ const TextStars = ({
     // same speed at any frame rate (just smoother).
     const factor = deltaMs / STAR_TICK_MS;
 
+    // No cursor gravity until the first phrase has formed: the intro's
+    // stream of stars should reach its glyphs untouched
     const cursor = cursorRef.current;
     const cursorUsable =
       cursor != null &&
+      sim.formed &&
       !isSmall &&
       cursor.x > CURSOR_DISABLED_BUFFER_ZONE_PX &&
       cursor.x < window.innerWidth - CURSOR_DISABLED_BUFFER_ZONE_PX &&
@@ -537,6 +544,7 @@ const TextStars = ({
 
     const prevNumClose = sim.numCloseToCursor;
     let numClose = 0;
+    let unsettled = 0;
 
     for (let i = 0; i < count; i++) {
       let x = positions[i * 2];
@@ -569,6 +577,7 @@ const TextStars = ({
       }
       positions[i * 2] = x;
       positions[i * 2 + 1] = y;
+      if (x !== originalX || y !== originalY) unsettled++;
 
       // Size swell + brightening near the cursor (legacy StarDot math)
       let size = targets[i].r;
@@ -593,6 +602,9 @@ const TextStars = ({
     }
 
     sim.numCloseToCursor = numClose;
+    // The glide lands stars exactly on their glyphs (it clamps the last
+    // step to the remaining distance), so "all settled" is exact
+    if (!sim.formed && unsettled === 0) sim.formed = true;
     data.buffers.positionsAttr.needsUpdate = true;
     data.buffers.sizesAttr.needsUpdate = true;
     data.buffers.brightensAttr.needsUpdate = true;
