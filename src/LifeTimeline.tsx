@@ -8,6 +8,7 @@ import {
   TooltipTrigger,
 } from "./ui/tooltip";
 import airbnbLogo from "./assets/logos/airbnb.svg";
+import princetonLogo from "./assets/logos/princeton.svg";
 import untappedLogo from "./assets/logos/untapped.svg";
 import zipLogo from "./assets/logos/zip.svg";
 
@@ -61,6 +62,7 @@ const eras: Era[] = [
   {
     title: "College",
     org: "Princeton University",
+    logo: princetonLogo,
     location: "New Jersey",
     dates: "September 2013 – June 2017",
     blurb:
@@ -254,6 +256,22 @@ const LifeTimeline = ({
   const [openKey, setOpenKey] = useState<string | null>(null);
   const wasOpen = useRef(false);
 
+  // Tap-off closes. Radix dismisses the card on a pointer-down outside
+  // it, but on touch it waits for the follow-up click (browsers delay
+  // that ~300ms), so close on the pointer-down itself and the tap on the
+  // résumé feels immediate. A tap on another segment is left to that
+  // segment's own toggle; one on the open card leaves it up.
+  useEffect(() => {
+    if (openKey === null) return;
+    const onPointerDown = (event: PointerEvent) => {
+      const target = event.target as Element | null;
+      if (target?.closest(".life-seg, .life-tip-card")) return;
+      setOpenKey(null);
+    };
+    document.addEventListener("pointerdown", onPointerDown);
+    return () => document.removeEventListener("pointerdown", onPointerDown);
+  }, [openKey]);
+
   /** One segment: a tooltip-triggering button plus its card */
   const segment = (
     key: string,
@@ -273,7 +291,14 @@ const LifeTimeline = ({
           onPointerDown={() => {
             wasOpen.current = openKey === key;
           }}
-          onClick={() => setOpenKey(wasOpen.current ? null : key)}
+          onClick={(event) => {
+            // Our toggle is the one that decides. Radix composes its own
+            // close-on-click after this handler and skips it once the
+            // event is default-prevented — without that, a tap that
+            // should open could be closed again in the same click.
+            event.preventDefault();
+            setOpenKey(wasOpen.current ? null : key);
+          }}
           {...props}
         >
           {children}
