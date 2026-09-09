@@ -347,7 +347,8 @@ const glideToward = (
 
 interface StarFieldProps {
   isLanding: boolean;
-  /** The shop, which drops the "andrewhunt" header on phone widths */
+  /** The shop, which drops the "andrewhunt" header — the moon perch and
+   *  the listings own that page, and the name only crowded the top */
   isArtifactsPage: boolean;
   /** 1 = shown, 0 = fading out before unmount */
   opacityTarget: number;
@@ -849,10 +850,9 @@ const StarField = ({
   isArtifactsPage,
   opacityTarget,
 }: StarFieldProps) => {
-  // The shop's own heading owns the top of the page on a phone; the name
-  // stars behind it just crowd it, so they sit that case out
-  const { isSmall } = useWindowWidth();
-  const showName = !isLanding && !(isArtifactsPage && isSmall);
+  // The shop's own heading owns the top of its page; the name stars
+  // behind it just crowd it, so they sit that route out
+  const showName = !isLanding && !isArtifactsPage;
   // Shared fade value, ramped in the frame loop (mount fade-in ~1s after
   // the delay above, view-switch fade-out ~0.6s to match the legacy
   // CSS transitions).
