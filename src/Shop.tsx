@@ -155,36 +155,38 @@ const ListingCard = ({ listing }: { listing: ShopListing }) => {
       {images.length > 0 && (
         <ListingCarousel images={images} title={listing.title} />
       )}
-      <h2>{displayTitle(listing.title)}</h2>
-      {listing.price && (
-        <p>
-          {listing.hasVariations ? "From " : ""}
-          {listing.price}
-        </p>
-      )}
-      {description && (
-        <div className={cx("shop-listing-blurb", expanded && "is-expanded")}>
-          <p id={descriptionId}>{description}</p>
-          <button
-            type="button"
-            className="shop-listing-toggle"
-            aria-expanded={expanded}
-            aria-controls={descriptionId}
-            onClick={() => setExpanded((open) => !open)}
-          >
-            {expanded ? "Collapse" : "Expand"}
-          </button>
-        </div>
-      )}
-      <a
-        className="shop-listing-link"
-        href={listing.url}
-        target="_blank"
-        rel="noopener noreferrer"
-      >
-        Etsy
-        <ArrowUpRight size={14} aria-hidden="true" />
-      </a>
+      <div className="shop-listing-body">
+        <h2>{displayTitle(listing.title)}</h2>
+        {listing.price && (
+          <p>
+            {listing.hasVariations ? "From " : ""}
+            {listing.price}
+          </p>
+        )}
+        {description && (
+          <div className={cx("shop-listing-blurb", expanded && "is-expanded")}>
+            <p id={descriptionId}>{description}</p>
+            <button
+              type="button"
+              className="shop-listing-toggle"
+              aria-expanded={expanded}
+              aria-controls={descriptionId}
+              onClick={() => setExpanded((open) => !open)}
+            >
+              {expanded ? "Collapse" : "Expand"}
+            </button>
+          </div>
+        )}
+        <a
+          className="shop-listing-link"
+          href={listing.url}
+          target="_blank"
+          rel="noopener noreferrer"
+        >
+          Etsy
+          <ArrowUpRight size={14} aria-hidden="true" />
+        </a>
+      </div>
     </li>
   );
 };

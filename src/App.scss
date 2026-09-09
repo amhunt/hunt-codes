@@ -3183,7 +3183,7 @@ $switch-ease: cubic-bezier(0.45, 0.05, 0.25, 1.2);
   // holds up at card size and through a long wrapped title. Very light
   // green, so they stand apart from the purple links.
   h2 {
-    margin: 12px 0 4px;
+    margin: 14px 0 4px;
     font-family: "Righteous", "Inconsolata", monospace;
     font-size: 18px;
     font-weight: 400;
@@ -3240,9 +3240,11 @@ $switch-ease: cubic-bezier(0.45, 0.05, 0.25, 1.2);
 .shop-skeletons {
   .shop-skeleton {
     margin: 0;
-    padding: 0;
-    // Roughly a real card: 4:3 photo over title, price, blurb and link
-    aspect-ratio: 5 / 6;
+    // Shaped like a real card rather than by a guessed ratio: the ::before
+    // takes the photo's 4:3, the padding stands in for the title, price
+    // and link below it. A fixed ratio drifts badly — the cards run from
+    // ~395px wide at xl to ~600px at two-up.
+    padding: 0 0 118px;
     border-radius: 12px;
     background: linear-gradient(
         100deg,
@@ -3254,6 +3256,12 @@ $switch-ease: cubic-bezier(0.45, 0.05, 0.25, 1.2);
     background-size: 220% 100%;
     background-repeat: no-repeat;
     animation: shop-skeleton-shimmer 1.6s ease-in-out infinite;
+
+    &::before {
+      content: "";
+      display: block;
+      aspect-ratio: 4 / 3;
+    }
   }
 
   // Only ever one row: the third goes below xl, the second below sm
@@ -3291,9 +3299,21 @@ $switch-ease: cubic-bezier(0.45, 0.05, 0.25, 1.2);
   // The base layer indents every li by 1rem (index.css); without this the
   // grid sits 16px right of the heading above it
   margin: 0;
-  padding: 12px;
+  // No side padding, so the photo runs the full width of the card and the
+  // card's left edge lands on the page heading's. The card's own radius
+  // clips the photo's top corners, so the image doesn't carry one of its
+  // own; the copy below gets its gutter from .shop-listing-body.
+  padding: 0 0 14px;
+  overflow: hidden;
   border-radius: 12px;
   background: rgba(8, 6, 28, 0.82);
+}
+
+// Everything under the photo. The photo itself runs the full width of the
+// card — that edge is the one that lines up with the page heading — while
+// the copy under it keeps a gutter on both sides.
+.shop-listing-body {
+  padding: 0 14px;
 }
 
 // Etsy's own listing copy. Collapsed it's clamped to two lines; expanded
@@ -3378,7 +3398,6 @@ $switch-ease: cubic-bezier(0.45, 0.05, 0.25, 1.2);
   overflow-x: auto;
   scroll-snap-type: x mandatory;
   scrollbar-width: none;
-  border-radius: 8px;
 
   &::-webkit-scrollbar {
     display: none;
@@ -3388,6 +3407,7 @@ $switch-ease: cubic-bezier(0.45, 0.05, 0.25, 1.2);
     flex: 0 0 100%;
     aspect-ratio: 4 / 3;
     object-fit: cover;
+    border-radius: 0;
     scroll-snap-align: start;
     scroll-snap-stop: always;
   }
