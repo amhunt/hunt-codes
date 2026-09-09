@@ -25,7 +25,7 @@ import {
   generateBackgroundStars,
   generateStarsForLetters,
   generateStarsForText,
-  introSpawnPoint,
+  introSpawnPositions,
   starPhrases,
   starPhrasesSmall,
   type SampledStar,
@@ -443,6 +443,11 @@ const TextStars = ({
     const prev = livePositionsRef.current;
     const positions = new Float32Array(count * 2);
     const velocities = new Float32Array(count);
+    // Landing intro only: spawn points outside the viewport, matched to
+    // the glyphs by angle so the fly-in doesn't tangle
+    const introSpawns = sim.hasEverHadStars
+      ? null
+      : introSpawnPositions(targets, width, height);
     for (let i = 0; i < count; i++) {
       velocities[i] = Math.random() + 0.5;
       if (i * 2 + 1 < prev.length && sim.hasEverHadStars) {
@@ -453,14 +458,13 @@ const TextStars = ({
         // Extra stars for a longer phrase start on their target (legacy)
         positions[i * 2] = targets[i].x;
         positions[i * 2 + 1] = targets[i].y;
-      } else {
+      } else if (introSpawns) {
         // Landing intro: start just outside the viewport, on every side,
         // then fly in toward the title. The glide's 10px-per-tick cap
         // means the farthest stars take a few seconds to land, which is
         // the effect — a stream converging on the centre.
-        const spawn = introSpawnPoint(width, height);
-        positions[i * 2] = spawn.x;
-        positions[i * 2 + 1] = spawn.y;
+        positions[i * 2] = introSpawns[i * 2];
+        positions[i * 2 + 1] = introSpawns[i * 2 + 1];
       }
     }
 

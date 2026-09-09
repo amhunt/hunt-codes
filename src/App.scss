@@ -69,19 +69,18 @@ $breakpoint-xl: 1440px;
   }
 }
 
-// "(and Claude)" under the landing title (AndClaude.tsx): blurs in once
-// the stars have spelled BUILT WITH ♥, blurs out as they leave. Above the
-// star canvas (z 2), never in the way of the sun link.
+// "(and Claude)" under the landing title's heart (AndClaude.tsx): blurs
+// in once the stars have spelled BUILT WITH ♥, blurs out as they leave.
+// Positioned and sized inline — centred under the heart glyph, as wide as
+// it. Above the star canvas (z 2), never in the way of the sun link.
 .and-claude {
   position: fixed;
-  left: 0;
-  right: 0;
   margin: 0;
+  transform: translateX(-50%);
+  white-space: nowrap;
   z-index: 3;
   pointer-events: none;
-  text-align: center;
   font-family: "Meow Script", "Brush Script MT", cursive;
-  font-size: 24px;
   line-height: 1;
   color: #f3efff;
   text-shadow: 0 0 10px rgba($purp-light, 0.9);
@@ -94,6 +93,17 @@ $breakpoint-xl: 1440px;
   &.and-claude--shown {
     opacity: 1;
     filter: none;
+  }
+
+  // The invisible copy the caption is measured against, at the
+  // reference size the scale is figured from
+  &.and-claude--measure {
+    left: 0;
+    top: 0;
+    transform: none;
+    visibility: hidden;
+    font-size: 24px;
+    transition: none;
   }
 }
 
