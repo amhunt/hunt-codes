@@ -35,8 +35,8 @@ import {
  */
 // Surface brightness multiplier (shader uTint; components >1 push the
 // palette toward white). Mesh view stays at 1: the tint multiplies the
-// photosphere's gold, and anything brighter blows out the blue the mesh
-// branch mixes in on top of it.
+// photosphere's gold, and the mesh branch mixes its own colour in on top
+// of it anyway.
 const SPACE_TINT = new THREE.Color(1.12, 1.12, 1.15);
 const MESH_TINT = new THREE.Color(1, 1, 1);
 
@@ -44,12 +44,12 @@ const MESH_TINT = new THREE.Color(1, 1, 1);
 // impact-parameter limb math, same eruptions — and only changes color.
 const CORONA_INNER = new THREE.Color("#ffd27a");
 const CORONA_OUTER = new THREE.Color("#ff7a1a");
-const CORONA_MESH_INNER = new THREE.Color("#dff2ff");
-const CORONA_MESH_OUTER = new THREE.Color("#4aa8ff");
+const CORONA_MESH_INNER = new THREE.Color("#fffbc7");
+const CORONA_MESH_OUTER = new THREE.Color("#ffd400");
 // The wide ambience sprite is a warm-white texture; tinting the material
 // is what cools it (the texture itself is shared)
 const GLOW_WARM = new THREE.Color("#ffffff");
-const GLOW_MESH = new THREE.Color("#8fd0ff");
+const GLOW_MESH = new THREE.Color("#ffe45c");
 
 /** How far the flare corona's nominal rim extends past the limb, CSS px */
 const FLARE_RING_PX = 24;

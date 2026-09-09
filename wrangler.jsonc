@@ -42,7 +42,7 @@
         "CANONICAL_HOST": "www.hunt.codes",
         "API_ORIGIN": "https://www.hunt.codes",
         // The shop domains open on the Etsy shop page, not the landing page.
-        "ROOT_REDIRECT": "/shop"
+        "ROOT_REDIRECT": "/artifacts"
       }
     }
   }

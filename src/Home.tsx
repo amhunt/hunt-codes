@@ -227,7 +227,7 @@ const Home = () => {
                   <TooltipTrigger asChild>
                     <Link
                       aria-label="Artifacts"
-                      to="/shop"
+                      to="/artifacts"
                       className="icon-pill flex size-12 items-center justify-center rounded-full p-1"
                     >
                       <ShoppingBag size={20} />

@@ -9,7 +9,7 @@ import { hoverState } from "../../solarHover";
 import { EARTH_ABOUT_OUTLINE_ID } from "../../solarAnchorIds";
 import { writeSilhouette } from "./outline";
 import { applyShimmer } from "./shimmerBand";
-import { applyWireSkin, wireState } from "./wireSkin";
+import { applyWireSkin, wireState, wireTint } from "./wireSkin";
 import { createEnergyWave } from "./energyWave";
 import AboutRing from "./AboutRing";
 import InteractiveGlow from "./InteractiveGlow";
@@ -42,6 +42,38 @@ const EARTH_SUNLIT_BOOST = new THREE.Color(1.45, 1.45, 1.45);
 /** Per-frame scratch (screen-up for the wave) and a fallback center */
 const camUp = new THREE.Vector3();
 const ORIGIN = new THREE.Vector3();
+
+/**
+ * Mesh view's per-planet wires. Mercury and Venus keep the scene's
+ * blue-white; the two the camera actually visits are coloured, and run a
+ * little under the default gain so the sun stays the brightest thing in
+ * the sky.
+ *
+ * Earth is two-toned: royal blue sea under neon green land, split by a
+ * noise field rather than the real coastlines — an abstract globe, not a
+ * map.
+ */
+const wireSkinFor = (kind: SolarPlanetConfig["kind"]) => {
+  if (kind === "earth") {
+    // Earth carries the /about perch, so it gets a finer grid — at that
+    // range a 20-meridian globe reads as a beach ball. It also folds
+    // hover into its wires, because the atmosphere shell that carries the
+    // hover in space view is faded out in mesh view.
+    return {
+      lon: 36,
+      lat: 24,
+      hover: true,
+      gain: 0.8,
+      tint: wireTint("#2b5cff"),
+      tintAlt: wireTint("#27ff6a"),
+      tintAltCoverage: 1 / 3,
+    };
+  }
+  if (kind === "mars") {
+    return { lon: 20, lat: 14, gain: 0.72, tint: wireTint("#ff2a1e") };
+  }
+  return { lon: 20, lat: 14, gain: 0.85 };
+};
 
 export default function Planet({
   config,
@@ -97,16 +129,7 @@ export default function Planet({
       surfaceMaterial.current = material;
       if (!material || patched.current) return;
       patched.current = true;
-      // Earth carries the /about perch, so it gets a finer grid — at that
-      // range a 20-meridian globe reads as a beach ball. It also folds
-      // hover into its wires, because the atmosphere shell that carries
-      // the hover in space view is faded out in mesh view (below).
-      applyWireSkin(
-        material,
-        config.kind === "earth"
-          ? { lon: 36, lat: 24, hover: true }
-          : { lon: 20, lat: 14, gain: 0.85 },
-      );
+      applyWireSkin(material, wireSkinFor(config.kind));
       if (config.kind === "earth") applyShimmer(material, [wave.uniforms]);
       material.needsUpdate = true;
     },

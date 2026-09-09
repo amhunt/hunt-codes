@@ -22,7 +22,8 @@ export const asteroidAnchorId = (name: string) => `asteroid-link-${name}`;
 export const asteroidOutlineId = (name: string) => `asteroid-outline-${name}`;
 /** The satellite's part links on /projects-and-toys — the scroll
  *  floating off its antenna tips (Zip blog post), the head's video screen
- *  (Zip launch reel), the floating pen (SVG Studio) and the vase (/shop).
+ *  (Zip launch reel), the floating pen (SVG Studio) and the vase
+ *  (/artifacts).
  *  ProjectsAndToys renders the overlays; Satellite writes their positions
  *  and outlines. */
 export const SATELLITE_PARTS = ["scroll", "screen", "pen", "vase"] as const;

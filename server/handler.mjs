@@ -5,7 +5,7 @@
  *   POST /api/draw            — generate + persist a drawing
  *   GET  /api/drawings        — recent drawings for the gallery
  *   GET  /api/drawings/{id}   — one drawing (permalink)
- *   GET  /api/shop            — Andrew's Etsy listings for the /shop page
+ *   GET  /api/shop            — Andrew's Etsy listings for /artifacts
  *
  * Design notes:
  * - The OpenAI key lives in SSM SecureString `/hunt-codes/openai-api-key`;
@@ -668,7 +668,7 @@ const handleListDrawings = async () => {
 // ---------------------------------------------------------------------------
 // Etsy shop — GET /api/shop
 //
-// The /shop page lists Andrew's own Etsy listings. Only public v3
+// The /artifacts page lists Andrew's own Etsy listings. Only public v3
 // endpoints are used (no OAuth): one call for the shop's active listing
 // ids, one batch call for titles/prices/images. Checkout stays on Etsy —
 // every listing links out.
@@ -766,6 +766,12 @@ const normalizeListing = (listing) => {
   return {
     id,
     title: decodeEntities(listing.title),
+    // v3 `description` is plain text (`rich_description` is the HTML one),
+    // so the page can render it as text. Etsy's own line breaks are kept —
+    // the card shows the first couple of lines and expands to the rest.
+    description: listing.description
+      ? decodeEntities(listing.description).trim()
+      : null,
     // With variations Etsy reports the lowest option's price
     price: listing.price ? formatPrice(listing.price) : null,
     hasVariations: Boolean(listing.has_variations),

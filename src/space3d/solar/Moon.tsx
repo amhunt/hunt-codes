@@ -49,6 +49,7 @@ export default function Moon({
   orbitOpacity,
   revealed = true,
   linkActive = false,
+  dim = 1,
 }: {
   orbitColor: string;
   orbitOpacity: number;
@@ -58,6 +59,10 @@ export default function Moon({
   /** The video link only exists on /about — gate the clickable halo to
    *  the view whose overlay is mounted */
   linkActive?: boolean;
+  /** Scales everything the reveal fades, for views that want the moon
+   *  present but pushed back (phone /artifacts, where it sat too bright
+   *  behind the listings) */
+  dim?: number;
 }) {
   const earthGroup = useRef<THREE.Group>(null);
   const moonGroup = useRef<THREE.Group>(null);
@@ -75,7 +80,7 @@ export default function Moon({
       surfaceMaterial.current = material;
       if (!material || patched.current) return;
       patched.current = true;
-      applyWireSkin(material, { lon: 24, lat: 16, hover: true });
+      applyWireSkin(material, { lon: 24, lat: 16, hover: true, gain: 0.75 });
       material.needsUpdate = true;
     },
     [],
@@ -210,12 +215,13 @@ export default function Moon({
       -maxStep,
       maxStep,
     );
+    const shown = revealOpacity.current * dim;
     if (surfaceMaterial.current) {
-      surfaceMaterial.current.opacity = revealOpacity.current;
+      surfaceMaterial.current.opacity = shown;
     }
-    badgeMaterial.opacity = revealOpacity.current;
+    badgeMaterial.opacity = shown;
     if (orbitMaterial.current) {
-      orbitMaterial.current.opacity = orbitOpacity * revealOpacity.current;
+      orbitMaterial.current.opacity = orbitOpacity * shown;
     }
 
     // Video-link hover (the /about and /home overlay): brighten the

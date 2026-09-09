@@ -347,6 +347,8 @@ const glideToward = (
 
 interface StarFieldProps {
   isLanding: boolean;
+  /** The shop, which drops the "andrewhunt" header on phone widths */
+  isArtifactsPage: boolean;
   /** 1 = shown, 0 = fading out before unmount */
   opacityTarget: number;
 }
@@ -844,7 +846,15 @@ const NameStars = ({
 // (part of the landing intro choreography)
 const FADE_IN_DELAY_SECONDS = 2;
 
-const StarField = ({ isLanding, opacityTarget }: StarFieldProps) => {
+const StarField = ({
+  isLanding,
+  isArtifactsPage,
+  opacityTarget,
+}: StarFieldProps) => {
+  // The shop's own heading owns the top of the page on a phone; the name
+  // stars behind it just crowd it, so they sit that case out
+  const { isSmall } = useWindowWidth();
+  const showName = !isLanding && !(isArtifactsPage && isSmall);
   // Shared fade value, ramped in the frame loop (mount fade-in ~1s after
   // the delay above, view-switch fade-out ~0.6s to match the legacy
   // CSS transitions).
@@ -882,7 +892,7 @@ const StarField = ({ isLanding, opacityTarget }: StarFieldProps) => {
       <TextStars isLanding={isLanding} opacityRef={opacityRef} />
       {/* Mounted per visit off the landing, so the name re-assembles on
           each return from the solar system */}
-      {!isLanding && <NameStars opacityRef={opacityRef} />}
+      {showName && <NameStars opacityRef={opacityRef} />}
     </group>
   );
 };

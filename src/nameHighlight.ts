@@ -6,6 +6,8 @@
  * solarHover.ts / starPan.ts).
  */
 export const nameHighlightState = {
-  /** Index of the highlighted letter within "andrewhunt" */
+  /** Index of the highlighted letter within "andrewhunt", or -1 for none
+   *  — the pages that park the roving highlight (see AppBackground) leave
+   *  it here, and every letter eases back to its resting size. */
   letter: 0,
 };

@@ -13,7 +13,8 @@
 //
 // ROOT_REDIRECT (optional): where `/` should land. The shop domains
 // (andysartifacts.com, artifactandy.com) are Andrew's 3D print shop, so they
-// open on /shop; production leaves it unset and keeps the WebGL landing page.
+// open on /artifacts; production leaves it unset and keeps the WebGL landing
+// page.
 
 const API_PREFIX = "/api/";
 

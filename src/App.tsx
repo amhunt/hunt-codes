@@ -3,6 +3,7 @@ import {
   BrowserRouter as Router,
   Routes,
   Route,
+  Navigate,
   useLocation,
 } from "react-router-dom";
 import cx from "classnames";
@@ -146,7 +147,10 @@ const App = () => {
           <Route path="/journey" element={<Journey />} />
           <Route path="/draw" element={<SvgGenerator />} />
           <Route path="/draw/:id" element={<SvgGenerator />} />
-          <Route path="/shop" element={<Shop />} />
+          <Route path="/artifacts" element={<Shop />} />
+          {/* The shop lived at /shop until it was renamed; keep the old
+              path working for anyone holding that link */}
+          <Route path="/shop" element={<Navigate to="/artifacts" replace />} />
           <Route path="/projects-and-toys" element={<ProjectsAndToys />} />
           <Route path="*" element={<NotFound />} />
         </Routes>

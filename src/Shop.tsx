@@ -11,7 +11,7 @@ import {
 /**
  * The artifacts shop: Andrew's Etsy listings, fetched through
  * GET /api/shop (see server/handler.mjs). Checkout stays on Etsy — every
- * item links out.
+ * item links out. Lives at /artifacts (/shop redirects there).
  *
  * Deliberately unstyled beyond legibility for now; a design pass comes
  * later.
@@ -31,6 +31,9 @@ type ShopListing = {
   price: string | null;
   hasVariations: boolean;
   url: string;
+  /** Etsy's plain-text listing copy; absent from API responses that
+   *  predate it (a stored payload, a cached deploy) */
+  description?: string | null;
   /** The primary photo (older API responses carry only this) */
   image: ShopImage | null;
   /** Every photo, primary first */
@@ -132,6 +135,73 @@ const ListingCarousel = ({
   );
 };
 
+/** Etsy titles are keyword-stuffed for search ("Name | Gift | Handmade");
+ *  the card shows only what comes before the first pipe. The full title
+ *  still rides along as the photo's alt text. */
+const displayTitle = (title: string) => title.split("|")[0].trim() || title;
+
+/** One listing: photo strip, title, price, and Etsy's own copy clamped to
+ *  two lines until it's expanded. */
+const ListingCard = ({ listing }: { listing: ShopListing }) => {
+  const [expanded, setExpanded] = useState(false);
+  // Older API copies (the Lambda's stored payload, a cached deploy) carry
+  // the primary photo alone, and no description at all
+  const images = listing.images ?? (listing.image ? [listing.image] : []);
+  const description = listing.description?.trim();
+  const descriptionId = `shop-desc-${listing.id}`;
+
+  return (
+    <li className="shop-listing">
+      {images.length > 0 && (
+        <ListingCarousel images={images} title={listing.title} />
+      )}
+      <div className="shop-listing-body">
+        <h2>{displayTitle(listing.title)}</h2>
+        {listing.price && (
+          <p>
+            {listing.hasVariations ? "From " : ""}
+            {listing.price}
+          </p>
+        )}
+        {description && (
+          <div className={cx("shop-listing-blurb", expanded && "is-expanded")}>
+            <p id={descriptionId}>{description}</p>
+            <button
+              type="button"
+              className="shop-listing-toggle"
+              aria-expanded={expanded}
+              aria-controls={descriptionId}
+              onClick={() => setExpanded((open) => !open)}
+            >
+              {expanded ? "Collapse" : "Expand"}
+            </button>
+          </div>
+        )}
+        <a
+          className="shop-listing-link"
+          href={listing.url}
+          target="_blank"
+          rel="noopener noreferrer"
+        >
+          Etsy
+          <ArrowUpRight size={14} aria-hidden="true" />
+        </a>
+      </div>
+    </li>
+  );
+};
+
+/** The wait: a row of card-shaped shimmers. Three are rendered and the
+ *  grid's own breakpoints hide the ones that would wrap, so it's always
+ *  exactly one row. */
+const ListingSkeletons = () => (
+  <ul className="shop-listings shop-skeletons" aria-hidden="true">
+    {[0, 1, 2].map((i) => (
+      <li key={i} className="shop-skeleton" />
+    ))}
+  </ul>
+);
+
 const Shop = () => {
   const [state, setState] = useState<ShopState>({ status: "loading" });
 
@@ -161,16 +231,26 @@ const Shop = () => {
         <ArrowLeftCircleIcon className="starIcon" size={16} />
         <span>home</span>
       </Link>
-      <h1>artifacts</h1>
-      <p>
-        small things I make, sold over on{" "}
+      <h1>
+        Artifacts <span className="shop-title-byline">by Andy</span>
+      </h1>
+      <p className="shop-intro">
+        3D-Printed Goods - made by me! To see item details or submit an order,
+        visit me on{" "}
         <a href={shopUrl} target="_blank" rel="noopener noreferrer">
           Etsy
         </a>
-        .
+        . More products to come soon.
       </p>
 
-      {state.status === "loading" && <p>warming up the replicator…</p>}
+      {state.status === "loading" && (
+        <>
+          <p className="sr-only" role="status">
+            warming up the replicator…
+          </p>
+          <ListingSkeletons />
+        </>
+      )}
 
       {state.status === "error" && (
         <p>
@@ -194,35 +274,9 @@ const Shop = () => {
 
       {state.status === "ready" && state.data.listings.length > 0 && (
         <ul className="shop-listings">
-          {state.data.listings.map((listing) => {
-            // Older API copies (the Lambda's stored payload, a cached
-            // deploy) carry the primary photo alone
-            const images =
-              listing.images ?? (listing.image ? [listing.image] : []);
-            return (
-              <li key={listing.id} className="shop-listing">
-                {images.length > 0 && (
-                  <ListingCarousel images={images} title={listing.title} />
-                )}
-                <h2>{listing.title}</h2>
-                {listing.price && (
-                  <p>
-                    {listing.hasVariations ? "from " : ""}
-                    {listing.price}
-                  </p>
-                )}
-                <a
-                  className="shop-listing-link"
-                  href={listing.url}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                >
-                  Etsy
-                  <ArrowUpRight size={14} aria-hidden="true" />
-                </a>
-              </li>
-            );
-          })}
+          {state.data.listings.map((listing) => (
+            <ListingCard key={listing.id} listing={listing} />
+          ))}
         </ul>
       )}
 
