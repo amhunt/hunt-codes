@@ -53,9 +53,15 @@ const ORIGIN = new THREE.Vector3();
  * noise field rather than the real coastlines — an abstract globe, not a
  * map.
  */
+/** Between-the-wires glow for Venus, Mars and the moon (wireSkin `fill`) */
+export const PLANET_WIRE_FILL = 0.14;
+
 const wireSkinFor = (kind: SolarPlanetConfig["kind"]) => {
   // Every planet is lit from the sun in mesh view too (wireSkin `sunlit`)
   const sunlit = true;
+  // The coarser cages get an even glow between their wires so they read
+  // about as solid as Earth, whose 36x24 grid hazes into one on its own
+  const fill = PLANET_WIRE_FILL;
   if (kind === "earth") {
     // Earth carries the /about perch, so it gets a finer grid — at that
     // range a 20-meridian globe reads as a beach ball. It also folds
@@ -77,6 +83,7 @@ const wireSkinFor = (kind: SolarPlanetConfig["kind"]) => {
     // than Mercury's rust
     return {
       sunlit,
+      fill,
       lon: 20,
       lat: 14,
       gain: 0.72,
@@ -84,19 +91,20 @@ const wireSkinFor = (kind: SolarPlanetConfig["kind"]) => {
     };
   }
   if (kind === "mercury") {
-    // Rust: brownish red, neon-ish
+    // Tan: brown leaning to sand, still neon-ish
     return {
       sunlit,
       lon: 20,
       lat: 14,
       gain: 0.72,
-      tint: wireTint("#c2472a"),
+      tint: wireTint("#c4864a"),
     };
   }
   if (kind === "venus") {
     // The shared blue-white leaned a touch toward yellow-beige
     return {
       sunlit,
+      fill,
       lon: 20,
       lat: 14,
       gain: 0.85,

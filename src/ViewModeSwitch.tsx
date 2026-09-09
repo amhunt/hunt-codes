@@ -65,7 +65,7 @@ const ViewModeSwitch = ({
         onClick={() => onChange(true)}
       >
         <StarIcon size={14} aria-hidden />
-        Space
+        Boring Space
       </button>
       <button
         type="button"
@@ -74,7 +74,7 @@ const ViewModeSwitch = ({
         onClick={() => onChange(false)}
       >
         <GlobeIcon size={14} aria-hidden />
-        Mesh
+        3D Disco Space
       </button>
     </div>
   );

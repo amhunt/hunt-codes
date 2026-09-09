@@ -140,6 +140,10 @@ const DISCO_GLSL = /* glsl */ `
   // highlight patchy.
   #define DISCO_BEAM_EDGE 0.91
   #define DISCO_BEAM_CORE 0.99
+  // Hovered (uHover -> 1): the spots run twice as bright and their beams
+  // open from 24deg to ~37deg (cos 0.80), so more tiles light up
+  #define DISCO_HOVER_BEAM_EDGE 0.80
+  #define DISCO_HOVER_GAIN 2.0
   #define DISCO_GOLD vec3(1.0, 0.82, 0.28)
   #define DISCO_ROOM_LIGHT vec3(1.25, 1.15, 0.9)
   #define DISCO_ROOM_DARK vec3(0.32, 0.24, 0.1)
@@ -233,11 +237,15 @@ const MESH_STYLES_GLSL = /* glsl */ `
     // per-tile wobble breaks each highlight into a patchy cluster and
     // the spin marches tiles through it — that's the twinkle, with no
     // randomness on top.
+    // Hover (the ENTER link, or the sun itself) turns the spots up and
+    // opens their beams — the whole ball catches more light
+    float beamEdge = mix(DISCO_BEAM_EDGE, DISCO_HOVER_BEAM_EDGE, uHover);
+    float spotGain = mix(1.0, DISCO_HOVER_GAIN, uHover);
     mat3 viewRot = mat3(viewMatrix);
     for (int i = 0; i < DISCO_LIGHT_COUNT; i++) {
       vec3 L = normalize(viewRot * DISCO_LIGHT_DIR[i]);
-      env += DISCO_LIGHT_COL[i] * DISCO_SPOT
-        * smoothstep(DISCO_BEAM_EDGE, DISCO_BEAM_CORE, dot(R, L));
+      env += DISCO_LIGHT_COL[i] * DISCO_SPOT * spotGain
+        * smoothstep(beamEdge, DISCO_BEAM_CORE, dot(R, L));
     }
 
     // Gold mirror: the reflection, tinted. Tiles turned away from the
@@ -282,6 +290,7 @@ const SURFACE_FRAGMENT = /* glsl */ `
   uniform vec3 uTint;
   uniform float uMesh;
   uniform float uMeshStyle;
+  uniform float uHover;
   varying vec3 vObjPos;
   varying vec3 vViewNormal;
   varying vec3 vViewPos;
@@ -355,6 +364,9 @@ export function createSunSurfaceMaterial(): THREE.ShaderMaterial {
       uMesh: { value: 0 },
       // 0 = mirror ball, 1 = the neon wire cage (see MESH_SUN_STYLE)
       uMeshStyle: { value: MESH_SUN_STYLE === "wire" ? 1 : 0 },
+      // Written per frame by Sun: the eased hover, 0..1 — the mirror
+      // ball's spots brighten and widen with it
+      uHover: { value: 0 },
     },
   });
 }

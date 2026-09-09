@@ -180,6 +180,9 @@ const SCROLL_BOB = 0.04;
 /** Mesh view: the scroll's wire lattice cell, in body radii — about nine
  *  cells across the sheet */
 const SCROLL_WIRE_PITCH = 0.1;
+/** Mesh view: how much of the scroll's own parchment/wood/ink shading
+ *  shows through under its wires (wireSkin `keep`) */
+const SCROLL_WIRE_KEEP = 0.2;
 const SCROLL_ROCK = 0.05;
 /** The scroll's self-glow (in its own colors), resting and hovered */
 const SCROLL_BASE_EMISSIVE = 0.5;
@@ -479,7 +482,11 @@ export default function Satellite({
       if (part === "display" || part === "bulb") return;
       applyWireSkin(set[part], {
         ...(scrollParts.has(part)
-          ? { grid: "box", pitch: SCROLL_WIRE_PITCH * config.radius }
+          ? {
+              grid: "box",
+              pitch: SCROLL_WIRE_PITCH * config.radius,
+              keep: SCROLL_WIRE_KEEP,
+            }
           : {}),
         // Small hardware, so a coarse grid — a fine one turns a 0.3-unit
         // pen into a solid smear

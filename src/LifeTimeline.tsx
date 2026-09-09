@@ -8,6 +8,7 @@ import {
   TooltipTrigger,
 } from "./ui/tooltip";
 import airbnbLogo from "./assets/logos/airbnb.svg";
+import argosLogo from "./assets/logos/argos.svg";
 import princetonLogo from "./assets/logos/princeton.svg";
 import untappedLogo from "./assets/logos/untapped.svg";
 import zipLogo from "./assets/logos/zip.svg";
@@ -34,6 +35,9 @@ type Era = Blurb & {
   /** Company mark shown in the bar — three eras are all "Engineer", and
    *  the logo is what tells them apart at a glance */
   logo?: string;
+  /** The logo's rendered width at the bar's 16px logo height, for the
+   *  fit gate; square marks leave it off (LOGO_PX). Wordmarks run wider. */
+  logoWidth?: number;
   /** What the bar says next to the logo, when it isn't the title: a
    *  company name, or `null` for logo only (Zip's mark is its name). The
    *  tooltip and aria-label always carry the title. */
@@ -105,6 +109,7 @@ const eras: Era[] = [
     title: "Staff Engineer",
     org: "Zip",
     logo: zipLogo,
+    logoWidth: 24,
     label: null,
     location: "San Francisco",
     dates: "2021 – 2025",
@@ -117,6 +122,8 @@ const eras: Era[] = [
   {
     title: "Sabbatical + Contract Work",
     org: "Argos",
+    logo: argosLogo,
+    logoWidth: 48,
     location: "San Francisco + Remote",
     dates: "2025 – Present",
     blurb:
@@ -155,9 +162,11 @@ const VISIBLE_START = Math.min(
  */
 const LABEL_PX_PER_CHAR = 5.6;
 const LABEL_PADDING_PX = 16;
-/** A logo plus its gap, when the era has one (.life-seg-logo). Sized for
- *  the widest mark, Zip's wordmark (16px tall, ~24px wide). */
-const LABEL_LOGO_PX = 30;
+/** A square mark's width at the bar's 16px logo height (.life-seg-logo);
+ *  wordmarks say their own (Era.logoWidth) */
+const LOGO_PX = 16;
+/** The gap between a logo and its text (.life-seg-label's gap) */
+const LOGO_GAP_PX = 5;
 /**
  * Labels may break onto two lines (the bar is tall enough for exactly
  * two), so the gate is the longer half of the best two-line split rather
@@ -196,12 +205,17 @@ const layout = eras.map((era) => ({
     : (((era.end ?? today) - Math.max(era.start, VISIBLE_START)) / span) * 100,
   // The stub always shows its word: it's sized for it (.life-seg--open
   // sets a smaller face), and the fit gate has nothing to measure it
-  // against since its width comes from CSS
+  // against since its width comes from CSS. Two gates for the rest: the
+  // logo alone, and the logo with its text — a segment too narrow for
+  // both still shows the mark.
+  logoMinPx: era.logo
+    ? (era.logoWidth ?? LOGO_PX) + LABEL_PADDING_PX
+    : Infinity,
   labelMinPx: era.openStart
     ? 0
     : twoLineChars(barText(era)) * LABEL_PX_PER_CHAR +
       LABEL_PADDING_PX +
-      (era.logo ? LABEL_LOGO_PX : 0),
+      (era.logo ? (era.logoWidth ?? LOGO_PX) + LOGO_GAP_PX : 0),
   year: Math.floor(era.start),
   key: `${era.title}-${era.dates}`,
 }));
@@ -255,6 +269,7 @@ const LifeTimeline = ({
         return {
           ...cell,
           showLabel: px >= cell.labelMinPx,
+          showLogo: px >= cell.logoMinPx,
           showYear: px >= MIN_YEAR_PX,
         };
       }),
@@ -356,7 +371,7 @@ const LifeTimeline = ({
           {/* The eras share the bar with the fixed-width future tail, so
               their percentages are of this inner track, not the bar */}
           <div className="life-timeline-track" ref={trackRef}>
-            {segments.map(({ era, width, showLabel, key }) =>
+            {segments.map(({ era, width, showLabel, showLogo, key }) =>
               segment(
                 key,
                 era,
@@ -367,12 +382,12 @@ const LifeTimeline = ({
                     background: era.color,
                   },
                 },
-                showLabel && (
+                (showLabel || showLogo) && (
                   <span className="life-seg-label" aria-hidden="true">
-                    {era.logo && (
+                    {era.logo && showLogo && (
                       <img className="life-seg-logo" src={era.logo} alt="" />
                     )}
-                    {barText(era) && <span>{barText(era)}</span>}
+                    {showLabel && barText(era) && <span>{barText(era)}</span>}
                   </span>
                 ),
               ),

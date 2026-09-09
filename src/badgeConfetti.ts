@@ -39,8 +39,21 @@ const SIGNATURE = {
   width: 174,
   height: 199,
 };
-/** Particle size multiplier (the docs' custom-shape examples run at 2) */
-const SCALAR = 2;
+/** Particle size multiplier (the docs' custom-shape examples run at 2;
+ *  the mark runs 30% past that) */
+const SCALAR = 2.6;
+/**
+ * How far, in CSS px along its heading, a piece travels per unit of
+ * `startVelocity`, from tsParticles' confetti physics: the engine steps
+ * position by velocity x (startVelocity x 3 x 1/2) each frame and decays
+ * velocity by 0.9, so the run sums to 10 x 1.5 = 15 per unit. The launch
+ * velocity is solved from this per click so the volley's median piece —
+ * the one on the 120deg heading — ends up over the viewport's centre,
+ * for a symmetrical fall off the screen from any corner.
+ */
+const REACH_PER_VELOCITY_PX = 15;
+const MIN_START_VELOCITY = 30;
+const MAX_START_VELOCITY = 140;
 /**
  * A container of its own, rather than the default shared "confetti" one:
  * the fullscreen canvas's z-index is fixed when its container is created,
@@ -119,10 +132,24 @@ export const fireBadgeConfetti = (origin: { x: number; y: number }) => {
     badgeAimState.aiming = false;
     teardownWhenDrained();
   };
+  // Aim the median piece at the centre of the viewport: its horizontal
+  // reach is the run length times the heading's cosine, so solve the
+  // run length for the coin's distance from centre
+  const coinX = origin.x * (window.innerWidth || 1);
+  const travelPx = coinX - (window.innerWidth || 1) / 2;
+  const headingX = Math.abs(Math.cos((BADGE_LAUNCH_ANGLE_DEG * Math.PI) / 180));
+  const startVelocity = Math.min(
+    MAX_START_VELOCITY,
+    Math.max(
+      MIN_START_VELOCITY,
+      travelPx / (REACH_PER_VELOCITY_PX * Math.max(headingX, 0.05)),
+    ),
+  );
   const options = {
     particleCount: PARTICLES_PER_FRAME,
     angle: BADGE_LAUNCH_ANGLE_DEG,
     spread: 55,
+    startVelocity,
     origin,
     colors: COLORS,
     shapes: ["image"],

@@ -25,7 +25,7 @@ import {
   generateBackgroundStars,
   generateStarsForLetters,
   generateStarsForText,
-  introSpawnPoint,
+  introSpawnPositions,
   starPhrases,
   starPhrasesSmall,
   type SampledStar,
@@ -34,6 +34,7 @@ import {
 } from "./starSampling";
 import { domToWorldX, domToWorldY, Z_STARS } from "./SpaceCanvas";
 import { starPanState } from "./starPan";
+import { setLandingPhrase } from "../landingPhrase";
 import { JOURNEY_BODY_CLASS, journeyState } from "../rocketJourney";
 import { nameHighlightState } from "../nameHighlight";
 import { NAME_TITLE_ID } from "../solarAnchorIds";
@@ -347,7 +348,8 @@ const glideToward = (
 
 interface StarFieldProps {
   isLanding: boolean;
-  /** The shop, which drops the "andrewhunt" header on phone widths */
+  /** The shop, which drops the "andrewhunt" header — the moon perch and
+   *  the listings own that page, and the name only crowded the top */
   isArtifactsPage: boolean;
   /** 1 = shown, 0 = fading out before unmount */
   opacityTarget: number;
@@ -409,6 +411,11 @@ const TextStars = ({
   const [phraseIdx, setPhraseIdx] = useState(0);
   const phrases = isSmall ? starPhrasesSmall : starPhrases;
   const phrase = phrases[phraseIdx % phrases.length];
+  // Publish the phrase for DOM chrome outside the canvas (the
+  // "(and Claude)" caption, AndClaude.tsx)
+  useEffect(() => {
+    setLandingPhrase(isLanding ? phrase : "");
+  }, [isLanding, phrase]);
 
   // Off the landing page there are no text stars, but the component stays
   // mounted so the intro/phrase choreography doesn't replay on every
@@ -424,6 +431,10 @@ const TextStars = ({
     numCloseToCursor: 0,
     elapsedMs: 0,
     transitions: 0,
+    /** Whether the first phrase has fully assembled — every star on its
+     *  glyph. Cursor gravity waits for it, so the fly-in can't be pulled
+     *  off course; once true it stays true. */
+    formed: false,
   });
   // Live star positions (DOM px, xy pairs); written every frame, read by
   // the next phrase's useMemo for carry-over. The memo itself stays pure —
@@ -436,6 +447,11 @@ const TextStars = ({
     const prev = livePositionsRef.current;
     const positions = new Float32Array(count * 2);
     const velocities = new Float32Array(count);
+    // Landing intro only: spawn points outside the viewport, matched to
+    // the glyphs by angle so the fly-in doesn't tangle
+    const introSpawns = sim.hasEverHadStars
+      ? null
+      : introSpawnPositions(targets, width, height);
     for (let i = 0; i < count; i++) {
       velocities[i] = Math.random() + 0.5;
       if (i * 2 + 1 < prev.length && sim.hasEverHadStars) {
@@ -446,14 +462,13 @@ const TextStars = ({
         // Extra stars for a longer phrase start on their target (legacy)
         positions[i * 2] = targets[i].x;
         positions[i * 2 + 1] = targets[i].y;
-      } else {
+      } else if (introSpawns) {
         // Landing intro: start just outside the viewport, on every side,
         // then fly in toward the title. The glide's 10px-per-tick cap
         // means the farthest stars take a few seconds to land, which is
         // the effect — a stream converging on the centre.
-        const spawn = introSpawnPoint(width, height);
-        positions[i * 2] = spawn.x;
-        positions[i * 2 + 1] = spawn.y;
+        positions[i * 2] = introSpawns[i * 2];
+        positions[i * 2 + 1] = introSpawns[i * 2 + 1];
       }
     }
 
@@ -513,9 +528,12 @@ const TextStars = ({
     // same speed at any frame rate (just smoother).
     const factor = deltaMs / STAR_TICK_MS;
 
+    // No cursor gravity until the first phrase has formed: the intro's
+    // stream of stars should reach its glyphs untouched
     const cursor = cursorRef.current;
     const cursorUsable =
       cursor != null &&
+      sim.formed &&
       !isSmall &&
       cursor.x > CURSOR_DISABLED_BUFFER_ZONE_PX &&
       cursor.x < window.innerWidth - CURSOR_DISABLED_BUFFER_ZONE_PX &&
@@ -526,6 +544,7 @@ const TextStars = ({
 
     const prevNumClose = sim.numCloseToCursor;
     let numClose = 0;
+    let unsettled = 0;
 
     for (let i = 0; i < count; i++) {
       let x = positions[i * 2];
@@ -558,6 +577,7 @@ const TextStars = ({
       }
       positions[i * 2] = x;
       positions[i * 2 + 1] = y;
+      if (x !== originalX || y !== originalY) unsettled++;
 
       // Size swell + brightening near the cursor (legacy StarDot math)
       let size = targets[i].r;
@@ -582,6 +602,9 @@ const TextStars = ({
     }
 
     sim.numCloseToCursor = numClose;
+    // The glide lands stars exactly on their glyphs (it clamps the last
+    // step to the remaining distance), so "all settled" is exact
+    if (!sim.formed && unsettled === 0) sim.formed = true;
     data.buffers.positionsAttr.needsUpdate = true;
     data.buffers.sizesAttr.needsUpdate = true;
     data.buffers.brightensAttr.needsUpdate = true;
@@ -849,10 +872,9 @@ const StarField = ({
   isArtifactsPage,
   opacityTarget,
 }: StarFieldProps) => {
-  // The shop's own heading owns the top of the page on a phone; the name
-  // stars behind it just crowd it, so they sit that case out
-  const { isSmall } = useWindowWidth();
-  const showName = !isLanding && !(isArtifactsPage && isSmall);
+  // The shop's own heading owns the top of its page; the name stars
+  // behind it just crowd it, so they sit that route out
+  const showName = !isLanding && !isArtifactsPage;
   // Shared fade value, ramped in the frame loop (mount fade-in ~1s after
   // the delay above, view-switch fade-out ~0.6s to match the legacy
   // CSS transitions).

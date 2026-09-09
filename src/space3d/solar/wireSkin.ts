@@ -95,6 +95,26 @@ export function wireTint(target: THREE.ColorRepresentation): THREE.Color {
   );
 }
 
+export interface WireMirrorLight {
+  /** Where the light sits: a view-space offset (+x right, +y up, +z
+   *  toward the viewer) from the object's origin, in the geometry's own
+   *  units — so a light "just below the coin" is written in coin radii
+   *  and rides the coin wherever it's anchored. A point light, not a
+   *  direction: that's what gathers its glints on the facets nearest it. */
+  position: THREE.Vector3;
+  color: THREE.ColorRepresentation;
+}
+
+export interface WireMirrorOptions {
+  /** Exactly two spots */
+  lights: [WireMirrorLight, WireMirrorLight];
+  /** How far a cell's normal may wander — what breaks a glint into a
+   *  mosaic instead of a smooth highlight */
+  tilt?: number;
+  /** Brightness of the mirrored cells */
+  gain?: number;
+}
+
 interface WireSkinOptions {
   /** How the lattice is laid out. "sphere" (the default) is lat/long
    *  lines from the object-space direction — right for globes and
@@ -118,6 +138,28 @@ interface WireSkinOptions {
   lat?: number;
   /** Peak brightness of a wire */
   gain?: number;
+  /** Turn the cells between the wires into flat mirrors: each cell gets
+   *  its own slightly-off normal and reflects a neutral room plus two
+   *  spots (the disco sun's trick, sunShaders.ts) — for hardware that
+   *  should read as polished metal. Light directions are VIEW space; in
+   *  the fixed-camera star canvas that is screen space. */
+  mirror?: WireMirrorOptions;
+  /** Keep the material solid in mesh view — normal blending, depth
+   *  written, its own side setting — instead of the additive see-through
+   *  the bodies take. For hardware that should read as an object rather
+   *  than a cage: the mirror coin, whose stacked faces and rims blow out
+   *  to white under additive blending. */
+  solid?: boolean;
+  /** Let this share (0..1) of the material's own lit colour through
+   *  under the wires — the parchment's cream, the 808's pad colours — so
+   *  a part reads as a translucent version of its space-view self rather
+   *  than bare lines. 0 (the default) is pure wires. */
+  keep?: number;
+  /** An even glow between the wires, in the body's tint, as a share of
+   *  full wire brightness — what makes a body read as a lit surface
+   *  rather than an empty cage. Earth gets this for free from its dense
+   *  grid hazing at screen size; the coarser bodies take it explicitly. */
+  fill?: number;
   /** Pulls this body's wires off the shared blue-white toward a color of
    *  its own. The satellite's four part-links are told apart at that
    *  scale by hue as much as by shape, so they keep a trace of it —
@@ -138,10 +180,12 @@ interface WireSkinOptions {
   hover?: boolean;
 }
 
-const fragmentHeader = (twoTone: boolean) => /* glsl */ `
+const fragmentHeader = (twoTone: boolean, mirror: boolean) => /* glsl */ `
 varying vec3 vWireObj;
 varying vec3 vWireNormal;
 varying vec3 vWireView;
+varying vec3 vWireOriginView;
+varying float vWireScale;
 uniform float uWire;
 uniform vec3 uWireColor;
 uniform float uWireRim;
@@ -149,6 +193,8 @@ uniform float uWireLat;
 uniform float uWireLon;
 uniform float uWirePitch;
 uniform float uWireGain;
+uniform float uWireFill;
+uniform float uWireKeep;
 uniform vec3 uWireTint;
 
 float wireGridLine( float coord ) {
@@ -160,6 +206,22 @@ float wireGridLine( float coord ) {
   float d = abs( fract( coord - 0.5 ) - 0.5 ) / max( w, 1e-4 );
   return 1.0 - smoothstep( 0.0, 1.4, d );
 }
+// A cheap hash: the two-tone blobs' noise and the mirror cells' wobble
+float wireHash( vec3 p ) {
+  return fract( sin( dot( p, vec3( 127.1, 311.7, 74.7 ) ) ) * 43758.5453 );
+}
+${
+  mirror
+    ? /* glsl */ `
+uniform vec3 uMirrorLight0;
+uniform vec3 uMirrorLight1;
+uniform vec3 uMirrorColor0;
+uniform vec3 uMirrorColor1;
+uniform float uMirrorTilt;
+uniform float uMirrorGain;
+`
+    : ``
+}
 ${
   twoTone
     ? /* glsl */ `
@@ -168,10 +230,6 @@ uniform float uWireAltCut;
 
 // Value noise on the object-space direction — cheap, no texture, and
 // stable per fragment, which is all the blobs need
-float wireHash( vec3 p ) {
-  return fract( sin( dot( p, vec3( 127.1, 311.7, 74.7 ) ) ) * 43758.5453 );
-}
-
 float wireNoise( vec3 p ) {
   vec3 i = floor( p );
   vec3 f = fract( p );
@@ -199,12 +257,19 @@ const VERTEX_HEADER = /* glsl */ `
 varying vec3 vWireObj;
 varying vec3 vWireNormal;
 varying vec3 vWireView;
+varying vec3 vWireOriginView;
+varying float vWireScale;
 `;
 
+// The origin and uniform scale are for the mirror's point lights, which
+// are placed relative to the object in its own units; constant over the
+// mesh, so interpolation leaves them alone
 const VERTEX_BODY = /* glsl */ `
 vWireObj = transformed;
 vWireNormal = normalize( normalMatrix * normal );
 vWireView = ( modelViewMatrix * vec4( transformed, 1.0 ) ).xyz;
+vWireOriginView = ( modelViewMatrix * vec4( 0.0, 0.0, 0.0, 1.0 ) ).xyz;
+vWireScale = length( modelViewMatrix[0].xyz );
 `;
 
 /** The far side's share of the wire brightness under `sunlit` — dark
@@ -217,6 +282,7 @@ const fragmentBody = (
   twoTone: boolean,
   box: boolean,
   sunlit: boolean,
+  mirror: boolean,
 ) => /* glsl */ `
 {
   vec3 wireN = normalize( vWireObj );
@@ -232,7 +298,8 @@ const fragmentBody = (
   float wireLine = max(
     max( wireGridLine( wireCell.x ), wireGridLine( wireCell.y ) ),
     wireGridLine( wireCell.z )
-  );`
+  );
+  vec3 wireFacetId = floor( wireCell );`
       : /* glsl */ `
   float wireLatC = ( asin( clamp( wireN.y, -1.0, 1.0 ) ) / PI + 0.5 ) * uWireLat;
   float wireLonC = ( atan( wireN.z, wireN.x ) / ( 2.0 * PI ) + 0.5 ) * uWireLon;
@@ -242,7 +309,8 @@ const fragmentBody = (
   float wireLine = max(
     wireGridLine( wireLatC ),
     wireGridLine( wireLonC ) * wirePole
-  );`
+  );
+  vec3 wireFacetId = vec3( floor( wireLatC ), floor( wireLonC ), 0.0 );`
   }
   float wireFacing = abs( dot( normalize( vWireNormal ), normalize( -vWireView ) ) );
   float wireGain = uWireGain;
@@ -282,12 +350,47 @@ const fragmentBody = (
   );`
       : ``
   }
+  vec3 wireMirror = vec3( 0.0 );
+  ${
+    mirror
+      ? /* glsl */ `
+  {
+    // Every lattice cell is a flat mirror with its own slightly-off
+    // normal (the disco sun's trick): it reflects a neutral room plus
+    // the two spots, and the wobble scatters their glints into a mosaic.
+    // The wires themselves stay on top — the mirror fills between them.
+    vec3 facetWobble = vec3(
+      wireHash( wireFacetId + vec3( 1.7, 0.0, 0.0 ) ),
+      wireHash( wireFacetId + vec3( 0.0, 5.3, 0.0 ) ),
+      wireHash( wireFacetId + vec3( 0.0, 0.0, 9.1 ) )
+    ) - 0.5;
+    vec3 facetN = normalize( normalize( vWireNormal ) + facetWobble * uMirrorTilt );
+    vec3 facetEye = normalize( -vWireView );
+    vec3 facetR = reflect( -facetEye, facetN );
+    vec3 facetEnv = mix( vec3( 0.10, 0.10, 0.13 ), vec3( 0.58, 0.58, 0.64 ), facetR.y * 0.5 + 0.5 );
+    // The spots are points near the object: the direction to each one
+    // changes across the surface, so the facets nearest a spot are the
+    // ones that can face it halfway, and its glints gather there
+    vec3 facetToLight0 = normalize( vWireOriginView + uMirrorLight0 * vWireScale - vWireView );
+    vec3 facetToLight1 = normalize( vWireOriginView + uMirrorLight1 * vWireScale - vWireView );
+    facetEnv += uMirrorColor0 * smoothstep( 0.86, 0.985, dot( facetR, facetToLight0 ) );
+    facetEnv += uMirrorColor1 * smoothstep( 0.86, 0.985, dot( facetR, facetToLight1 ) );
+    wireMirror =
+      uWireColor * wireBodyTint * facetEnv * uMirrorGain
+      * ( 0.3 + 0.7 * max( dot( facetN, facetEye ), 0.0 ) )
+      * ( 1.0 - wireLine ) * wireDay;
+  }`
+      : ``
+  }
   // The rim keeps half its light on the night side so the silhouette
   // never disappears against the sky
   vec3 wireLit =
     uWireColor * wireBodyTint *
-    ( wireLine * wireGain * wireDay
-      + pow( 1.0 - wireFacing, 3.0 ) * uWireRim * ( 0.5 + 0.5 * wireDay ) );
+    ( ( wireLine * wireGain + uWireFill ) * wireDay
+      + pow( 1.0 - wireFacing, 3.0 ) * uWireRim * ( 0.5 + 0.5 * wireDay ) )
+    + wireMirror
+    // A share of the part's own shading, so it keeps its colour
+    + outgoingLight * uWireKeep;
   outgoingLight = mix( outgoingLight, wireLit, uWire );
   // Alpha is left alone on purpose. Under additive blending it scales
   // what the body contributes, and it is also the ONLY thing hiding the
@@ -309,6 +412,8 @@ interface SkinnedState {
 const original = new WeakMap<THREE.Material, SkinnedState>();
 
 function setMeshProps(material: THREE.Material, on: boolean): void {
+  // Solid hardware keeps its own blend state in both views
+  if (material.userData.wireSolid) return;
   let base = original.get(material);
   if (!base) {
     base = {
@@ -351,6 +456,10 @@ export function applyWireSkin(
     lon = 24,
     lat = 16,
     gain = 0.95,
+    fill = 0,
+    keep = 0,
+    mirror,
+    solid = false,
     hover = false,
     tint = "#ffffff",
     tintAlt,
@@ -359,10 +468,11 @@ export function applyWireSkin(
 ): void {
   const twoTone = tintAlt !== undefined;
   const box = grid === "box";
+  const mirrored = mirror !== undefined;
   registerMaterialHook(material, {
     // All three terms change the generated GLSL, so all three have to
     // name themselves here — three caches programs on this string
-    key: `wire:${hover ? "hover" : "plain"}:${twoTone ? "blob" : "flat"}:${grid}:${sunlit ? "sunlit" : "flat-lit"}`,
+    key: `wire:${hover ? "hover" : "plain"}:${twoTone ? "blob" : "flat"}:${grid}:${sunlit ? "sunlit" : "flat-lit"}:${mirrored ? "mirror" : "matte"}`,
     order: "replace",
     uniforms: {
       uWire: wireUniforms.uWire,
@@ -372,6 +482,18 @@ export function applyWireSkin(
       uWireLon: { value: lon },
       uWirePitch: { value: pitch },
       uWireGain: { value: gain },
+      uWireFill: { value: fill },
+      uWireKeep: { value: keep },
+      ...(mirror
+        ? {
+            uMirrorLight0: { value: mirror.lights[0].position.clone() },
+            uMirrorLight1: { value: mirror.lights[1].position.clone() },
+            uMirrorColor0: { value: new THREE.Color(mirror.lights[0].color) },
+            uMirrorColor1: { value: new THREE.Color(mirror.lights[1].color) },
+            uMirrorTilt: { value: mirror.tilt ?? 0.16 },
+            uMirrorGain: { value: mirror.gain ?? 1 },
+          }
+        : {}),
       uWireTint: { value: new THREE.Color(tint) },
       ...(twoTone
         ? {
@@ -388,10 +510,11 @@ export function applyWireSkin(
     },
     vertexHeader: VERTEX_HEADER,
     vertexBody: VERTEX_BODY,
-    fragmentHeader: fragmentHeader(twoTone),
-    fragmentBody: fragmentBody(hover, twoTone, box, sunlit),
+    fragmentHeader: fragmentHeader(twoTone, mirrored),
+    fragmentBody: fragmentBody(hover, twoTone, box, sunlit, mirrored),
   });
   material.userData.wireSkin = true;
+  material.userData.wireSolid = solid;
   setMeshProps(material, wireState.target > 0);
 }
 

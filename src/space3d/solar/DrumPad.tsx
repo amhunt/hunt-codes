@@ -151,14 +151,29 @@ export default function DrumPad({
   // hardware takes the cartesian lattice (lat/long lines converged on
   // each box's centre and read as a web); pitches are in the geometry's
   // own units — the rig scales to config.radius.
+  // A fifth of the pad's own shading shows through under the wires
+  // (wireSkin `keep`), so it reads as a translucent 808 rather than a
+  // bare lattice.
   useMemo(() => {
-    applyWireSkin(materials.chassis, { grid: "box", pitch: 0.2, hover: true });
-    applyWireSkin(materials.knob, { grid: "box", pitch: 0.06, hover: true });
+    const keep = 0.2;
+    applyWireSkin(materials.chassis, {
+      grid: "box",
+      pitch: 0.2,
+      hover: true,
+      keep,
+    });
+    applyWireSkin(materials.knob, {
+      grid: "box",
+      pitch: 0.06,
+      hover: true,
+      keep,
+    });
     materials.pads.forEach((material, i) =>
       applyWireSkin(material, {
         grid: "box",
         pitch: 0.1,
         hover: true,
+        keep,
         tint: PAD_ROW_COLORS[i],
       }),
     );

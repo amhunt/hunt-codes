@@ -122,6 +122,46 @@ const percentageWidthOfText = 0.8;
 const percentageWidthOfSpacing = 0.1;
 const percentageWidthForSidePadding = 0.05;
 
+/**
+ * The box one glyph of the landing title occupies, in CSS px: the same
+ * measure-and-scale generateStarsForText runs, so `left` and `width` are
+ * exactly where that glyph's stars land, and `bottom` is where the
+ * letters end — they hang ~1.5x their average width below the top (see
+ * generateStarsForLetter's averageLetterHeight). For DOM chrome that
+ * wants to sit under a particular letter (the "(and Claude)" caption
+ * under BUILT WITH ♥'s heart).
+ */
+export function landingGlyphBox(
+  text: string,
+  index: number,
+  windowWidth: number,
+): { left: number; width: number; bottom: number } {
+  const layout = landingTextLayout(text, windowWidth);
+  const canvas = document.createElement("canvas");
+  const ctx = canvas.getContext("2d");
+  const averageLetterWidth = layout.textWidth / text.length;
+  const bottom = layout.y + averageLetterWidth * 1.5;
+  if (!ctx) {
+    return { left: layout.x, width: averageLetterWidth, bottom };
+  }
+  ctx.font = `100 40px ${fontFamily}`;
+  const letterWidths = text
+    .split("")
+    .map((letter) => Math.round(ctx.measureText(letter).width));
+  const total = letterWidths.reduce((sum, w) => sum + w, 0);
+  let left = layout.x;
+  for (let i = 0; i < index; i++) {
+    left +=
+      Math.round((letterWidths[i] / total) * layout.textWidth) +
+      layout.letterSpacing;
+  }
+  return {
+    left,
+    width: Math.round((letterWidths[index] / total) * layout.textWidth),
+    bottom,
+  };
+}
+
 /** The landing title's layout: 80% of the viewport width of glyphs, 10%
  *  of letter spacing, 5% of padding each side. */
 const landingTextLayout = (
@@ -217,6 +257,49 @@ export function introSpawnPoint(
     const y = -band + Math.random() * (height + 2 * band);
     if (x < 0 || x > width || y < 0 || y > height) return { x, y };
   }
+}
+
+/**
+ * A spawn point for every target glyph star, chosen so the fly-in
+ * doesn't tangle: the spawns are still uniform around the band, but
+ * instead of handing them out in index order (which sent stars criss-
+ * crossing the whole screen) both sets are sorted by angle around the
+ * title's centre and matched rank for rank. The mapping is monotonic in
+ * angle, so each star heads inward along roughly its own ray and paths
+ * rarely cross — a cheap stand-in for a real assignment problem, two
+ * sorts instead of anything quadratic. Returns xy pairs indexed like
+ * `targets`.
+ */
+export function introSpawnPositions(
+  targets: { x: number; y: number }[],
+  width: number,
+  height: number,
+): Float32Array {
+  const n = targets.length;
+  const out = new Float32Array(n * 2);
+  if (n === 0) return out;
+  let cx = 0;
+  let cy = 0;
+  for (const t of targets) {
+    cx += t.x;
+    cy += t.y;
+  }
+  cx /= n;
+  cy /= n;
+  const angleOf = (p: { x: number; y: number }) =>
+    Math.atan2(p.y - cy, p.x - cx);
+  const spawns = Array.from({ length: n }, () =>
+    introSpawnPoint(width, height),
+  );
+  spawns.sort((a, b) => angleOf(a) - angleOf(b));
+  const order = targets
+    .map((_, i) => i)
+    .sort((a, b) => angleOf(targets[a]) - angleOf(targets[b]));
+  order.forEach((targetIndex, rank) => {
+    out[targetIndex * 2] = spawns[rank].x;
+    out[targetIndex * 2 + 1] = spawns[rank].y;
+  });
+  return out;
 }
 
 // Background star densities: ~1-2 stars per ten thousand pixels

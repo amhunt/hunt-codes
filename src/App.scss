@@ -69,6 +69,44 @@ $breakpoint-xl: 1440px;
   }
 }
 
+// "(and Claude)" under the landing title's heart (AndClaude.tsx): blurs
+// in once the stars have spelled BUILT WITH ♥, blurs out as they leave.
+// Positioned and sized inline — centred under the heart glyph, as wide as
+// it. Above the star canvas (z 2), never in the way of the sun link.
+.and-claude {
+  position: fixed;
+  margin: 0;
+  transform: translateX(-50%);
+  white-space: nowrap;
+  z-index: 3;
+  pointer-events: none;
+  font-family: "Meow Script", "Brush Script MT", cursive;
+  line-height: 1;
+  color: #f3efff;
+  text-shadow: 0 0 10px rgba($purp-light, 0.9);
+  opacity: 0;
+  filter: blur(10px);
+  transition:
+    opacity 600ms ease,
+    filter 600ms ease;
+
+  &.and-claude--shown {
+    opacity: 1;
+    filter: none;
+  }
+
+  // The invisible copy the caption is measured against, at the
+  // reference size the scale is figured from
+  &.and-claude--measure {
+    left: 0;
+    top: 0;
+    transform: none;
+    visibility: hidden;
+    font-size: 24px;
+    transition: none;
+  }
+}
+
 // ─── /journey: the story crawl ────────────────
 // Bare black in both views: the crawl's gold text and the additive warp
 // streaks want an empty sky, and mesh view's graticule would compete
@@ -2283,10 +2321,10 @@ $switch-ease: cubic-bezier(0.45, 0.05, 0.25, 1.2);
   // so the two segments have to measure the same — `flex: 1 1 0` sizes
   // them from a zero basis and splits the space evenly instead of
   // letting the longer label run wider. The floor is what the track's
-  // width comes from, so it has to clear the wider word ("Space" needs
-  // 82px with its star, "Mesh" 77px).
+  // width comes from, so it has to clear the wider label ("3D Disco
+  // Space" needs ~136px with its globe; "Boring Space" less).
   flex: 1 1 0;
-  min-width: 88px;
+  min-width: 140px;
   justify-content: center;
   border-radius: 999px;
   font-size: 12px;
@@ -3199,6 +3237,21 @@ body.life-timeline-present {
 // scrolling layer over the scene so the listings stay legible above it;
 // the real design pass comes later. No backdrop-filter (see .resume-panel).
 .shop-page {
+  // Arrival: the page waits for the camera's swoop to land (Shop.tsx,
+  // useCameraSettled), then comes in through a 200ms blur + fade. A
+  // one-shot transition on a content-height layer — not one of the
+  // looping fullscreen filters the reduced-motion block turns off.
+  // `filter: none` at rest so the page doesn't keep a filter layer
+  // over the canvases after it has arrived.
+  transition:
+    opacity 200ms ease,
+    filter 200ms ease;
+
+  &.shop-page--arriving {
+    opacity: 0;
+    filter: blur(12px);
+    pointer-events: none;
+  }
   position: fixed;
   inset: 0;
   z-index: 5;
@@ -3592,6 +3645,9 @@ body.life-timeline-present {
   // The childhood stub on the left, off the time axis (LifeTimeline's
   // cellWidth subtracts it before sharing the track out by years)
   --life-child-w: 32px;
+  // The corner the medallion owns (140px coin + margins): the bar and
+  // its slab both stop short of it
+  --life-medallion-w: 160px;
   --life-slab: 6 4 22;
   --life-slab-a: 0.8;
   --life-bar-shadow: rgba(0, 0, 0, 0.45);
@@ -3610,7 +3666,7 @@ body.life-timeline-present {
   bottom: env(safe-area-inset-bottom, 0px);
   // A little air under the year ticks so they don't sit on the edge
   padding-bottom: 6px;
-  padding-right: 160px;
+  padding-right: var(--life-medallion-w);
   z-index: 6;
   font-family: "Inconsolata", monospace;
   // The band covers the résumé panel's right margin too — only the bar
@@ -3653,7 +3709,9 @@ body.life-timeline-present {
   &::before {
     content: "";
     position: absolute;
-    inset: -14px 0 -18px 0;
+    // Stops at the medallion's corner rather than running under it —
+    // over the coin it read as a dark smudge
+    inset: -14px var(--life-medallion-w) -18px 0;
     z-index: -1;
     background: linear-gradient(
       to top,
@@ -3794,8 +3852,10 @@ body.life-timeline-present {
   flex: 0 0 var(--life-future-w);
   padding: 0 14px 0 22px;
   background: var(--life-future-bg);
-  mask-image: linear-gradient(to right, #000 25%, transparent 96%);
-  -webkit-mask-image: linear-gradient(to right, #000 25%, transparent 96%);
+  // Solid under the (centred) word, fading only past it: the label ends
+  // around two thirds of the way across the tail
+  mask-image: linear-gradient(to right, #000 70%, transparent 100%);
+  -webkit-mask-image: linear-gradient(to right, #000 70%, transparent 100%);
   box-shadow: inset 1px 0 0 rgba(255, 255, 255, 0.4);
 
   &::before {
