@@ -3585,6 +3585,9 @@ body.life-timeline-present {
   // The future tail's width — shared by the bar and the axis so the
   // "now" tick stays on the boundary
   --life-future-w: 96px;
+  // The childhood stub on the left, off the time axis (LifeTimeline's
+  // cellWidth subtracts it before sharing the track out by years)
+  --life-child-w: 32px;
   --life-slab: 6 4 22;
   --life-slab-a: 0.8;
   --life-bar-shadow: rgba(0, 0, 0, 0.45);
@@ -3732,10 +3735,10 @@ body.life-timeline-present {
 // left edge of the bar is not 1995. Its label right-aligns so it lands in
 // the solid half rather than dissolving into the fade.
 .life-seg--open {
-  justify-content: flex-end;
-  padding-right: 10px;
-  mask-image: linear-gradient(to right, transparent 0%, #000 50%);
-  -webkit-mask-image: linear-gradient(to right, transparent 0%, #000 50%);
+  flex: 0 0 var(--life-child-w);
+  padding: 0;
+  mask-image: linear-gradient(to right, transparent 0%, #000 60%);
+  -webkit-mask-image: linear-gradient(to right, transparent 0%, #000 60%);
 }
 
 .life-seg-label {
@@ -3753,21 +3756,18 @@ body.life-timeline-present {
   text-shadow: 0 1px 2px rgba(0, 0, 0, 0.35);
 }
 
-// The company mark before a work era's title, on a small white chip so
-// every logo reads against every segment purple (Zip's wordmark is
-// purple itself, near-invisible straight on the bar). Height is fixed
-// and width follows the mark's aspect: the square marks make a 16px
-// chip, the Zip wordmark a wider one.
+// The company mark before a work era's title, straight on the segment:
+// height is fixed and width follows the mark's aspect (the Zip wordmark
+// runs wider than the two square marks). The engineer eras are lighter
+// purples than the rest of the ramp so the coral and red marks read
+// against them; Zip's wordmark is filled white for the same reason (its
+// own purple would vanish on the bar). Same shadow as the label text.
 .life-seg-logo {
   flex: none;
   height: 16px;
   width: auto;
-  min-width: 16px;
-  padding: 2px;
-  border-radius: 4px;
-  background: #fff;
   object-fit: contain;
-  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.35);
+  filter: drop-shadow(0 1px 2px rgba(0, 0, 0, 0.35));
 }
 
 // ─ The future tail ─
@@ -3860,8 +3860,11 @@ body.life-timeline-present {
   flex: 0 0 var(--life-future-w);
 }
 
-.life-axis-year,
-.life-axis-open {
+.life-axis-cell--open {
+  flex: 0 0 var(--life-child-w);
+}
+
+.life-axis-year {
   position: absolute;
   top: 0;
   height: 12px;
@@ -3883,10 +3886,6 @@ body.life-timeline-present {
 
 // Sits under the faded end of the childhood segment, which is exactly
 // what it labels: the part of the bar that ran off the screen
-.life-axis-open {
-  left: 6px;
-  opacity: 0.75;
-}
 
 .life-axis-now {
   font-style: italic;

@@ -77,7 +77,7 @@ const eras: Era[] = [
     dates: "2017 – 2020",
     blurb:
       "Pricing and availability across Experiences, 20+ A/B tests, and the org's migration to TypeScript.",
-    color: "#5b3ec4",
+    color: "#7a5ce6",
     start: ym(2017, 7),
     end: ym(2020, 7),
   },
@@ -89,7 +89,7 @@ const eras: Era[] = [
     dates: "2020 – 2021",
     blurb:
       "Launched the Recruiter Analytics platform and led the frontend platform group.",
-    color: "#7a4fd0",
+    color: "#9d78f5",
     start: ym(2020, 7),
     end: ym(2021, 7),
   },
@@ -101,7 +101,7 @@ const eras: Era[] = [
     dates: "2021 – 2025",
     blurb:
       "Four years on the procurement platform: shared components, CI and DevX, build and deploy, 99% type safety.",
-    color: "#4a2f9e",
+    color: "#6b4ad8",
     start: ym(2021, 7),
     end: ym(2025, 2),
   },
@@ -130,11 +130,14 @@ const future: Blurb = {
 };
 
 /**
- * Where the visible bar starts. Everything before it is off-screen inside
- * the childhood segment, which is the point: at true scale childhood is
- * over half a life so far, and the interesting part is the right end.
+ * Where the time axis starts: the first era that isn't `openStart`.
+ * Childhood sits off the axis as a fixed-width stub on the left (see
+ * --life-child-w) — at true scale it's over half a life so far, and the
+ * interesting part is the right end, which now gets the whole track.
  */
-const VISIBLE_START = ym(2010, 7);
+const VISIBLE_START = Math.min(
+  ...eras.filter((era) => !era.openStart).map((era) => era.start),
+);
 
 /**
  * Inconsolata's advance is half its size, so an 11px label is ~5.6px a
@@ -143,9 +146,9 @@ const VISIBLE_START = ym(2010, 7);
  */
 const LABEL_PX_PER_CHAR = 5.6;
 const LABEL_PADDING_PX = 16;
-/** A logo chip plus its gap, when the era has one (.life-seg-logo). Sized
- *  for the widest chip, Zip's wordmark. */
-const LABEL_LOGO_PX = 28;
+/** A logo plus its gap, when the era has one (.life-seg-logo). Sized for
+ *  the widest mark, Zip's wordmark (16px tall, ~24px wide). */
+const LABEL_LOGO_PX = 30;
 /**
  * Labels may break onto two lines (the bar is tall enough for exactly
  * two), so the gate is the longer half of the best two-line split rather
@@ -163,8 +166,6 @@ const twoLineChars = (title: string) => {
 };
 /** A year tick needs room for four digits and its rule */
 const MIN_YEAR_PX = 42;
-/** The childhood segment fades over its left half (see .life-seg--open) */
-const OPEN_START_LABEL_FRACTION = 0.5;
 
 // The geometry never changes after load (the running era ends at this
 // month), so it's laid out once: each era's share of the track and the
@@ -175,16 +176,25 @@ const today = ym(now.getFullYear(), now.getMonth() + 1);
 const span = today - VISIBLE_START;
 const layout = eras.map((era) => ({
   era,
-  width:
-    (((era.end ?? today) - Math.max(era.start, VISIBLE_START)) / span) * 100,
-  labelMinPx:
-    (twoLineChars(era.title) * LABEL_PX_PER_CHAR +
+  /** Share of the time axis (the track less the childhood stub), as a
+   *  percentage; the stub itself has none */
+  width: era.openStart
+    ? 0
+    : (((era.end ?? today) - Math.max(era.start, VISIBLE_START)) / span) * 100,
+  // The stub never fits a label — it's tooltip-only
+  labelMinPx: era.openStart
+    ? Infinity
+    : twoLineChars(era.title) * LABEL_PX_PER_CHAR +
       LABEL_PADDING_PX +
-      (era.logo ? LABEL_LOGO_PX : 0)) /
-    (era.openStart ? OPEN_START_LABEL_FRACTION : 1),
+      (era.logo ? LABEL_LOGO_PX : 0),
   year: Math.floor(era.start),
   key: `${era.title}-${era.dates}`,
 }));
+
+/** A cell's width: its share of the axis, which is the track less the
+ *  childhood stub (the stub's own width comes from CSS) */
+const cellWidth = (width: number, openStart?: boolean) =>
+  openStart ? undefined : `calc((100% - var(--life-child-w)) * ${width / 100})`;
 
 const FUTURE_KEY = "future";
 
@@ -314,7 +324,10 @@ const LifeTimeline = ({
                 era,
                 {
                   className: cx("life-seg", era.openStart && "life-seg--open"),
-                  style: { width: `${width}%`, background: era.color },
+                  style: {
+                    width: cellWidth(width, era.openStart),
+                    background: era.color,
+                  },
                 },
                 showLabel && (
                   <span className="life-seg-label" aria-hidden="true">
@@ -337,21 +350,22 @@ const LifeTimeline = ({
           )}
         </div>
       </TooltipProvider>
-      {/* Year rules line up with the segment boundaries above. The first
-          era's start is off-screen, so it gets the "keeps going" note
-          instead of a tick; the future tail's tick is today. */}
+      {/* Year rules line up with the segment boundaries above. The
+          childhood stub gets no tick (its start is decades off the axis);
+          the future tail's tick is today. */}
       <div className="life-timeline-axis" aria-hidden="true">
         <div className="life-timeline-track">
-          {segments.map(({ width, showYear, year, key }, i) => (
+          {segments.map(({ era, width, showYear, year, key }) => (
             <span
-              className="life-axis-cell"
+              className={cx(
+                "life-axis-cell",
+                era.openStart && "life-axis-cell--open",
+              )}
               key={key}
-              style={{ width: `${width}%` }}
+              style={{ width: cellWidth(width, era.openStart) }}
             >
-              {i === 0 ? (
-                <span className="life-axis-open">← {year}</span>
-              ) : (
-                showYear && <span className="life-axis-year">{year}</span>
+              {!era.openStart && showYear && (
+                <span className="life-axis-year">{year}</span>
               )}
             </span>
           ))}
