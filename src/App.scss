@@ -3584,7 +3584,7 @@ body.life-timeline-present {
 .life-timeline {
   // The future tail's width — shared by the bar and the axis so the
   // "now" tick stays on the boundary
-  --life-future-w: 96px;
+  --life-future-w: 192px;
   // The childhood stub on the left, off the time axis (LifeTimeline's
   // cellWidth subtracts it before sharing the track out by years)
   --life-child-w: 32px;
@@ -3778,7 +3778,7 @@ body.life-timeline-present {
 .life-seg--future {
   position: relative;
   flex: 0 0 var(--life-future-w);
-  padding: 0 14px 0 8px;
+  padding: 0 14px 0 22px;
   background: var(--life-future-bg);
   mask-image: linear-gradient(to right, #000 25%, transparent 96%);
   -webkit-mask-image: linear-gradient(to right, #000 25%, transparent 96%);
