@@ -70,7 +70,17 @@ const wireSkinFor = (kind: SolarPlanetConfig["kind"]) => {
     };
   }
   if (kind === "mars") {
-    return { lon: 20, lat: 14, gain: 0.72, tint: wireTint("#ff2a1e") };
+    // A shade darker than pure neon red, but still redder and brighter
+    // than Mercury's rust
+    return { lon: 20, lat: 14, gain: 0.72, tint: wireTint("#e8231a") };
+  }
+  if (kind === "mercury") {
+    // Rust: brownish red, neon-ish
+    return { lon: 20, lat: 14, gain: 0.72, tint: wireTint("#c2472a") };
+  }
+  if (kind === "venus") {
+    // The shared blue-white leaned a touch toward yellow-beige
+    return { lon: 20, lat: 14, gain: 0.85, tint: wireTint("#eadfbf") };
   }
   return { lon: 20, lat: 14, gain: 0.85 };
 };
