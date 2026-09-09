@@ -347,7 +347,7 @@ const glideToward = (
 
 interface StarFieldProps {
   isLanding: boolean;
-  /** 1 = shown (night), 0 = fading out before unmount */
+  /** 1 = shown, 0 = fading out before unmount */
   opacityTarget: number;
 }
 
@@ -486,7 +486,7 @@ const TextStars = ({
   useEffect(() => () => material.dispose(), [material]);
 
   useFrame((_, delta) => {
-    // Fully faded out (day mode, canvas persists for the sun): the whole
+    // Fully faded out (fading toward unmount): the whole
     // group is hidden, so don't burn CPU on the gravity sim either
     if (opacityRef.current <= 0.001) return;
     const sim = simRef.current;
@@ -593,8 +593,8 @@ const TextStars = ({
 // ─── The "andrewhunt" name header ────────────────────────────────────────
 // Off the landing page the name at the top of every page is the landing
 // title's glyph-sampled stars, laid out over the .nameTitle SVG (which
-// fades out at night but keeps the day-mode letters, the accessible text
-// and — the part this reads — the responsive box). Not interactive: no
+// stays invisible but keeps the accessible text and — the part this
+// reads — the responsive box). Not interactive: no
 // cursor gravity, just the roving letter highlight AppBackground's ticker
 // drives, a random twinkle, and a one-shot assemble on mount. Thinned and
 // dimmed so it reads as a header rather than the show.
@@ -747,7 +747,7 @@ const NameStars = ({
       ((chromeHidden ? 0 : 1) - sim.chromeVisible) * Math.min(1, delta * 4);
     fadeRef.current =
       opacityRef.current * NAME_STAR_OPACITY * sim.chromeVisible;
-    // Fully faded out (day mode): the group is hidden, skip the sim
+    // Fully faded out: the group is hidden, skip the sim
     if (opacityRef.current <= 0.001) return;
     const count = targets.length;
     if (count === 0) return;
@@ -846,7 +846,7 @@ const FADE_IN_DELAY_SECONDS = 2;
 
 const StarField = ({ isLanding, opacityTarget }: StarFieldProps) => {
   // Shared fade value, ramped in the frame loop (mount fade-in ~1s after
-  // the delay above, day/night switch fade-out ~0.6s to match the legacy
+  // the delay above, view-switch fade-out ~0.6s to match the legacy
   // CSS transitions).
   const opacityRef = useRef(0);
   const targetRef = useRef(opacityTarget);
@@ -856,7 +856,7 @@ const StarField = ({ isLanding, opacityTarget }: StarFieldProps) => {
 
   useFrame((_, delta) => {
     // Stars mount at opacity 0, so burning the delay first postpones only
-    // the initial reveal — later day/night fades are unaffected
+    // the initial reveal — later fades are unaffected
     if (delayRef.current > 0) {
       delayRef.current -= Math.min(delta, 0.1);
       if (groupRef.current) groupRef.current.visible = false;
@@ -869,7 +869,7 @@ const StarField = ({ isLanding, opacityTarget }: StarFieldProps) => {
       target > opacityRef.current
         ? Math.min(target, opacityRef.current + step)
         : Math.max(target, opacityRef.current - step);
-    // The canvas persists through day mode (for the sun) — skip drawing
+    // The canvas persists while faded out (for the sun) — skip drawing
     // the fully-faded stars instead of rasterizing invisible points
     if (groupRef.current) {
       groupRef.current.visible = opacityRef.current > 0.001;

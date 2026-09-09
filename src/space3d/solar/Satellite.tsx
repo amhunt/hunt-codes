@@ -22,6 +22,7 @@ import { writeSilhouette } from "./outline";
 import { createVideoScreenTexture } from "../textures";
 import { hoverState } from "../../solarHover";
 import { applyShimmer } from "./shimmerBand";
+import { applyWireSkin } from "./wireSkin";
 import { createEnergyWave } from "./energyWave";
 import InteractiveGlow from "./InteractiveGlow";
 
@@ -438,6 +439,35 @@ export default function Satellite({
         transparent: true,
       }),
     };
+    // Mesh view's wire skin. The screen and the beacon bulb sit it out:
+    // the display is live UI (the video still), the bulb is a light, and
+    // both are MeshBasic anyway — `totalEmissiveRadiance` doesn't exist
+    // in that program, so the hover term couldn't link. Each part link
+    // keeps a trace of its own hue so the four stay tellable apart at
+    // close-up range, and hover feeds the wires: on this body the
+    // brighten is nothing but `emissiveIntensity` (glowTo below), which
+    // the skin would otherwise mix away.
+    const wireTints: Partial<Record<keyof typeof set, string>> = {
+      penBarrel: "#b9a6ff",
+      penCap: "#b9a6ff",
+      penSteel: "#dfe8ff",
+      vase: "#7fe9dc",
+      parchment: "#ffe9b8",
+      dowel: "#ffcfa0",
+      ink: "#c3b0ff",
+    };
+    (Object.keys(set) as (keyof typeof set)[]).forEach((part) => {
+      if (part === "display" || part === "bulb") return;
+      applyWireSkin(set[part], {
+        // Small hardware, so a coarse grid — a fine one turns a 0.3-unit
+        // pen into a solid smear
+        lon: 12,
+        lat: 8,
+        hover: true,
+        tint: wireTints[part] ?? "#ffffff",
+      });
+    });
+
     // The body's wave runs down the antennas on /home; the link parts
     // get their own sweep on /projects-and-toys (the body is not a link
     // there, so it takes no part in that one)

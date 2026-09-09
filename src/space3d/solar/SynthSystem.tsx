@@ -1,6 +1,8 @@
-import React, { useEffect, useMemo, useRef } from "react";
+import React, { useCallback, useEffect, useMemo, useRef } from "react";
 import { useFrame, useThree } from "@react-three/fiber";
 import * as THREE from "three";
+
+import { applyWireSkin } from "./wireSkin";
 
 import { projectBody, type ProjectedBody } from "./projection";
 import { rigState } from "./constants";
@@ -172,6 +174,22 @@ function KnobPlanet({
     () => spec.stepNames?.map((name) => createWaveTexture(name)) ?? null,
     [spec.stepNames],
   );
+  // Mesh view's wire skin, hooked on when the JSX material's ref lands.
+  // A knob keeps its own color as the wire tint — these six are matched
+  // to their DOM arc strokes in Synth.tsx, so going monochrome would cut
+  // the planet loose from the control it drives. Steppers sit it out
+  // entirely: their oscilloscope texture is live state, not decoration.
+  const patched = useRef(false);
+  const setSurface = useCallback(
+    (material: THREE.MeshStandardMaterial | null) => {
+      surface.current = material;
+      if (!material || patched.current || stepTextures) return;
+      patched.current = true;
+      applyWireSkin(material, { lon: 14, lat: 10, tint: spec.color });
+      material.needsUpdate = true;
+    },
+    [spec.color, stepTextures],
+  );
   useEffect(
     () => () => stepTextures?.forEach((texture) => texture.dispose()),
     [stepTextures],
@@ -260,7 +278,7 @@ function KnobPlanet({
               base, white emissive so the trace glows); plain knobs get
               the spec's flat color treatment */}
             <meshStandardMaterial
-              ref={surface}
+              ref={setSurface}
               color={stepTextures ? "#ffffff" : spec.color}
               map={stepTextures ? stepTextures[0] : null}
               roughness={0.45}
@@ -278,10 +296,23 @@ function KnobPlanet({
   );
 }
 
-export default function SynthSystem({ isNightMode }: { isNightMode: boolean }) {
+export default function SynthSystem({ isSpaceView }: { isSpaceView: boolean }) {
   const size = useThree((s) => s.size);
   const sun = useRef<THREE.Mesh>(null);
   const sunMaterial = useRef<THREE.MeshStandardMaterial>(null);
+  // This system's own sun keeps its violet through mesh view — the whole
+  // second solar system is pitched a shade off the first one's palette
+  const sunPatched = useRef(false);
+  const setSunMaterial = useCallback(
+    (material: THREE.MeshStandardMaterial | null) => {
+      sunMaterial.current = material;
+      if (!material || sunPatched.current) return;
+      sunPatched.current = true;
+      applyWireSkin(material, { lon: 30, lat: 20, tint: "#d8b4ff" });
+      material.needsUpdate = true;
+    },
+    [],
+  );
   const glowMaterial = useRef<THREE.MeshBasicMaterial>(null);
   // Arrival fade, shared with every knob planet
   const reveal = useRef(0);
@@ -340,7 +371,7 @@ export default function SynthSystem({ isNightMode }: { isNightMode: boolean }) {
       <mesh ref={sun}>
         <sphereGeometry args={[SUN_RADIUS, 48, 32]} />
         <meshStandardMaterial
-          ref={sunMaterial}
+          ref={setSunMaterial}
           color="#3a1f52"
           emissive="#c26bff"
           emissiveIntensity={0}
@@ -367,7 +398,7 @@ export default function SynthSystem({ isNightMode }: { isNightMode: boolean }) {
           key={spec.param}
           spec={spec}
           index={i}
-          orbitColor={isNightMode ? "#ffffff" : "#141428"}
+          orbitColor={isSpaceView ? "#ffffff" : "#bfe6ff"}
           reveal={reveal}
         />
       ))}

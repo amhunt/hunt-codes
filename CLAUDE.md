@@ -72,8 +72,30 @@ the preview tool.
   supplies each page's tab title. A new public page goes in that list
   (title + priority) and gets its `<Route>` in `App.tsx`.
 
-Day/night is a user toggle in `App.tsx` (night default); every page must
-stay legible in both palettes (`.App.night` / `.App.day` overrides).
+Space/Mesh is a user toggle in `App.tsx` (space default, remembered in
+`localStorage`, `.App.space` / `.App.mesh` on the root): space is the
+photographed scene, mesh redraws every 3D body as a glowing blue-white
+wire lattice over a dark graticule ground. Both grounds are dark, so the
+two share one palette — there are no per-view text overrides left, and
+`.App.mesh` carries only the backdrop. The view is called "space", not
+"satellite", because the scene already has a satellite in it (Sputnik,
+the /projects-and-toys link) — don't rename the `SATELLITE_*` constants
+or `satellite-link`, which are that body.
+
+Mesh view is a shader patch, not a material swap or wireframe geometry
+(`solar/wireSkin.ts`): `EdgesGeometry` returns zero segments on a sphere
+and `material.wireframe` on Earth's 96x96 globe is 54,720 segments of
+haze. `applyWireSkin` folds a derivative-based lat/long grid plus a
+fresnel rim into each body's own material, and the bodies go additive
+with `depthWrite` off so they are genuinely see-through. One shared
+`uWire` uniform crossfades the whole scene (`solar/WireDriver.tsx`).
+A material has only one `onBeforeCompile`, so the wire skin and the
+energy wave both register through `solar/materialHooks.ts`, which keeps
+them in a defined order (wires first, band on top) and builds a cache key
+naming both. Things carrying live state stay solid: the satellite's video
+screen, the synth's oscilloscope steppers. Things told apart by color
+keep it as a wire tint: the 808's pad rows, the satellite's four part
+links, the six synth knob-planets.
 
 ## 3D architecture (src/space3d/)
 

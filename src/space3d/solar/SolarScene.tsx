@@ -13,6 +13,7 @@ import JourneyCruise from "./JourneyCruise";
 import SynthSystem from "./SynthSystem";
 import SunSvgAnchor from "./SunSvgAnchor";
 import BodyAnchors from "./BodyAnchors";
+import WireDriver from "./WireDriver";
 import { ASTEROIDS, layoutState, PLANETS, SYNTH_PAD } from "./constants";
 import useWindowWidth from "../../useWindowWidth";
 
@@ -34,13 +35,16 @@ const PLANETS_DELAY_MS = 1000;
 const ENTER_DELAY_MS = 2000;
 let hasPlayedLandingIntro = false;
 
+/** Orbit rings in mesh view — the same blue-white the wire skin paints */
+const ORBIT_MESH_COLOR = "#bfe6ff";
+
 const SolarScene = ({
   view,
-  isNightMode,
+  isSpaceView,
   onNavigate,
 }: {
   view: SolarView;
-  isNightMode: boolean;
+  isSpaceView: boolean;
   /** Router navigation for the lightspeed journeys (threaded through the
    *  canvas boundary — router context doesn't cross into R3F) */
   onNavigate: (to: string) => void;
@@ -106,12 +110,15 @@ const SolarScene = ({
       gl={{ alpha: true, antialias: true, powerPreference: "high-performance" }}
     >
       <ambientLight intensity={0.14} />
+      {/* Eases the whole scene between the two views (one shared uniform)
+          and flips the bodies' blend state on the way in and out */}
+      <WireDriver meshView={!isSpaceView} />
       {/* From the home sun-perch the full glow would fill the frame and
           wash out the stars (and the crisp flare corona) — shrink it to
           hug the limb there */}
       <Sun
         targetGlowScale={view === "home" || isProjects ? 2.2 : 4}
-        isNightMode={isNightMode}
+        isSpaceView={isSpaceView}
         showEnterRing={isLanding}
         enterRevealed={enterRevealed}
       />
@@ -119,10 +126,12 @@ const SolarScene = ({
         <Planet
           key={planet.name}
           config={planet}
-          // hunt-codes-3's faint white rings, flipped dark for day mode
-          orbitColor={isNightMode ? "#ffffff" : "#141428"}
-          orbitOpacity={isNightMode ? 0.28 : 0.2}
-          isNightMode={isNightMode}
+          // hunt-codes-3's faint white rings. Mesh view brings them
+          // forward instead of pushing them back: on a wire scene the
+          // orbits are the structure, not background chrome.
+          orbitColor={isSpaceView ? "#ffffff" : ORBIT_MESH_COLOR}
+          orbitOpacity={isSpaceView ? 0.28 : 0.5}
+          isSpaceView={isSpaceView}
           aboutActive={view === "home"}
           revealed={planetsRevealed}
           closeUp={view === "about"}
@@ -135,8 +144,8 @@ const SolarScene = ({
           along the scroll scrub as well as the timed swoop (Moon reads the
           journey progress itself) — where it becomes the video link. */}
       <Moon
-        orbitColor={isNightMode ? "#ffffff" : "#141428"}
-        orbitOpacity={isNightMode ? 0.28 : 0.2}
+        orbitColor={isSpaceView ? "#ffffff" : ORBIT_MESH_COLOR}
+        orbitOpacity={isSpaceView ? 0.28 : 0.5}
         revealed={view === "about"}
         // The video link needs the moon actually on screen AND clickable:
         // /about above phone widths (on phones the panel is full-bleed
@@ -191,7 +200,7 @@ const SolarScene = ({
       <DrumPad config={SYNTH_PAD} visible={isProjects && !isPhone} />
       {/* The second solar system, far below this one: six knob-planets
           around a beat-pulsing sun (the space synth) */}
-      {view === "synth" && <SynthSystem isNightMode={isNightMode} />}
+      {view === "synth" && <SynthSystem isSpaceView={isSpaceView} />}
       {/* The /journey cruise: the rocket ride's warp — open-space flight
           behind the story crawl, ended by the cockpit's "End trip" */}
       {view === "journey" && <JourneyCruise navigate={onNavigate} />}

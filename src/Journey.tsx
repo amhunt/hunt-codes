@@ -86,8 +86,8 @@ const Journey = () => {
     setIntroDone(true);
   };
 
-  // The crawl needs deep space even in day mode (additive streaks on a
-  // pink sky read as nothing) — the same forced-night trick as the
+  // The crawl needs a bare black sky in both views (mesh view's
+  // graticule competes with the additive streaks) — the same trick as the
   // lightspeed rides, via a body class (App.scss)
   useEffect(() => {
     document.body.classList.add("journey-mode");

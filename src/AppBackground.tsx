@@ -55,11 +55,11 @@ for (const c of andrewHunt) {
 
 const AppBackground = ({
   showBridge,
-  isNightMode,
+  isSpaceView,
 }: {
   showBridge: boolean;
-  /** User-toggled (App.tsx's moon/sun switch); night is the default */
-  isNightMode: boolean;
+  /** User-toggled (App.tsx's Space/Mesh switch); space is the default */
+  isSpaceView: boolean;
 }) => {
   const size = useWindowSize();
   const location = useLocation();
@@ -90,9 +90,9 @@ const AppBackground = ({
   const [highlightedCharIdx, setHighlightedCharIdx] = useState(0);
 
   useEffect(() => {
-    // The name header this drives (the nameTitle SVG by day, the star
-    // field's NameStars by night) only renders off the landing page, so
-    // don't fire a 5x/sec state update + re-render on the landing route.
+    // The name header this drives (the star field's NameStars) only
+    // renders off the landing page, so don't fire a 5x/sec state update
+    // + re-render on the landing route.
     if (isLanding) return;
     // On /synth the ticker keeps time with the music instead of the
     // clock: every audible note — arp step or keyboard press — advances
@@ -120,15 +120,13 @@ const AppBackground = ({
       {!isLanding && (
         <svg
           id={NAME_TITLE_ID}
-          className={cx(
-            "nameTitle",
-            // At night the star field draws the name over this box
-            // (NameStars): the SVG fades out but stays mounted for its
-            // layout and the accessible text
-            isNightMode
-              ? "opacity-0 pointer-events-none"
-              : "fill-[#004225] opacity-75",
-          )}
+          // The star field draws the name over this box (NameStars) in
+          // both views now that both grounds are dark — the SVG stays
+          // mounted, invisible, for its layout and its accessible text.
+          // It can't take the job back: `.nameTitle` is
+          // `mix-blend-mode: multiply`, which resolves to black on a dark
+          // ground whatever fill it carries.
+          className="nameTitle opacity-0 pointer-events-none"
           viewBox={size === "lg" ? "0 0 200 20" : "0 0 100 20"}
           xmlns="http://www.w3.org/2000/svg"
         >
@@ -151,22 +149,22 @@ const AppBackground = ({
       <div
         className={cx(
           "App-background",
-          "App-background_day",
-          isNightMode ? "off" : "on",
+          "App-background_mesh",
+          isSpaceView ? "off" : "on",
         )}
       />
       <div
         className={cx(
           "App-background",
-          "App-background_night",
+          "App-background_space",
           "webgl",
-          isNightMode ? "on" : "off",
+          isSpaceView ? "on" : "off",
         )}
       />
       <BackgroundErrorBoundary>
         <Suspense fallback={null}>
           <Space3DBackground
-            isNightMode={isNightMode}
+            isSpaceView={isSpaceView}
             isLanding={isLanding}
             isHomePage={isHomePage}
             isAboutPage={isAboutPage}
@@ -182,12 +180,12 @@ const AppBackground = ({
           {/* <RetroMac /> */}
           <img
             className={`App-gg-bridge ${
-              showBridge && !isNightMode ? "App-gg-bridge-opaque" : ""
+              showBridge && !isSpaceView ? "App-gg-bridge-opaque" : ""
             }`}
             src={GoldenGate}
             alt="Golden Gate Bridge"
           />
-          <GoldenGateFog visible={showBridge && !isNightMode} />
+          <GoldenGateFog visible={showBridge && !isSpaceView} />
         </>
       )}
     </>

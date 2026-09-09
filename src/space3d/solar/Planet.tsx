@@ -9,6 +9,7 @@ import { hoverState } from "../../solarHover";
 import { EARTH_ABOUT_OUTLINE_ID } from "../../solarAnchorIds";
 import { writeSilhouette } from "./outline";
 import { applyShimmer } from "./shimmerBand";
+import { applyWireSkin, wireState } from "./wireSkin";
 import { createEnergyWave } from "./energyWave";
 import AboutRing from "./AboutRing";
 import InteractiveGlow from "./InteractiveGlow";
@@ -46,7 +47,7 @@ export default function Planet({
   config,
   orbitColor,
   orbitOpacity,
-  isNightMode = true,
+  isSpaceView = true,
   aboutActive = false,
   revealed = true,
   closeUp = false,
@@ -54,8 +55,9 @@ export default function Planet({
   config: SolarPlanetConfig;
   orbitColor: string;
   orbitOpacity: number;
-  /** Drives the Earth "ABOUT ME" label color (white at night, purple in day) */
-  isNightMode?: boolean;
+  /** Drives the Earth "ABOUT ME" label color (white in space view,
+   *  blue-white in mesh) */
+  isSpaceView?: boolean;
   /** Show the Earth "ABOUT ME" label (home view only) */
   aboutActive?: boolean;
   /** Fades the planet + its orbit ring in (landing intro) */
@@ -89,13 +91,23 @@ export default function Planet({
   // by the globe's shape and reveal alpha. The material is built in JSX,
   // so hook the band on when the ref lands (and recompile: by then the
   // material may already have a program).
-  const shimmered = useRef(false);
+  const patched = useRef(false);
   const setSurfaceMaterial = useCallback(
     (material: THREE.MeshStandardMaterial | null) => {
       surfaceMaterial.current = material;
-      if (!material || config.kind !== "earth" || shimmered.current) return;
-      shimmered.current = true;
-      applyShimmer(material, [wave.uniforms]);
+      if (!material || patched.current) return;
+      patched.current = true;
+      // Earth carries the /about perch, so it gets a finer grid — at that
+      // range a 20-meridian globe reads as a beach ball. It also folds
+      // hover into its wires, because the atmosphere shell that carries
+      // the hover in space view is faded out in mesh view (below).
+      applyWireSkin(
+        material,
+        config.kind === "earth"
+          ? { lon: 36, lat: 24, hover: true }
+          : { lon: 20, lat: 14, gain: 0.85 },
+      );
+      if (config.kind === "earth") applyShimmer(material, [wave.uniforms]);
       material.needsUpdate = true;
     },
     [config.kind, wave],
@@ -228,8 +240,17 @@ export default function Planet({
       atmosphereBase.current +=
         ((hovered ? 0.5 : 0.16) - atmosphereBase.current) * ease;
       if (atmosphereMaterial.current) {
+        // The shell reads as a rim only because the globe's depth buffer
+        // rejects its far half inside the silhouette. Mesh view turns
+        // depth writing off to see through the body, so the whole
+        // back-side shell would survive and normal-blend a flat blue
+        // disc over the lattice — worse on hover, where it swells to
+        // 0.5. Fade it out with the crossfade; the wire skin's fresnel
+        // rim is mesh view's limb, and its hover term the swell.
         atmosphereMaterial.current.opacity =
-          atmosphereBase.current * revealOpacity.current;
+          atmosphereBase.current *
+          revealOpacity.current *
+          (1 - wireState.amount);
       }
       if (surfaceMaterial.current) {
         surfaceMaterial.current.emissiveIntensity +=
@@ -289,7 +310,7 @@ export default function Planet({
                 />
               ) : (
                 <meshStandardMaterial
-                  ref={surfaceMaterial}
+                  ref={setSurfaceMaterial}
                   map={texture}
                   roughness={0.95}
                   metalness={0}
@@ -317,7 +338,7 @@ export default function Planet({
             the group (not the squash wrapper) so it stays put over Earth. */}
         {config.kind === "earth" && (
           <>
-            <AboutRing active={aboutActive} isNightMode={isNightMode} />
+            <AboutRing active={aboutActive} isSpaceView={isSpaceView} />
             {/* clickable-body affordance halo (the /about link, home only;
                 a lighter touch than the small rocks — Earth is big) */}
             <InteractiveGlow

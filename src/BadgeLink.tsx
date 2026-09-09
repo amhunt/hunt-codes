@@ -18,7 +18,7 @@ import useReducedMotion from "./useReducedMotion";
  * is nothing to click, so the coin goes back to being decorative rather
  * than a button that does nothing.
  */
-const BadgeLink = ({ isNightMode }: { isNightMode: boolean }) => {
+const BadgeLink = ({ isSpaceView }: { isSpaceView: boolean }) => {
   const { pathname } = useLocation();
   const reducedMotion = useReducedMotion();
   const isLanding = pathname === "/";
@@ -34,10 +34,10 @@ const BadgeLink = ({ isNightMode }: { isNightMode: boolean }) => {
       pathname.startsWith("/draw") ||
       pathname === "/shop" ||
       pathname === "/projects-and-toys" ||
-      (pathname === "/home" && isNightMode));
+      (pathname === "/home" && isSpaceView));
 
-  // The hit target can vanish without a pointerleave — flipping to day
-  // mode on /home hides it, a route change swaps the element — so don't
+  // The hit target can vanish without a pointerleave — flipping to mesh
+  // view on /home hides it, a route change swaps the element — so don't
   // leave the coin posed for a hover that ended when it comes back
   useEffect(() => {
     if (!visible) badgeHoverState.hovered = false;

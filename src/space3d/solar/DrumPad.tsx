@@ -2,6 +2,8 @@ import React, { useEffect, useMemo, useRef } from "react";
 import { useFrame } from "@react-three/fiber";
 import * as THREE from "three";
 
+import { applyWireSkin } from "./wireSkin";
+
 import {
   planetPosition,
   SATELLITE,
@@ -142,6 +144,25 @@ export default function DrumPad({
     }),
     [],
   );
+  // Mesh view's wire skin. The 16 pads keep their row colors as wire
+  // tints — they're the only door to /synth, and at this size the rows
+  // are told apart by color alone. The LED sits it out: it's a lamp, and
+  // MeshBasic has no `totalEmissiveRadiance` for the hover term. Small
+  // faceted hardware takes a coarse grid; on a box the lat/long lines
+  // read as a scan sweeping across the faces.
+  useMemo(() => {
+    applyWireSkin(materials.chassis, { lon: 10, lat: 7, hover: true });
+    applyWireSkin(materials.knob, { lon: 8, lat: 6, hover: true });
+    materials.pads.forEach((material, i) =>
+      applyWireSkin(material, {
+        lon: 6,
+        lat: 4,
+        hover: true,
+        tint: PAD_ROW_COLORS[i],
+      }),
+    );
+  }, [materials]);
+
   useEffect(
     () => () => {
       materials.pads.forEach((material) => material.dispose());
