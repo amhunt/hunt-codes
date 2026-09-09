@@ -107,14 +107,20 @@ export function createEnergyWave({
         return;
       }
       const halfWidth = radius * halfWidthRadii;
-      const sweep = Math.min((time % periodSeconds) / sweepSeconds, 1);
+      const phase = time % periodSeconds;
+      const sweep = Math.min(phase / sweepSeconds, 1);
       uniforms.offset.value = THREE.MathUtils.lerp(
         radius * startRadii - halfWidth,
         radius * endRadii + halfWidth,
         sweep,
       );
       uniforms.halfWidth.value = halfWidth;
-      uniforms.strength.value = strength * shown;
+      // Between runs the band parks at the far end of its run. That end
+      // is meant to be clear of everything, but if a part sits past it
+      // the parked band would stay lit on that part until the next run —
+      // so it's switched off while parked rather than trusted to be
+      // out of sight.
+      uniforms.strength.value = phase < sweepSeconds ? strength * shown : 0;
     },
   };
 }

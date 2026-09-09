@@ -147,16 +147,17 @@ export default function DrumPad({
   // Mesh view's wire skin. The 16 pads keep their row colors as wire
   // tints — they're the only door to /synth, and at this size the rows
   // are told apart by color alone. The LED sits it out: it's a lamp, and
-  // MeshBasic has no `totalEmissiveRadiance` for the hover term. Small
-  // faceted hardware takes a coarse grid; on a box the lat/long lines
-  // read as a scan sweeping across the faces.
+  // MeshBasic has no `totalEmissiveRadiance` for the hover term. Boxy
+  // hardware takes the cartesian lattice (lat/long lines converged on
+  // each box's centre and read as a web); pitches are in the geometry's
+  // own units — the rig scales to config.radius.
   useMemo(() => {
-    applyWireSkin(materials.chassis, { lon: 10, lat: 7, hover: true });
-    applyWireSkin(materials.knob, { lon: 8, lat: 6, hover: true });
+    applyWireSkin(materials.chassis, { grid: "box", pitch: 0.2, hover: true });
+    applyWireSkin(materials.knob, { grid: "box", pitch: 0.06, hover: true });
     materials.pads.forEach((material, i) =>
       applyWireSkin(material, {
-        lon: 6,
-        lat: 4,
+        grid: "box",
+        pitch: 0.1,
         hover: true,
         tint: PAD_ROW_COLORS[i],
       }),

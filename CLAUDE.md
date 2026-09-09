@@ -85,8 +85,10 @@ or `satellite-link`, which are that body.
 Mesh view is a shader patch, not a material swap or wireframe geometry
 (`solar/wireSkin.ts`): `EdgesGeometry` returns zero segments on a sphere
 and `material.wireframe` on Earth's 96x96 globe is 54,720 segments of
-haze. `applyWireSkin` folds a derivative-based lat/long grid plus a
-fresnel rim into each body's own material, and the bodies go additive
+haze. `applyWireSkin` folds a derivative-based lat/long grid (or, with
+`grid: "box"`, a cartesian lattice — flat and boxy parts like the
+scroll and the 808 read as a web under lat/long) plus a fresnel rim
+into each body's own material, and the bodies go additive
 with `depthWrite` off so they are genuinely see-through. One shared
 `uWire` uniform crossfades the whole scene; `solar/WireDriver.tsx` is
 mounted once per canvas (the corner coin lives in the star canvas and

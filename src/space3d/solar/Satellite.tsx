@@ -90,7 +90,13 @@ const ROLL_SPEED_SCALE = 0.35;
  *  reach is set per frame from the camera, so it sweeps the layout as
  *  the eye reads it. */
 const PARTS_WAVE_PERIOD_SECONDS = 3;
-const PARTS_WAVE_SPAN_RADII = 2;
+/** The run, in body radii along the screen diagonal. It has to clear the
+ *  scroll, the farthest part: SCROLL_CENTER projects to ~2.9 radii along
+ *  that diagonal and the sheet reaches ~0.6 past it. A run that stopped
+ *  short parked the band on the scroll, still lit, for the rest of the
+ *  period. */
+const PARTS_WAVE_START_RADII = -1.6;
+const PARTS_WAVE_END_RADII = 4.2;
 const PARTS_WAVE_HALF_WIDTH_RADII = 0.35;
 const PARTS_WAVE_STRENGTH = 0.5;
 
@@ -171,6 +177,9 @@ const SCROLL_INK_LINES: [number, number][] = [
 ];
 const SCROLL_INK_HEIGHT = 0.03;
 const SCROLL_BOB = 0.04;
+/** Mesh view: the scroll's wire lattice cell, in body radii — about nine
+ *  cells across the sheet */
+const SCROLL_WIRE_PITCH = 0.1;
 const SCROLL_ROCK = 0.05;
 /** The scroll's self-glow (in its own colors), resting and hovered */
 const SCROLL_BASE_EMISSIVE = 0.5;
@@ -324,8 +333,8 @@ export default function Satellite({
         periodSeconds: PARTS_WAVE_PERIOD_SECONDS,
         halfWidthRadii: PARTS_WAVE_HALF_WIDTH_RADII,
         strength: PARTS_WAVE_STRENGTH,
-        startRadii: -PARTS_WAVE_SPAN_RADII,
-        endRadii: PARTS_WAVE_SPAN_RADII,
+        startRadii: PARTS_WAVE_START_RADII,
+        endRadii: PARTS_WAVE_END_RADII,
       }),
     [config.radius],
   );
@@ -456,9 +465,22 @@ export default function Satellite({
       dowel: "#ffcfa0",
       ink: "#c3b0ff",
     };
+    // The scroll is flat: lat/long lines all met at the sheet's centre
+    // and read as a web, so its three materials take the cartesian
+    // lattice instead — a grid on the sheet, rings on the rolls and
+    // dowels. The pitch is in geometry units (the scroll's geometry is
+    // built in body radii, see the JSX).
+    const scrollParts = new Set<keyof typeof set>([
+      "parchment",
+      "dowel",
+      "ink",
+    ]);
     (Object.keys(set) as (keyof typeof set)[]).forEach((part) => {
       if (part === "display" || part === "bulb") return;
       applyWireSkin(set[part], {
+        ...(scrollParts.has(part)
+          ? { grid: "box", pitch: SCROLL_WIRE_PITCH * config.radius }
+          : {}),
         // Small hardware, so a coarse grid — a fine one turns a 0.3-unit
         // pen into a solid smear
         lon: 12,
@@ -486,7 +508,7 @@ export default function Satellite({
       set.ink,
     ].forEach((material) => applyShimmer(material, [partsWave.uniforms]));
     return set;
-  }, [partsWave, wave]);
+  }, [partsWave, wave, config.radius]);
   const bodyMaterials = useMemo(
     () => [materials.body, materials.leg, materials.bulb],
     [materials],
