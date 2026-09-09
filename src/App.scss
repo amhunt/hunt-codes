@@ -3645,6 +3645,9 @@ body.life-timeline-present {
   // The childhood stub on the left, off the time axis (LifeTimeline's
   // cellWidth subtracts it before sharing the track out by years)
   --life-child-w: 32px;
+  // The corner the medallion owns (140px coin + margins): the bar and
+  // its slab both stop short of it
+  --life-medallion-w: 160px;
   --life-slab: 6 4 22;
   --life-slab-a: 0.8;
   --life-bar-shadow: rgba(0, 0, 0, 0.45);
@@ -3663,7 +3666,7 @@ body.life-timeline-present {
   bottom: env(safe-area-inset-bottom, 0px);
   // A little air under the year ticks so they don't sit on the edge
   padding-bottom: 6px;
-  padding-right: 160px;
+  padding-right: var(--life-medallion-w);
   z-index: 6;
   font-family: "Inconsolata", monospace;
   // The band covers the résumé panel's right margin too — only the bar
@@ -3706,7 +3709,9 @@ body.life-timeline-present {
   &::before {
     content: "";
     position: absolute;
-    inset: -14px 0 -18px 0;
+    // Stops at the medallion's corner rather than running under it —
+    // over the coin it read as a dark smudge
+    inset: -14px var(--life-medallion-w) -18px 0;
     z-index: -1;
     background: linear-gradient(
       to top,
@@ -3847,8 +3852,10 @@ body.life-timeline-present {
   flex: 0 0 var(--life-future-w);
   padding: 0 14px 0 22px;
   background: var(--life-future-bg);
-  mask-image: linear-gradient(to right, #000 25%, transparent 96%);
-  -webkit-mask-image: linear-gradient(to right, #000 25%, transparent 96%);
+  // Solid under the (centred) word, fading only past it: the label ends
+  // around two thirds of the way across the tail
+  mask-image: linear-gradient(to right, #000 70%, transparent 100%);
+  -webkit-mask-image: linear-gradient(to right, #000 70%, transparent 100%);
   box-shadow: inset 1px 0 0 rgba(255, 255, 255, 0.4);
 
   &::before {
