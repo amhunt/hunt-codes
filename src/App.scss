@@ -3148,6 +3148,17 @@ $switch-ease: cubic-bezier(0.45, 0.05, 0.25, 1.2);
     padding-right: 96px;
   }
 
+  // The name stars are gated off below sm (StarField), so nothing needs
+  // clearing up top — the "home" link sits 24px down and the heading
+  // follows 16px under it.
+  @media (max-width: $breakpoint-sm - 1px) {
+    padding-top: 24px;
+
+    h1 {
+      margin-top: 16px;
+    }
+  }
+
   // Rothefight (the shop's display face) runs small and tight for its
   // point size, so it needs more of both than the old mono heading
   h1 {
@@ -3156,9 +3167,11 @@ $switch-ease: cubic-bezier(0.45, 0.05, 0.25, 1.2);
     font-size: 52px;
     font-weight: 400;
     letter-spacing: 3px;
-    // Rothefight's loops overshoot its em box top and bottom; 1.1 let the
-    // descenders land on the standfirst below
-    line-height: 1.35;
+    // Rothefight's loops overshoot its em box top and bottom, so it needs
+    // a lot of leading: 1.1 dropped the descenders onto the standfirst,
+    // and 1.35 still had the wrapped second line (phones, where "Artifacts
+    // by / Andy" runs two deep) colliding with the first
+    line-height: 1.6;
     text-shadow: 0 0 24px $purp-light-transparent;
   }
 

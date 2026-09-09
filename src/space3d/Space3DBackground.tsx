@@ -48,6 +48,7 @@ const Space3DBackground = ({
   isLanding,
   isHomePage,
   isAboutPage,
+  isArtifactsPage,
   isProjectsPage,
   isSynthPage,
   isJourneyPage,
@@ -57,6 +58,9 @@ const Space3DBackground = ({
   isLanding: boolean;
   isHomePage: boolean;
   isAboutPage: boolean;
+  /** The shop, which shares the about view but drops the name header and
+   *  pushes the moon back on phones */
+  isArtifactsPage: boolean;
   /** The satellite close-up (/projects-and-toys) */
   isProjectsPage: boolean;
   isSynthPage: boolean;
@@ -75,6 +79,7 @@ const Space3DBackground = ({
             "andrewhunt" header. */}
         <StarField
           isLanding={isLanding}
+          isArtifactsPage={isArtifactsPage}
           opacityTarget={isLanding ? LANDING_STAR_OPACITY : 1}
         />
         {/* The corner "hunt.codes" medallion rides the star canvas rather
@@ -111,6 +116,7 @@ const Space3DBackground = ({
                       : "home"
           }
           isSpaceView={isSpaceView}
+          isArtifactsPage={isArtifactsPage}
           onNavigate={onJourneyNavigate}
         />
       )}

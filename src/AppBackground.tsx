@@ -173,6 +173,7 @@ const AppBackground = ({
             isLanding={isLanding}
             isHomePage={isHomePage}
             isAboutPage={isAboutPage}
+            isArtifactsPage={isArtifactsPage}
             isProjectsPage={isProjectsPage}
             isSynthPage={isSynthPage}
             isJourneyPage={isJourneyPage}

@@ -41,10 +41,14 @@ const ORBIT_MESH_COLOR = "#bfe6ff";
 const SolarScene = ({
   view,
   isSpaceView,
+  isArtifactsPage,
   onNavigate,
 }: {
   view: SolarView;
   isSpaceView: boolean;
+  /** /artifacts rides the about view's camera perch but wants the moon
+   *  pushed back on phones (see the Moon below) */
+  isArtifactsPage: boolean;
   /** Router navigation for the lightspeed journeys (threaded through the
    *  canvas boundary — router context doesn't cross into R3F) */
   onNavigate: (to: string) => void;
@@ -147,6 +151,10 @@ const SolarScene = ({
         orbitColor={isSpaceView ? "#ffffff" : ORBIT_MESH_COLOR}
         orbitOpacity={isSpaceView ? 0.28 : 0.5}
         revealed={view === "about"}
+        // On a phone the shop listings run the full width, and a
+        // full-strength moon behind them reads as clutter rather than
+        // backdrop — half opacity everywhere else it's business as usual
+        dim={isArtifactsPage && isPhone ? 0.5 : 1}
         // The video link needs the moon actually on screen AND clickable:
         // /about above phone widths (on phones the panel is full-bleed
         // and Resume doesn't mount the overlay — the moon hides behind
