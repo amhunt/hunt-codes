@@ -2321,10 +2321,10 @@ $switch-ease: cubic-bezier(0.45, 0.05, 0.25, 1.2);
   // so the two segments have to measure the same — `flex: 1 1 0` sizes
   // them from a zero basis and splits the space evenly instead of
   // letting the longer label run wider. The floor is what the track's
-  // width comes from, so it has to clear the wider word ("Space" needs
-  // 82px with its star, "Mesh" 77px).
+  // width comes from, so it has to clear the wider label ("3D Disco
+  // Space" needs ~136px with its globe; "Boring Space" less).
   flex: 1 1 0;
-  min-width: 88px;
+  min-width: 140px;
   justify-content: center;
   border-radius: 999px;
   font-size: 12px;
