@@ -74,8 +74,8 @@ the preview tool.
 
 Space/Mesh is a user toggle in `App.tsx` (space default, remembered in
 `localStorage`, `.App.space` / `.App.mesh` on the root): space is the
-photographed scene, mesh redraws every 3D body as a glowing blue-white
-wire lattice over a dark graticule ground. Both grounds are dark, so the
+photographed scene, mesh redraws every 3D body as a glowing wire lattice
+(and the sun as a gold mirror ball) over a dark graticule ground. Both grounds are dark, so the
 two share one palette — there are no per-view text overrides left, and
 `.App.mesh` carries only the backdrop. The view is called "space", not
 "satellite", because the scene already has a satellite in it (Sputnik,
@@ -95,11 +95,17 @@ them in a defined order (wires first, band on top) and builds a cache key
 naming both. Things carrying live state stay solid: the satellite's video
 screen, the synth's oscilloscope steppers. Things told apart by color
 keep it as a wire tint: the 808's pad rows, the satellite's four part
-links, the six synth knob-planets.
+links, the six synth knob-planets. The sun never takes the wire skin at
+all: its own surface shader crossfades to a gold mirror ball (the `uMesh`
+branch in `solar/sunShaders.ts` — procedural tiles reflecting a
+procedural room, since the scene has no environment map), and it stays
+solid because its depth buffer is what culls the far half of the corona
+shell.
 
 ## 3D architecture (src/space3d/)
 
 Two independent fullscreen canvases, both `pointer-events: none`:
+
 - `SpaceCanvas` + `StarField` — orthographic, world units = CSS px. Two
   point clouds: static background stars (pan/wrap with camera rotation via
   `starPan.ts`) and the landing "text stars" (glyph layout + cursor
@@ -115,6 +121,7 @@ Hover outlines share one pattern: `writeSilhouette` (convex hull of
 projected verts) → `.body-outline` SVG paths in `SolarOverlays.tsx`.
 
 Invariants worth knowing:
+
 - `SPEED_SCALE` in `solar/constants.ts` is the global orbital tempo; the
   asteroids must orbit at exactly `EARTH.orbitSpeed` (the home camera
   co-rotates with Earth, freezing them on screen).
