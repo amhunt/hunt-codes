@@ -3,7 +3,7 @@ import Typed from "typed.js";
 import cx from "classnames";
 
 import { GitHub, Linkedin, Mail } from "react-feather";
-import { ShoppingBag } from "lucide-react";
+import { ChevronLeft, ShoppingBag } from "lucide-react";
 import useWindowSize from "./useWindowSize";
 import useScrollJourney from "./useScrollJourney";
 import SolarOverlays from "./SolarOverlays";
@@ -121,14 +121,32 @@ const Home = () => {
   return (
     <>
       <SolarOverlays />
+      {/* Icon-only: the label lives in a tooltip (and the aria-label), so
+          the corner stays a chevron and a galaxy. The chevron is part of
+          the link and bounces while any of it is hovered (App.scss
+          .back-to-orbit). */}
       <div className="homePageBackLink">
-        <Link
-          className={cx("mt-4 flex items-center gap-1 transition-transform")}
-          to="/"
-        >
-          <GalaxyIcon aria-hidden="true" className="starIcon" size={16} />
-          <span>Back to orbit</span>
-        </Link>
+        <TooltipProvider delayDuration={TOOLTIP_DELAY_MS}>
+          <Tooltip disableHoverableContent>
+            <TooltipTrigger asChild>
+              <Link
+                className="back-to-orbit mt-4 flex items-center"
+                to="/"
+                aria-label="Back to orbit"
+              >
+                <ChevronLeft
+                  aria-hidden="true"
+                  className="back-to-orbit-chevron"
+                  size={16}
+                />
+                <GalaxyIcon aria-hidden="true" className="starIcon" size={48} />
+              </Link>
+            </TooltipTrigger>
+            <TooltipContent side="right" sideOffset={6}>
+              <p>Back to orbit</p>
+            </TooltipContent>
+          </Tooltip>
+        </TooltipProvider>
       </div>
       <main className={cx("homeInfoContainer", logoOpacity === 1 && "show")}>
         <h1 className="sr-only">Andrew Hunt — home</h1>

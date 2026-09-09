@@ -645,6 +645,7 @@ p {
   .interest-pill,
   .body-outline-pulse,
   .scroll-hint-chevron,
+  .back-to-orbit-chevron,
   .sjs-bar,
   .svg-generator-spinner,
   .svg-generator-loading-dots span,
@@ -809,6 +810,32 @@ p {
         fill: $purp;
       }
     }
+  }
+}
+
+// /home's "Back to orbit": a chevron and a 48px galaxy, no caption (the
+// label is a tooltip). The whole link is the hover target, so the chevron
+// bounces whether the cursor is on it or on the galaxy.
+.back-to-orbit {
+  border-radius: 999px;
+  padding: 4px 6px 4px 2px;
+
+  .back-to-orbit-chevron {
+    flex: none;
+    margin-right: -2px;
+  }
+
+  &:hover .back-to-orbit-chevron {
+    animation: orbit-chevron-bounce 600ms ease-in-out infinite alternate;
+  }
+}
+
+@keyframes orbit-chevron-bounce {
+  from {
+    transform: translateX(0);
+  }
+  to {
+    transform: translateX(-5px);
   }
 }
 
