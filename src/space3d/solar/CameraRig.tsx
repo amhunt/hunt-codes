@@ -4,12 +4,16 @@ import * as THREE from "three";
 
 import {
   EARTH,
+  MARS,
+  MOON,
   moonPosition,
+  PLANETS,
   planetPosition,
   rigState,
   SATELLITE,
   satelliteLegsDirection,
   satelliteViewFrame,
+  SUN_RADIUS,
 } from "./constants";
 import { starPanState } from "../starPan";
 import { JOURNEY_STOPS, scrollTransitionState } from "../../scrollTransition";
@@ -24,14 +28,19 @@ import { SYNTH_CAM_HEIGHT, SYNTH_ORIGIN } from "../../synthSpec";
  * and Earth hanging small in the middle distance. About
  * perches over EARTH's limb opposite the moon and rides the moon's
  * orbit, so Earth's top curve fills the foreground with the moon pinned
- * in view above-right of it. Projects (/projects-and-toys) closes in on
+ * in view above-right of it. Artifacts (/artifacts, the shop) perches
+ * over the MOON's limb the same way, on the far side of the moon from
+ * Mars, so the moon's top curve fills the bottom of the frame with Mars
+ * hanging in the background — the perch swings around the moon to keep
+ * it there, holding its heading while Mars is behind the sun or another
+ * planet. Projects (/projects-and-toys) closes in on
  * the Sputnik satellite from just above it, the sun's limb glowing along
  * the bottom of the frame. View changes swoop between the views over
  * a few seconds; once arrived the camera rides the moving goal.
  */
 
 export type SolarView =
-  "landing" | "home" | "about" | "projects" | "synth" | "journey";
+  "landing" | "home" | "about" | "artifacts" | "projects" | "synth" | "journey";
 
 // Height tuned so Earth's orbit (r 17.5) nearly reaches the bottom edge
 // (~16px margin on a laptop): visible half-height = tan(fov/2)·y ≈ .52·35.
@@ -108,6 +117,29 @@ function aboutMoonNdcX(width: number): number | null {
   return gutter / width - 1;
 }
 
+// Artifacts-view framing: the moon-perch, the about view's Earth-perch
+// scaled to the moon. The camera sits ARTIFACTS_CAM_RADII moon radii from
+// the moon's center, on the far side from Mars, raised ARTIFACTS_CAM_PITCH
+// above the moon's horizontal — which puts the moon's top curve in the
+// bottom ~20% of the frame (its limb reaches ~16deg below the view
+// center, ~0.55 NDC at the scene's 55deg fov) — and looks out along the
+// heading toward Mars.
+const ARTIFACTS_CAM_RADII = 2.9;
+const ARTIFACTS_CAM_PITCH = THREE.MathUtils.degToRad(36);
+/** The look point sits this far along the heading, at the moon's height:
+ *  far enough that Mars (6–41 units off, in the same plane) rides the
+ *  horizon near the center whatever its distance */
+const ARTIFACTS_LOOK_DIST = 30;
+/** Mars a touch above center (NDC): aiming below a body lifts it */
+const ARTIFACTS_MARS_NDC_Y = 0.1;
+/** How fast the heading re-acquires Mars once it's back in the clear
+ *  (per second, exponential ease) — a drift, not a snap */
+const ARTIFACTS_TURN_RATE = 0.6;
+/** A body counts as blocking Mars when the moon->Mars line passes within
+ *  this many of its radii: some margin for the sun's corona and a
+ *  planet's atmosphere */
+const ARTIFACTS_BLOCK_RADII = 1.4;
+
 // Projects-view framing: the satellite perch. The camera sits along
 // satelliteViewFrame's direction (level with the satellite, off the sun
 // line, so the sun ends up below the frame rather than behind the
@@ -145,6 +177,42 @@ const invQuat = new THREE.Quaternion();
 const scrubFromPos = new THREE.Vector3();
 const scrubFromQuat = new THREE.Quaternion();
 const scrubToQuat = new THREE.Quaternion();
+const marsPos = new THREE.Vector3();
+const blockerPos = new THREE.Vector3();
+const toMars = new THREE.Vector3();
+const toBlocker = new THREE.Vector3();
+const backdropTarget = new THREE.Vector3();
+/** The artifacts perch's heading (horizontal, moon -> backdrop). Kept
+ *  across frames so it can hold still while Mars is blocked and ease back
+ *  rather than snap; module state, like rigState. */
+const artifactsDir = new THREE.Vector3();
+let artifactsDirReady = false;
+let artifactsLastT = 0;
+
+/**
+ * Is the moon's line of sight to Mars blocked — by the sun, or by a
+ * planet sitting between them? Point-to-segment distance against each
+ * body, with ARTIFACTS_BLOCK_RADII of margin.
+ */
+function marsBlocked(from: THREE.Vector3, mars: THREE.Vector3, t: number) {
+  toMars.copy(mars).sub(from);
+  const reach = toMars.length();
+  toMars.divideScalar(reach);
+  const blockedBy = (center: THREE.Vector3, radius: number) => {
+    toBlocker.copy(center).sub(from);
+    const along = toBlocker.dot(toMars);
+    if (along <= 0 || along >= reach) return false;
+    toBlocker.addScaledVector(toMars, -along);
+    return toBlocker.length() < radius * ARTIFACTS_BLOCK_RADII;
+  };
+  if (blockedBy(ORIGIN, SUN_RADIUS)) return true;
+  for (const planet of PLANETS) {
+    if (planet === MARS) continue;
+    if (blockedBy(planetPosition(planet, t, blockerPos), planet.radius))
+      return true;
+  }
+  return false;
+}
 
 /** How fast the rendered scrub progress chases the wheel target (per s) */
 const SCRUB_EASE_RATE = 6;
@@ -206,6 +274,40 @@ function computeGoal(
       .copy(satPos)
       .addScaledVector(coneDir, alongCone * SATELLITE.radius)
       .addScaledVector(perchUp, PROJECTS_NDC_Y * distance * tanHalfV);
+  } else if (view === "artifacts") {
+    // Perch over the moon's limb on the far side from Mars, riding the
+    // moon's orbit: the moon's top curve fills the bottom of the frame
+    // and Mars hangs in the background. The heading swings around the
+    // moon to keep Mars there — and holds where it is while Mars is
+    // behind the sun or another planet, easing back once it's clear.
+    moonPosition(t, moonPos);
+    planetPosition(MARS, t, marsPos);
+    backdropTarget.copy(marsPos).sub(moonPos);
+    backdropTarget.y = 0;
+    backdropTarget.normalize();
+    const dt = THREE.MathUtils.clamp(t - artifactsLastT, 0, 0.1);
+    artifactsLastT = t;
+    if (!artifactsDirReady) {
+      artifactsDirReady = true;
+      artifactsDir.copy(backdropTarget);
+    } else if (!marsBlocked(moonPos, marsPos, t)) {
+      artifactsDir
+        .lerp(backdropTarget, Math.min(1, dt * ARTIFACTS_TURN_RATE))
+        .normalize();
+    }
+    const dist = MOON.radius * ARTIFACTS_CAM_RADII;
+    goalPos
+      .copy(moonPos)
+      .addScaledVector(artifactsDir, -dist * Math.cos(ARTIFACTS_CAM_PITCH));
+    goalPos.y += dist * Math.sin(ARTIFACTS_CAM_PITCH);
+    // Look out along the heading at the moon's height, then aim a touch
+    // below it so Mars rides just above center
+    const persp = camera as THREE.PerspectiveCamera;
+    const tanHalfV = Math.tan((persp.fov * Math.PI) / 360);
+    goalLook.copy(moonPos).addScaledVector(artifactsDir, ARTIFACTS_LOOK_DIST);
+    goalLook.y =
+      moonPos.y -
+      goalPos.distanceTo(goalLook) * ARTIFACTS_MARS_NDC_Y * tanHalfV;
   } else if (view === "about") {
     // Perch over Earth's limb opposite the moon, riding the moon's orbit:
     // Earth's top curve fills the bottom of the frame and the moon stays
@@ -296,11 +398,15 @@ export default function CameraRig({ view }: { view: SolarView }) {
   useFrame(({ camera, clock, size }, delta) => {
     const t = clock.elapsedTime;
     const scrub = scrollTransitionState;
-    // The synth system, the /journey cruise and the satellite close-up
-    // sit outside the scroll journey — no stop to adopt or scrub toward;
-    // view changes to or from them always take the timed swoop
+    // The synth system, the /journey cruise, the satellite close-up
+    // and the shop's moon perch sit outside the scroll journey — no stop
+    // to adopt or scrub toward; view changes to or from them always take
+    // the timed swoop
     const stop =
-      view === "synth" || view === "journey" || view === "projects"
+      view === "synth" ||
+      view === "journey" ||
+      view === "projects" ||
+      view === "artifacts"
         ? null
         : JOURNEY_STOPS[view];
 
@@ -354,7 +460,8 @@ export default function CameraRig({ view }: { view: SolarView }) {
       const fromDetached =
         activeView.current === "synth" ||
         activeView.current === "journey" ||
-        activeView.current === "projects";
+        activeView.current === "projects" ||
+        activeView.current === "artifacts";
       activeView.current = view;
       if (
         stop !== null &&

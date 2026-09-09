@@ -111,6 +111,7 @@ export const PLANETS: SolarPlanetConfig[] = [
 ];
 
 export const EARTH = PLANETS.find((p) => p.name === "Earth")!;
+export const MARS = PLANETS.find((p) => p.name === "Mars")!;
 
 /**
  * Link asteroids: small rocks that float near the sun in the home view.

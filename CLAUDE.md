@@ -53,6 +53,11 @@ the preview tool.
 - `/home` → `Home.tsx` — social links; Earth = "ABOUT ME" link; asteroids +
   Sputnik satellite = blog/LinkedIn/GitHub links (home view only)
 - `/about` → `Resume.tsx` — the résumé page (frosted panel over the scene)
+- `/artifacts` → the shop, over the "artifacts" solar view: the camera
+  perches over the moon's limb (the about view's Earth-perch, scaled to
+  the moon) on the far side from Mars, swinging around the moon to keep
+  Mars in the background and holding its heading while Mars is behind
+  the sun or a planet (`CameraRig.tsx`, `marsBlocked`)
 - `/draw` → `SvgGenerator.tsx` — AI SVG generator; `/draw/:id` are
   shareable permalinks. Backed by the `/api` Lambda (see `server/`), not a
   browser-side key. **Other people's drawings render as inert

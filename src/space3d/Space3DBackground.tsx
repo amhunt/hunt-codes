@@ -17,10 +17,10 @@ const LANDING_STAR_OPACITY = 0.8;
  *   field). Mounted on every route.
  * - SolarScene: the perspective solar system (hunt-codes-3's scene — sun,
  *   orbiting planets + Earth's moon, camera rig). Mounted on the landing,
- *   home, about and projects routes; the camera swoops between the
- *   top-down landing view, the Earth-perch home view, the moon-perch about
- *   view and the satellite close-up, and the sun's DOM rings follow the
- *   projection (landing/home only).
+ *   home, about, artifacts and projects routes; the camera swoops between
+ *   the top-down landing view, the sun-perch home view, the Earth-perch
+ *   about view, the moon-perch artifacts view and the satellite close-up,
+ *   and the sun's DOM rings follow the projection (landing/home only).
  *
  * Scenes hide themselves when their DOM anchor is absent, and StarField
  * gates its layers invisible once fully faded.
@@ -115,11 +115,13 @@ const Space3DBackground = ({
                 ? "synth"
                 : isJourneyPage
                   ? "journey"
-                  : isAboutPage
-                    ? "about"
-                    : isProjectsPage
-                      ? "projects"
-                      : "home"
+                  : isArtifactsPage
+                    ? "artifacts"
+                    : isAboutPage
+                      ? "about"
+                      : isProjectsPage
+                        ? "projects"
+                        : "home"
           }
           isSpaceView={isSpaceView}
           isArtifactsPage={isArtifactsPage}

@@ -46,7 +46,7 @@ const SolarScene = ({
 }: {
   view: SolarView;
   isSpaceView: boolean;
-  /** /artifacts rides the about view's camera perch but wants the moon
+  /** /artifacts (the "artifacts" view: the moon perch) wants the moon
    *  pushed back on phones (see the Moon below) */
   isArtifactsPage: boolean;
   /** Router navigation for the lightspeed journeys (threaded through the
@@ -138,19 +138,20 @@ const SolarScene = ({
           isSpaceView={isSpaceView}
           aboutActive={view === "home"}
           revealed={planetsRevealed}
-          closeUp={view === "about"}
+          closeUp={view === "about" || view === "artifacts"}
         />
       ))}
-      {/* The moon is an /about-only body: from the landing's top-down
-          framing it reads as a stray speck beside Earth rather than a body
-          (and its orbit ring crosses Earth's), and from the home perch it
-          only crowds Earth. It fades in on the way to the about perch —
-          along the scroll scrub as well as the timed swoop (Moon reads the
-          journey progress itself) — where it becomes the video link. */}
+      {/* The moon is an /about and /artifacts body: from the landing's
+          top-down framing it reads as a stray speck beside Earth rather
+          than a body (and its orbit ring crosses Earth's), and from the
+          home perch it only crowds Earth. It fades in on the way to the
+          about perch — along the scroll scrub as well as the timed swoop
+          (Moon reads the journey progress itself) — where it becomes the
+          video link, and it's the foreground of the artifacts perch. */}
       <Moon
         orbitColor={isSpaceView ? "#ffffff" : ORBIT_MESH_COLOR}
         orbitOpacity={isSpaceView ? 0.28 : 0.5}
-        revealed={view === "about"}
+        revealed={view === "about" || view === "artifacts"}
         // On a phone the shop listings run the full width, and a
         // full-strength moon behind them reads as clutter rather than
         // backdrop — half opacity everywhere else it's business as usual
