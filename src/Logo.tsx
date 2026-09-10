@@ -44,8 +44,8 @@ const Logo = ({
   paddingTop2?: number;
 }) => {
   const size = useWindowSize();
-  const [strokeColor1, setStrokeColor1] = useState(getPantoneColor());
-  const [strokeColor2, setStrokeColor2] = useState(getPantoneColor());
+  const [strokeColor1, setStrokeColor1] = useState(() => getPantoneColor());
+  const [strokeColor2, setStrokeColor2] = useState(() => getPantoneColor());
   const changeColor = useCallback(() => {
     setStrokeColor1(getPantoneColor());
     setStrokeColor2(getPantoneColor());

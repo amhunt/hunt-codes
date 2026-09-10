@@ -108,8 +108,18 @@ export default function DrumPad({
   const swayPhase = useRef(0);
   const bobPhase = useRef(0);
 
-  const materials = useMemo(
-    () => ({
+  // Mesh view's wire skin goes on right here, as the materials are built.
+  // The 16 pads keep their row colors as wire tints — they're the only
+  // door to /synth, and at this size the rows are told apart by color
+  // alone. The LED sits it out: it's a lamp, and MeshBasic has no
+  // `totalEmissiveRadiance` for the hover term. Boxy hardware takes the
+  // cartesian lattice (lat/long lines converged on each box's centre and
+  // read as a web); pitches are in the geometry's own units — the rig
+  // scales to config.radius. A fifth of the pad's own shading shows
+  // through under the wires (wireSkin `keep`), so it reads as a
+  // translucent 808 rather than a bare lattice.
+  const materials = useMemo(() => {
+    const set = {
       chassis: new THREE.MeshStandardMaterial({
         color: "#2a2e35",
         metalness: 0.35,
@@ -141,34 +151,21 @@ export default function DrumPad({
         color: "#ff5252",
         transparent: true,
       }),
-    }),
-    [],
-  );
-  // Mesh view's wire skin. The 16 pads keep their row colors as wire
-  // tints — they're the only door to /synth, and at this size the rows
-  // are told apart by color alone. The LED sits it out: it's a lamp, and
-  // MeshBasic has no `totalEmissiveRadiance` for the hover term. Boxy
-  // hardware takes the cartesian lattice (lat/long lines converged on
-  // each box's centre and read as a web); pitches are in the geometry's
-  // own units — the rig scales to config.radius.
-  // A fifth of the pad's own shading shows through under the wires
-  // (wireSkin `keep`), so it reads as a translucent 808 rather than a
-  // bare lattice.
-  useMemo(() => {
+    };
     const keep = 0.2;
-    applyWireSkin(materials.chassis, {
+    applyWireSkin(set.chassis, {
       grid: "box",
       pitch: 0.2,
       hover: true,
       keep,
     });
-    applyWireSkin(materials.knob, {
+    applyWireSkin(set.knob, {
       grid: "box",
       pitch: 0.06,
       hover: true,
       keep,
     });
-    materials.pads.forEach((material, i) =>
+    set.pads.forEach((material, i) =>
       applyWireSkin(material, {
         grid: "box",
         pitch: 0.1,
@@ -177,7 +174,8 @@ export default function DrumPad({
         tint: PAD_ROW_COLORS[i],
       }),
     );
-  }, [materials]);
+    return set;
+  }, []);
 
   useEffect(
     () => () => {
