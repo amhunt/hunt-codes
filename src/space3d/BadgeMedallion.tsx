@@ -70,7 +70,7 @@ const buildSignatureGeometry = (
   const svg = new SVGLoader().parse(
     `<svg xmlns="http://www.w3.org/2000/svg" viewBox="${SIGNATURE_VIEWBOX}"><path fill="#000" fill-rule="evenodd" d="${SIGNATURE_D}"/></svg>`,
   );
-  const shapes = svg.paths.flatMap((p) => SVGLoader.createShapes(p));
+  const shapes = svg.paths.flatMap((p) => p.toShapes());
   const depth = letterBox.max.z - letterBox.min.z || 0.5;
   const geo = new THREE.ExtrudeGeometry(shapes, {
     depth,
