@@ -908,9 +908,18 @@ p {
   z-index: 2;
   mix-blend-mode: multiply;
   max-height: 200px;
+  // No "nova-mono" here, deliberately. This element is `opacity-0` on
+  // every route that mounts it — the visible name is the star field's
+  // glyph sampling, which measures this box but renders its own letters
+  // in "Helvetica Neue" (space3d/starSampling.ts). Naming the webfont
+  // first cost a 127KB TTF download on /home, /about, /artifacts, /draw,
+  // /synth, /projects-and-toys and the 404 purely to shape text nobody
+  // ever sees. Leading with "Helvetica Neue" also means the box is now
+  // laid out in the same family the stars are sampled from.
+  // (/journey still loads the font for `.journey-title`, which is visible.)
   font-family:
-    "nova-mono", "Helvetica Neue", "Segoe UI", "Roboto", "Oxygen", "Ubuntu",
-    "Cantarell", "Fira Sans", "Droid Sans", sans-serif;
+    "Helvetica Neue", "Segoe UI", "Roboto", "Oxygen", "Ubuntu", "Cantarell",
+    "Fira Sans", "Droid Sans", sans-serif;
 }
 
 .highlightedChar {
