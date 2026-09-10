@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from "react";
+import React, { useState, useEffect, useRef, Suspense } from "react";
 import {
   BrowserRouter as Router,
   Routes,
@@ -9,15 +9,18 @@ import {
 import cx from "classnames";
 import "./App.scss";
 
-import Home from "./Home";
-import Journey from "./Journey";
-import NotFound from "./NotFound";
-import ProjectsAndToys from "./ProjectsAndToys";
-import Resume from "./Resume";
 import RocketCockpit from "./RocketCockpit";
-import Shop from "./Shop";
-import Synth from "./Synth";
-import SvgGenerator from "./SvgGenerator";
+import {
+  Home,
+  Journey,
+  NotFound,
+  ProjectsAndToys,
+  Resume,
+  Shop,
+  Synth,
+  SvgGenerator,
+  prefetchRoutes,
+} from "./routeChunks";
 import AppBackground from "AppBackground";
 import BadgeLink from "BadgeLink";
 import Landing from "Landing";
@@ -133,27 +136,52 @@ const App = () => {
     return () => clearTimeout(timer);
   }, []);
 
+  // Warm the other routes' chunks once this one has finished loading —
+  // after `load`, not on mount, so the prefetch never competes with the
+  // 3D chunk and its textures for a phone's bandwidth.
+  useEffect(() => {
+    if (document.readyState === "complete") {
+      prefetchRoutes();
+      return;
+    }
+    window.addEventListener("load", prefetchRoutes, { once: true });
+    return () => window.removeEventListener("load", prefetchRoutes);
+  }, []);
+
   return (
     <div className={cx("App", isSpaceView ? "space" : "mesh")}>
       <Router>
         <RouteMeta />
         <AppBackground showBridge={showBridge} isSpaceView={isSpaceView} />
         <ViewModeSwitch isSpaceView={isSpaceView} onChange={setIsSpaceView} />
-        <Routes>
-          <Route path="/" element={<Landing />} />
-          <Route path="/home" element={<Home />} />
-          <Route path="/about" element={<Resume />} />
-          <Route path="/synth" element={<Synth />} />
-          <Route path="/journey" element={<Journey />} />
-          <Route path="/draw" element={<SvgGenerator />} />
-          <Route path="/draw/:id" element={<SvgGenerator />} />
-          <Route path="/artifacts" element={<Shop />} />
-          {/* The shop lived at /shop until it was renamed; keep the old
-              path working for anyone holding that link */}
-          <Route path="/shop" element={<Navigate to="/artifacts" replace />} />
-          <Route path="/projects-and-toys" element={<ProjectsAndToys />} />
-          <Route path="*" element={<NotFound />} />
-        </Routes>
+        {/* Every route but the landing is its own chunk (routeChunks.ts),
+            so `/` no longer parses the résumé, the shop and the synth
+            before it can draw the sun. `null` is the right fallback: the
+            solar system and the corner chrome are mounted outside this
+            boundary and keep rendering, so a warmed chunk swaps in with
+            no flash — and routeChunks prefetches the others during idle
+            time, so by the time anyone navigates there is nothing to
+            wait for. */}
+        <Suspense fallback={null}>
+          <Routes>
+            <Route path="/" element={<Landing />} />
+            <Route path="/home" element={<Home />} />
+            <Route path="/about" element={<Resume />} />
+            <Route path="/synth" element={<Synth />} />
+            <Route path="/journey" element={<Journey />} />
+            <Route path="/draw" element={<SvgGenerator />} />
+            <Route path="/draw/:id" element={<SvgGenerator />} />
+            <Route path="/artifacts" element={<Shop />} />
+            {/* The shop lived at /shop until it was renamed; keep the old
+                path working for anyone holding that link */}
+            <Route
+              path="/shop"
+              element={<Navigate to="/artifacts" replace />}
+            />
+            <Route path="/projects-and-toys" element={<ProjectsAndToys />} />
+            <Route path="*" element={<NotFound />} />
+          </Routes>
+        </Suspense>
         {/* Fixed corner chrome sits after the routes so each page's own
             content — the landing's ENTER sun — comes first in the tab
             order. The "Space jam" switch rides every page, the landing
