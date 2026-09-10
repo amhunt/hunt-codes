@@ -496,7 +496,7 @@ const SvgGenerator = () => {
 
   // Drop a suggestion (or the loaded drawing's prompt) into the box, ready
   // to edit or send — deliberately not submitting, generations are billed
-  const usePrompt = useCallback((text: string) => {
+  const pickPrompt = useCallback((text: string) => {
     setPrompt(text);
     const el = inputRef.current;
     if (el) {
@@ -606,7 +606,7 @@ const SvgGenerator = () => {
                 key={idea}
                 className="svg-generator-idea"
                 type="button"
-                onClick={() => usePrompt(idea)}
+                onClick={() => pickPrompt(idea)}
               >
                 {idea}
               </button>
@@ -668,7 +668,7 @@ const SvgGenerator = () => {
                 <div className="svg-generator-actions">
                   <button
                     className="svg-generator-action"
-                    onClick={() => usePrompt(drawing.prompt)}
+                    onClick={() => pickPrompt(drawing.prompt)}
                     type="button"
                     title="Load this prompt so you can tweak it and draw your own"
                   >

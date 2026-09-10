@@ -66,7 +66,7 @@ const knobDisplay = (knob: SynthKnobSpec, value: number): string =>
     : `${Math.round(value * 100)}%`;
 
 const Synth = () => {
-  const [params, setParamsState] = useState<Record<SynthParam, number>>(
+  const [params, setParams] = useState<Record<SynthParam, number>>(
     () =>
       Object.fromEntries(
         SYNTH_KNOBS.map((knob) => [knob.param, getParam(knob.param)]),
@@ -84,7 +84,7 @@ const Synth = () => {
   const commitParam = useCallback((param: SynthParam, value: number) => {
     const v = clamp01(value);
     setParam(param, v);
-    setParamsState((prev) => ({ ...prev, [param]: v }));
+    setParams((prev) => ({ ...prev, [param]: v }));
   }, []);
 
   // Arriving by 808 pad: the click that launched the warp already

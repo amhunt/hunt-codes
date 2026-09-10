@@ -5,7 +5,7 @@ import { fileURLToPath } from "node:url";
 import js from "@eslint/js";
 import globals from "globals";
 import tseslint from "typescript-eslint";
-import pluginReact from "eslint-plugin-react";
+import eslintReact from "@eslint-react/eslint-plugin";
 import unicorn from "eslint-plugin-unicorn";
 import { importX } from "eslint-plugin-import-x";
 import pluginUnusedImports from "eslint-plugin-unused-imports";
@@ -62,9 +62,48 @@ export default defineConfig([
     ...cfg,
     files: [typedGlob],
   })),
-  pluginReact.configs.flat.recommended,
   {
-    settings: { react: { version: "19.2" } },
+    // @eslint-react in place of eslint-plugin-react: the type-checked preset
+    // covers what plugin-react's recommended set did (keys, children props,
+    // direct state mutation, findDOMNode, render return values, ...) and
+    // adds the hooks rules, so there is no separate react-hooks plugin. It
+    // leans on the same projectService the TS rules above use.
+    ...eslintReact.configs["recommended-type-checked"],
+    files: [typedGlob],
+    settings: {
+      "react-x": {
+        ...eslintReact.configs["recommended-type-checked"].settings["react-x"],
+        version: "19.2",
+      },
+    },
+    rules: {
+      ...eslintReact.configs["recommended-type-checked"].rules,
+      // Two DOM checks plugin-react's recommended set had that the preset
+      // leaves opt-in.
+      "@eslint-react/dom-no-unknown-property": "error",
+      "@eslint-react/dom-no-unsafe-target-blank": "error",
+      // Taste calls the preset makes that this codebase doesn't share: refs
+      // here are named for the thing they hold (`group`, `mesh`, `knob`),
+      // the index-keyed lists are fixed geometry and pill rows that never
+      // reorder, and the setState-in-effect sites are deliberate syncs from
+      // measurement, fonts, and route changes.
+      "@eslint-react/naming-convention-ref-name": "off",
+      "@eslint-react/no-array-index-key": "off",
+      "@eslint-react/set-state-in-effect": "off",
+    },
+  },
+  {
+    // plugin-react's preset used to switch JSX parsing on for every file and
+    // count `import React` as used by the JSX; the handful of plain .js entry
+    // points and tests still need both. The TS parser gives them both at
+    // once: it takes JSX in .js and treats the classic-runtime pragma
+    // (`React`, which tsconfig's `"jsx": "react"` compiles JSX down to) as a
+    // reference.
+    files: ["**/*.{js,jsx}"],
+    languageOptions: {
+      parser: tseslint.parser,
+      parserOptions: { ecmaFeatures: { jsx: true } },
+    },
   },
   {
     files: [sourceGlob],
@@ -106,7 +145,10 @@ export default defineConfig([
       "unicorn/prefer-single-call": "error",
       "unicorn/no-lonely-if": "error",
       "unicorn/no-zero-fractions": "error",
-      "unicorn/no-useless-undefined": ["error", { checkArrowFunctionBody: false }],
+      "unicorn/no-useless-undefined": [
+        "error",
+        { checkArrowFunctionBody: false },
+      ],
       "unicorn/no-instanceof-builtins": ["error", { exclude: ["Function"] }],
       "unicorn/new-for-builtins": "error",
       "unicorn/throw-new-error": "error",
@@ -171,7 +213,10 @@ export default defineConfig([
       // Surface class names Tailwind never generated — typos like "felx" and
       // classes left stranded after a theme change. Selectors that only live
       // in Sass never reach the compiler, so allow those explicitly.
-      "tailwindcss/no-custom-classname": ["error", { whitelist: harvestSassSelectors() }],
+      "tailwindcss/no-custom-classname": [
+        "error",
+        { whitelist: harvestSassSelectors() },
+      ],
       // Collapse mt-4 mb-4 ml-4 mr-4 into m-4, w-4 h-4 into size-4, and so on.
       "tailwindcss/enforces-shorthand": "error",
       // e.g. -top-[5px] rather than top-[-5px]
@@ -194,7 +239,7 @@ export default defineConfig([
     // that the DOM-focused rule has no knowledge of.
     files: ["src/space3d/**/*.{ts,tsx}"],
     rules: {
-      "react/no-unknown-property": "off",
+      "@eslint-react/dom-no-unknown-property": "off",
     },
   },
 ]);
