@@ -16,6 +16,26 @@ $breakpoint-xl: 1440px;
   position: fixed;
 }
 
+// Every page is a stack of fixed, inset-0 layers, so the document itself
+// has no height and the root's own background is what iOS Safari paints
+// over any screen it isn't covering: the overscroll bounce, and the band
+// that opens under the page while the bottom toolbar resizes (the layout
+// viewport lags the visible one). Tailwind's base layer makes body white,
+// which showed up as a white strip under the stars on phones. Paint the
+// root the scene's own black (mesh: the foot of its ground), give the
+// document a real height, and stop the root rubber-banding — the journey
+// scrub already claims touch drags, and nothing scrolls at the root.
+html,
+body {
+  height: 100%;
+  background-color: #000;
+  overscroll-behavior-y: none;
+}
+
+body:has(.App.mesh) {
+  background-color: #02060f;
+}
+
 // Day/night is a user toggle (App.tsx) rather than a per-route fact, so
 // every page can now render in either palette. These overrides keep text
 // readable in the combinations the original per-route styling never had
@@ -3278,7 +3298,7 @@ body.life-timeline-present {
   // The name stars are gated off below sm (StarField), so nothing needs
   // clearing up top — the "home" link sits 24px down and the heading
   // follows 16px under it.
-  @media (max-width: $breakpoint-sm - 1px) {
+  @media (max-width: ($breakpoint-sm - 1px)) {
     padding-top: 24px;
 
     h1 {
