@@ -68,7 +68,7 @@ tmp="$(mktemp -d)"
 trap 'rm -rf "$tmp"' EXIT
 while IFS= read -r -d '' model; do
   key="${model#build/}"
-  brotli --quality 11 --force --output "$tmp/model.br" "$model"
+  brotli --quality=11 --force --output="$tmp/model.br" "$model"
   raw=$(wc -c <"$model")
   compressed=$(wc -c <"$tmp/model.br")
   echo "→ $key: $((raw / 1024))KB → $((compressed / 1024))KB (brotli)"
