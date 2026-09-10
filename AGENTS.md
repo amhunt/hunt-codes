@@ -10,8 +10,8 @@ Single service: a client-only SPA (React 19 + rsbuild + TypeScript, Yarn 4
 via Corepack). No backend / database. Dependencies are already installed by
 the startup update script (`corepack enable` + `yarn install --immutable`).
 
-- Use `yarn` (Corepack shim → 4.6.0) — after `corepack enable`, plain
-  `yarn` resolves to 4.6.0 in this repo. Commands: `yarn start` (rsbuild dev
+- Use `yarn` (Corepack shim → 4.18.0) — after `corepack enable`, plain
+  `yarn` resolves to 4.18.0 in this repo. Commands: `yarn start` (rsbuild dev
   on http://localhost:3000, HMR), `yarn build`, `yarn lint`,
   `yarn tsc --noEmit`. See `README.md`.
 - Tests run with **Bun** (`bunfig.toml` preloads `happydom.ts`; CI uses
