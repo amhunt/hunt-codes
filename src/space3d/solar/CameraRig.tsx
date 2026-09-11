@@ -50,11 +50,16 @@ const ORIGIN = new THREE.Vector3(0, 0, 0);
 const UP = new THREE.Vector3(0, 1, 0);
 const TRANSITION_SECONDS = 2;
 
-// On lg/xl screens, pan the top-down landing camera straight down (world −Z
-// is screen-up, so panning −Z drops the sun below center). A pure pan keeps
-// the orbital diagram flat/undistorted rather than tilting it into ellipses.
-// Expressed in vh below the viewport's vertical center (50vh = half-height).
-const LANDING_SUN_DROP_VH = 15;
+// On lg/xl screens the title stands in a left column (starSampling's
+// stacked layout), so the system moves off to the right: the sun sits at
+// LANDING_SUN_X of the viewport width, vertically centred, and the camera
+// hovers a little lower than LANDING_POS so the sun reads ~13% larger as
+// the composition's second focal point. A pure pan (camera and look
+// target together; world +X is screen-right) keeps the orbital diagram
+// flat rather than tilting it into ellipses; Earth's orbit and Mars'
+// deliberately run off the right and bottom edges.
+const LANDING_SUN_X = 0.75;
+const LANDING_HEIGHT_LG = 31;
 
 // Home-view framing: the sun-perch. Offsets from the SUN's center (r 3),
 // on the far side from Earth, elevated well above the surface so the
@@ -239,13 +244,16 @@ function computeGoal(
     goalLook.set(SYNTH_ORIGIN.x, SYNTH_ORIGIN.y, SYNTH_ORIGIN.z);
   } else if (view === "landing") {
     if (viewport.width >= LG_BREAKPOINT_PX) {
-      // Drop the sun below center by panning the camera + look target the
-      // same amount in −Z (screen-down), so the view stays straight-down.
+      // Pan the camera + look target left (−X) by the world distance
+      // that puts the sun at LANDING_SUN_X: NDC x = 2·X − 1, times the
+      // visible half-width at the sun's plane
       const persp = camera as THREE.PerspectiveCamera;
       const tanHalfV = Math.tan((persp.fov * Math.PI) / 360);
-      const drop = (LANDING_SUN_DROP_VH / 50) * tanHalfV * LANDING_POS.y;
-      goalPos.set(LANDING_POS.x, LANDING_POS.y, LANDING_POS.z - drop);
-      goalLook.set(0, 0, -drop);
+      const aspect = viewport.width / viewport.height;
+      const shift =
+        (2 * LANDING_SUN_X - 1) * tanHalfV * aspect * LANDING_HEIGHT_LG;
+      goalPos.set(-shift, LANDING_HEIGHT_LG, LANDING_POS.z);
+      goalLook.set(-shift, 0, 0);
     } else {
       goalPos.copy(LANDING_POS);
       goalLook.copy(ORIGIN);

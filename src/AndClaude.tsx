@@ -26,11 +26,11 @@ const MEASURE_PX = 24;
 const CAPTION = "(and Claude)";
 
 const AndClaude = () => {
-  const { width } = useWindowWidth();
+  const { width, height } = useWindowWidth();
   const [shown, setShown] = useState(false);
   const [fontSize, setFontSize] = useState(MEASURE_PX);
   const measureRef = useRef<HTMLSpanElement>(null);
-  const heart = landingGlyphBox(CREDIT_PHRASE, HEART_INDEX, width);
+  const heart = landingGlyphBox(CREDIT_PHRASE, HEART_INDEX, width, height);
 
   useEffect(() => {
     let timer = 0;

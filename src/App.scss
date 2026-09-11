@@ -127,6 +127,30 @@ body:has(.App.mesh) {
   }
 }
 
+// The caption under the stacked wordmark (LandingTagline.tsx, lg+ only):
+// positioned inline off the title's ink block, so it hangs GAP_PX under
+// whichever phrase the stars are spelling — the top eases when the
+// three-line phrase pushes it down. Fades in with the solar system
+// (#solar-system's delay and no-intro-delay opt-out, below).
+.landing-tagline {
+  position: fixed;
+  margin: 0;
+  z-index: 3;
+  pointer-events: none;
+  white-space: nowrap;
+  font-family: "Inconsolata", monospace;
+  font-size: 22px;
+  letter-spacing: 0.06em;
+  color: rgba(232, 230, 245, 0.7);
+  animation: fadeIn 1s ease-in-out both;
+  animation-delay: 4s;
+  transition: top 1.2s ease;
+
+  &.no-intro-delay {
+    animation-delay: 0s;
+  }
+}
+
 // ─── /journey: the story crawl ────────────────
 // Bare black in both views: the crawl's gold text and the additive warp
 // streaks want an empty sky, and mesh view's graticule would compete
@@ -2444,6 +2468,34 @@ body.life-timeline-present {
       bottom: calc(
         #{$timeline-band-clearance} + 1rem + env(safe-area-inset-bottom, 0px)
       );
+    }
+  }
+}
+
+// ─── Landing page dock (lg+) ────────────────
+// With the title stacked in a left column (starSampling's stacked
+// layout) the corner chrome lines up on its edges: the music switch and
+// the view switch sit on the title's 5vw margin, 64px up, and the coin's
+// hit target parks top-right (BadgeMedallion moves the coin itself to
+// match). `on-landing` rides <body> while Landing.tsx is mounted.
+body.on-landing {
+  @media (min-width: $breakpoint-lg) {
+    .music-toggle.space-jam-switch {
+      left: calc(5vw + env(safe-area-inset-left, 0px));
+      bottom: calc(64px + env(safe-area-inset-bottom, 0px));
+    }
+
+    .view-mode-switch {
+      left: calc(
+        5vw + #{$switch-width} + 24px + env(safe-area-inset-left, 0px)
+      );
+      bottom: calc(64px + env(safe-area-inset-bottom, 0px));
+    }
+
+    .badge-link {
+      top: calc(48px + env(safe-area-inset-top, 0px));
+      right: calc(48px + env(safe-area-inset-right, 0px));
+      bottom: auto;
     }
   }
 }

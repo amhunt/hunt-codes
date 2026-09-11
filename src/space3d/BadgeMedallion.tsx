@@ -150,11 +150,20 @@ const AIM_S = BADGE_AIM_MS / 1000;
 const SLOT_PX = 140;
 const SLOT_PX_SMALL = 96;
 const SMALL_BREAKPOINT_PX = 768; // $breakpoint-sm
+const LG_BREAKPOINT_PX = 1280; // $breakpoint-lg
 const MARGIN_PX = 8; // 0.5rem
+/** The landing page at lg+ parks the coin top-right instead — the
+ *  bottom-left dock and the sun own the bottom band there — inset from
+ *  the corner to sit on the same margin as the rest of that layout
+ *  (App.scss `body.on-landing .badge-link`) */
+const LANDING_MARGIN_PX = 48;
+/** How fast the coin glides between corners on a route change (per s) */
+const CORNER_EASE_RATE = 4;
 /** Coin diameter as a fraction of the slot */
 const FILL = 0.88;
 /** Above the stars (z 0), well inside the ortho frustum (camera z 1000) */
 const BADGE_Z = 200;
+const cornerTarget = new THREE.Vector3();
 
 type SplitGeometry = {
   letter: THREE.BufferGeometry;
@@ -227,7 +236,7 @@ const splitMonogram = (
   return { letter: parts.miss, caret: parts.hit };
 };
 
-const BadgeMedallion = () => {
+const BadgeMedallion = ({ isLanding }: { isLanding: boolean }) => {
   const gltf = useLoader(GLTFLoader, badgeUrl);
 
   // Track prefers-reduced-motion live (a read-once snapshot would miss the
@@ -449,20 +458,37 @@ const BadgeMedallion = () => {
   // Grow-in on load so the coin doesn't pop mid-choreography (the GLB
   // arrives async); reduced motion skips straight to full size
   const mountEase = useRef(0);
+  // Whether the coin has taken its first corner (the glide only starts
+  // from a corner it has already reached, never from the origin)
+  const placed = useRef(false);
 
   useFrame((state, delta) => {
     const anchor = anchorRef.current;
     const spin = spinRef.current;
     if (!anchor || !spin) return;
 
-    // Re-anchor to the bottom-right corner in CSS-pixel world units
+    // Re-anchor to its corner in CSS-pixel world units: bottom-right
+    // everywhere but the lg+ landing page, which parks it top-right.
+    // A route change glides it between the two rather than snapping.
     const { width, height } = state.size;
     const slot = width <= SMALL_BREAKPOINT_PX ? SLOT_PX_SMALL : SLOT_PX;
-    anchor.position.set(
-      width / 2 - MARGIN_PX - slot / 2,
-      -height / 2 + MARGIN_PX + slot / 2,
+    const topRight = isLanding && width >= LG_BREAKPOINT_PX;
+    cornerTarget.set(
+      width / 2 - (topRight ? LANDING_MARGIN_PX : MARGIN_PX) - slot / 2,
+      topRight
+        ? height / 2 - LANDING_MARGIN_PX - slot / 2
+        : -height / 2 + MARGIN_PX + slot / 2,
       BADGE_Z,
     );
+    if (!placed.current) {
+      placed.current = true;
+      anchor.position.copy(cornerTarget);
+    } else {
+      anchor.position.lerp(
+        cornerTarget,
+        Math.min(1, 1 - Math.exp(-delta * CORNER_EASE_RATE)),
+      );
+    }
 
     // Hover (from the DOM hit target): ease toward the slower spin, the
     // faster caret and the nudge up
