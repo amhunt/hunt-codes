@@ -88,23 +88,70 @@ const RouteMeta = () => {
   return null;
 };
 
-/** Remembers the visitor's pick between the two scene views */
+/** Remembers the visitor's own pick between the two scene views */
 const VIEW_STORAGE_KEY = "hunt-codes-scene-view";
+
+/**
+ * The scene-view tour: the landing page always opens in space view (its
+ * stars-then-sun intro is choreographed for the photographed scene), the
+ * trip in to /home flips the scene to mesh — a free demo of the corner
+ * switch — and the trip back returns it to space. Each step is a route
+ * hop, from → to. The tour stops the moment the visitor works the switch
+ * themselves (App's `userPickedView`): from then on their pick holds
+ * across every route until the next full load.
+ */
+const VIEW_TOUR: { from: string; to: string; space: boolean }[] = [
+  { from: "/", to: "/home", space: false },
+  { from: "/home", to: "/", space: true },
+];
+
+const ViewTour = ({
+  enabled,
+  onView,
+}: {
+  enabled: boolean;
+  onView: (isSpace: boolean) => void;
+}) => {
+  const { pathname } = useLocation();
+  const previous = useRef(pathname);
+  useEffect(() => {
+    const from = previous.current;
+    previous.current = pathname;
+    if (!enabled || from === pathname) return;
+    const step = VIEW_TOUR.find((s) => s.from === from && s.to === pathname);
+    if (step) onView(step.space);
+  }, [pathname, enabled, onView]);
+  return null;
+};
 
 const App = () => {
   const [showBridge, setShowBridge] = useState(false);
-  // The scene opens in space view — the photographed solar system —
-  // until the visitor flips the corner switch to mesh. Remembered across
-  // visits: a named view that resets on every reload reads as a bug.
-  // (Same guarded read as the drawing studio's: storage throws outright
-  // in a browser set to block site data.)
+  // The landing page always opens in space view (see VIEW_TOUR). Any
+  // other entry point opens in the view the visitor last picked for
+  // themselves, remembered across visits: a chosen view that resets on
+  // every reload reads as a bug. (Same guarded read as the drawing
+  // studio's: storage throws outright in a browser set to block site
+  // data.)
   const [isSpaceView, setIsSpaceView] = useState(() => {
+    if (window.location.pathname === "/") return true;
     try {
       return window.localStorage.getItem(VIEW_STORAGE_KEY) !== "mesh";
     } catch {
       return true;
     }
   });
+  // Whether the visitor has worked the switch this session — which ends
+  // the tour's automatic flips and is the only pick worth remembering
+  const [userPickedView, setUserPickedView] = useState(false);
+  const pickView = (isSpace: boolean) => {
+    setUserPickedView(true);
+    setIsSpaceView(isSpace);
+    try {
+      window.localStorage.setItem(VIEW_STORAGE_KEY, isSpace ? "space" : "mesh");
+    } catch {
+      // A browser blocking site data just means the view won't persist
+    }
+  };
 
   usePauseAudioOnHideEventListener();
   useEffect(installClickTracking, []);
@@ -118,14 +165,6 @@ const App = () => {
     document
       .querySelector('meta[name="theme-color"]')
       ?.setAttribute("content", isSpaceView ? "#000000" : "#050f22");
-    try {
-      window.localStorage.setItem(
-        VIEW_STORAGE_KEY,
-        isSpaceView ? "space" : "mesh",
-      );
-    } catch {
-      // A browser blocking site data just means the view won't persist
-    }
   }, [isSpaceView]);
 
   // fade home content in once mounted
@@ -152,8 +191,9 @@ const App = () => {
     <div className={cx("App", isSpaceView ? "space" : "mesh")}>
       <Router>
         <RouteMeta />
+        <ViewTour enabled={!userPickedView} onView={setIsSpaceView} />
         <AppBackground showBridge={showBridge} isSpaceView={isSpaceView} />
-        <ViewModeSwitch isSpaceView={isSpaceView} onChange={setIsSpaceView} />
+        <ViewModeSwitch isSpaceView={isSpaceView} onChange={pickView} />
         {/* Every route but the landing is its own chunk (routeChunks.ts),
             so `/` no longer parses the résumé, the shop and the synth
             before it can draw the sun. `null` is the right fallback: the

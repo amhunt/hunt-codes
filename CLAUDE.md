@@ -85,8 +85,12 @@ the preview tool.
   supplies each page's tab title. A new public page goes in that list
   (title + priority) and gets its `<Route>` in `App.tsx`.
 
-Space/Mesh is a user toggle in `App.tsx` (space default, remembered in
-`localStorage`, `.App.space` / `.App.mesh` on the root): space is the
+Space/Mesh is a user toggle in `App.tsx` (`.App.space` / `.App.mesh` on
+the root). The landing page always opens in space, and `VIEW_TOUR` flips
+to mesh on the `/` → `/home` hop and back on the return — until the
+visitor works the switch themselves, after which their pick holds for the
+session and is the only one remembered in `localStorage` (other entry
+points open in it). Space is the
 photographed scene, mesh redraws every 3D body as a glowing wire lattice
 (and the sun as a gold mirror ball) over a dark graticule ground. Both grounds are dark, so the
 two share one palette — there are no per-view text overrides left, and
