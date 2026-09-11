@@ -4,6 +4,13 @@ import cx from "classnames";
 import { GlobeIcon, StarIcon } from "lucide-react";
 
 import useWindowSize from "useWindowSize";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+  TOOLTIP_DELAY_MS,
+} from "ui/tooltip";
 
 /**
  * The scene's view switch, borrowed from the layer chip every maps app
@@ -15,17 +22,34 @@ import useWindowSize from "useWindowSize";
  * suggested: this scene already has a satellite in it — Sputnik, the
  * /projects-and-toys link — so the word was spoken for.)
  *
- * Both words stay visible rather than hiding behind an icon: the two
- * views are equals, and a lone pill gives no hint that a second one
- * exists. The segments are buttons rather than a Radix switch — a switch
- * announces itself as on/off, which is the wrong shape for two named
- * views.
+ * Two glyphs side by side rather than a lone pill, so it's plain a
+ * second view exists: a gold star for space, a silver wire globe for
+ * mesh, both inked with the same black stroke. The names live in the
+ * buttons' labels and the tooltips. The segments are buttons rather than
+ * a Radix switch — a switch announces itself as on/off, which is the
+ * wrong shape for two named views.
  *
  * Shown on the landing page at every size. Elsewhere phones sit it out
  * (a corner too crowded to spare), as does /home below lg; when it comes
  * back it fades in a beat after the camera swoop starts (the .vms-hidden
  * transition in App.scss carries the delay).
  */
+/** The one stroke both glyphs share */
+const GLYPH_STROKE = "#000";
+const GLYPH_STROKE_WIDTH = 1.5;
+const STAR_FILL = "#ffd23f";
+const GLOBE_FILL = "#c9ccd6";
+
+const VIEWS: {
+  isSpace: boolean;
+  name: string;
+  Icon: typeof StarIcon;
+  fill: string;
+}[] = [
+  { isSpace: true, name: "Boring Space", Icon: StarIcon, fill: STAR_FILL },
+  { isSpace: false, name: "3D Disco Space", Icon: GlobeIcon, fill: GLOBE_FILL },
+];
+
 const ViewModeSwitch = ({
   isSpaceView,
   onChange,
@@ -58,24 +82,32 @@ const ViewModeSwitch = ({
         aria-hidden
         className={cx("vms-indicator", !isSpaceView && "vms-indicator-end")}
       />
-      <button
-        type="button"
-        className="vms-option"
-        aria-pressed={isSpaceView}
-        onClick={() => onChange(true)}
-      >
-        <StarIcon size={14} aria-hidden />
-        Boring Space
-      </button>
-      <button
-        type="button"
-        className="vms-option"
-        aria-pressed={!isSpaceView}
-        onClick={() => onChange(false)}
-      >
-        <GlobeIcon size={14} aria-hidden />
-        3D Disco Space
-      </button>
+      <TooltipProvider delayDuration={TOOLTIP_DELAY_MS}>
+        {VIEWS.map(({ isSpace, name, Icon, fill }) => (
+          <Tooltip key={name} disableHoverableContent>
+            <TooltipTrigger asChild>
+              <button
+                type="button"
+                className="vms-option"
+                aria-label={name}
+                aria-pressed={isSpaceView === isSpace}
+                onClick={() => onChange(isSpace)}
+              >
+                <Icon
+                  size={18}
+                  fill={fill}
+                  stroke={GLYPH_STROKE}
+                  strokeWidth={GLYPH_STROKE_WIDTH}
+                  aria-hidden
+                />
+              </button>
+            </TooltipTrigger>
+            <TooltipContent>
+              <p>{name}</p>
+            </TooltipContent>
+          </Tooltip>
+        ))}
+      </TooltipProvider>
     </div>
   );
 };

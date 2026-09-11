@@ -2368,42 +2368,23 @@ $switch-ease: cubic-bezier(0.45, 0.05, 0.25, 1.2);
   position: relative;
   display: flex;
   align-items: center;
-  gap: 5px;
-  padding: 5px 13px;
+  justify-content: center;
+  padding: 0;
   // The highlight is half the track and slides by exactly its own width,
   // so the two segments have to measure the same — `flex: 1 1 0` sizes
-  // them from a zero basis and splits the space evenly instead of
-  // letting the longer label run wider. The floor is what the track's
-  // width comes from, so it has to clear the wider label ("3D Disco
-  // Space" needs ~136px with its globe; "Boring Space" less).
+  // them from a zero basis and splits the space evenly. The floor is
+  // what the track's width comes from: a glyph with a thumb's worth of
+  // room around it.
   flex: 1 1 0;
-  min-width: 140px;
-  justify-content: center;
+  min-width: 38px;
   border-radius: 999px;
-  font-size: 12px;
-  font-weight: 600;
-  letter-spacing: 0.02em;
-  white-space: nowrap;
-  // Light on the charcoal track; the active one rides the light thumb,
-  // so it takes the speaker's ink instead
-  color: rgba(243, 241, 248, 0.7);
   background: none;
-  // The global `button:hover` underline would draw a line under the
-  // label; these read as tabs, not links
+  // The global `button:hover` underline has nothing to draw under, but
+  // these read as tabs, not links
   text-decoration: none;
-  transition: color 300ms ease;
-
-  &[aria-pressed="true"] {
-    color: #24203a;
-  }
 
   &:hover {
-    color: #f3f1f8;
     text-decoration: none;
-  }
-
-  &[aria-pressed="true"]:hover {
-    color: #24203a;
   }
 
   // The global button:focus-visible ring sets a 4px radius, which squares
@@ -2414,8 +2395,16 @@ $switch-ease: cubic-bezier(0.45, 0.05, 0.25, 1.2);
   }
 
   svg {
-    // The label carries the meaning; the glyph is a quiet marker beside it
-    opacity: 0.85;
+    // The glyph carries the whole meaning: full strength, and the
+    // resting one dims a touch so the lit thumb reads as the pick
+    display: block;
+    opacity: 0.7;
+    transition: opacity 300ms ease;
+  }
+
+  &[aria-pressed="true"] svg,
+  &:hover svg {
+    opacity: 1;
   }
 }
 

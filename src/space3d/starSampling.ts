@@ -39,6 +39,10 @@ export interface TextStarLayout {
    *  title sets it explicitly so every line's letters stand the same
    *  height whatever their widths add up to. */
   fontSize?: number;
+  /** Relative glyph widths, one per letter, that textWidth is divided
+   *  by; measured in the measuring font when absent. The stacked title
+   *  supplies its own (stackedLetterWidths). */
+  letterWidths?: number[];
 }
 
 const LANDING_TEXT_TOP_PX = 60;
@@ -146,11 +150,6 @@ const GLYPH_INK_BOTTOM = 1.53;
 const MEASURE_PX = 40;
 const MEASURE_FONT = `100 ${MEASURE_PX}px ${fontFamily}`;
 
-/** Glyphs the measuring font doesn't have: the ♥ falls back to a face
- *  that sets it a full em wide, which would hand it a box nearly three
- *  letters across — give it a capital's instead */
-const MEASURE_OVERRIDES: Record<string, number> = { "♥": 28 };
-
 /** Each letter's width in the measuring font (all 0 without a 2D context) */
 function measureLetters(text: string): number[] {
   const ctx = document.createElement("canvas").getContext("2d");
@@ -158,10 +157,7 @@ function measureLetters(text: string): number[] {
   ctx.font = MEASURE_FONT;
   return text
     .split("")
-    .map(
-      (letter) =>
-        MEASURE_OVERRIDES[letter] ?? Math.round(ctx.measureText(letter).width),
-    );
+    .map((letter) => Math.round(ctx.measureText(letter).width));
 }
 
 /** The landing title's single-line layout: 80% of the viewport width of
@@ -222,9 +218,24 @@ export interface LandingTitleLayout {
 const stackedLines = (phrase: string): string[] =>
   STACKED_LINES[phrase] ?? phrase.split(" ");
 
+/**
+ * The ♥'s measured width for the stacked title. The measuring font has
+ * no heart, and the fallback face's is a full em (MEASURE_PX) — but the
+ * sampler stretches every glyph ~1.5× taller than its em while a box
+ * STACK_STRETCH wide only stretches the heart ~1.5× wider than its em
+ * once its side bearings are taken out, and a heart drawn ~1.36 font
+ * sizes tall needs a box ~1.66 wide to come out round (capitals get
+ * away with reading tall; a narrow heart just reads squashed).
+ */
+const STACK_HEART_WIDTH = 44;
+
+/** The measuring font's widths, with the ♥ opened out (STACK_HEART_WIDTH) */
+const stackedLetterWidths = (text: string): number[] =>
+  measureLetters(text).map((w, i) => (text[i] === "♥" ? STACK_HEART_WIDTH : w));
+
 /** A stacked line's width in font sizes: its glyph boxes plus the gaps */
 const lineUnits = (text: string): number =>
-  (measureLetters(text).reduce((sum, w) => sum + w, 0) / MEASURE_PX) *
+  (stackedLetterWidths(text).reduce((sum, w) => sum + w, 0) / MEASURE_PX) *
     STACK_STRETCH +
   (text.length - 1) * STACK_LETTER_SPACING;
 
@@ -274,6 +285,7 @@ export function landingTitleLayout(
         ),
         letterSpacing,
         fontSize,
+        letterWidths: stackedLetterWidths(text),
       },
     };
   });
@@ -305,7 +317,7 @@ export function landingGlyphBox(
     lines[0];
   const { layout, text } = line;
   const bottom = layout.y + GLYPH_INK_BOTTOM * fontSize;
-  const letterWidths = measureLetters(text);
+  const letterWidths = layout.letterWidths ?? measureLetters(text);
   const total = letterWidths.reduce((sum, w) => sum + w, 0);
   if (!total) return { left: layout.x, width: fontSize, bottom };
   const i = index - line.start;
@@ -361,7 +373,7 @@ export const generateStarsForText = (
   layout: TextStarLayout,
   { density = 1, radiusScale = 1, letterOffset = 0 }: TextStarOptions = {},
 ): SampledStar[] => {
-  const letterWidths = measureLetters(text);
+  const letterWidths = layout.letterWidths ?? measureLetters(text);
   const totalPrescaledCharWidths = letterWidths.reduce((sum, w) => sum + w, 0);
   if (!totalPrescaledCharWidths) return [];
 
