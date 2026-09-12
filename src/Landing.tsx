@@ -6,14 +6,19 @@ import useScrollJourney from "./useScrollJourney";
 import ScrollHint from "./ScrollHint";
 import AndClaude from "./AndClaude";
 import LandingTagline from "./LandingTagline";
-import { SUN_RADIUS_OFFSET, SUN_SIZE } from "./landingScene";
+import {
+  SUN_CENTER,
+  SUN_RADIUS_OFFSET,
+  SUN_SIZE,
+  SUN_SURFACE_RADIUS,
+} from "./landingScene";
+import { ringLabelMetrics } from "./ringLabel";
 import { JOURNEY_STOPS } from "./scrollTransition";
 import { LANDING_STACK_MIN_WIDTH_PX } from "./space3d/starSampling";
 import useWindowWidth from "./useWindowWidth";
 
-// While the landing page is up, the corner chrome (the music and view
-// switches, the coin's hit target) takes its lg+ dock positions from
-// App.scss `body.on-landing` rules
+// While the landing page is up, the coin's hit target takes its lg+ dock
+// position from App.scss `body.on-landing` rules
 const LANDING_BODY_CLASS = "on-landing";
 
 // The solar system's 4s-delayed fadeIn is first-visit choreography (the
@@ -21,6 +26,13 @@ const LANDING_BODY_CLASS = "on-landing";
 // that delay when returning from /home would hide the whole system — and
 // the sun flying back into it — for 5 seconds.
 let hasPlayedIntro = false;
+
+// The sun's hit target, in viewBox units. It reaches past the disc to the
+// outer edge of the curved ENTER label the WebGL sun draws around it, so the
+// word is part of the link rather than decoration sitting next to it — the
+// same radius the label is laid out on (ringLabel.ts), read in the SVG's
+// units, where the sun's radius is SUN_SURFACE_RADIUS.
+const SUN_HIT_RADIUS = ringLabelMetrics(SUN_SURFACE_RADIUS).outerRadius;
 
 // The scroll hint appears a beat after the landing choreography finishes:
 // the first visit's intro runs ~5s (stars, then the 4s-delayed system
@@ -85,7 +97,15 @@ const Landing = () => {
             }}
           >
             {/* The "ENTER" label itself is drawn by the WebGL sun; this SVG
-                supplies the clickable disc the label rings */}
+                supplies the clickable disc the label rings — sized to take
+                the label in too, since SunInternals' own paths stop just
+                past the limb */}
+            <circle
+              cx={SUN_CENTER}
+              cy={SUN_CENTER}
+              r={SUN_HIT_RADIUS}
+              fill="transparent"
+            />
             <SunInternals size={SUN_SIZE} radiusOffset={SUN_RADIUS_OFFSET} />
           </Link>
         </svg>

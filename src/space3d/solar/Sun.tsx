@@ -3,8 +3,8 @@ import { useFrame } from "@react-three/fiber";
 import * as THREE from "three";
 
 import { SUN_RADIUS, sunState } from "./constants";
-import { SUN_SIZE, SUN_SURFACE_RADIUS } from "../../landingScene";
 import { hoverState } from "../../solarHover";
+import { ringLabelMetrics } from "../../ringLabel";
 import { scrollTransitionState } from "../../scrollTransition";
 import { createSunGlowTexture } from "../textures";
 import { wireState } from "./wireSkin";
@@ -56,14 +56,13 @@ const FLARE_RING_PX = 24;
 /** Corona shell radius, in sun radii (must fit the biggest flare burst) */
 const CORONA_SHELL_RADII = 2;
 const ENTER_TEXT = "ENTER";
-const ENTER_FONT_SIZE_SVG = 22;
-/** Enlarge the curved "ENTER" label relative to its SVG-derived size */
-const ENTER_TEXT_SCALE = 1.5;
-/** Push the label off the sun's surface by ~10% of the sun's diameter */
-const ENTER_SURFACE_OFFSET = 0.2 * SUN_RADIUS;
-/** SunInternals #circle2 — the textPath the SVG "ENTER" link follows */
-const ENTER_RING_OUTER_RADIUS = 200 * SUN_SIZE;
-const ENTER_FONT = retroFloralFont(ENTER_FONT_SIZE_SVG);
+/**
+ * Rasterization size for the glyph textures — resolution only, since the
+ * word's real size comes from ringLabelMetrics. It runs above Earth's 13px
+ * because the sun is the bigger body, so its label covers more screen.
+ */
+const ENTER_RASTER_PX = 22;
+const ENTER_FONT = retroFloralFont(ENTER_RASTER_PX);
 const ENTER_TEXT_COLOR = new THREE.Color("#ffffff");
 // Mesh view keeps the label bright — the old dark purple was there to
 // read against the light sky this view replaced
@@ -89,7 +88,11 @@ function orientLetter(quaternion: THREE.Quaternion, angle: number) {
   quaternion.setFromRotationMatrix(letterBasis);
 }
 
-/** Curved "ENTER" text above the sun, matching the landing SVG textPath. */
+/**
+ * Curved "ENTER" text above the sun. Same construction and same proportions
+ * as Earth's "ABOUT ME" ring (ringLabel.ts) — the two are the site's only
+ * planet links, and they should read as a pair.
+ */
 function EnterRing({
   isSpaceView,
   revealed,
@@ -107,21 +110,14 @@ function EnterRing({
     const charWidths = measureCharWidths(
       ENTER_TEXT,
       ENTER_FONT,
-      ENTER_FONT_SIZE_SVG * 0.6,
+      ENTER_RASTER_PX * 0.6,
     );
     const totalWidth = charWidths.reduce((sum, width) => sum + width, 0);
     if (totalWidth <= 0) return null;
 
-    const worldFontSize =
-      SUN_RADIUS *
-      (ENTER_FONT_SIZE_SVG / SUN_SURFACE_RADIUS) *
-      ENTER_TEXT_SCALE;
-    // Float the ring off the sun's surface by ~10% of its diameter so the
-    // (now larger) word clears the limb instead of grazing it.
-    const worldRadius =
-      SUN_RADIUS * (ENTER_RING_OUTER_RADIUS / SUN_SURFACE_RADIUS) +
-      ENTER_SURFACE_OFFSET;
-    const worldArcLength = totalWidth * (worldFontSize / ENTER_FONT_SIZE_SVG);
+    const { radius: worldRadius, fontSize: worldFontSize } =
+      ringLabelMetrics(SUN_RADIUS);
+    const worldArcLength = totalWidth * (worldFontSize / ENTER_RASTER_PX);
     const totalAngle = worldArcLength / worldRadius;
     // Center the word at the top of the screen (−Z is screen-up for the
     // top-down landing camera); increasing angle runs left→right.
@@ -135,7 +131,7 @@ function EnterRing({
       const letter = createLetterPlane(
         char,
         width,
-        ENTER_FONT_SIZE_SVG,
+        ENTER_RASTER_PX,
         worldFontSize,
         ENTER_FONT,
       );

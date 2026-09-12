@@ -43,17 +43,23 @@ the preview tool.
 
 ## Routes & structure
 
-- `/` → `Landing.tsx` — WebGL solar system; the sun is a clickable "ENTER".
-  On lg+ (≥1280px) the star-glyph title stacks in a left column
-  (`HUNT.` / `CODES`, the later phrases likewise — `STACKED_LINES` in
-  `starSampling.ts`), the sun parks at 75% of the width (`LANDING_SUN_X`
-  in `CameraRig.tsx`), a tagline hangs under the title
-  (`LandingTagline.tsx`), the music + view switches dock bottom-left on
-  the title's 5vw margin and the coin parks top-right (`body.on-landing`
-  rules in App.scss, mirrored in `BadgeMedallion.tsx`); the scroll
-  chevron sits that layout out. Below lg it's the one-line banner.
+- `/` → `Landing.tsx` — WebGL solar system; the sun is a clickable
+  "ENTER" — the curved label is drawn in WebGL, and the SVG under it
+  carries one transparent disc wide enough to be the link for both
+  (`SUN_HIT_RADIUS`). On lg+ (≥1280px) the star-glyph title stacks in a
+  left column (`HUNT.` / `CODES`, the later phrases likewise —
+  `STACKED_LINES` in `starSampling.ts`), the sun parks at 75% of the
+  width (`LANDING_SUN_X` in `CameraRig.tsx`), a tagline hangs under the
+  title (`LandingTagline.tsx`) and the coin parks top-right
+  (`body.on-landing` rules in App.scss, mirrored in
+  `BadgeMedallion.tsx`); the music + view switches keep their usual
+  bottom-left corner, and the scroll chevron sits the layout out. Below
+  lg it's the one-line banner.
 - `/home` → `Home.tsx` — social links; Earth = "ABOUT ME" link; asteroids +
-  Sputnik satellite = blog/LinkedIn/GitHub links (home view only)
+  Sputnik satellite = blog/LinkedIn/GitHub links (home view only). "ABOUT
+  ME" and the landing's "ENTER" are one pair of curved ring labels and
+  share their proportions (`src/ringLabel.ts`) — size one and you size
+  both.
 - `/about` → `Resume.tsx` — the résumé page (frosted panel over the scene)
 - `/artifacts` → the shop, over the "artifacts" solar view: the camera
   perches over the moon's limb (the about view's Earth-perch, scaled to

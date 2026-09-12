@@ -72,6 +72,15 @@ export interface CurvedLetter {
   quaternion: THREE.Quaternion;
 }
 
+/**
+ * Transparent margin around each glyph, as a fraction of the font size. It
+ * has to scale with the font: a fixed margin makes the same word read heavier
+ * the larger it is rasterized (the glyph fills more of its plane), and the
+ * two ring labels rasterize at different sizes so each stays crisp at the
+ * size it renders.
+ */
+const GLYPH_PAD_FRAC = 0.3;
+
 /** Rasterize one glyph to an unlit, always-on-top plane mesh. */
 export function createLetterPlane(
   char: string,
@@ -83,7 +92,7 @@ export function createLetterPlane(
   const dpr = Math.min(window.devicePixelRatio || 1, 2);
   const canvas = document.createElement("canvas");
   const ctx = canvas.getContext("2d")!;
-  const pad = 4;
+  const pad = Math.ceil(fontSizePx * GLYPH_PAD_FRAC);
   const cssW = Math.max(Math.ceil(widthPx) + pad * 2, 8);
   const cssH = Math.max(Math.ceil(fontSizePx * 1.25) + pad * 2, 8);
   canvas.width = cssW * dpr;
