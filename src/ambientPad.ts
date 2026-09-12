@@ -70,12 +70,21 @@ let enabled = false;
 let scene = "landing";
 let unlockArmed = false;
 
-/** Build the graph and start every oscillator. They run for the life of
- *  the page — starting and stopping oscillators per chord would click,
- *  and eight idling oscillators behind a closed gain cost nothing. */
+/**
+ * Build the graph and start every oscillator. They run for the life of
+ * the page — starting and stopping oscillators per chord would click, and
+ * eight idling oscillators behind a closed gain cost nothing.
+ *
+ * Built whatever state the context is in. A suspended context accepts
+ * nodes and `start()` calls perfectly happily and simply begins when it
+ * resumes, so the pad is standing by before the visitor's first gesture
+ * rather than being assembled by it. Waiting for "running" here would
+ * cost a second gesture: `resume()` is async, so the state is still
+ * "suspended" on the very tick the first one unlocks it.
+ */
 function build(): Pad | null {
   const ctx = ensureAudioContext();
-  if (!ctx || ctx.state !== "running") return null;
+  if (!ctx) return null;
 
   const bus = ctx.createGain();
   bus.gain.value = 0.0001;
@@ -134,8 +143,8 @@ function fadeTo(level: number): void {
   );
 }
 
-/** Try to start; if the context isn't unlocked yet, wait out the first
- *  interaction and try again. */
+/** Autoplay policy only lets a context resume from inside a gesture, so
+ *  wait out the first interaction and resume there. */
 function armGestureUnlock(): void {
   if (unlockArmed) return;
   unlockArmed = true;
@@ -143,7 +152,7 @@ function armGestureUnlock(): void {
     unlockArmed = false;
     document.removeEventListener("pointerdown", unlock);
     document.removeEventListener("keydown", unlock);
-    if (enabled) start();
+    if (enabled) ensureAudioContext();
   };
   document.addEventListener("pointerdown", unlock);
   document.addEventListener("keydown", unlock);
@@ -151,10 +160,9 @@ function armGestureUnlock(): void {
 
 function start(): void {
   if (!pad) pad = build();
-  if (!pad) {
-    armGestureUnlock();
-    return;
-  }
+  // No Web Audio at all — nothing to do, and nothing a gesture would fix
+  if (!pad) return;
+  if (pad.ctx.state !== "running") armGestureUnlock();
   fadeTo(CHORDS[scene] ? PAD_BUS_GAIN : 0);
 }
 
