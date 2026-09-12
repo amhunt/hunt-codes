@@ -16,6 +16,7 @@ import BodyAnchors from "./BodyAnchors";
 import WireDriver from "./WireDriver";
 import AmbientPadDriver from "./AmbientPadDriver";
 import { ASTEROIDS, layoutState, PLANETS, SYNTH_PAD } from "./constants";
+import { SCENE_FOV_DEG } from "../../landingScene";
 import useWindowWidth from "../../useWindowWidth";
 
 /**
@@ -108,7 +109,12 @@ const SolarScene = ({
       onCreated={({ gl }) => {
         gl.domElement.style.pointerEvents = "none";
       }}
-      camera={{ position: [0, 58, 0.01], fov: 55, near: 0.1, far: 1200 }}
+      camera={{
+        position: [0, 58, 0.01],
+        fov: SCENE_FOV_DEG,
+        near: 0.1,
+        far: 1200,
+      }}
       // Cap DPR at 1.5 (2x on retina was ~78% more pixels for little
       // visible gain); keep MSAA — the sphere limbs do need it
       dpr={[1, 1.5]}

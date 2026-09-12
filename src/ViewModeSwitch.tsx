@@ -29,9 +29,12 @@ const VIEWS: {
   Icon: typeof StarIcon;
   fill: string;
 }[] = [
-  { isSpace: true, name: "Boring Space", Icon: StarIcon, fill: STAR_FILL },
+  { isSpace: true, name: "Normal Space", Icon: StarIcon, fill: STAR_FILL },
   { isSpace: false, name: "3D Disco Space", Icon: GlobeIcon, fill: GLOBE_FILL },
 ];
+/** The tooltips say which of the two the glyph picks; the labels don't
+ *  need it, sitting inside a group already called "Scene view" */
+const VIEW_TOOLTIP_PREFIX = "View: ";
 
 const ViewModeSwitch = ({
   isSpaceView,
@@ -84,7 +87,10 @@ const ViewModeSwitch = ({
             </button>
           </TooltipTrigger>
           <TooltipContent>
-            <p>{name}</p>
+            <p>
+              {VIEW_TOOLTIP_PREFIX}
+              {name}
+            </p>
           </TooltipContent>
         </Tooltip>
       ))}

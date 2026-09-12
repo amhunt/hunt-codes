@@ -14,6 +14,11 @@ import { JOURNEY_STOPS } from "./scrollTransition";
 import { Tooltip, TooltipContent, TooltipTrigger } from "./ui/tooltip";
 import { Link } from "react-router-dom";
 
+// While /home is up, the scene switches dock in the bottom-right corner
+// the coin sits out here — App.scss `body.on-home` rules, the same dock
+// the landing uses, so neither switch moves on the hop between them
+const HOME_BODY_CLASS = "on-home";
+
 const typedOptions = {
   // The one-shot intro stays under reduced motion (a deliberate
   // entrance, same policy as the CSS one-shots); only the infinite
@@ -64,6 +69,11 @@ const Home = () => {
       typed.destroy();
     };
   }, [isSmall]);
+
+  useEffect(() => {
+    document.body.classList.add(HOME_BODY_CLASS);
+    return () => document.body.classList.remove(HOME_BODY_CLASS);
+  }, []);
 
   // Reveal the content as the 2s swoop lands. typed.js starts at 1s, so
   // the greeting is already mid-type as the container fades in.

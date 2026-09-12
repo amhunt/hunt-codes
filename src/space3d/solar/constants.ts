@@ -1,6 +1,6 @@
 import * as THREE from "three";
 
-import type { PlanetKind } from "../../landingScene";
+import { SUN_WORLD_RADIUS, type PlanetKind } from "../../landingScene";
 import type { SatellitePart } from "../../solarAnchorIds";
 import type { AsteroidLogo } from "../textures";
 
@@ -55,7 +55,7 @@ export interface SolarPlanetConfig {
  */
 export const layoutState = { compact: false };
 
-export const SUN_RADIUS = 3;
+export const SUN_RADIUS = SUN_WORLD_RADIUS;
 
 /**
  * The sun's current rendered scale multiplier (it grows a bit for the

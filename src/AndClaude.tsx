@@ -13,7 +13,7 @@ import useWindowWidth from "./useWindowWidth";
  * the heart glyph and sized to its width — the face is measured at a
  * reference size and scaled to match — with HEART_GAP_PX of air under
  * the title's glyph band. Phones never spell that phrase
- * (starPhrasesSmall), so there is nothing to show there.
+ * (they get the signature A instead), so there is nothing to show there.
  */
 const CREDIT_PHRASE = starPhrases[1];
 const HEART_INDEX = CREDIT_PHRASE.indexOf("♥");

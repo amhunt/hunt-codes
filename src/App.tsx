@@ -240,7 +240,7 @@ const App = () => {
             comes first in the tab order. The music switch is mounted once
             so the track carries across routes. */}
           <RoutedMusicSwitch />
-          <BadgeLink isSpaceView={isSpaceView} />
+          <BadgeLink />
           {/* App-level so the windshield frame and warp flash survive the
             rides' mid-flight route hops — a per-page mount would cut the
             flash short at every navigation */}

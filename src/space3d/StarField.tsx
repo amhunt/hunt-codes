@@ -24,10 +24,12 @@ import {
 import {
   generateBackgroundStars,
   generateStarsForLetters,
+  generateStarsForSignature,
   generateStarsForText,
   introSpawnPositions,
+  signaturePen,
   starPhrases,
-  starPhrasesSmall,
+  type PenState,
   type SampledStar,
   type TextStarLayout,
   type TextStarOptions,
@@ -53,6 +55,53 @@ import { NAME_TITLE_ID } from "../solarAnchorIds";
 // back on the first phrase).
 const MAX_PHRASE_TRANSITIONS = 3;
 
+// How long the phone signature takes to draw itself on (the pen's pace
+// varies leg by leg within it — SIGNATURE_LEG_SPEED in starSampling)
+const SIGNATURE_DRAW_MS = 4000;
+// The ball of light is struck rather than switched on: it comes up from
+// a point over SIGNATURE_BALL_GROW_MS, then breathes while it draws.
+const SIGNATURE_BALL_GROW_MS = 600;
+const SIGNATURE_BALL_PULSE_MS = 1500;
+const SIGNATURE_BALL_PULSE = 0.08;
+// The ball's own light. Piling every star's sprite on one point only ever
+// sums to white, so one star of the crowd is flagged as the ball (aBall)
+// and drawn by the shader as a little sun of its own — a disc marbled
+// light purple through light green by two turns of drifting noise, coarse
+// and quick where the real sun's surface is fine and slow. The rest of
+// the crowd rides inside it at no size.
+const BALL_COLOR_PURPLE = [0.74, 0.56, 1] as const;
+const BALL_COLOR_GREEN = [0.56, 1, 0.76] as const;
+/** How fast the cloud churns (noise fields crossed per second) */
+const BALL_CLOUD_SPEED = 0.9;
+/** How fine the marbling is — a few blobs across the ball, nothing like
+ *  the detail on the real sun */
+const BALL_CLOUD_SCALE = 14;
+/** How strongly the ball burns: the one knob for solid vs ghostly. The
+ *  sprite blends additively, so this scales what it puts on the screen
+ *  as well as its alpha. On top of it the ball still rides the star
+ *  layer's own fade (uOpacity) like everything else. */
+const BALL_OPACITY = 1;
+/** The disc's radius, as a fraction of the sprite's half-width (the
+ *  sprite runs HALO_FACTOR× the dot, so there is room either side) */
+const BALL_RADIUS = 0.46;
+/** The ball never shrinks below this, so the last few stars still come
+ *  off something rather than off nothing */
+const BALL_MIN_RADIUS_PX = 1.5;
+/** How far the rim fades over, in the same units: 0.02 is a crisp edge
+ *  with just enough of a ramp to keep it from stepping, 0.15 reads
+ *  soft-focus */
+const BALL_EDGE = 0.02;
+/** How much glow spills past the rim. 0 keeps the ball a clean disc with
+ *  no faint outskirts; the stars themselves glow at 0.25 */
+const BALL_GLOW = 0;
+
+// A clump of stars on one point — the crowd the cursor gathers on md+,
+// and the phone signature's ball of light — swells with the size of the
+// crowd and brightens toward white by it (legacy StarDot math).
+const CLUMP_DISTANCE_PX = 10;
+const CLUMP_STARS_PER_PX = 16;
+const MAX_CLUMP_RADIUS_PX = 32;
+
 const HUE_ROTATION_PERIOD_S = 20; // 20s per full rotation
 const DISCO_PERIOD_S = 8; // star-disco: 4s alternate = 8s round trip
 
@@ -76,13 +125,16 @@ const TWINKLE_DOT_GROW = 1.6;
 // offscreen before re-entering on the far side instead of popping
 const PAN_WRAP_PAD_PX = 160;
 
-const vertexShader = /* glsl */ `
+// Exported for StarField.shader.test.js, which type-checks them with glslx
+// — a shader that fails to compile takes the whole star field down with it
+export const vertexShader = /* glsl */ `
   attribute float aSize;
   attribute vec3 aColor;
   attribute float aPhase;
   attribute float aDisco;
   attribute float aBrighten;
   attribute float aTwinkle;
+  attribute float aBall;
   uniform float uTime;
   uniform float uPixelRatio;
   uniform float uMaxPointSize;
@@ -91,9 +143,11 @@ const vertexShader = /* glsl */ `
   varying vec3 vColor;
   varying float vExtraHue;
   varying float vTwinkle;
+  varying float vBall;
 
   void main() {
     vTwinkle = aTwinkle;
+    vBall = aBall;
     float scale = 1.0;
     float extraHue = 0.0;
     if (aDisco > 0.5) {
@@ -121,14 +175,31 @@ const vertexShader = /* glsl */ `
   }
 `;
 
-const fragmentShader = /* glsl */ `
+export const fragmentShader = /* glsl */ `
   uniform float uOpacity;
   uniform float uHue;
   uniform vec3 uGlowColor;
   uniform float uGlowStrength;
+  uniform float uTime;
   varying vec3 vColor;
   varying float vExtraHue;
   varying float vTwinkle;
+  varying float vBall;
+
+  // Value noise, for the ball's cloudy surface
+  float hash(vec2 p) {
+    return fract(sin(dot(p, vec2(127.1, 311.7))) * 43758.5453);
+  }
+  float noise(vec2 p) {
+    vec2 i = floor(p);
+    vec2 f = fract(p);
+    vec2 u = f * f * (3.0 - 2.0 * f);
+    return mix(
+      mix(hash(i), hash(i + vec2(1.0, 0.0)), u.x),
+      mix(hash(i + vec2(0.0, 1.0)), hash(i + vec2(1.0, 1.0)), u.x),
+      u.y
+    );
+  }
 
   // One sparkle ray: \`across\` is the distance off the ray's line, \`along\`
   // the distance from the center along it (sprite units, 0..0.5). Thin,
@@ -153,6 +224,41 @@ const fragmentShader = /* glsl */ `
   void main() {
     vec2 p = gl_PointCoord - 0.5;
     float d = length(p) * 2.0; // 0 at center, 1 at sprite edge
+    if (vBall > 0.5) {
+      // The signature's ball of light: a soft disc filling the middle of
+      // the sprite, its surface marbled by two turns of noise drifting
+      // against each other — the sun's trick, coarse and quick.
+      float body = 1.0 - smoothstep(
+        ${(BALL_RADIUS - BALL_EDGE).toFixed(3)},
+        ${(BALL_RADIUS + BALL_EDGE).toFixed(3)},
+        d
+      );
+      float halo = exp(-d * 4.0) * ${BALL_GLOW.toFixed(2)} * (1.0 - body);
+      vec2 q = p * ${BALL_CLOUD_SCALE.toFixed(1)};
+      // Churn is a loop, so a reduced-motion preference stills it — the
+      // marbling stays, it just stops moving
+      float t = uTime * ${(prefersReducedMotion ? 0 : BALL_CLOUD_SPEED).toFixed(2)};
+      float n = clamp((
+        noise(q + vec2(t, -t * 0.7)) +
+        0.5 * noise(q * 2.3 - vec2(t * 1.4, t * 0.9))
+      ) / 1.5, 0.0, 1.0);
+      // Mostly one colour or the other, with a soft seam between them —
+      // half and half everywhere would only wash out pale
+      vec3 cloud = mix(
+        vec3(${BALL_COLOR_PURPLE.map((v) => v.toFixed(3)).join(", ")}),
+        vec3(${BALL_COLOR_GREEN.map((v) => v.toFixed(3)).join(", ")}),
+        smoothstep(0.35, 0.65, n)
+      );
+      // The disc is solid: what it covers is all its alpha answers to
+      // (so the rim stays antialiased and nothing else is see-through),
+      // and the churn shows only as colour running light and dark
+      float cover = min(1.0, (body + halo) * ${BALL_OPACITY.toFixed(2)});
+      float shade = 0.8 + 0.45 * n;
+      float ballAlpha = cover * uOpacity;
+      if (ballAlpha < 0.004) discard;
+      gl_FragColor = vec4(cloud * shade, ballAlpha);
+      return;
+    }
     // The core fills 1/HALO_FACTOR of the sprite, the rest is glow. While
     // twinkling the sprite is TWINKLE_GROW× bigger, so the core thresholds
     // shrink to hold the dot near its size.
@@ -220,10 +326,14 @@ interface StarBuffers {
   discos: Float32Array;
   brightens: Float32Array;
   twinkles: Float32Array;
+  /** 1 on the one star drawn as the signature's ball of light, 0 on the
+   *  rest (the shader gives it a cloudy surface of its own) */
+  balls: Float32Array;
   positionsAttr: THREE.BufferAttribute;
   sizesAttr: THREE.BufferAttribute;
   brightensAttr: THREE.BufferAttribute;
   twinklesAttr: THREE.BufferAttribute;
+  ballsAttr: THREE.BufferAttribute;
 }
 
 /** The one place that knows the star shader's per-vertex attribute layout. */
@@ -249,6 +359,7 @@ const createStarGeometry = (
   const discosAttr = make(1, "aDisco");
   const brightensAttr = make(1, "aBrighten");
   const twinklesAttr = make(1, "aTwinkle");
+  const ballsAttr = make(1, "aBall");
   // Points are spread across the whole screen; skip per-frame culling math
   geometry.boundingSphere = new THREE.Sphere(new THREE.Vector3(), extent);
   return {
@@ -259,11 +370,13 @@ const createStarGeometry = (
     phases: phasesAttr.array as Float32Array,
     discos: discosAttr.array as Float32Array,
     brightens: brightensAttr.array as Float32Array,
+    balls: ballsAttr.array as Float32Array,
     twinkles: twinklesAttr.array as Float32Array,
     positionsAttr,
     sizesAttr,
     brightensAttr,
     twinklesAttr,
+    ballsAttr,
   };
 };
 
@@ -404,20 +517,31 @@ const TextStars = ({
   const cursorRef = useCursorPositionRef();
 
   const [phraseIdx, setPhraseIdx] = useState(0);
-  const phrases = isSmall ? starPhrasesSmall : starPhrases;
-  const phrase = phrases[phraseIdx % phrases.length];
+  const phrase = starPhrases[phraseIdx % starPhrases.length];
+  // Phones don't spell anything: the stars fill the signature A and stay
+  // there, so there's no phrase to publish (or to cycle, below) either.
   // Publish the phrase for DOM chrome outside the canvas (the
   // "(and Claude)" caption, AndClaude.tsx)
   useEffect(() => {
-    setLandingPhrase(isLanding ? phrase : "");
-  }, [isLanding, phrase]);
+    setLandingPhrase(isLanding && !isSmall ? phrase : "");
+  }, [isLanding, isSmall, phrase]);
 
   // Off the landing there are no text stars, but the component stays
   // mounted so the choreography doesn't replay on every route return.
-  const targets: SampledStar[] = useMemo(
-    () => (isLanding ? generateStarsForLetters(phrase, width, height) : []),
-    [isLanding, phrase, width, height],
+  // Phones: the signature's stars, each with its place along the stroke
+  // the ball of light draws them on with (null everywhere else)
+  const formation = useMemo(
+    () =>
+      isLanding && isSmall ? generateStarsForSignature(width, height) : null,
+    [isLanding, isSmall, width, height],
   );
+
+  const targets: SampledStar[] = useMemo(() => {
+    if (!isLanding) return [];
+    return formation
+      ? formation.stars
+      : generateStarsForLetters(phrase, width, height);
+  }, [isLanding, formation, phrase, width, height]);
 
   // Choreography state persists across phrase changes and route hops
   const simRef = useRef({
@@ -429,6 +553,9 @@ const TextStars = ({
      *  glyph. Cursor gravity waits for it, so the fly-in can't be pulled
      *  off course; once true it stays true. */
     formed: false,
+    /** How far the phone signature has been drawn (0–1). Only ever
+     *  climbs, so a resize or a route hop can't replay the draw. */
+    drawn: 0,
   });
   // Live positions (DOM px, xy pairs), written every frame and read by
   // the next phrase's useMemo for carry-over. The memo stays pure — the
@@ -441,11 +568,17 @@ const TextStars = ({
     const prev = livePositionsRef.current;
     const positions = new Float32Array(count * 2);
     const velocities = new Float32Array(count);
-    // Landing intro only: spawn points outside the viewport, matched to
-    // the glyphs by angle so the fly-in doesn't tangle
-    const introSpawns = sim.hasEverHadStars
-      ? null
-      : introSpawnPositions(targets, width, height);
+    // Landing intro only: spawn points scattered over the screen (and a
+    // little past it), matched to the glyphs by angle so the fly-in
+    // doesn't tangle
+    const introSpawns =
+      sim.hasEverHadStars || formation
+        ? null
+        : introSpawnPositions(targets, width, height);
+    // The signature draws itself on instead: every star waits in one ball
+    // of light at the head of the stroke
+    const ballStart =
+      sim.hasEverHadStars || !formation ? null : signaturePen(formation.pen, 0);
     for (let i = 0; i < count; i++) {
       velocities[i] = Math.random() + 0.5;
       if (i * 2 + 1 < prev.length && sim.hasEverHadStars) {
@@ -457,11 +590,14 @@ const TextStars = ({
         positions[i * 2] = targets[i].x;
         positions[i * 2 + 1] = targets[i].y;
       } else if (introSpawns) {
-        // Start just outside the viewport on every side and fly in. The
-        // glide's 10px-per-tick cap means the farthest stars take a few
-        // seconds — that's the effect, a stream converging on the centre.
+        // Start scattered across the sky and draw in. The glide's
+        // 10px-per-tick cap means the farthest stars take a few seconds —
+        // that's the effect, a whole field gathering into the words.
         positions[i * 2] = introSpawns[i * 2];
         positions[i * 2 + 1] = introSpawns[i * 2 + 1];
+      } else if (ballStart) {
+        positions[i * 2] = ballStart.x;
+        positions[i * 2 + 1] = ballStart.y;
       }
     }
 
@@ -475,7 +611,7 @@ const TextStars = ({
       buffers.phases[i] = Math.random();
     }
     return { buffers, positions, velocities };
-  }, [targets, width, height]);
+  }, [targets, formation, width, height]);
 
   // Commit the new sim arrays outside of render
   useEffect(() => {
@@ -490,8 +626,31 @@ const TextStars = ({
 
   useConfigureMaterial(material, opacityRef);
 
+  // The ball of light is a cloud of its own: one point, drawn after the
+  // stars and blended normally rather than added to them, so it covers
+  // the letter it has already laid down instead of glowing through it.
+  // (Everything in the star cloud blends additively — a sprite in there
+  // can only ever add light, never hide what's behind it.)
+  const ballBuffers = useMemo(() => {
+    const b = createStarGeometry(1, width + height, true);
+    b.balls[0] = 1;
+    b.ballsAttr.needsUpdate = true;
+    b.positions[2] = Z_STARS;
+    return b;
+  }, [width, height]);
+
+  const ballMaterial = useMemo(() => {
+    const m = createStarMaterial(TEXT_GLOW_COLOR, TEXT_GLOW_STRENGTH);
+    m.blending = THREE.NormalBlending;
+    return m;
+  }, []);
+
+  useConfigureMaterial(ballMaterial, opacityRef);
+
   useEffect(() => () => data.buffers.geometry.dispose(), [data]);
   useEffect(() => () => material.dispose(), [material]);
+  useEffect(() => () => ballBuffers.geometry.dispose(), [ballBuffers]);
+  useEffect(() => () => ballMaterial.dispose(), [ballMaterial]);
 
   useFrame((_, delta) => {
     // Fully faded out: the group is hidden, so skip the gravity sim too
@@ -499,17 +658,20 @@ const TextStars = ({
     const sim = simRef.current;
     const deltaMs = Math.min(delta * 1000, 100);
     sim.elapsedMs += deltaMs;
-    // Legacy choreography: stars hold off-screen for 2s before flying in
-    if (sim.elapsedMs < STAR_INTRO_DELAY_MS) return;
+    // Legacy choreography: stars hold off-screen for 2s before flying in.
+    // The phone signature holds too, but visibly — its ball of light is
+    // already gathered at the head of the stroke, waiting to draw.
+    if (sim.elapsedMs < STAR_INTRO_DELAY_MS && !formation) return;
 
     // Phrase cycle: advance every 10s, 3 times total, ending on phrase 0
     if (
+      !isSmall &&
       sim.transitions < MAX_PHRASE_TRANSITIONS &&
       sim.elapsedMs - STAR_INTRO_DELAY_MS >
         (sim.transitions + 1) * TEXT_CHANGE_INTERVAL_MS
     ) {
       sim.transitions++;
-      setPhraseIdx((idx) => (idx + 1) % phrases.length);
+      setPhraseIdx((idx) => (idx + 1) % starPhrases.length);
     }
 
     const count = targets.length;
@@ -519,6 +681,38 @@ const TextStars = ({
     // The legacy sim stepped once per 45ms; scale movement to hold that
     // speed at any frame rate.
     const factor = deltaMs / STAR_TICK_MS;
+
+    // The phone signature's draw-on: the stars that haven't been drawn yet
+    // all sit on the pen, which walks the letter's stroke over
+    // SIGNATURE_DRAW_MS. Piled on one point with additive blending and the
+    // cursor-clump swell (size by the size of the crowd, brightened toward
+    // white by it too) they read as a single ball of light, which thins out
+    // and dims as the letter takes the stars off it.
+    let pen: PenState | null = null;
+    let ballSize = 0;
+    let ballScale = 1;
+    let crowd = 0;
+    if (formation && sim.drawn < 1) {
+      pen = signaturePen(
+        formation.pen,
+        Math.max(0, sim.elapsedMs - STAR_INTRO_DELAY_MS) / SIGNATURE_DRAW_MS,
+      );
+      sim.drawn = pen.drawn;
+      for (let i = 0; i < targets.length; i++) {
+        if (formation.order[i] > sim.drawn) crowd++;
+      }
+      ballSize = Math.min(crowd / CLUMP_STARS_PER_PX, MAX_CLUMP_RADIUS_PX);
+      // Struck from nothing, then breathing (the pulse is a loop, so it
+      // sits out a reduced-motion preference)
+      const struck = Math.min(1, sim.elapsedMs / SIGNATURE_BALL_GROW_MS);
+      ballScale = 1 - (1 - struck) ** 3;
+      if (!prefersReducedMotion) {
+        ballScale *=
+          1 +
+          SIGNATURE_BALL_PULSE *
+            Math.sin((2 * Math.PI * sim.elapsedMs) / SIGNATURE_BALL_PULSE_MS);
+      }
+    }
 
     // No cursor gravity until the first phrase forms — the intro's stream
     // should reach its glyphs untouched
@@ -539,6 +733,15 @@ const TextStars = ({
     let unsettled = 0;
 
     for (let i = 0; i < count; i++) {
+      if (pen && formation && formation.order[i] > sim.drawn) {
+        // Riding inside the ball, which draws itself (below)
+        positions[i * 2] = pen.x;
+        positions[i * 2 + 1] = pen.y;
+        data.buffers.positions[i * 3] = domToWorldX(pen.x, width);
+        data.buffers.positions[i * 3 + 1] = domToWorldY(pen.y, height);
+        data.buffers.sizes[i] = 0;
+        continue;
+      }
       let x = positions[i * 2];
       let y = positions[i * 2 + 1];
       const distanceToCursor = Math.sqrt(
@@ -581,8 +784,11 @@ const TextStars = ({
             targets[i].r,
           maxStarRadiusPx,
         );
-        if (distanceToCursor < 10) {
-          size = Math.max(size, Math.min(prevNumClose / 16, 32));
+        if (distanceToCursor < CLUMP_DISTANCE_PX) {
+          size = Math.max(
+            size,
+            Math.min(prevNumClose / CLUMP_STARS_PER_PX, MAX_CLUMP_RADIUS_PX),
+          );
           brighten = prevNumClose;
         }
       }
@@ -593,16 +799,40 @@ const TextStars = ({
       data.buffers.brightens[i] = brighten;
     }
 
+    // The ball's own point: on the pen while there's still a crowd
+    // inside it, and gone the moment the last star has been laid down
+    if (pen && crowd > 0) {
+      ballBuffers.positions[0] = domToWorldX(pen.x, width);
+      ballBuffers.positions[1] = domToWorldY(pen.y, height);
+      ballBuffers.sizes[0] = Math.max(BALL_MIN_RADIUS_PX, ballSize) * ballScale;
+    } else if (formation && sim.drawn < 1) {
+      ballBuffers.sizes[0] = 0;
+    }
+    if (formation && sim.drawn < 1) {
+      ballBuffers.positionsAttr.needsUpdate = true;
+      ballBuffers.sizesAttr.needsUpdate = true;
+    }
+
     sim.numCloseToCursor = numClose;
     // The glide clamps its last step to the remaining distance, so "all
     // settled" is exact
-    if (!sim.formed && unsettled === 0) sim.formed = true;
+    if (!sim.formed && unsettled === 0 && crowd === 0) sim.formed = true;
     data.buffers.positionsAttr.needsUpdate = true;
     data.buffers.sizesAttr.needsUpdate = true;
     data.buffers.brightensAttr.needsUpdate = true;
   });
 
-  return <points geometry={data.buffers.geometry} material={material} />;
+  return (
+    <>
+      <points geometry={data.buffers.geometry} material={material} />
+      {/* Last of the star clouds, so it covers what it has drawn */}
+      <points
+        geometry={ballBuffers.geometry}
+        material={ballMaterial}
+        renderOrder={2}
+      />
+    </>
+  );
 };
 
 // ─── The "andrewhunt" name header ────────────────────────────────────────

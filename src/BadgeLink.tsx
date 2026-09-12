@@ -20,12 +20,13 @@ import useReducedMotion from "./useReducedMotion";
  * is nothing to click, so the coin goes back to being decorative rather
  * than a button that does nothing.
  */
-const BadgeLink = ({ isSpaceView }: { isSpaceView: boolean }) => {
+const BadgeLink = () => {
   const { pathname } = useLocation();
   const reducedMotion = useReducedMotion();
   const isLanding = pathname === "/";
-  // Day-mode /home: the Golden Gate Bridge owns the corner. The coin hides
-  // in the same case (Space3DBackground) — an invisible hit target over
+  // /home is the one page the coin sits out: the scene switches dock in
+  // its corner there (App.scss's `body.on-home`), and the coin itself is
+  // hidden to match (Space3DBackground) — an invisible hit target over
   // other content would hijack clicks.
   const visible =
     !reducedMotion &&
@@ -35,12 +36,11 @@ const BadgeLink = ({ isSpaceView }: { isSpaceView: boolean }) => {
       pathname === "/about" ||
       pathname.startsWith("/draw") ||
       pathname === "/artifacts" ||
-      pathname === "/projects-and-toys" ||
-      (pathname === "/home" && isSpaceView));
+      pathname === "/projects-and-toys");
 
-  // The hit target can vanish without a pointerleave — flipping to mesh
-  // view on /home hides it, a route change swaps the element — so don't
-  // leave the coin posed for a hover that ended when it comes back
+  // The hit target can vanish without a pointerleave — a route change
+  // swaps the element — so don't leave the coin posed for a hover that
+  // ended when it comes back
   useEffect(() => {
     if (!visible) badgeHoverState.hovered = false;
     return () => {

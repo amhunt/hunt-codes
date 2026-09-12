@@ -19,6 +19,7 @@ import { starPanState } from "../starPan";
 import { JOURNEY_STOPS, scrollTransitionState } from "../../scrollTransition";
 import { journeyState } from "../../rocketJourney";
 import { LANDING_STACK_MIN_WIDTH_PX } from "../starSampling";
+import { LANDING_CAM_HEIGHT, LANDING_SUN_Y_SMALL } from "../../landingScene";
 import { SYNTH_CAM_HEIGHT, SYNTH_ORIGIN } from "../../synthSpec";
 
 /**
@@ -46,7 +47,7 @@ export type SolarView =
 // Height tuned so Earth's orbit (r 17.5) nearly reaches the bottom edge
 // (~16px margin on a laptop): visible half-height = tan(fov/2)·y ≈ .52·35.
 // Mars' orbit clips top/bottom at this zoom — intentional.
-const LANDING_POS = new THREE.Vector3(0, 35, 0.01);
+const LANDING_POS = new THREE.Vector3(0, LANDING_CAM_HEIGHT, 0.01);
 const ORIGIN = new THREE.Vector3(0, 0, 0);
 const UP = new THREE.Vector3(0, 1, 0);
 const TRANSITION_SECONDS = 2;
@@ -61,10 +62,6 @@ const TRANSITION_SECONDS = 2;
 // deliberately run off the right and bottom edges.
 const LANDING_SUN_X = 0.75;
 const LANDING_HEIGHT_LG = 31;
-// Phones keep the one-line title across the top, so the sun sits low:
-// its centre this far down the viewport (a third of the way up from the
-// bottom), by the same pure-pan trick in −Z (screen-down)
-const LANDING_SUN_Y_SMALL = 2 / 3;
 
 // Home-view framing: the sun-perch. Offsets from the SUN's center (r 3),
 // on the far side from Earth, elevated well above the surface so the

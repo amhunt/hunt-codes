@@ -1,5 +1,10 @@
 import tinycolor from "tinycolor2";
 
+import {
+  LANDING_SUN_RADIUS_FRACTION,
+  LANDING_SUN_Y_SMALL,
+} from "../landingScene";
+
 /**
  * Star data produced by sampling text glyphs on an offscreen 2D canvas.
  * Coordinates are in CSS pixels relative to the viewport.
@@ -13,13 +18,6 @@ export interface SampledStar {
   color: string;
   /** Index of the glyph this star belongs to within the sampled text */
   letter: number;
-}
-
-// Sampling-internal: glyph-canvas coordinates used only for the
-// min-distance dedup between candidate points
-interface PlacedStar extends SampledStar {
-  canvasX: number;
-  canvasY: number;
 }
 
 /** Where a line of star text sits on screen (CSS px). */
@@ -48,7 +46,60 @@ export interface TextStarLayout {
 const LANDING_TEXT_TOP_PX = 60;
 const fontFamily = "Helvetica Neue";
 
-const MIN_PX_DIFF_BETWEEN_STARS = 3;
+/** Alpha above which a rasterized pixel counts as ink — high enough to
+ *  keep stars off the antialiased fringe of a glyph or a path */
+const INK_ALPHA = 128;
+/** The ink is diced into cells this big and each takes one star at most,
+ *  so the scatter can't clump. Small enough that it doesn't thin out the
+ *  name header's little glyphs, which ask for more stars than a letter
+ *  that size has room for. */
+const STAR_CELL_PX = 3;
+/** How many times to look for a free cell before giving that star up */
+const STAR_PLACEMENT_ATTEMPTS = 40;
+/** The ramp every sampled star is coloured off: mint at the left edge of
+ *  the shape through red at the right */
+const starColor = (fraction: number) =>
+  tinycolor.mix("#3effcc", "#ff2d2d", fraction * 100).toHexString();
+/** Stars run 1.5–2.5px, thinner where a caller asks for it */
+const starRadius = (scale = 1) => (Math.random() + 1.5) * scale;
+
+/**
+ * Well-spread points over whatever has been drawn on `ctx`: up to `count`
+ * of them, no two in the same cell. Canvas pixel coordinates — mapping
+ * them onto the screen is the caller's business, since a glyph stretches
+ * into its box while the signature only shifts. Shared by both samplers,
+ * so the title and the signature scatter alike.
+ */
+const scatterOverInk = (
+  ctx: CanvasRenderingContext2D,
+  count: number,
+): { x: number; y: number }[] => {
+  const { width, height } = ctx.canvas;
+  const { data } = ctx.getImageData(0, 0, width, height);
+  const ink: number[] = [];
+  for (let pixel = 0; pixel < width * height; pixel++) {
+    if (data[pixel * 4 + 3] > INK_ALPHA) ink.push(pixel);
+  }
+  if (ink.length === 0) return [];
+
+  const columns = Math.ceil(width / STAR_CELL_PX);
+  const taken = new Set<number>();
+  const points: { x: number; y: number }[] = [];
+  for (let i = 0; i < count; i++) {
+    for (let attempt = 0; attempt < STAR_PLACEMENT_ATTEMPTS; attempt++) {
+      const pixel = ink[Math.floor(Math.random() * ink.length)];
+      const x = pixel % width;
+      const y = Math.floor(pixel / width);
+      const cell =
+        Math.floor(y / STAR_CELL_PX) * columns + Math.floor(x / STAR_CELL_PX);
+      if (taken.has(cell)) continue;
+      taken.add(cell);
+      points.push({ x, y });
+      break;
+    }
+  }
+  return points;
+};
 
 const generateStarsForLetter = ({
   letter,
@@ -87,51 +138,17 @@ const generateStarsForLetter = ({
   const letterMetricsInCanvas = ctx.measureText(letter);
   const ctxTextWidth = letterMetricsInCanvas.width;
   const ctxTextHeight = letterMetricsInCanvas.fontBoundingBoxAscent;
-  const points: PlacedStar[] = [];
-  const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
 
-  for (let i = 0; i < numStars; i++) {
-    let foundPoint = false;
-    let remainingAttempts = 40;
-    while (!foundPoint && remainingAttempts > 0) {
-      const xRandom = Math.random();
-      const x = Math.floor(xRandom * canvas.width);
-      const y = Math.floor(Math.random() * canvas.height);
-      const index = (y * canvas.width + x) * 4;
-
-      // If the pixel is not transparent AND is not near an existing star, we've found a point in the letter
-      if (
-        imageData.data[index + 3] > 0 &&
-        !points.some(
-          (star) =>
-            Math.abs(star.canvasX - x) < MIN_PX_DIFF_BETWEEN_STARS &&
-            Math.abs(star.canvasY - y) < MIN_PX_DIFF_BETWEEN_STARS,
-        )
-      ) {
-        points.push({
-          // Every glyph fills its box: a narrow one is stretched out to
-          // it, and one wider than the box (the fillText maxWidth
-          // squeezed it in) is left at the box's width rather than
-          // squeezed a second time
-          x:
-            (x * letterWidthPx) / Math.min(ctxTextWidth, letterWidthPx) +
-            offsetX,
-          canvasX: x,
-          y: (y * averageLetterHeight) / ctxTextHeight + offsetY,
-          canvasY: y,
-          r: (Math.random() + 1.5) * radiusScale,
-          // Color should be a hex value between blue and red, based on the x and y coordinates. Blue in the top-left, red in the bottom-right.
-          color: tinycolor
-            .mix("#3effcc", "#ff2d2d", xRandom * 100)
-            .toHexString(),
-          letter: letterIndex,
-        });
-        foundPoint = true;
-      }
-      remainingAttempts--;
-    }
-  }
-  return points;
+  return scatterOverInk(ctx, numStars).map(({ x, y }) => ({
+    // Every glyph fills its box: a narrow one is stretched out to it, and
+    // one wider than the box (the fillText maxWidth squeezed it in) is
+    // left at the box's width rather than squeezed a second time
+    x: (x * letterWidthPx) / Math.min(ctxTextWidth, letterWidthPx) + offsetX,
+    y: (y * averageLetterHeight) / ctxTextHeight + offsetY,
+    r: starRadius(radiusScale),
+    color: starColor(x / canvas.width),
+    letter: letterIndex,
+  }));
 };
 
 const percentageWidthOfText = 0.8;
@@ -416,33 +433,292 @@ export const generateStarsForLetters = (
   );
 
 export const starPhrases = ["HUNT.CODES", "BUILT WITH ♥", "BY ANDREW HUNT"];
-export const starPhrasesSmall = ["ANDREW", "HUNT", "CODES ★"];
+
+// ─── The signature "A" (phones) ────────────────────────────────────
+// Below LANDING_STACK_MIN_WIDTH_PX the title doesn't spell anything: the
+// stars fill Andrew's signature A instead of a line of letters. The path
+// is public/signature-a-thin.svg's — the thin-stroke cut of the mark,
+// which reads better as a scatter of stars than the coin's heavier
+// signature-a.svg (that one stays as it is: the favicon, the badge
+// extrusion and the coin's confetti all draw from it). Inlined so the
+// sampling stays synchronous — re-copy the `d` if the art changes.
+const SIGNATURE_PATH =
+  "M7.35,192.27l-1.2-.38-1.14-.53-1.06-.68-.97-.82-.85-.93-.69-.97-.32-.57-.53-1.2-.35-1.21-.2-1.28-.04-1.02.14-1.34.33-1.36.46-1.18.53-1.01,29.43-48.25-19.25-14.28-.88-1.19-.54-.96-.23-.54-.37-1.17-.21-1.19-.06-.92.1-1.3.26-1.19.69-1.71.58-.95.74-.93.85-.81.87-.65.53-.31,1.1-.51,1.06-.35.59-.12,1.24-.13,30.76-.02L107.18,4.48l.76-1.02.88-.91.99-.79,1.08-.66,1.11-.49.78-.25,1.31-.26,1.01-.09,1.24.06.82.12,1.03.26.79.29.91.43,1.28.82,1.28,1.16.51.6.58.84.7,1.37.35.97.2.79.16,1.07.04.72,2.01,90.8h29.54l9.96,8.34-9.3,9.59h-29.8l1.06,48-.08,1.4-.11.64-.35,1.29-.5,1.18-.59,1.03-.4.55-.81.93-.5.46-.96.74-.58.36-1.19.57-1.14.39-.65.14-1.26.16-.47.02-1.49-.12-1.19-.24-.63-.2-1.16-.49-67.24-35.2-20.73,31.01,17.61-6.88,12.81,1.21-2.25,13.37-45.65,13.99-1.63-.28ZM57.12,123.65l51.67,27.11-.72-32.51h-47.65l-3.3,5.41ZM71.36,100.31h36.31l-1.27-57.45-35.04,57.45Z";
+const SIGNATURE_VIEWBOX = { width: 166.5, height: 192.55 };
+/** How tall the letter stands, and the caps that keep it on screen on
+ *  narrow or landscape phones (the band below is the room it has) */
+const SIGNATURE_HEIGHT_PX = 260;
+const SIGNATURE_MAX_WIDTH_FRACTION = 0.75;
+const SIGNATURE_MAX_BAND_FRACTION = 0.75;
+/** The room above the sun: the top of the viewport down to the top of
+ *  the sun's sphere, both of them the landing scene's own numbers. The
+ *  letter stands centred in it. */
+const SIGNATURE_BAND_FRACTION =
+  LANDING_SUN_Y_SMALL - LANDING_SUN_RADIUS_FRACTION;
+const SIGNATURE_CENTER_Y_FRACTION = SIGNATURE_BAND_FRACTION / 2;
+/** Stars per px of letter height (~415 at the full 260px) */
+const SIGNATURE_STAR_DENSITY = 1.6;
 
 /**
- * Where a landing text star starts before it flies in: a point in the
- * band just outside the viewport, uniform over the whole band, so the
- * stars converge on the title from every side — top, bottom, left and
- * right alike — rather than scattering around the glyphs. The band is
- * INTRO_SPAWN_BAND of the longer viewport edge deep. Rejection-sampled
- * from the enclosing rectangle; the band is two thirds of it, so this
- * rarely loops more than once.
+ * The stroke Andrew's pen takes through the A, in viewBox units: the
+ * order the ball of light draws it in on phones. Measured off the art's
+ * own outline, one point per change of direction.
  */
-export const INTRO_SPAWN_BAND = 0.3;
-export function introSpawnPoint(
+const SIGNATURE_STROKE: [number, number][] = [
+  [56, 171], // the tail's free end, the little point at bottom left
+  [6, 186], // down and left, to the foot of the tail
+  [116, 6], // up and right — the long left diagonal, to the apex
+  [120, 170], // down and right — the right leg, to its foot
+  [52, 132], // up and left along the strike-through
+  [15, 108], // on up to the crossbar's left tip
+  [164, 109], // and right, the whole crossbar to its far point
+];
+
+/**
+ * How fast the pen runs on each leg of SIGNATURE_STROKE, relative to the
+ * others (one per leg, so one fewer than there are points). A signature
+ * isn't written at one steady rate: the long strokes run away with
+ * themselves and the short connecting moves are deliberate. The two legs
+ * of the reach back across the letter share a speed — they're one
+ * movement of the hand, and a step in pace mid-air would read as a
+ * stumble.
+ */
+const SIGNATURE_LEG_SPEED = [1.1, 1.35, 1.15, 0.85, 0.85, 1.3];
+
+/** How sharp a turn has to be before the pen slows for it at all, and
+ *  where it brakes to a full stop (radians) */
+const SIGNATURE_TURN_FREE = 0.44; // ~25°: carry straight on through
+const SIGNATURE_TURN_STOP = 1.75; // ~100°: come to a halt and set off again
+/** The speed the pen carries through a corner it doesn't brake for, as a
+ *  multiple of that leg's average — a smooth stroke passes its own
+ *  midpoint at 1.5× its average, so that's the pace to keep up. */
+const SIGNATURE_CARRY_SPEED = 1.5;
+
+/** A point on the pen's path: how far along the stroke it is, how far
+ *  through the draw the pen reaches it (both 0–1), and how hard it brakes
+ *  there (0 = straight through, 1 = down to a stop) */
+interface PenPoint {
+  x: number;
+  y: number;
+  at: number;
+  time: number;
+  ease: number;
+}
+
+export interface SignatureFormation {
+  stars: SampledStar[];
+  /** Where each star sits along the stroke (0–1), indexed like `stars` */
+  order: Float32Array;
+  /** The pen's path in CSS px — where the ball of light walks */
+  pen: PenPoint[];
+}
+
+/** The stroke in CSS px, each corner carrying its 0–1 arc length and the
+ *  0–1 moment of the draw the pen arrives there */
+const penPath = (
+  scale: number,
+  offsetX: number,
+  offsetY: number,
+): PenPoint[] => {
+  const points = SIGNATURE_STROKE.map(([x, y]) => ({
+    x: offsetX + x * scale,
+    y: offsetY + y * scale,
+    at: 0,
+    time: 0,
+    ease: 1,
+  }));
+  let length = 0;
+  let elapsed = 0;
+  const lengths = [0];
+  const times = [0];
+  for (let i = 1; i < points.length; i++) {
+    const leg = Math.hypot(
+      points[i].x - points[i - 1].x,
+      points[i].y - points[i - 1].y,
+    );
+    length += leg;
+    lengths.push(length);
+    // A leg takes as long as it is long, divided by how fast the pen
+    // runs on it
+    elapsed += leg / (SIGNATURE_LEG_SPEED[i - 1] ?? 1);
+    times.push(elapsed);
+  }
+  points.forEach((point, i) => {
+    point.at = length > 0 ? lengths[i] / length : 0;
+    point.time = elapsed > 0 ? times[i] / elapsed : 0;
+    // The two ends of the stroke start and finish at rest; in between,
+    // the pen only brakes for a turn worth braking for. The apex and the
+    // feet spin it right around, so it stops dead — but where the
+    // strike-through bends a few degrees on its way back across the
+    // letter it should carry straight on, not hesitate mid-air.
+    if (i === 0 || i === points.length - 1) return;
+    const inAngle = Math.atan2(
+      point.y - points[i - 1].y,
+      point.x - points[i - 1].x,
+    );
+    const outAngle = Math.atan2(
+      points[i + 1].y - point.y,
+      points[i + 1].x - point.x,
+    );
+    const delta = outAngle - inAngle;
+    const turn = Math.abs(Math.atan2(Math.sin(delta), Math.cos(delta)));
+    point.ease = Math.min(
+      1,
+      Math.max(
+        0,
+        (turn - SIGNATURE_TURN_FREE) /
+          (SIGNATURE_TURN_STOP - SIGNATURE_TURN_FREE),
+      ),
+    );
+  });
+  return points;
+};
+
+/** How far along the stroke the nearest point of the pen's path is */
+const strokeOrder = (x: number, y: number, pen: PenPoint[]): number => {
+  let nearest = Infinity;
+  let order = 0;
+  for (let i = 1; i < pen.length; i++) {
+    const a = pen[i - 1];
+    const b = pen[i];
+    const dx = b.x - a.x;
+    const dy = b.y - a.y;
+    const span = dx * dx + dy * dy;
+    const t = span
+      ? Math.min(1, Math.max(0, ((x - a.x) * dx + (y - a.y) * dy) / span))
+      : 0;
+    const distance = (x - a.x - t * dx) ** 2 + (y - a.y - t * dy) ** 2;
+    // Ties go to the earlier segment: where the strokes cross, a star
+    // belongs to the one the pen reaches first
+    if (distance < nearest) {
+      nearest = distance;
+      order = a.at + t * (b.at - a.at);
+    }
+  }
+  return order;
+};
+
+/** Where the pen is at a moment of the draw: how far along the stroke it
+ *  has come (0–1, which is what says whether a star has been laid down
+ *  yet) and where on screen that puts it */
+export interface PenState {
+  drawn: number;
+  x: number;
+  y: number;
+}
+
+/**
+ * The pen at `time` (0–1 of the draw). Each leg runs on a cubic with its
+ * end speeds set by how hard the pen brakes at the corners either side
+ * (`ease`): through a reversal a real hand's speed passes through zero,
+ * and that stop and run-up is most of what separates a signature being
+ * written from a marquee — while a joint that barely changes direction is
+ * taken at full tilt. A leg is a straight line, so the same eased
+ * fraction gives both how much of the stroke is behind the pen and where
+ * the pen itself stands.
+ */
+export function signaturePen(pen: PenPoint[], time: number): PenState {
+  if (pen.length === 0) return { drawn: 1, x: 0, y: 0 };
+  const at = Math.min(1, Math.max(0, time));
+  for (let i = 1; i < pen.length; i++) {
+    if (at > pen[i].time && i < pen.length - 1) continue;
+    const a = pen[i - 1];
+    const b = pen[i];
+    const span = b.time - a.time;
+    const u = span > 0 ? Math.min(1, (at - a.time) / span) : 1;
+    // Hermite on the leg: speed 0 at an end the pen brakes into, full
+    // stride at one it carries through. Braking at both ends is a plain
+    // smoothstep; carrying through both is a leg taken at a run.
+    const from = (1 - a.ease) * SIGNATURE_CARRY_SPEED;
+    const to = (1 - b.ease) * SIGNATURE_CARRY_SPEED;
+    const eased =
+      from * (u ** 3 - 2 * u ** 2 + u) +
+      (3 * u ** 2 - 2 * u ** 3) +
+      to * (u ** 3 - u ** 2);
+    return {
+      drawn: a.at + eased * (b.at - a.at),
+      x: a.x + eased * (b.x - a.x),
+      y: a.y + eased * (b.y - a.y),
+    };
+  }
+  return { drawn: 1, x: pen[0].x, y: pen[0].y };
+}
+
+/**
+ * The phone landing "title": stars scattered through the fill of the
+ * signature A, centred horizontally and a third of the way down. The
+ * path is rasterized to an offscreen canvas at its on-screen size, its
+ * ink pixels collected, and stars drawn from them at random — the same
+ * left-to-right green→red ramp the sampled glyphs use. Each star also
+ * carries its place along the pen's stroke, which is what lets the ball
+ * of light draw the letter on (StarField's TextStars).
+ */
+export const generateStarsForSignature = (
+  windowWidth: number,
+  windowHeight: number,
+): SignatureFormation => {
+  const empty = { stars: [], order: new Float32Array(0), pen: [] };
+  const canvas = document.createElement("canvas");
+  const ctx = canvas.getContext("2d");
+  if (!ctx || typeof Path2D === "undefined") return empty;
+
+  const aspect = SIGNATURE_VIEWBOX.width / SIGNATURE_VIEWBOX.height;
+  const height = Math.min(
+    SIGNATURE_HEIGHT_PX,
+    (SIGNATURE_MAX_WIDTH_FRACTION * windowWidth) / aspect,
+    SIGNATURE_MAX_BAND_FRACTION * SIGNATURE_BAND_FRACTION * windowHeight,
+  );
+  const width = height * aspect;
+  canvas.width = Math.round(width);
+  canvas.height = Math.round(height);
+  const scale = canvas.height / SIGNATURE_VIEWBOX.height;
+  ctx.setTransform(scale, 0, 0, scale, 0, 0);
+  // The art is an evenodd path — filled nonzero, the counters fill in
+  ctx.fill(new Path2D(SIGNATURE_PATH), "evenodd");
+
+  const offsetX = (windowWidth - width) / 2;
+  const offsetY = SIGNATURE_CENTER_Y_FRACTION * windowHeight - height / 2;
+  const pen = penPath(scale, offsetX, offsetY);
+  const stars: SampledStar[] = scatterOverInk(
+    ctx,
+    Math.round(height * SIGNATURE_STAR_DENSITY),
+  ).map(({ x, y }) => ({
+    x: offsetX + x,
+    y: offsetY + y,
+    r: starRadius(),
+    color: starColor(x / canvas.width),
+    letter: 0,
+  }));
+  if (stars.length === 0) return empty;
+
+  const order = new Float32Array(
+    stars.map((star) => strokeOrder(star.x, star.y, pen)),
+  );
+  return { stars, order, pen };
+};
+
+/**
+ * Where a landing text star starts before it flies in: anywhere on the
+ * screen, plus a margin past every edge so the field doesn't stop dead at
+ * the bezel and some stars arrive from off-frame. The sky is already full
+ * of stars when the title starts gathering, and they draw in from all
+ * over it rather than sweeping in off the edges.
+ */
+const INTRO_SPAWN_MARGIN_PX = 60;
+function introSpawnPoint(
   width: number,
   height: number,
 ): { x: number; y: number } {
-  const band = Math.max(width, height) * INTRO_SPAWN_BAND;
-  for (;;) {
-    const x = -band + Math.random() * (width + 2 * band);
-    const y = -band + Math.random() * (height + 2 * band);
-    if (x < 0 || x > width || y < 0 || y > height) return { x, y };
-  }
+  const margin = INTRO_SPAWN_MARGIN_PX;
+  return {
+    x: -margin + Math.random() * (width + 2 * margin),
+    y: -margin + Math.random() * (height + 2 * margin),
+  };
 }
 
 /**
  * A spawn point for every target glyph star, chosen so the fly-in
- * doesn't tangle: the spawns are still uniform around the band, but
+ * doesn't tangle: the spawns are still uniform over the rectangle, but
  * instead of handing them out in index order (which sent stars criss-
  * crossing the whole screen) both sets are sorted by angle around the
  * title's centre and matched rank for rank. The mapping is monotonic in
