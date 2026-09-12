@@ -198,7 +198,7 @@ const Home = () => {
                 (the one non-universal icon) gets there */}
             <div
               className={cx(
-                "flex items-start justify-end gap-1",
+                "icon-pill-row flex items-start justify-end gap-1",
                 isMedium && "flex-wrap max-w-38",
               )}
             >
