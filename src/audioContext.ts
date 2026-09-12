@@ -23,7 +23,7 @@ let suspendedByHide = false;
  * a background tab. So the context minds its own visibility.
  */
 function watchVisibility(audio: AudioContext): void {
-  document.addEventListener("visibilitychange", () => {
+  const sync = () => {
     if (document.hidden) {
       if (audio.state === "running") {
         suspendedByHide = true;
@@ -33,7 +33,14 @@ function watchVisibility(audio: AudioContext): void {
       suspendedByHide = false;
       void audio.resume();
     }
-  });
+  };
+  document.addEventListener("visibilitychange", sync);
+  // A page can *load* hidden — opened in a background tab, restored with
+  // the session — and no visibilitychange fires for that, so the starting
+  // state has to be applied by hand. Without this the pad strikes up in a
+  // tab nobody is looking at, which is exactly the case the listener
+  // above was meant to cover.
+  sync();
 }
 
 /** Create (once) and resume the shared context. Returns null where Web
@@ -44,6 +51,8 @@ export function ensureAudioContext(): AudioContext | null {
     ctx = new AudioContext();
     watchVisibility(ctx);
   }
-  if (ctx.state === "suspended") void ctx.resume();
+  // Don't wake a context for a page nobody is looking at — the handler
+  // above brings it back when the page returns
+  if (ctx.state === "suspended" && !document.hidden) void ctx.resume();
   return ctx;
 }
