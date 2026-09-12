@@ -54,7 +54,14 @@ the preview tool.
   (`body.on-landing` rules in App.scss, mirrored in
   `BadgeMedallion.tsx`); the music + view switches keep their usual
   bottom-left corner, and the scroll chevron sits the layout out. Phones
-  keep the one-line banner.
+  spell nothing at all: the stars fill Andrew's signature A instead
+  (`generateStarsForSignature`, the thin-cut `public/signature-a-thin.svg`
+  — the coin keeps the heavier `signature-a.svg`), 260px tall and centred
+  between the top of the viewport and the top of the sun. It draws itself
+  on: every star starts inside one ball of light that walks the letter's
+  stroke (`SIGNATURE_STROKE`, at a hand's varying pace —
+  `SIGNATURE_LEG_SPEED`), shedding each star as it passes. No phrase
+  cycle there, so `landingPhrase` stays empty on phones.
 - `/home` → `Home.tsx` — social links; Earth = "ABOUT ME" link; asteroids +
   Sputnik satellite = blog/LinkedIn/GitHub links (home view only). "ABOUT
   ME" and the landing's "ENTER" are one pair of curved ring labels and

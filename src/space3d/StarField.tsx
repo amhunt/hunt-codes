@@ -24,10 +24,12 @@ import {
 import {
   generateBackgroundStars,
   generateStarsForLetters,
+  generateStarsForSignature,
   generateStarsForText,
   introSpawnPositions,
+  signaturePenPosition,
+  signatureStrokeAt,
   starPhrases,
-  starPhrasesSmall,
   type SampledStar,
   type TextStarLayout,
   type TextStarOptions,
@@ -52,6 +54,22 @@ import { NAME_TITLE_ID } from "../solarAnchorIds";
 // The legacy interval advanced the phrase 3 times, then stopped (ending
 // back on the first phrase).
 const MAX_PHRASE_TRANSITIONS = 3;
+
+// How long the phone signature takes to draw itself on (the pen's pace
+// varies leg by leg within it — SIGNATURE_LEG_SPEED in starSampling)
+const SIGNATURE_DRAW_MS = 4000;
+// The ball of light is struck rather than switched on: it comes up from
+// a point over SIGNATURE_BALL_GROW_MS, then breathes while it draws.
+const SIGNATURE_BALL_GROW_MS = 600;
+const SIGNATURE_BALL_PULSE_MS = 1500;
+const SIGNATURE_BALL_PULSE = 0.08;
+
+// A clump of stars on one point — the crowd the cursor gathers on md+,
+// and the phone signature's ball of light — swells with the size of the
+// crowd and brightens toward white by it (legacy StarDot math).
+const CLUMP_DISTANCE_PX = 10;
+const CLUMP_STARS_PER_PX = 16;
+const MAX_CLUMP_RADIUS_PX = 32;
 
 const HUE_ROTATION_PERIOD_S = 20; // 20s per full rotation
 const DISCO_PERIOD_S = 8; // star-disco: 4s alternate = 8s round trip
@@ -404,20 +422,31 @@ const TextStars = ({
   const cursorRef = useCursorPositionRef();
 
   const [phraseIdx, setPhraseIdx] = useState(0);
-  const phrases = isSmall ? starPhrasesSmall : starPhrases;
-  const phrase = phrases[phraseIdx % phrases.length];
+  const phrase = starPhrases[phraseIdx % starPhrases.length];
+  // Phones don't spell anything: the stars fill the signature A and stay
+  // there, so there's no phrase to publish (or to cycle, below) either.
   // Publish the phrase for DOM chrome outside the canvas (the
   // "(and Claude)" caption, AndClaude.tsx)
   useEffect(() => {
-    setLandingPhrase(isLanding ? phrase : "");
-  }, [isLanding, phrase]);
+    setLandingPhrase(isLanding && !isSmall ? phrase : "");
+  }, [isLanding, isSmall, phrase]);
 
   // Off the landing there are no text stars, but the component stays
   // mounted so the choreography doesn't replay on every route return.
-  const targets: SampledStar[] = useMemo(
-    () => (isLanding ? generateStarsForLetters(phrase, width, height) : []),
-    [isLanding, phrase, width, height],
+  // Phones: the signature's stars, each with its place along the stroke
+  // the ball of light draws them on with (null everywhere else)
+  const formation = useMemo(
+    () =>
+      isLanding && isSmall ? generateStarsForSignature(width, height) : null,
+    [isLanding, isSmall, width, height],
   );
+
+  const targets: SampledStar[] = useMemo(() => {
+    if (!isLanding) return [];
+    return formation
+      ? formation.stars
+      : generateStarsForLetters(phrase, width, height);
+  }, [isLanding, formation, phrase, width, height]);
 
   // Choreography state persists across phrase changes and route hops
   const simRef = useRef({
@@ -429,6 +458,9 @@ const TextStars = ({
      *  glyph. Cursor gravity waits for it, so the fly-in can't be pulled
      *  off course; once true it stays true. */
     formed: false,
+    /** How far the phone signature has been drawn (0–1). Only ever
+     *  climbs, so a resize or a route hop can't replay the draw. */
+    drawn: 0,
   });
   // Live positions (DOM px, xy pairs), written every frame and read by
   // the next phrase's useMemo for carry-over. The memo stays pure — the
@@ -443,9 +475,16 @@ const TextStars = ({
     const velocities = new Float32Array(count);
     // Landing intro only: spawn points outside the viewport, matched to
     // the glyphs by angle so the fly-in doesn't tangle
-    const introSpawns = sim.hasEverHadStars
-      ? null
-      : introSpawnPositions(targets, width, height);
+    const introSpawns =
+      sim.hasEverHadStars || formation
+        ? null
+        : introSpawnPositions(targets, width, height);
+    // The signature draws itself on instead: every star waits in one ball
+    // of light at the head of the stroke
+    const ballStart =
+      sim.hasEverHadStars || !formation
+        ? null
+        : signaturePenPosition(formation.pen, 0);
     for (let i = 0; i < count; i++) {
       velocities[i] = Math.random() + 0.5;
       if (i * 2 + 1 < prev.length && sim.hasEverHadStars) {
@@ -462,6 +501,9 @@ const TextStars = ({
         // seconds — that's the effect, a stream converging on the centre.
         positions[i * 2] = introSpawns[i * 2];
         positions[i * 2 + 1] = introSpawns[i * 2 + 1];
+      } else if (ballStart) {
+        positions[i * 2] = ballStart.x;
+        positions[i * 2 + 1] = ballStart.y;
       }
     }
 
@@ -475,7 +517,7 @@ const TextStars = ({
       buffers.phases[i] = Math.random();
     }
     return { buffers, positions, velocities };
-  }, [targets, width, height]);
+  }, [targets, formation, width, height]);
 
   // Commit the new sim arrays outside of render
   useEffect(() => {
@@ -499,17 +541,20 @@ const TextStars = ({
     const sim = simRef.current;
     const deltaMs = Math.min(delta * 1000, 100);
     sim.elapsedMs += deltaMs;
-    // Legacy choreography: stars hold off-screen for 2s before flying in
-    if (sim.elapsedMs < STAR_INTRO_DELAY_MS) return;
+    // Legacy choreography: stars hold off-screen for 2s before flying in.
+    // The phone signature holds too, but visibly — its ball of light is
+    // already gathered at the head of the stroke, waiting to draw.
+    if (sim.elapsedMs < STAR_INTRO_DELAY_MS && !formation) return;
 
     // Phrase cycle: advance every 10s, 3 times total, ending on phrase 0
     if (
+      !isSmall &&
       sim.transitions < MAX_PHRASE_TRANSITIONS &&
       sim.elapsedMs - STAR_INTRO_DELAY_MS >
         (sim.transitions + 1) * TEXT_CHANGE_INTERVAL_MS
     ) {
       sim.transitions++;
-      setPhraseIdx((idx) => (idx + 1) % phrases.length);
+      setPhraseIdx((idx) => (idx + 1) % starPhrases.length);
     }
 
     const count = targets.length;
@@ -519,6 +564,38 @@ const TextStars = ({
     // The legacy sim stepped once per 45ms; scale movement to hold that
     // speed at any frame rate.
     const factor = deltaMs / STAR_TICK_MS;
+
+    // The phone signature's draw-on: the stars that haven't been drawn yet
+    // all sit on the pen, which walks the letter's stroke over
+    // SIGNATURE_DRAW_MS. Piled on one point with additive blending and the
+    // cursor-clump swell (size by the size of the crowd, brightened toward
+    // white by it too) they read as a single ball of light, which thins out
+    // and dims as the letter takes the stars off it.
+    let pen: { x: number; y: number } | null = null;
+    let ballSize = 0;
+    let ballScale = 1;
+    let crowd = 0;
+    if (formation && sim.drawn < 1) {
+      sim.drawn = signatureStrokeAt(
+        formation.pen,
+        Math.max(0, sim.elapsedMs - STAR_INTRO_DELAY_MS) / SIGNATURE_DRAW_MS,
+      );
+      pen = signaturePenPosition(formation.pen, sim.drawn);
+      for (let i = 0; i < targets.length; i++) {
+        if (formation.order[i] > sim.drawn) crowd++;
+      }
+      ballSize = Math.min(crowd / CLUMP_STARS_PER_PX, MAX_CLUMP_RADIUS_PX);
+      // Struck from nothing, then breathing (the pulse is a loop, so it
+      // sits out a reduced-motion preference)
+      const struck = Math.min(1, sim.elapsedMs / SIGNATURE_BALL_GROW_MS);
+      ballScale = 1 - (1 - struck) ** 3;
+      if (!prefersReducedMotion) {
+        ballScale *=
+          1 +
+          SIGNATURE_BALL_PULSE *
+            Math.sin((2 * Math.PI * sim.elapsedMs) / SIGNATURE_BALL_PULSE_MS);
+      }
+    }
 
     // No cursor gravity until the first phrase forms — the intro's stream
     // should reach its glyphs untouched
@@ -539,6 +616,15 @@ const TextStars = ({
     let unsettled = 0;
 
     for (let i = 0; i < count; i++) {
+      if (pen && formation && formation.order[i] > sim.drawn) {
+        positions[i * 2] = pen.x;
+        positions[i * 2 + 1] = pen.y;
+        data.buffers.positions[i * 3] = domToWorldX(pen.x, width);
+        data.buffers.positions[i * 3 + 1] = domToWorldY(pen.y, height);
+        data.buffers.sizes[i] = Math.max(targets[i].r, ballSize) * ballScale;
+        data.buffers.brightens[i] = crowd;
+        continue;
+      }
       let x = positions[i * 2];
       let y = positions[i * 2 + 1];
       const distanceToCursor = Math.sqrt(
@@ -581,8 +667,11 @@ const TextStars = ({
             targets[i].r,
           maxStarRadiusPx,
         );
-        if (distanceToCursor < 10) {
-          size = Math.max(size, Math.min(prevNumClose / 16, 32));
+        if (distanceToCursor < CLUMP_DISTANCE_PX) {
+          size = Math.max(
+            size,
+            Math.min(prevNumClose / CLUMP_STARS_PER_PX, MAX_CLUMP_RADIUS_PX),
+          );
           brighten = prevNumClose;
         }
       }
@@ -596,7 +685,7 @@ const TextStars = ({
     sim.numCloseToCursor = numClose;
     // The glide clamps its last step to the remaining distance, so "all
     // settled" is exact
-    if (!sim.formed && unsettled === 0) sim.formed = true;
+    if (!sim.formed && unsettled === 0 && crowd === 0) sim.formed = true;
     data.buffers.positionsAttr.needsUpdate = true;
     data.buffers.sizesAttr.needsUpdate = true;
     data.buffers.brightensAttr.needsUpdate = true;
