@@ -8,12 +8,12 @@ import SpaceJamSwitch from "./SpaceJamSwitch";
 /**
  * The bottom-left music switch, with its playing (note, bouncing
  * equaliser) and muted (red-slashed note, flatline) dressings. Hovering
- * or focusing it shows the "Play space jams" / "Pause space jams" tooltip.
- * The toolbar view switch (`.App.space` / `.App.mesh`) shows it over
- * both backdrops.
+ * or focusing it shows the "Sound on for the full experience" tooltip
+ * while it's off and "Pause space jams" once it's on. The toolbar view
+ * switch (`.App.space` / `.App.mesh`) shows it over both backdrops.
  *
  * The switch starts off, so the default story is the muted dressing —
- * and two seconds in, the tooltip opens on its own to advertise that
+ * and four seconds in, the tooltip opens on its own to advertise that
  * there is something to hear, which is the `Hint` story below. Flipping
  * it by hand starts the generative pad for real.
  */
@@ -43,9 +43,9 @@ export const Playing: Story = {
 };
 
 /**
- * The unprompted advert, two seconds after load. Waits it out rather than
- * hovering, so this is the tooltip opening on its own rather than the
- * "Play space jams" label a hover would bring up.
+ * The unprompted advert, four seconds after load. Waits it out rather
+ * than hovering — a hover shows the same line, so what this story checks
+ * is the tooltip opening on its own.
  */
 export const Hint: Story = {
   play: async () => {
@@ -53,7 +53,7 @@ export const Hint: Story = {
     const hint = await within(document.body).findByText(
       "Sound on for the full experience",
       undefined,
-      { timeout: 5000 },
+      { timeout: 8000 },
     );
     await expect(hint).toBeVisible();
   },
