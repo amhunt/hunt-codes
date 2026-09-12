@@ -1,6 +1,6 @@
 import React, { useCallback, useEffect, useMemo, useState } from "react";
 import { Link } from "react-router-dom";
-import { Sun } from "react-feather";
+import { GitHub, Package, Sun } from "react-feather";
 import { Box, Download, RotateCcw, Upload } from "lucide-react";
 import {
   analyzeSvg,
@@ -436,6 +436,35 @@ const SvgTo3d = () => {
             Everything happens in the browser — the file never leaves this tab.
           </p>
         )}
+
+        {/* The extruder is published on its own — this page is really just
+            a UI bolted onto it, so point people at the package. */}
+        <aside className="svg3d-package">
+          <p className="svg3d-package-copy">
+            The extruder behind this page is its own npm package. I pulled it
+            out and published it as <code>svg-to-3d</code> — flat vector art in,
+            watertight multi-color solids out — so you can point it at your own
+            art.
+          </p>
+          <div className="svg3d-package-links">
+            <a
+              href="https://github.com/amhunt/svg-to-3d"
+              rel="noopener noreferrer"
+              target="_blank"
+            >
+              <GitHub aria-hidden="true" size={13} />
+              <span>GitHub</span>
+            </a>
+            <a
+              href="https://www.npmjs.com/package/svg-to-3d"
+              rel="noopener noreferrer"
+              target="_blank"
+            >
+              <Package aria-hidden="true" size={13} />
+              <span>npm</span>
+            </a>
+          </div>
+        </aside>
       </div>
     </div>
   );

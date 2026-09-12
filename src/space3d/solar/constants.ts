@@ -291,6 +291,7 @@ export const satellitePartState: Record<
   screen: { position: new THREE.Vector3(), radius: satelliteBodyRadius * 0.32 },
   pen: { position: new THREE.Vector3(), radius: satelliteBodyRadius * 0.5 },
   vase: { position: new THREE.Vector3(), radius: satelliteBodyRadius * 0.3 },
+  tile: { position: new THREE.Vector3(), radius: satelliteBodyRadius * 0.45 },
 };
 
 const WORLD_UP = new THREE.Vector3(0, 1, 0);

@@ -4353,6 +4353,65 @@ body.on-landing {
   margin: 10px 2px 0;
 }
 
+// The npm-package card at the foot of /svg-to-3d. Same translucent purple
+// as the generator's composer — no backdrop-filter over the canvases.
+.svg3d-package {
+  width: 100%;
+  margin: 28px 0 0;
+  padding: 14px 16px;
+  background: rgba(101, 66, 214, 0.28);
+  border: 1px solid rgba(158, 128, 249, 0.35);
+  border-radius: 10px;
+}
+
+.svg3d-package-copy {
+  font-family: "Inconsolata", monospace;
+  font-size: 13px;
+  line-height: 1.5;
+  color: rgba(255, 255, 255, 0.78);
+  margin: 0;
+
+  code {
+    font-family: inherit;
+    color: #fff;
+    background: rgba(255, 255, 255, 0.12);
+    border-radius: 4px;
+    padding: 1px 5px;
+  }
+}
+
+.svg3d-package-links {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-top: 12px;
+
+  a {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    font-family: "Inconsolata", monospace;
+    font-size: 12px;
+    letter-spacing: 0.5px;
+    color: rgba(255, 255, 255, 0.85);
+    text-decoration: none;
+    padding: 5px 10px;
+    border: 1px solid rgba(158, 128, 249, 0.45);
+    border-radius: 999px;
+    transition:
+      background 0.2s ease,
+      color 0.2s ease,
+      transform 0.2s ease;
+
+    &:hover,
+    &:focus-visible {
+      background: rgba(158, 128, 249, 0.3);
+      color: #fff;
+      transform: translateY(-1px);
+    }
+  }
+}
+
 .svg3d-empty {
   margin: 0;
   font-size: 13px;
