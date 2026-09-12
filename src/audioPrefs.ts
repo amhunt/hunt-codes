@@ -9,8 +9,9 @@
  * it off has to silence the clicks and chimes too, or a visitor who muted
  * the site still hears it and reads that as a bug.
  *
- * Default on, so the site has a voice on arrival. Nothing is audible
- * until the browser's autoplay policy lets it be — see SpaceJamSwitch,
- * which retries the track on the first gesture.
+ * Default off. A scene that starts singing at a visitor who didn't ask
+ * is worse than one they never found had a soundtrack, so the switch
+ * advertises itself with a tooltip a beat after load instead (see
+ * SpaceJamSwitch) and waits to be asked.
  */
-export const audioPrefs = { enabled: true };
+export const audioPrefs = { enabled: false };

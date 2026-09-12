@@ -12,11 +12,10 @@ import SpaceJamSwitch from "./SpaceJamSwitch";
  * The toolbar view switch (`.App.space` / `.App.mesh`) shows it over
  * both backdrops.
  *
- * The switch starts on, so the default story is the playing dressing —
- * silently, since autoplay policy refuses a cold `play()` and the switch
- * deliberately shows intent rather than flipping itself off. Interacting
- * with the page starts the real track (`public/` is served as Storybook's
- * static dir).
+ * The switch starts off, so the default story is the muted dressing —
+ * and two seconds in, the tooltip opens on its own to advertise that
+ * there is something to hear, which is the `Hint` story below. Flipping
+ * it by hand starts the generative pad for real.
  */
 const meta = {
   title: "Controls/Space jam switch",
@@ -29,26 +28,39 @@ const meta = {
 export default meta;
 type Story = StoryObj<typeof meta>;
 
-/** The resting state: purple track, equaliser, note. */
-export const Playing: Story = {};
+/** The resting state: charcoal track, flatline, slashed note. */
+export const Muted: Story = {};
 
-/**
- * After a flip off: charcoal track, flatline, slashed note. `pause()` is
- * synchronous and always allowed, so unlike the way on there is nothing
- * to stub here.
- */
-export const Muted: Story = {
+/** After a flip on: purple track, equaliser, note. */
+export const Playing: Story = {
   play: async ({ canvasElement }) => {
     const toggle = within(canvasElement).getByRole("switch", {
       name: "Space jams",
     });
     await userEvent.click(toggle);
-    await expect(toggle).toHaveAttribute("aria-checked", "false");
+    await expect(toggle).toHaveAttribute("aria-checked", "true");
   },
 };
 
-/** Mesh view, playing — the purple track over the wire-scene ground. */
-export const PlayingMesh: Story = {
+/**
+ * The unprompted advert, two seconds after load. Waits it out rather than
+ * hovering, so this is the tooltip opening on its own rather than the
+ * "Play space jams" label a hover would bring up.
+ */
+export const Hint: Story = {
+  play: async () => {
+    // Radix portals its tooltip to the body, outside the story canvas
+    const hint = await within(document.body).findByText(
+      "Enable sound for the full experience",
+      undefined,
+      { timeout: 5000 },
+    );
+    await expect(hint).toBeVisible();
+  },
+};
+
+/** Mesh view, muted — the charcoal track over the wire-scene ground. */
+export const MutedMesh: Story = {
   globals: { palette: "mesh" },
 };
 
