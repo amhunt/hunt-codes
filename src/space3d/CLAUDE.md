@@ -40,6 +40,19 @@ which suspends itself when the tab hides: App.tsx's hide handler sweeps
   orbit automatically. Don't reintroduce a hand-set `orbitSpeed` — the
   asteroids, which share Earth's, are the only bodies exempt. Planet
   radii come off `EARTH_RADIUS` by the real km ratio the same way.
+- `planetPosition` walks the classical orbital elements, so `orbitRadius`
+  is a semi-major axis and `orbitSpeed` a *mean* rate — an eccentric orbit
+  sweeps faster near the sun. Mercury (e 0.206) and Mars (e 0.093) are the
+  only elliptical ones: Earth must stay a circle or the link asteroids
+  riding `EARTH.orbitSpeed` unpin from the co-rotating home camera, and
+  Venus's real 0.007 is too round to see. Orbit rings in `Planet.tsx` are
+  **sampled from `planetPosition`**, not drawn as circles, so a ring can't
+  disagree with the planet on it.
+- Spin rates are deliberately compressed, not accurate: `spin(n)` in
+  `solar/constants.ts` is n Earth-days per turn, and the real figures
+  (Mercury 58.8, Venus 243.7) would leave both looking welded still. The
+  ordering is the true part — Mars keeps pace with Earth, Venus is
+  slowest — so keep the order if you retune the numbers.
 - Orbits sweep +X → +Z, which is a turn about **-Y**, while a positive
   `rotation.y` turns about +Y — the two senses are opposite. So a
   `spinSpeed` is prograde-positive and both `Planet.tsx` and `Moon.tsx`

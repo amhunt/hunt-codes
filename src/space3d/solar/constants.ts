@@ -16,11 +16,31 @@ export interface SolarPlanetConfig {
   name: string;
   kind: PlanetKind;
   radius: number;
+  /** Semi-major axis — the orbit's mean radius, and its exact radius
+   *  while `eccentricity` is 0 */
   orbitRadius: number;
-  /** radians per second */
+  /** radians per second — the *mean* rate. An eccentric orbit sweeps
+   *  faster near the sun and slower away from it (Kepler's second law);
+   *  this is the average, and what the period is measured from. */
   orbitSpeed: number;
-  /** starting angle, radians */
+  /** starting mean anomaly, radians */
   orbitPhase: number;
+  /** How far from circular, 0..1. Mercury's real 0.206 swings its
+   *  distance ±21% and its speed by 2.3x between the ends of the orbit;
+   *  Earth's 0.017 is invisible, so it stays a circle — the link
+   *  asteroids ride `EARTH.orbitSpeed` and a varying rate would unpin
+   *  them from the co-rotating home camera. */
+  eccentricity?: number;
+  /** Argument of perihelion, radians: which way the ellipse points,
+   *  measured within the orbital plane from the ascending node. */
+  perihelion?: number;
+  /** Tilt of the orbital plane off the ecliptic, radians. Earth defines
+   *  the ecliptic, so its own is 0 by definition. */
+  inclination?: number;
+  /** Longitude of the ascending node, radians: where this orbit's tilt
+   *  hinges. Without it every plane would tip the same way and they'd
+   *  all cross along one line. */
+  ascendingNode?: number;
   /** Radians per second of self-rotation, positive being prograde — the
    *  same sense the body orbits in. `Planet.tsx` negates it on the way
    *  into `rotation.y`, whose +Y turns against the orbits' -Y; the
@@ -109,6 +129,20 @@ const radiusVsEarth = (km: number) => EARTH_RADIUS * (km / 6371);
 
 const tilt = (degrees: number) => THREE.MathUtils.degToRad(degrees);
 
+const EARTH_SPIN_SPEED = 0.039 * SPEED_SCALE;
+/**
+ * Self-rotation, given as a multiple of Earth's day — so `spin(1)` turns
+ * once in the time Earth does.
+ *
+ * The real multiples are 58.8 for Mercury and 243.7 for Venus, which at
+ * any tempo where Earth is watchable leave both looking welded in place.
+ * So these are compressed hard, the way the orbit radii are. What's true
+ * is the ordering and the rough feel: Mars keeps pace with Earth (its
+ * real day is 24h37m, within 3% of ours), Mercury is visibly slow, and
+ * Venus is slowest of all and turns backwards off its 177° tilt.
+ */
+const spin = (earthDays: number) => EARTH_SPIN_SPEED / earthDays;
+
 export const PLANETS: SolarPlanetConfig[] = [
   {
     name: "Mercury",
@@ -116,7 +150,13 @@ export const PLANETS: SolarPlanetConfig[] = [
     radius: radiusVsEarth(2439.7),
     ...orbit(7.5),
     orbitPhase: 0.6,
-    spinSpeed: 0.12 * SPEED_SCALE,
+    // The most eccentric orbit in the system: 5.96 out at perihelion
+    // against 9.04 at aphelion, and visibly hurrying through the near end
+    eccentricity: 0.2056,
+    perihelion: tilt(29.12),
+    inclination: tilt(7.005),
+    ascendingNode: tilt(48.33),
+    spinSpeed: spin(3),
     axialTilt: tilt(0.034),
   },
   {
@@ -125,9 +165,13 @@ export const PLANETS: SolarPlanetConfig[] = [
     radius: radiusVsEarth(6051.8),
     ...orbit(12),
     orbitPhase: 2.4,
+    // Real eccentricity is 0.007 — rounder than anything else out there,
+    // and far too round to see, so it stays a circle
+    inclination: tilt(3.395),
+    ascendingNode: tilt(76.68),
     // Prograde-positive like the rest: Venus turns backwards because it
     // is tipped almost fully over, and the 177° tilt below supplies that.
-    spinSpeed: 0.05 * SPEED_SCALE,
+    spinSpeed: spin(5),
     axialTilt: tilt(177.36),
   },
   {
@@ -136,7 +180,9 @@ export const PLANETS: SolarPlanetConfig[] = [
     radius: EARTH_RADIUS,
     ...orbit(EARTH_ORBIT_RADIUS),
     orbitPhase: 4.2,
-    spinSpeed: 0.039 * SPEED_SCALE,
+    // No eccentricity (0.017 in life, invisible here) and no inclination
+    // — Earth's orbit *is* the ecliptic every other tilt is measured off
+    spinSpeed: spin(1),
     axialTilt: tilt(23.44),
   },
   {
@@ -145,7 +191,11 @@ export const PLANETS: SolarPlanetConfig[] = [
     radius: radiusVsEarth(3389.5),
     ...orbit(23.5),
     orbitPhase: 1.3,
-    spinSpeed: 0.3 * SPEED_SCALE,
+    eccentricity: 0.0934,
+    perihelion: tilt(286.5),
+    inclination: tilt(1.85),
+    ascendingNode: tilt(49.56),
+    spinSpeed: spin(1.0288),
     axialTilt: tilt(25.19),
   },
 ];
@@ -395,21 +445,81 @@ export const MOON = {
   spinPhase: Math.PI - MOON_ORBIT_PHASE,
 };
 
-/** Position of a planet at elapsed time t (seconds), honoring the
- *  phone-width overrides while layoutState.compact. */
+/**
+ * Kepler's equation, M = E - e·sin E, solved for the eccentric anomaly E
+ * by Newton-Raphson. There is no closed form; at the eccentricities here
+ * (Mercury's 0.206 is the worst of them) four passes from E = M land well
+ * inside a millionth of a radian, which is orders of magnitude finer than
+ * a pixel at this zoom.
+ */
+const KEPLER_PASSES = 4;
+function eccentricAnomaly(meanAnomaly: number, e: number): number {
+  let E = meanAnomaly;
+  for (let i = 0; i < KEPLER_PASSES; i += 1) {
+    E -= (E - e * Math.sin(E) - meanAnomaly) / (1 - e * Math.cos(E));
+  }
+  return E;
+}
+
+/**
+ * Position of a planet at elapsed time t (seconds), honoring the
+ * phone-width overrides while layoutState.compact.
+ *
+ * Circular orbits (everything without an `eccentricity`, the link
+ * asteroids included) take the cheap path. Otherwise this walks the
+ * classical orbital elements: mean anomaly → eccentric anomaly → the
+ * ellipse in its own plane with the sun at a focus, then rotated by the
+ * argument of perihelion, tipped by the inclination about the line of
+ * nodes, and swung round by the longitude of that node. Kepler's second
+ * law comes out of it for free — the same angular step covers less arc
+ * out at aphelion, so the body slows down there.
+ */
 export function planetPosition(
   p: SolarPlanetConfig,
   t: number,
   out = new THREE.Vector3(),
 ): THREE.Vector3 {
   const c = layoutState.compact ? p.compact : undefined;
-  const angle = (c?.orbitPhase ?? p.orbitPhase) + t * p.orbitSpeed;
-  const orbitRadius = c?.orbitRadius ?? p.orbitRadius;
-  return out.set(
-    Math.cos(angle) * orbitRadius,
-    c?.yOffset ?? p.yOffset ?? 0,
-    Math.sin(angle) * orbitRadius,
-  );
+  const meanAnomaly = (c?.orbitPhase ?? p.orbitPhase) + t * p.orbitSpeed;
+  const a = c?.orbitRadius ?? p.orbitRadius;
+  const e = p.eccentricity ?? 0;
+  let y = c?.yOffset ?? p.yOffset ?? 0;
+
+  let x: number;
+  let z: number;
+  if (e === 0) {
+    x = Math.cos(meanAnomaly) * a;
+    z = Math.sin(meanAnomaly) * a;
+  } else {
+    // The ellipse, measured from the focus the sun sits on
+    const E = eccentricAnomaly(meanAnomaly, e);
+    x = a * (Math.cos(E) - e);
+    z = a * Math.sqrt(1 - e * e) * Math.sin(E);
+    // Swing perihelion round to where it belongs within the plane
+    const w = p.perihelion ?? 0;
+    if (w !== 0) {
+      const cos = Math.cos(w);
+      const sin = Math.sin(w);
+      [x, z] = [x * cos - z * sin, x * sin + z * cos];
+    }
+  }
+
+  const inclination = p.inclination ?? 0;
+  if (inclination !== 0) {
+    // Tip the plane about its own line of nodes (the +X axis here)...
+    y += z * Math.sin(inclination);
+    z *= Math.cos(inclination);
+    // ...then rotate that line to where this orbit's node actually lies,
+    // so the planes cross each other rather than all hinging together
+    const node = p.ascendingNode ?? 0;
+    if (node !== 0) {
+      const cos = Math.cos(node);
+      const sin = Math.sin(node);
+      [x, z] = [x * cos - z * sin, x * sin + z * cos];
+    }
+  }
+
+  return out.set(x, y, z);
 }
 
 const moonEarthScratch = new THREE.Vector3();
