@@ -9,13 +9,7 @@ import useWindowSize from "useWindowSize";
 import MusicMutedIcon from "ui/MusicMutedIcon";
 import { audioPrefs } from "./audioPrefs";
 import { setPadEnabled } from "./ambientPad";
-import {
-  Tooltip,
-  TooltipContent,
-  TooltipProvider,
-  TooltipTrigger,
-  TOOLTIP_DELAY_MS,
-} from "ui/tooltip";
+import { Tooltip, TooltipContent, TooltipTrigger } from "ui/tooltip";
 
 /**
  * The bottom-left music switch: the site's one audio control. The thumb
@@ -104,69 +98,65 @@ const SpaceJamSwitch = () => {
   };
 
   return (
-    <>
-      <TooltipProvider delayDuration={TOOLTIP_DELAY_MS}>
-        <Tooltip
-          disableHoverableContent
-          open={open}
-          onOpenChange={handleOpenChange}
+    <Tooltip
+      disableHoverableContent
+      open={open}
+      onOpenChange={handleOpenChange}
+    >
+      {/* The switch is the trigger itself (no wrapper), so the
+          tooltip's aria-describedby lands on the button. Radix's trigger
+          overwrites the root's data-state with its own open/closed one —
+          the App.scss styles read aria-checked. */}
+      <TooltipTrigger asChild>
+        <SceneSwitch
+          // music-toggle: hook for the video-mode / rocket-journey
+          // hiding rules and the bottom-left placement (App.scss)
+          className={cx(
+            "music-toggle space-jam-switch fixed bottom-4 left-4 z-5000",
+            hiddenOnPhone && "music-toggle-hidden",
+          )}
+          checked={enabled}
+          onCheckedChange={(on) => {
+            setHinting(false);
+            setOpen(false);
+            setEnabled(on);
+            if (on && !toastSpent.current) {
+              toastSpent.current = true;
+              toast(SOUND_TOAST);
+            }
+          }}
+          // A stable name — aria-checked carries the state, and the
+          // tooltip names the flip
+          aria-label="Space jams"
+          thumbClassName="sjs-thumb"
+          thumb={
+            <>
+              <MusicIcon size={16} className="sjs-icon-on" />
+              <MusicMutedIcon size={16} className="sjs-icon-off" />
+            </>
+          }
         >
-          {/* The switch is the trigger itself (no wrapper), so the
-              tooltip's aria-describedby lands on the button. Radix's
-              trigger overwrites the root's data-state with its own
-              open/closed one — the App.scss styles read aria-checked. */}
-          <TooltipTrigger asChild>
-            <SceneSwitch
-              // music-toggle: hook for the video-mode / rocket-journey
-              // hiding rules and the bottom-left placement (App.scss)
-              className={cx(
-                "music-toggle space-jam-switch fixed bottom-4 left-4 z-5000",
-                hiddenOnPhone && "music-toggle-hidden",
-              )}
-              checked={enabled}
-              onCheckedChange={(on) => {
-                setHinting(false);
-                setOpen(false);
-                setEnabled(on);
-                if (on && !toastSpent.current) {
-                  toastSpent.current = true;
-                  toast(SOUND_TOAST);
-                }
-              }}
-              // A stable name — aria-checked carries the state, and the
-              // tooltip names the flip
-              aria-label="Space jams"
-              thumbClassName="sjs-thumb"
-              thumb={
-                <>
-                  <MusicIcon size={16} className="sjs-icon-on" />
-                  <MusicMutedIcon size={16} className="sjs-icon-off" />
-                </>
-              }
-            >
-              <span aria-hidden className="sjs-scene sjs-scene-on">
-                <span className="sjs-bar" />
-                <span className="sjs-bar" />
-                <span className="sjs-bar" />
-                <span className="sjs-bar" />
-              </span>
-              <span aria-hidden className="sjs-scene sjs-scene-off" />
-            </SceneSwitch>
-          </TooltipTrigger>
-          {/* The advert is a sentence rather than two words, so it takes
-              the vertical padding the thin hover pill does without */}
-          <TooltipContent side="top" className={hinting ? "py-1" : undefined}>
-            <p>
-              {hinting
-                ? SOUND_HINT
-                : enabled
-                  ? "Pause space jams"
-                  : "Play space jams"}
-            </p>
-          </TooltipContent>
-        </Tooltip>
-      </TooltipProvider>
-    </>
+          <span aria-hidden className="sjs-scene sjs-scene-on">
+            <span className="sjs-bar" />
+            <span className="sjs-bar" />
+            <span className="sjs-bar" />
+            <span className="sjs-bar" />
+          </span>
+          <span aria-hidden className="sjs-scene sjs-scene-off" />
+        </SceneSwitch>
+      </TooltipTrigger>
+      {/* The advert is a sentence rather than two words, so it takes
+          the vertical padding the thin hover pill does without */}
+      <TooltipContent side="top" className={hinting ? "py-1" : undefined}>
+        <p>
+          {hinting
+            ? SOUND_HINT
+            : enabled
+              ? "Pause space jams"
+              : "Play space jams"}
+        </p>
+      </TooltipContent>
+    </Tooltip>
   );
 };
 

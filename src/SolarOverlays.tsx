@@ -4,8 +4,8 @@ import { Link } from "react-router-dom";
 import {
   Tooltip,
   TooltipContent,
-  TooltipProvider,
   TooltipTrigger,
+  TOOLTIP_BODY_DELAY_MS,
 } from "./ui/tooltip";
 import {
   asteroidAnchorId,
@@ -81,37 +81,34 @@ const SolarOverlays = () => {
           camera closes in on it and its parts become the links
           (ProjectsAndToys). Same swoop-on-click as Earth's /about link. */}
       {!isNarrow && (
-        <TooltipProvider delayDuration={100}>
-          <Tooltip disableHoverableContent>
-            <TooltipTrigger asChild>
-              <Link
-                id={asteroidAnchorId("satellite")}
-                className="asteroid-link"
-                to="/projects-and-toys"
-                aria-label="Projects & creations"
-                onPointerEnter={() => {
-                  hoverState.asteroid = "satellite";
-                }}
-                onPointerLeave={() => {
-                  if (hoverState.asteroid === "satellite") {
-                    hoverState.asteroid = null;
-                  }
-                }}
-              >
-                <BodyOutline outlineId={asteroidOutlineId("satellite")} />
-              </Link>
-            </TooltipTrigger>
-            <TooltipContent updatePositionStrategy="always">
-              <p>Projects &amp; creations</p>
-            </TooltipContent>
-          </Tooltip>
-        </TooltipProvider>
+        <Tooltip disableHoverableContent delayDuration={TOOLTIP_BODY_DELAY_MS}>
+          <TooltipTrigger asChild>
+            <Link
+              id={asteroidAnchorId("satellite")}
+              className="asteroid-link"
+              to="/projects-and-toys"
+              aria-label="Projects & creations"
+              onPointerEnter={() => {
+                hoverState.asteroid = "satellite";
+              }}
+              onPointerLeave={() => {
+                if (hoverState.asteroid === "satellite") {
+                  hoverState.asteroid = null;
+                }
+              }}
+            >
+              <BodyOutline outlineId={asteroidOutlineId("satellite")} />
+            </Link>
+          </TooltipTrigger>
+          <TooltipContent updatePositionStrategy="always">
+            <p>Projects &amp; creations</p>
+          </TooltipContent>
+        </Tooltip>
       )}
       {/* The LinkedIn rock is parked for now (its 3D body is skipped in
           SolarScene to match). Restore both to bring it back:
       {!isNarrow && (
-        <TooltipProvider delayDuration={100}>
-          <Tooltip disableHoverableContent>
+          <Tooltip disableHoverableContent delayDuration={TOOLTIP_BODY_DELAY_MS}>
             <TooltipTrigger asChild>
               <a
                 id={asteroidAnchorId("linkedin")}
@@ -136,7 +133,6 @@ const SolarOverlays = () => {
               <p>LinkedIn</p>
             </TooltipContent>
           </Tooltip>
-        </TooltipProvider>
       )}
       */}
       {/* The rocket (spaceship) link is parked until the /journey copy is
@@ -146,8 +142,7 @@ const SolarOverlays = () => {
          The rocket easter egg: clicking it boards the ship and warps to
           the /journey story crawl (rocketJourney.ts flips the route under
           the warp flash). Same anchor plumbing as the asteroid links.
-      <TooltipProvider delayDuration={100}>
-        <Tooltip disableHoverableContent>
+        <Tooltip disableHoverableContent delayDuration={TOOLTIP_BODY_DELAY_MS}>
           <TooltipTrigger asChild>
             <button
               type="button"
@@ -179,7 +174,6 @@ const SolarOverlays = () => {
             <p>So u wanna be astronaut?</p>
           </TooltipContent>
         </Tooltip>
-      </TooltipProvider>
       */}
     </>
   );

@@ -2,6 +2,8 @@ import React from "react";
 import type { Preview } from "@storybook/react";
 import { MemoryRouter } from "react-router-dom";
 
+import { TooltipProvider, TOOLTIP_DELAY_MS } from "../src/ui/tooltip";
+
 // The real stylesheets, in the order index.js loads them — Tailwind and the
 // site's SCSS both carry layout the stories depend on
 import "../src/index.css";
@@ -97,21 +99,27 @@ const preview: Preview = {
       const palette = (context.globals.palette as string) ?? "space";
       return (
         <MemoryRouter initialEntries={["/home"]}>
-          <style>{SETTLED_ENTRANCES}</style>
-          <div
-            className={`App ${palette}`}
-            style={{
-              minHeight: "100vh",
-              // In the real app this is the WebGL canvases showing through,
-              // which stories leave out on purpose. Without standing in for
-              // them the page is white-on-white and unreadable — these are
-              // the two views' backdrop colours (see the theme-color
-              // switch in App.tsx).
-              background: palette === "mesh" ? "#050f22" : "#000",
-            }}
-          >
-            <Story />
-          </div>
+          {/* App.tsx mounts one of these around the whole site, so the
+              components below expect to find it (Radix throws without
+              one). Same job as the .App class and the backdrop here:
+              stand in for the app shell the story renders outside of. */}
+          <TooltipProvider delayDuration={TOOLTIP_DELAY_MS}>
+            <style>{SETTLED_ENTRANCES}</style>
+            <div
+              className={`App ${palette}`}
+              style={{
+                minHeight: "100vh",
+                // In the real app this is the WebGL canvases showing through,
+                // which stories leave out on purpose. Without standing in for
+                // them the page is white-on-white and unreadable — these are
+                // the two views' backdrop colours (see the theme-color
+                // switch in App.tsx).
+                background: palette === "mesh" ? "#050f22" : "#000",
+              }}
+            >
+              <Story />
+            </div>
+          </TooltipProvider>
         </MemoryRouter>
       );
     },

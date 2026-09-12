@@ -4,8 +4,8 @@ import ZipVideoPopover from "./ZipVideoPopover";
 import {
   Tooltip,
   TooltipContent,
-  TooltipProvider,
   TooltipTrigger,
+  TOOLTIP_BODY_DELAY_MS,
 } from "./ui/tooltip";
 import { MOON_VIDEO_LINK_ID, MOON_VIDEO_OUTLINE_ID } from "./solarAnchorIds";
 import { BodyOutline } from "./SolarOverlays";
@@ -54,33 +54,31 @@ const ZipVideoMoon = ({
   if (!moonLinkActive) return null;
 
   return (
-    <TooltipProvider delayDuration={100}>
-      <Tooltip disableHoverableContent>
-        <TooltipTrigger asChild>
-          <button
-            type="button"
-            id={MOON_VIDEO_LINK_ID}
-            className="moon-link"
-            aria-label="Zip brand redesign launch video"
-            onClick={() => {
-              hoverState.moon = false;
-              onOpenChange(true);
-            }}
-            onPointerEnter={() => {
-              hoverState.moon = true;
-            }}
-            onPointerLeave={() => {
-              hoverState.moon = false;
-            }}
-          >
-            <BodyOutline outlineId={MOON_VIDEO_OUTLINE_ID} />
-          </button>
-        </TooltipTrigger>
-        <TooltipContent updatePositionStrategy="always">
-          <p>Zip brand redesign launch video</p>
-        </TooltipContent>
-      </Tooltip>
-    </TooltipProvider>
+    <Tooltip disableHoverableContent delayDuration={TOOLTIP_BODY_DELAY_MS}>
+      <TooltipTrigger asChild>
+        <button
+          type="button"
+          id={MOON_VIDEO_LINK_ID}
+          className="moon-link"
+          aria-label="Zip brand redesign launch video"
+          onClick={() => {
+            hoverState.moon = false;
+            onOpenChange(true);
+          }}
+          onPointerEnter={() => {
+            hoverState.moon = true;
+          }}
+          onPointerLeave={() => {
+            hoverState.moon = false;
+          }}
+        >
+          <BodyOutline outlineId={MOON_VIDEO_OUTLINE_ID} />
+        </button>
+      </TooltipTrigger>
+      <TooltipContent updatePositionStrategy="always">
+        <p>Zip brand redesign launch video</p>
+      </TooltipContent>
+    </Tooltip>
   );
 };
 

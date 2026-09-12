@@ -11,13 +11,7 @@ import ScrollHint from "./ScrollHint";
 import GalaxyIcon from "./ui/GalaxyIcon";
 import { JOURNEY_STOPS } from "./scrollTransition";
 
-import {
-  Tooltip,
-  TooltipContent,
-  TooltipProvider,
-  TooltipTrigger,
-  TOOLTIP_DELAY_MS,
-} from "./ui/tooltip";
+import { Tooltip, TooltipContent, TooltipTrigger } from "./ui/tooltip";
 import { Link } from "react-router-dom";
 
 const typedOptions = {
@@ -126,27 +120,25 @@ const Home = () => {
           the link and bounces while any of it is hovered (App.scss
           .back-to-orbit). */}
       <div className="homePageBackLink">
-        <TooltipProvider delayDuration={TOOLTIP_DELAY_MS}>
-          <Tooltip disableHoverableContent>
-            <TooltipTrigger asChild>
-              <Link
-                className="back-to-orbit mt-4 flex items-center"
-                to="/"
-                aria-label="Back to orbit"
-              >
-                <ChevronLeft
-                  aria-hidden="true"
-                  className="back-to-orbit-chevron"
-                  size={16}
-                />
-                <GalaxyIcon aria-hidden="true" className="starIcon" size={48} />
-              </Link>
-            </TooltipTrigger>
-            <TooltipContent side="right" sideOffset={6}>
-              <p>Back to orbit</p>
-            </TooltipContent>
-          </Tooltip>
-        </TooltipProvider>
+        <Tooltip disableHoverableContent>
+          <TooltipTrigger asChild>
+            <Link
+              className="back-to-orbit mt-4 flex items-center"
+              to="/"
+              aria-label="Back to orbit"
+            >
+              <ChevronLeft
+                aria-hidden="true"
+                className="back-to-orbit-chevron"
+                size={16}
+              />
+              <GalaxyIcon aria-hidden="true" className="starIcon" size={48} />
+            </Link>
+          </TooltipTrigger>
+          <TooltipContent side="right" sideOffset={6}>
+            <p>Back to orbit</p>
+          </TooltipContent>
+        </Tooltip>
       </div>
       <main className={cx("homeInfoContainer", logoOpacity === 1 && "show")}>
         <h1 className="sr-only">Andrew Hunt — home</h1>
@@ -185,110 +177,108 @@ const Home = () => {
               </div>
             </div>
           )}
-          {/* One provider for the whole row: every icon opens with the same
-              slight hover delay, and sliding along the row skips it (Radix's
-              default skip grace), like native toolbar tooltips */}
-          <TooltipProvider delayDuration={TOOLTIP_DELAY_MS}>
-            {/* On md the pills wrap into two rows: contact links (LinkedIn,
+          {/* Every icon opens with the same slight hover delay, and sliding
+              along the row skips it, like native toolbar tooltips — that's
+              the app-wide TooltipProvider's skip grace (App.tsx) */}
+          {/* On md the pills wrap into two rows: contact links (LinkedIn,
                 GitHub, mail) on top, the shop pushed underneath via `order`
                 on its slot; max-w-38 = three 48px pills + gaps. Everywhere
                 else it's one row in DOM order. */}
-            {/* Tooltips never open from a touch pointer, so on phones each
+          {/* Tooltips never open from a touch pointer, so on phones each
                 pill also carries a caption — the only name the shopping bag
                 (the one non-universal icon) gets there */}
-            <div
-              className={cx(
-                "icon-pill-row flex items-start justify-end gap-1",
-                isMedium && "flex-wrap max-w-38",
-              )}
-            >
-              <span className="icon-pill-slot">
-                <Tooltip disableHoverableContent>
-                  <TooltipTrigger asChild>
-                    <a
-                      aria-label="LinkedIn"
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      href="https://www.linkedin.com/in/andrewmhunt/"
-                      className="icon-pill flex size-12 items-center justify-center rounded-full p-1"
-                    >
-                      <Linkedin size={22} />
-                    </a>
-                  </TooltipTrigger>
-                  <TooltipContent>
-                    <p>LinkedIn</p>
-                  </TooltipContent>
-                </Tooltip>
-                {isSmall && <span className="icon-pill-caption">LinkedIn</span>}
-              </span>
-              <span className="icon-pill-slot">
-                <Tooltip disableHoverableContent>
-                  <TooltipTrigger asChild>
-                    <a
-                      aria-label="GitHub"
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      href="https://www.github.com/amhunt"
-                      className="icon-pill flex size-12 items-center justify-center rounded-full p-1"
-                    >
-                      <GitHub size={22} />
-                    </a>
-                  </TooltipTrigger>
-                  <TooltipContent>
-                    <p>GitHub</p>
-                  </TooltipContent>
-                </Tooltip>
-                {isSmall && <span className="icon-pill-caption">GitHub</span>}
-              </span>
-              <span className={cx("icon-pill-slot", isMedium && "order-1")}>
-                <Tooltip disableHoverableContent>
-                  <TooltipTrigger asChild>
-                    <Link
-                      aria-label="Artifacts"
-                      to="/artifacts"
-                      className="icon-pill flex size-12 items-center justify-center rounded-full p-1"
-                    >
-                      <ShoppingBag size={20} />
-                    </Link>
-                  </TooltipTrigger>
-                  <TooltipContent>
-                    <p>Artifacts by Andy Shop — 3D Printed Goods</p>
-                  </TooltipContent>
-                </Tooltip>
-                {isSmall && <span className="icon-pill-caption">Shop</span>}
-              </span>
-              <span className="icon-pill-slot">
-                <Tooltip
-                  disableHoverableContent
-                  open={copyTooltipOpen}
-                  onOpenChange={handleCopyTooltipOpenChange}
-                >
-                  <TooltipTrigger asChild>
-                    <button
-                      type="button"
-                      ref={copyTriggerRef}
-                      aria-label="Copy email address andrew@hunt.codes"
-                      onPointerDown={() => pinCopyTooltip()}
-                      onClick={() => void handleCopy()}
-                      className="icon-pill flex size-12 items-center justify-center rounded-full p-1"
-                    >
-                      <Mail size={22} />
-                    </button>
-                  </TooltipTrigger>
-                  <TooltipContent
-                    onPointerDownOutside={(e) => e.preventDefault()}
+          <div
+            className={cx(
+              "icon-pill-row flex items-start justify-end gap-1",
+              isMedium && "flex-wrap max-w-38",
+            )}
+          >
+            <span className="icon-pill-slot">
+              <Tooltip disableHoverableContent>
+                <TooltipTrigger asChild>
+                  <a
+                    aria-label="LinkedIn"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    href="https://www.linkedin.com/in/andrewmhunt/"
+                    className="icon-pill flex size-12 items-center justify-center rounded-full p-1"
                   >
-                    <p>
-                      {copied
-                        ? "Email copied!"
-                        : `andrew@hunt.codes — ${isTouch ? "tap" : "click"} to copy`}
-                    </p>
-                  </TooltipContent>
-                </Tooltip>
-                {isSmall && <span className="icon-pill-caption">Email</span>}
-              </span>
-            </div>
-          </TooltipProvider>
+                    <Linkedin size={22} />
+                  </a>
+                </TooltipTrigger>
+                <TooltipContent>
+                  <p>LinkedIn</p>
+                </TooltipContent>
+              </Tooltip>
+              {isSmall && <span className="icon-pill-caption">LinkedIn</span>}
+            </span>
+            <span className="icon-pill-slot">
+              <Tooltip disableHoverableContent>
+                <TooltipTrigger asChild>
+                  <a
+                    aria-label="GitHub"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    href="https://www.github.com/amhunt"
+                    className="icon-pill flex size-12 items-center justify-center rounded-full p-1"
+                  >
+                    <GitHub size={22} />
+                  </a>
+                </TooltipTrigger>
+                <TooltipContent>
+                  <p>GitHub</p>
+                </TooltipContent>
+              </Tooltip>
+              {isSmall && <span className="icon-pill-caption">GitHub</span>}
+            </span>
+            <span className={cx("icon-pill-slot", isMedium && "order-1")}>
+              <Tooltip disableHoverableContent>
+                <TooltipTrigger asChild>
+                  <Link
+                    aria-label="Artifacts"
+                    to="/artifacts"
+                    className="icon-pill flex size-12 items-center justify-center rounded-full p-1"
+                  >
+                    <ShoppingBag size={20} />
+                  </Link>
+                </TooltipTrigger>
+                <TooltipContent>
+                  <p>Artifacts by Andy Shop — 3D Printed Goods</p>
+                </TooltipContent>
+              </Tooltip>
+              {isSmall && <span className="icon-pill-caption">Shop</span>}
+            </span>
+            <span className="icon-pill-slot">
+              <Tooltip
+                disableHoverableContent
+                open={copyTooltipOpen}
+                onOpenChange={handleCopyTooltipOpenChange}
+              >
+                <TooltipTrigger asChild>
+                  <button
+                    type="button"
+                    ref={copyTriggerRef}
+                    aria-label="Copy email address andrew@hunt.codes"
+                    onPointerDown={() => pinCopyTooltip()}
+                    onClick={() => void handleCopy()}
+                    className="icon-pill flex size-12 items-center justify-center rounded-full p-1"
+                  >
+                    <Mail size={22} />
+                  </button>
+                </TooltipTrigger>
+                <TooltipContent
+                  onPointerDownOutside={(e) => e.preventDefault()}
+                >
+                  <p>
+                    {copied
+                      ? "Email copied!"
+                      : `andrew@hunt.codes — ${isTouch ? "tap" : "click"} to copy`}
+                  </p>
+                </TooltipContent>
+              </Tooltip>
+              {isSmall && <span className="icon-pill-caption">Email</span>}
+            </span>
+          </div>
         </div>
         {/* Moved to computer for large screens */}
         {/* {isMdOrLess && ( */}

@@ -4,13 +4,7 @@ import cx from "classnames";
 import { GlobeIcon, StarIcon } from "lucide-react";
 
 import useWindowSize from "useWindowSize";
-import {
-  Tooltip,
-  TooltipContent,
-  TooltipProvider,
-  TooltipTrigger,
-  TOOLTIP_DELAY_MS,
-} from "ui/tooltip";
+import { Tooltip, TooltipContent, TooltipTrigger } from "ui/tooltip";
 
 /**
  * The scene's view switch, borrowed from the layer chip every maps app
@@ -82,32 +76,30 @@ const ViewModeSwitch = ({
         aria-hidden
         className={cx("vms-indicator", !isSpaceView && "vms-indicator-end")}
       />
-      <TooltipProvider delayDuration={TOOLTIP_DELAY_MS}>
-        {VIEWS.map(({ isSpace, name, Icon, fill }) => (
-          <Tooltip key={name} disableHoverableContent>
-            <TooltipTrigger asChild>
-              <button
-                type="button"
-                className="vms-option"
-                aria-label={name}
-                aria-pressed={isSpaceView === isSpace}
-                onClick={() => onChange(isSpace)}
-              >
-                <Icon
-                  size={18}
-                  fill={fill}
-                  stroke={GLYPH_STROKE}
-                  strokeWidth={GLYPH_STROKE_WIDTH}
-                  aria-hidden
-                />
-              </button>
-            </TooltipTrigger>
-            <TooltipContent>
-              <p>{name}</p>
-            </TooltipContent>
-          </Tooltip>
-        ))}
-      </TooltipProvider>
+      {VIEWS.map(({ isSpace, name, Icon, fill }) => (
+        <Tooltip key={name} disableHoverableContent>
+          <TooltipTrigger asChild>
+            <button
+              type="button"
+              className="vms-option"
+              aria-label={name}
+              aria-pressed={isSpaceView === isSpace}
+              onClick={() => onChange(isSpace)}
+            >
+              <Icon
+                size={18}
+                fill={fill}
+                stroke={GLYPH_STROKE}
+                strokeWidth={GLYPH_STROKE_WIDTH}
+                aria-hidden
+              />
+            </button>
+          </TooltipTrigger>
+          <TooltipContent>
+            <p>{name}</p>
+          </TooltipContent>
+        </Tooltip>
+      ))}
     </div>
   );
 };

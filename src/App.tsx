@@ -29,6 +29,7 @@ import Landing from "Landing";
 import SpaceJamSwitch from "SpaceJamSwitch";
 import ViewModeSwitch from "ViewModeSwitch";
 import { installClickTracking, trackPageView } from "./analytics";
+import { TooltipProvider, TOOLTIP_DELAY_MS } from "ui/tooltip";
 import { NOT_FOUND_TITLE, ROUTE_TITLES, SITE_ORIGIN } from "./routes";
 
 // Pause audio when the page is hidden; resume on return whatever was
@@ -96,6 +97,15 @@ const RouteMeta = () => {
 const TOAST_DURATION_MS = 7000;
 
 const VIEW_STORAGE_KEY = "hunt-codes-scene-view";
+
+/**
+ * How long after a tooltip closes the next one still opens instantly.
+ * Radix's own default, named here because the single root provider makes
+ * it matter site-wide: it's what turns the corner chrome, and each row of
+ * 3D body links, into one group you can sweep rather than a set of
+ * separate waits.
+ */
+const TOOLTIP_SKIP_DELAY_MS = 300;
 
 /**
  * The scene-view tour: the landing page always opens in space view (its
@@ -195,12 +205,21 @@ const App = () => {
 
   return (
     <div className={cx("App", isSpaceView ? "space" : "mesh")}>
-      <Router>
-        <RouteMeta />
-        <ViewTour enabled={!userPickedView} onView={setIsSpaceView} />
-        <AppBackground showBridge={showBridge} isSpaceView={isSpaceView} />
-        <ViewModeSwitch isSpaceView={isSpaceView} onChange={pickView} />
-        {/* Every route but the landing is its own chunk (routeChunks.ts),
+      {/* The site's one tooltip provider. Radix scopes its open/close
+          grace to a provider, so mounting one per tooltip (as this used
+          to) made every tooltip its own island that re-served the full
+          delay — the delays and the skip window live here instead, and
+          a <Tooltip> overrides `delayDuration` when it needs to. */}
+      <TooltipProvider
+        delayDuration={TOOLTIP_DELAY_MS}
+        skipDelayDuration={TOOLTIP_SKIP_DELAY_MS}
+      >
+        <Router>
+          <RouteMeta />
+          <ViewTour enabled={!userPickedView} onView={setIsSpaceView} />
+          <AppBackground showBridge={showBridge} isSpaceView={isSpaceView} />
+          <ViewModeSwitch isSpaceView={isSpaceView} onChange={pickView} />
+          {/* Every route but the landing is its own chunk (routeChunks.ts),
             so `/` no longer parses the résumé, the shop and the synth
             before it can draw the sun. `null` is the right fallback: the
             solar system and the corner chrome are mounted outside this
@@ -208,55 +227,56 @@ const App = () => {
             no flash — and routeChunks prefetches the others during idle
             time, so by the time anyone navigates there is nothing to
             wait for. */}
-        <Suspense fallback={null}>
-          <Routes>
-            <Route path="/" element={<Landing />} />
-            <Route path="/home" element={<Home />} />
-            <Route path="/about" element={<Resume />} />
-            <Route path="/synth" element={<Synth />} />
-            <Route path="/journey" element={<Journey />} />
-            <Route path="/draw" element={<SvgGenerator />} />
-            <Route path="/draw/:id" element={<SvgGenerator />} />
-            <Route path="/svg-to-3d" element={<SvgTo3d />} />
-            <Route path="/artifacts" element={<Shop />} />
-            {/* The shop lived at /shop until it was renamed; keep the old
+          <Suspense fallback={null}>
+            <Routes>
+              <Route path="/" element={<Landing />} />
+              <Route path="/home" element={<Home />} />
+              <Route path="/about" element={<Resume />} />
+              <Route path="/synth" element={<Synth />} />
+              <Route path="/journey" element={<Journey />} />
+              <Route path="/draw" element={<SvgGenerator />} />
+              <Route path="/draw/:id" element={<SvgGenerator />} />
+              <Route path="/svg-to-3d" element={<SvgTo3d />} />
+              <Route path="/artifacts" element={<Shop />} />
+              {/* The shop lived at /shop until it was renamed; keep the old
                 path working for anyone holding that link */}
-            <Route
-              path="/shop"
-              element={<Navigate to="/artifacts" replace />}
-            />
-            <Route path="/projects-and-toys" element={<ProjectsAndToys />} />
-            <Route path="*" element={<NotFound />} />
-          </Routes>
-        </Suspense>
-        {/* Fixed corner chrome sits after the routes so each page's own
+              <Route
+                path="/shop"
+                element={<Navigate to="/artifacts" replace />}
+              />
+              <Route path="/projects-and-toys" element={<ProjectsAndToys />} />
+              <Route path="*" element={<NotFound />} />
+            </Routes>
+          </Suspense>
+          {/* Fixed corner chrome sits after the routes so each page's own
             content — the landing's ENTER sun — comes first in the tab
             order. The "Space jam" switch rides every page, the landing
             included: the site starts muted, so the landing is where
             visitors look for the music; mounted once, app-wide, the track
             carries across routes. */}
-        {isSynthRoute ? null : <SpaceJamSwitch />}
-        <BadgeLink isSpaceView={isSpaceView} />
-        {/* App-level so the windshield frame and warp flash survive the
+          {isSynthRoute ? null : <SpaceJamSwitch />}
+          <BadgeLink isSpaceView={isSpaceView} />
+          {/* App-level so the windshield frame and warp flash survive the
             rides' mid-flight route hops (/home → /journey → /home) —
             per-page mounts cut the flash short at every navigation */}
-        <RocketCockpit />
-        {/* Bottom centre, clear of the music switch (bottom-left) and the
+          <RocketCockpit />
+          {/* Bottom centre, clear of the music switch (bottom-left) and the
             coin (bottom-right). Dressed like the tooltips — the site's
             surfaces are dark, and the library's default is a white card. */}
-        <Toaster
-          position="bottom-center"
-          toastOptions={{
-            duration: TOAST_DURATION_MS,
-            style: {
-              background: "hsl(var(--primary))",
-              color: "hsl(var(--primary-foreground))",
-              fontSize: "0.75rem",
-              maxWidth: "32rem",
-            },
-          }}
-        />
-      </Router>
+          <Toaster
+            position="bottom-center"
+            toastOptions={{
+              duration: TOAST_DURATION_MS,
+              style: {
+                background: "hsl(var(--primary))",
+                color: "hsl(var(--primary-foreground))",
+                fontSize: "0.75rem",
+                maxWidth: "32rem",
+              },
+            }}
+          />
+        </Router>
+      </TooltipProvider>
     </div>
   );
 };

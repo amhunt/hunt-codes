@@ -6,8 +6,8 @@ import { ArrowLeftCircleIcon } from "lucide-react";
 import {
   Tooltip,
   TooltipContent,
-  TooltipProvider,
   TooltipTrigger,
+  TOOLTIP_BODY_DELAY_MS,
 } from "./ui/tooltip";
 import {
   asteroidAnchorId,
@@ -76,22 +76,20 @@ const PartLink = ({
     outline: React.ReactNode;
   }) => React.ReactElement;
 }) => (
-  <TooltipProvider delayDuration={100}>
-    <Tooltip disableHoverableContent>
-      <TooltipTrigger asChild>
-        {children({
-          id: satellitePartAnchorId(part),
-          className: "satellite-link",
-          "aria-label": PART_TOOLTIP[part],
-          ...partHoverProps(part),
-          outline: <BodyOutline outlineId={satellitePartOutlineId(part)} />,
-        })}
-      </TooltipTrigger>
-      <TooltipContent updatePositionStrategy="always">
-        <p>{PART_TOOLTIP[part]}</p>
-      </TooltipContent>
-    </Tooltip>
-  </TooltipProvider>
+  <Tooltip disableHoverableContent delayDuration={TOOLTIP_BODY_DELAY_MS}>
+    <TooltipTrigger asChild>
+      {children({
+        id: satellitePartAnchorId(part),
+        className: "satellite-link",
+        "aria-label": PART_TOOLTIP[part],
+        ...partHoverProps(part),
+        outline: <BodyOutline outlineId={satellitePartOutlineId(part)} />,
+      })}
+    </TooltipTrigger>
+    <TooltipContent updatePositionStrategy="always">
+      <p>{PART_TOOLTIP[part]}</p>
+    </TooltipContent>
+  </Tooltip>
 );
 
 const ProjectsAndToys = () => {
@@ -184,43 +182,44 @@ const ProjectsAndToys = () => {
               (/synth). Unlocking the AudioContext inside this click is
               what lets the beat start playing the moment you land. */}
           {!isPhone && (
-            <TooltipProvider delayDuration={100}>
-              <Tooltip disableHoverableContent>
-                <TooltipTrigger asChild>
-                  <button
-                    type="button"
-                    id={asteroidAnchorId("synthpad")}
-                    className="satellite-link"
-                    aria-label="Space Synth"
-                    onClick={() => {
-                      ensureAudio();
-                      startSynthJourney();
-                      // The studio lives at /synth: flip the URL as the
-                      // ride boards (shareable, back-button aborts the
-                      // trip) rather than after the warp lands. Only if
-                      // the journey actually launched — the 3D driver
-                      // may be dead (crashed canvas).
-                      if (journeyState.phase !== "idle") {
-                        void navigate("/synth");
-                      }
-                    }}
-                    onPointerEnter={() => {
-                      hoverState.asteroid = "synthpad";
-                    }}
-                    onPointerLeave={() => {
-                      if (hoverState.asteroid === "synthpad") {
-                        hoverState.asteroid = null;
-                      }
-                    }}
-                  >
-                    <BodyOutline outlineId={asteroidOutlineId("synthpad")} />
-                  </button>
-                </TooltipTrigger>
-                <TooltipContent updatePositionStrategy="always">
-                  <p>Space Synth</p>
-                </TooltipContent>
-              </Tooltip>
-            </TooltipProvider>
+            <Tooltip
+              disableHoverableContent
+              delayDuration={TOOLTIP_BODY_DELAY_MS}
+            >
+              <TooltipTrigger asChild>
+                <button
+                  type="button"
+                  id={asteroidAnchorId("synthpad")}
+                  className="satellite-link"
+                  aria-label="Space Synth"
+                  onClick={() => {
+                    ensureAudio();
+                    startSynthJourney();
+                    // The studio lives at /synth: flip the URL as the
+                    // ride boards (shareable, back-button aborts the
+                    // trip) rather than after the warp lands. Only if
+                    // the journey actually launched — the 3D driver
+                    // may be dead (crashed canvas).
+                    if (journeyState.phase !== "idle") {
+                      void navigate("/synth");
+                    }
+                  }}
+                  onPointerEnter={() => {
+                    hoverState.asteroid = "synthpad";
+                  }}
+                  onPointerLeave={() => {
+                    if (hoverState.asteroid === "synthpad") {
+                      hoverState.asteroid = null;
+                    }
+                  }}
+                >
+                  <BodyOutline outlineId={asteroidOutlineId("synthpad")} />
+                </button>
+              </TooltipTrigger>
+              <TooltipContent updatePositionStrategy="always">
+                <p>Space Synth</p>
+              </TooltipContent>
+            </Tooltip>
           )}
         </>
       )}

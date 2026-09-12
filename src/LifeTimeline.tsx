@@ -1,12 +1,7 @@
 import React, { useEffect, useMemo, useRef, useState } from "react";
 import cx from "classnames";
 
-import {
-  Tooltip,
-  TooltipContent,
-  TooltipProvider,
-  TooltipTrigger,
-} from "./ui/tooltip";
+import { Tooltip, TooltipContent, TooltipTrigger } from "./ui/tooltip";
 import airbnbLogo from "./assets/logos/airbnb.svg";
 import argosLogo from "./assets/logos/argos.svg";
 import princetonLogo from "./assets/logos/princeton.svg";
@@ -184,6 +179,9 @@ const twoLineChars = (title: string) => {
 };
 /** A year tick needs room for four digits and its rule */
 const MIN_YEAR_PX = 42;
+/** Faster than the site standard: sweeping the bar to compare eras is the
+ *  whole interaction, and 500ms fights it */
+const BAR_DELAY_MS = 150;
 
 // The geometry never changes after load (the running era ends at this
 // month), so it's laid out once: each era's share of the track and the
@@ -309,6 +307,7 @@ const LifeTimeline = ({
   ) => (
     <Tooltip
       key={key}
+      delayDuration={BAR_DELAY_MS}
       open={openKey === key}
       onOpenChange={(open) => setOpenKey(open ? key : null)}
     >
@@ -364,45 +363,41 @@ const LifeTimeline = ({
       role="group"
       aria-label="Timeline of my life"
     >
-      {/* Short delay: sweeping the bar to compare eras is the whole
-          interaction, and the site's standard 500ms fights it */}
-      <TooltipProvider delayDuration={150}>
-        <div className="life-timeline-bar">
-          {/* The eras share the bar with the fixed-width future tail, so
+      <div className="life-timeline-bar">
+        {/* The eras share the bar with the fixed-width future tail, so
               their percentages are of this inner track, not the bar */}
-          <div className="life-timeline-track" ref={trackRef}>
-            {segments.map(({ era, width, showLabel, showLogo, key }) =>
-              segment(
-                key,
-                era,
-                {
-                  className: cx("life-seg", era.openStart && "life-seg--open"),
-                  style: {
-                    width: cellWidth(width, era.openStart),
-                    background: era.color,
-                  },
+        <div className="life-timeline-track" ref={trackRef}>
+          {segments.map(({ era, width, showLabel, showLogo, key }) =>
+            segment(
+              key,
+              era,
+              {
+                className: cx("life-seg", era.openStart && "life-seg--open"),
+                style: {
+                  width: cellWidth(width, era.openStart),
+                  background: era.color,
                 },
-                (showLabel || showLogo) && (
-                  <span className="life-seg-label" aria-hidden="true">
-                    {era.logo && showLogo && (
-                      <img className="life-seg-logo" src={era.logo} alt="" />
-                    )}
-                    {showLabel && barText(era) && <span>{barText(era)}</span>}
-                  </span>
-                ),
+              },
+              (showLabel || showLogo) && (
+                <span className="life-seg-label" aria-hidden="true">
+                  {era.logo && showLogo && (
+                    <img className="life-seg-logo" src={era.logo} alt="" />
+                  )}
+                  {showLabel && barText(era) && <span>{barText(era)}</span>}
+                </span>
               ),
-            )}
-          </div>
-          {segment(
-            FUTURE_KEY,
-            future,
-            { className: "life-seg life-seg--future" },
-            <span className="life-seg-label life-seg-label--future">
-              {future.title}
-            </span>,
+            ),
           )}
         </div>
-      </TooltipProvider>
+        {segment(
+          FUTURE_KEY,
+          future,
+          { className: "life-seg life-seg--future" },
+          <span className="life-seg-label life-seg-label--future">
+            {future.title}
+          </span>,
+        )}
+      </div>
       {/* Year rules line up with the segment boundaries above. The
           childhood stub gets no tick (its start is decades off the axis);
           the future tail's tick is today. */}

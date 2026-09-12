@@ -2,13 +2,7 @@ import React, { useEffect, useState } from "react";
 import { ChevronDown } from "react-feather";
 import cx from "classnames";
 
-import {
-  Tooltip,
-  TooltipContent,
-  TooltipProvider,
-  TooltipTrigger,
-  TOOLTIP_DELAY_MS,
-} from "./ui/tooltip";
+import { Tooltip, TooltipContent, TooltipTrigger } from "./ui/tooltip";
 import { scrollTransitionState } from "./scrollTransition";
 
 /**
@@ -65,39 +59,37 @@ const ScrollHint = ({ target, delayMs, hidden = false }: ScrollHintProps) => {
   }, [delayMs]);
 
   return (
-    <TooltipProvider delayDuration={TOOLTIP_DELAY_MS}>
-      <Tooltip disableHoverableContent>
-        <TooltipTrigger asChild>
-          <button
-            type="button"
-            className={cx(
-              "scroll-hint",
-              (!ready || hidden || clicked) && "hint-hidden",
-            )}
-            aria-label={destinationText}
-            onClick={() => {
-              const s = scrollTransitionState;
-              if (s.initialized && s.rigSettled) {
-                s.target = target;
-                setClicked(true);
-              }
-            }}
-          >
-            {/* aria-hidden: the button's own label already says this, and
+    <Tooltip disableHoverableContent>
+      <TooltipTrigger asChild>
+        <button
+          type="button"
+          className={cx(
+            "scroll-hint",
+            (!ready || hidden || clicked) && "hint-hidden",
+          )}
+          aria-label={destinationText}
+          onClick={() => {
+            const s = scrollTransitionState;
+            if (s.initialized && s.rigSettled) {
+              s.target = target;
+              setClicked(true);
+            }
+          }}
+        >
+          {/* aria-hidden: the button's own label already says this, and
                 more fully — this copy is the visible shorthand */}
-            {CAPTION_TEXT[target] && (
-              <span className="scroll-hint-label" aria-hidden="true">
-                {CAPTION_TEXT[target]}
-              </span>
-            )}
-            <ChevronDown className="scroll-hint-chevron" size={30} />
-          </button>
-        </TooltipTrigger>
-        <TooltipContent>
-          <p>{destinationText}</p>
-        </TooltipContent>
-      </Tooltip>
-    </TooltipProvider>
+          {CAPTION_TEXT[target] && (
+            <span className="scroll-hint-label" aria-hidden="true">
+              {CAPTION_TEXT[target]}
+            </span>
+          )}
+          <ChevronDown className="scroll-hint-chevron" size={30} />
+        </button>
+      </TooltipTrigger>
+      <TooltipContent>
+        <p>{destinationText}</p>
+      </TooltipContent>
+    </Tooltip>
   );
 };
 
