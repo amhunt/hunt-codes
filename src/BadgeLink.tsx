@@ -3,6 +3,7 @@ import { useLocation } from "react-router-dom";
 
 import { fireBadgeConfetti, preloadBadgeConfetti } from "./badgeConfetti";
 import { badgeHoverState } from "./badgeState";
+import { playCoin } from "./sfx";
 import useReducedMotion from "./useReducedMotion";
 
 /**
@@ -52,6 +53,9 @@ const BadgeLink = ({ isSpaceView }: { isSpaceView: boolean }) => {
   // Launch from the coin's center (the coin fills the hit disc, centered)
   const fire = (target: HTMLElement) => {
     const rect = target.getBoundingClientRect();
+    // The chime the volley was already miming. Only reached when the coin
+    // is visible at all, so prefers-reduced-motion silences it for free.
+    playCoin();
     fireBadgeConfetti({
       x: (rect.left + rect.width / 2) / (window.innerWidth || 1),
       y: (rect.top + rect.height / 2) / (window.innerHeight || 1),

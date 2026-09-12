@@ -1,19 +1,21 @@
 import React, { useState } from "react";
 import type { Meta, StoryObj } from "@storybook/react";
-import { expect, spyOn, userEvent, within } from "storybook/test";
+import { expect, userEvent, within } from "storybook/test";
 
 import ViewModeSwitch from "./ViewModeSwitch";
 import SpaceJamSwitch from "./SpaceJamSwitch";
 
 /**
- * The bottom-left music switch, with its muted (red-slashed speaker,
- * flatline) and playing (speaker, bouncing equaliser) dressings. Hovering
+ * The bottom-left music switch, with its playing (note, bouncing
+ * equaliser) and muted (red-slashed note, flatline) dressings. Hovering
  * or focusing it shows the "Play space jams" / "Pause space jams" tooltip.
  * The toolbar view switch (`.App.space` / `.App.mesh`) shows it over
  * both backdrops.
  *
- * Flipping the switch by hand plays the real track (`public/` is served
- * as Storybook's static dir).
+ * The switch starts off, so the default story is the muted dressing —
+ * and two seconds in, the tooltip opens on its own to advertise that
+ * there is something to hear, which is the `Hint` story below. Flipping
+ * it by hand starts the generative pad for real.
  */
 const meta = {
   title: "Controls/Space jam switch",
@@ -26,27 +28,34 @@ const meta = {
 export default meta;
 type Story = StoryObj<typeof meta>;
 
-/** The resting state: charcoal track, flatline, slashed speaker. */
+/** The resting state: charcoal track, flatline, slashed note. */
 export const Muted: Story = {};
 
-/**
- * After a flip on: purple track, equaliser, speaker. The click here is
- * synthetic, so the browser would refuse `play()` and the switch would
- * honestly fall back to muted — stub playback so the dressing can be
- * judged (listen for real in the Muted story).
- */
+/** After a flip on: purple track, equaliser, note. */
 export const Playing: Story = {
   play: async ({ canvasElement }) => {
-    const play = spyOn(HTMLMediaElement.prototype, "play").mockResolvedValue();
-    try {
-      const toggle = within(canvasElement).getByRole("switch", {
-        name: "Space jams",
-      });
-      await userEvent.click(toggle);
-      await expect(toggle).toHaveAttribute("aria-checked", "true");
-    } finally {
-      play.mockRestore();
-    }
+    const toggle = within(canvasElement).getByRole("switch", {
+      name: "Space jams",
+    });
+    await userEvent.click(toggle);
+    await expect(toggle).toHaveAttribute("aria-checked", "true");
+  },
+};
+
+/**
+ * The unprompted advert, two seconds after load. Waits it out rather than
+ * hovering, so this is the tooltip opening on its own rather than the
+ * "Play space jams" label a hover would bring up.
+ */
+export const Hint: Story = {
+  play: async () => {
+    // Radix portals its tooltip to the body, outside the story canvas
+    const hint = await within(document.body).findByText(
+      "Sound on for the full experience",
+      undefined,
+      { timeout: 5000 },
+    );
+    await expect(hint).toBeVisible();
   },
 };
 

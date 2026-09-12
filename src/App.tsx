@@ -7,6 +7,7 @@ import {
   useLocation,
 } from "react-router-dom";
 import cx from "classnames";
+import { Toaster } from "react-hot-toast";
 import "./App.scss";
 
 import RocketCockpit from "./RocketCockpit";
@@ -90,6 +91,10 @@ const RouteMeta = () => {
 };
 
 /** Remembers the visitor's own pick between the two scene views */
+/** Long enough to read a sentence that explains itself, rather than the
+ *  library's 4s, which suits "Saved!" and not much else */
+const TOAST_DURATION_MS = 7000;
+
 const VIEW_STORAGE_KEY = "hunt-codes-scene-view";
 
 /**
@@ -236,6 +241,21 @@ const App = () => {
             rides' mid-flight route hops (/home → /journey → /home) —
             per-page mounts cut the flash short at every navigation */}
         <RocketCockpit />
+        {/* Bottom centre, clear of the music switch (bottom-left) and the
+            coin (bottom-right). Dressed like the tooltips — the site's
+            surfaces are dark, and the library's default is a white card. */}
+        <Toaster
+          position="bottom-center"
+          toastOptions={{
+            duration: TOAST_DURATION_MS,
+            style: {
+              background: "hsl(var(--primary))",
+              color: "hsl(var(--primary-foreground))",
+              fontSize: "0.75rem",
+              maxWidth: "32rem",
+            },
+          }}
+        />
       </Router>
     </div>
   );

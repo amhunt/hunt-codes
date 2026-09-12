@@ -1,5 +1,7 @@
 import type { SynthParam } from "./synthSpec";
 
+import { audioOutput, ensureAudioContext } from "./audioContext";
+
 /**
  * The space synth's Web Audio engine — a little subtractive poly synth
  * with a built-in arpeggiator, all knobs driven by the planet overlays
@@ -12,9 +14,11 @@ import type { SynthParam } from "./synthSpec";
  *                          filter -> delay (feedback loop) -> wet -> master
  *         LFO -> filter.frequency ("gravity wobble")
  *
- * The AudioContext is created lazily inside a user gesture
+ * The AudioContext is the site-wide one (audioContext.ts), shared with
+ * the interaction sounds and created lazily inside a user gesture
  * (ensureAudio() runs in the 808-pad click handler and in every /synth
- * interaction), so autoplay policy never leaves the synth muted.
+ * interaction), so autoplay policy never leaves the synth muted. The
+ * graph below is the synth's own and is built once, the first time.
  */
 
 /** Read by SynthSystem every frame; pulse spikes on each arp note and
@@ -82,12 +86,15 @@ function applyParam(param: SynthParam): void {
 /** Create/resume the context. Must be called from a user gesture at
  *  least once; safe to call repeatedly. Returns readiness. */
 export function ensureAudio(): boolean {
-  if (typeof AudioContext === "undefined") return false;
+  const shared = ensureAudioContext();
+  if (!shared) return false;
   if (!ctx) {
-    ctx = new AudioContext();
+    ctx = shared;
     master = ctx.createGain();
     master.gain.value = 0.16;
-    master.connect(ctx.destination);
+    // The shared master, not the destination, so the synth ducks and
+    // fades with the rest of the layer when attention moves
+    master.connect(audioOutput() ?? ctx.destination);
 
     filter = ctx.createBiquadFilter();
     filter.type = "lowpass";
@@ -118,7 +125,7 @@ export function ensureAudio(): boolean {
     (Object.keys(params) as SynthParam[]).forEach(applyParam);
     synthState.ready = true;
   }
-  if (ctx.state === "suspended") void ctx.resume();
+  // Resuming is ensureAudioContext's job — it owns the context now
   return true;
 }
 
