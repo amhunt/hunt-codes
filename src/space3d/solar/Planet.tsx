@@ -265,7 +265,10 @@ export default function Planet({
       }
     }
     if (mesh.current) {
-      mesh.current.rotation.y += delta * config.spinSpeed;
+      // Negated: the orbits sweep +X → +Z, a turn about -Y, so a prograde
+      // spin runs against a +Y `rotation.y`. Adding it spun every planet
+      // backwards against its own orbit.
+      mesh.current.rotation.y -= delta * config.spinSpeed;
     }
 
     // Landing-intro reveal: ramp opacity 0→1 (or back) and push it into the
@@ -343,7 +346,15 @@ export default function Planet({
       <group ref={group}>
         <group ref={squashWrapper}>
           <group ref={squashCounterRotate}>
-            <mesh ref={mesh}>
+            {/* ZYX order so the composed rotation is Rz(tilt)·Ry(spin):
+                the tilt is fixed in the orbital frame and the spin below
+                runs about that tilted pole. The default XYZ would compose
+                the other way round and precess the pole into a wobble. */}
+            <mesh
+              ref={mesh}
+              rotation-order="ZYX"
+              rotation-z={config.axialTilt ?? 0}
+            >
               {/* Earth gets double the segments: the /about perch sits so
                   close that 48 shows flat spots on the limb */}
               <sphereGeometry
