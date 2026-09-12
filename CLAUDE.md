@@ -46,15 +46,15 @@ the preview tool.
 - `/` → `Landing.tsx` — WebGL solar system; the sun is a clickable
   "ENTER" — the curved label is drawn in WebGL, and the SVG under it
   carries one transparent disc wide enough to be the link for both
-  (`SUN_HIT_RADIUS`). On lg+ (≥1280px) the star-glyph title stacks in a
+  (`SUN_HIT_RADIUS`). On md+ (≥768px) the star-glyph title stacks in a
   left column (`HUNT.` / `CODES`, the later phrases likewise —
   `STACKED_LINES` in `starSampling.ts`), the sun parks at 75% of the
   width (`LANDING_SUN_X` in `CameraRig.tsx`), a tagline hangs under the
   title (`LandingTagline.tsx`) and the coin parks top-right
   (`body.on-landing` rules in App.scss, mirrored in
   `BadgeMedallion.tsx`); the music + view switches keep their usual
-  bottom-left corner, and the scroll chevron sits the layout out. Below
-  lg it's the one-line banner.
+  bottom-left corner, and the scroll chevron sits the layout out. Phones
+  keep the one-line banner.
 - `/home` → `Home.tsx` — social links; Earth = "ABOUT ME" link; asteroids +
   Sputnik satellite = blog/LinkedIn/GitHub links (home view only). "ABOUT
   ME" and the landing's "ENTER" are one pair of curved ring labels and

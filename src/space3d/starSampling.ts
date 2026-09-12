@@ -172,13 +172,13 @@ const landingTextLayout = (
   letterSpacing: (windowWidth * percentageWidthOfSpacing) / (text.length - 1),
 });
 
-// ─── The stacked title (lg+) ───────────────────
+// ─── The stacked title (md+) ───────────────────
 // From LANDING_STACK_MIN_WIDTH_PX up the title stands in a left column on
 // two or three lines, vertically centred on the viewport, with the solar
 // system off to the right (CameraRig's landing pose parks the sun at
-// three quarters of the width). Narrower viewports keep the one-line
-// banner across the top.
-export const LANDING_STACK_MIN_WIDTH_PX = 1280; // $breakpoint-lg
+// three quarters of the width). Phones keep the one-line banner across
+// the top.
+export const LANDING_STACK_MIN_WIDTH_PX = 768; // $breakpoint-sm
 
 /** How each phrase breaks into lines when stacked */
 const STACKED_LINES: Record<string, string[]> = {

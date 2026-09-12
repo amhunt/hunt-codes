@@ -2,7 +2,6 @@ import React, { useEffect, useMemo, useRef } from "react";
 import * as THREE from "three";
 import { useFrame, useLoader } from "@react-three/fiber";
 import { GLTFLoader } from "three/examples/jsm/loaders/GLTFLoader.js";
-
 import { SVGLoader } from "three/examples/jsm/loaders/SVGLoader.js";
 
 import {
@@ -13,6 +12,7 @@ import {
 } from "../badgeState";
 import badgeUrl from "../assets/hunt-codes-badge.glb";
 import { applyWireSkin, wireState } from "./solar/wireSkin";
+import { LANDING_STACK_MIN_WIDTH_PX } from "./starSampling";
 
 /**
  * The "hunt.codes" medallion (the exported coin from three-d-stage),
@@ -153,7 +153,6 @@ const AIM_S = BADGE_AIM_MS / 1000;
 const SLOT_PX = 140;
 const SLOT_PX_SMALL = 96;
 const SMALL_BREAKPOINT_PX = 768; // $breakpoint-sm
-const LG_BREAKPOINT_PX = 1280; // $breakpoint-lg
 const MARGIN_PX = 8; // 0.5rem
 /** The landing page at lg+ parks the coin top-right instead — the
  *  bottom-left dock and the sun own the bottom band there — inset from
@@ -475,7 +474,7 @@ const BadgeMedallion = ({ isLanding }: { isLanding: boolean }) => {
     // A route change glides it between the two rather than snapping.
     const { width, height } = state.size;
     const slot = width <= SMALL_BREAKPOINT_PX ? SLOT_PX_SMALL : SLOT_PX;
-    const topRight = isLanding && width >= LG_BREAKPOINT_PX;
+    const topRight = isLanding && width >= LANDING_STACK_MIN_WIDTH_PX;
     cornerTarget.set(
       width / 2 - (topRight ? LANDING_MARGIN_PX : MARGIN_PX) - slot / 2,
       topRight
