@@ -2486,6 +2486,19 @@ body.on-landing {
       bottom: calc(1rem + env(safe-area-inset-bottom, 0px));
     }
   }
+
+  // Phones: the view switch drops from the top-right corner to the
+  // bottom-left one, inset 24px from both edges, so the one-line title
+  // and the sun's top have the upper screen to themselves. (The music
+  // switch already sits phones out here.)
+  @media (max-width: ($breakpoint-sm - 1px)) {
+    .view-mode-switch {
+      top: auto;
+      right: auto;
+      left: calc(24px + env(safe-area-inset-left, 0px));
+      bottom: calc(24px + env(safe-area-inset-bottom, 0px));
+    }
+  }
 }
 
 .space-jam-switch {
