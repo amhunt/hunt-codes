@@ -63,6 +63,37 @@ const SIGNATURE_DRAW_MS = 4000;
 const SIGNATURE_BALL_GROW_MS = 600;
 const SIGNATURE_BALL_PULSE_MS = 1500;
 const SIGNATURE_BALL_PULSE = 0.08;
+// The ball's own light. Piling every star's sprite on one point only ever
+// sums to white, so one star of the crowd is flagged as the ball (aBall)
+// and drawn by the shader as a little sun of its own — a disc marbled
+// light purple through light green by two turns of drifting noise, coarse
+// and quick where the real sun's surface is fine and slow. The rest of
+// the crowd rides inside it at no size.
+const BALL_COLOR_PURPLE = [0.74, 0.56, 1] as const;
+const BALL_COLOR_GREEN = [0.56, 1, 0.76] as const;
+/** How fast the cloud churns (noise fields crossed per second) */
+const BALL_CLOUD_SPEED = 0.9;
+/** How fine the marbling is — a few blobs across the ball, nothing like
+ *  the detail on the real sun */
+const BALL_CLOUD_SCALE = 14;
+/** How strongly the ball burns: the one knob for solid vs ghostly. The
+ *  sprite blends additively, so this scales what it puts on the screen
+ *  as well as its alpha. On top of it the ball still rides the star
+ *  layer's own fade (uOpacity) like everything else. */
+const BALL_OPACITY = 1;
+/** The disc's radius, as a fraction of the sprite's half-width (the
+ *  sprite runs HALO_FACTOR× the dot, so there is room either side) */
+const BALL_RADIUS = 0.46;
+/** The ball never shrinks below this, so the last few stars still come
+ *  off something rather than off nothing */
+const BALL_MIN_RADIUS_PX = 1.5;
+/** How far the rim fades over, in the same units: 0.02 is a crisp edge
+ *  with just enough of a ramp to keep it from stepping, 0.15 reads
+ *  soft-focus */
+const BALL_EDGE = 0.02;
+/** How much glow spills past the rim. 0 keeps the ball a clean disc with
+ *  no faint outskirts; the stars themselves glow at 0.25 */
+const BALL_GLOW = 0;
 
 // A clump of stars on one point — the crowd the cursor gathers on md+,
 // and the phone signature's ball of light — swells with the size of the
@@ -94,13 +125,16 @@ const TWINKLE_DOT_GROW = 1.6;
 // offscreen before re-entering on the far side instead of popping
 const PAN_WRAP_PAD_PX = 160;
 
-const vertexShader = /* glsl */ `
+// Exported for StarField.shader.test.js, which type-checks them with glslx
+// — a shader that fails to compile takes the whole star field down with it
+export const vertexShader = /* glsl */ `
   attribute float aSize;
   attribute vec3 aColor;
   attribute float aPhase;
   attribute float aDisco;
   attribute float aBrighten;
   attribute float aTwinkle;
+  attribute float aBall;
   uniform float uTime;
   uniform float uPixelRatio;
   uniform float uMaxPointSize;
@@ -109,9 +143,11 @@ const vertexShader = /* glsl */ `
   varying vec3 vColor;
   varying float vExtraHue;
   varying float vTwinkle;
+  varying float vBall;
 
   void main() {
     vTwinkle = aTwinkle;
+    vBall = aBall;
     float scale = 1.0;
     float extraHue = 0.0;
     if (aDisco > 0.5) {
@@ -139,14 +175,31 @@ const vertexShader = /* glsl */ `
   }
 `;
 
-const fragmentShader = /* glsl */ `
+export const fragmentShader = /* glsl */ `
   uniform float uOpacity;
   uniform float uHue;
   uniform vec3 uGlowColor;
   uniform float uGlowStrength;
+  uniform float uTime;
   varying vec3 vColor;
   varying float vExtraHue;
   varying float vTwinkle;
+  varying float vBall;
+
+  // Value noise, for the ball's cloudy surface
+  float hash(vec2 p) {
+    return fract(sin(dot(p, vec2(127.1, 311.7))) * 43758.5453);
+  }
+  float noise(vec2 p) {
+    vec2 i = floor(p);
+    vec2 f = fract(p);
+    vec2 u = f * f * (3.0 - 2.0 * f);
+    return mix(
+      mix(hash(i), hash(i + vec2(1.0, 0.0)), u.x),
+      mix(hash(i + vec2(0.0, 1.0)), hash(i + vec2(1.0, 1.0)), u.x),
+      u.y
+    );
+  }
 
   // One sparkle ray: \`across\` is the distance off the ray's line, \`along\`
   // the distance from the center along it (sprite units, 0..0.5). Thin,
@@ -171,6 +224,41 @@ const fragmentShader = /* glsl */ `
   void main() {
     vec2 p = gl_PointCoord - 0.5;
     float d = length(p) * 2.0; // 0 at center, 1 at sprite edge
+    if (vBall > 0.5) {
+      // The signature's ball of light: a soft disc filling the middle of
+      // the sprite, its surface marbled by two turns of noise drifting
+      // against each other — the sun's trick, coarse and quick.
+      float body = 1.0 - smoothstep(
+        ${(BALL_RADIUS - BALL_EDGE).toFixed(3)},
+        ${(BALL_RADIUS + BALL_EDGE).toFixed(3)},
+        d
+      );
+      float halo = exp(-d * 4.0) * ${BALL_GLOW.toFixed(2)} * (1.0 - body);
+      vec2 q = p * ${BALL_CLOUD_SCALE.toFixed(1)};
+      // Churn is a loop, so a reduced-motion preference stills it — the
+      // marbling stays, it just stops moving
+      float t = uTime * ${(prefersReducedMotion ? 0 : BALL_CLOUD_SPEED).toFixed(2)};
+      float n = clamp((
+        noise(q + vec2(t, -t * 0.7)) +
+        0.5 * noise(q * 2.3 - vec2(t * 1.4, t * 0.9))
+      ) / 1.5, 0.0, 1.0);
+      // Mostly one colour or the other, with a soft seam between them —
+      // half and half everywhere would only wash out pale
+      vec3 cloud = mix(
+        vec3(${BALL_COLOR_PURPLE.map((v) => v.toFixed(3)).join(", ")}),
+        vec3(${BALL_COLOR_GREEN.map((v) => v.toFixed(3)).join(", ")}),
+        smoothstep(0.35, 0.65, n)
+      );
+      // The disc is solid: what it covers is all its alpha answers to
+      // (so the rim stays antialiased and nothing else is see-through),
+      // and the churn shows only as colour running light and dark
+      float cover = min(1.0, (body + halo) * ${BALL_OPACITY.toFixed(2)});
+      float shade = 0.8 + 0.45 * n;
+      float ballAlpha = cover * uOpacity;
+      if (ballAlpha < 0.004) discard;
+      gl_FragColor = vec4(cloud * shade, ballAlpha);
+      return;
+    }
     // The core fills 1/HALO_FACTOR of the sprite, the rest is glow. While
     // twinkling the sprite is TWINKLE_GROW× bigger, so the core thresholds
     // shrink to hold the dot near its size.
@@ -238,10 +326,14 @@ interface StarBuffers {
   discos: Float32Array;
   brightens: Float32Array;
   twinkles: Float32Array;
+  /** 1 on the one star drawn as the signature's ball of light, 0 on the
+   *  rest (the shader gives it a cloudy surface of its own) */
+  balls: Float32Array;
   positionsAttr: THREE.BufferAttribute;
   sizesAttr: THREE.BufferAttribute;
   brightensAttr: THREE.BufferAttribute;
   twinklesAttr: THREE.BufferAttribute;
+  ballsAttr: THREE.BufferAttribute;
 }
 
 /** The one place that knows the star shader's per-vertex attribute layout. */
@@ -267,6 +359,7 @@ const createStarGeometry = (
   const discosAttr = make(1, "aDisco");
   const brightensAttr = make(1, "aBrighten");
   const twinklesAttr = make(1, "aTwinkle");
+  const ballsAttr = make(1, "aBall");
   // Points are spread across the whole screen; skip per-frame culling math
   geometry.boundingSphere = new THREE.Sphere(new THREE.Vector3(), extent);
   return {
@@ -277,11 +370,13 @@ const createStarGeometry = (
     phases: phasesAttr.array as Float32Array,
     discos: discosAttr.array as Float32Array,
     brightens: brightensAttr.array as Float32Array,
+    balls: ballsAttr.array as Float32Array,
     twinkles: twinklesAttr.array as Float32Array,
     positionsAttr,
     sizesAttr,
     brightensAttr,
     twinklesAttr,
+    ballsAttr,
   };
 };
 
@@ -532,8 +627,31 @@ const TextStars = ({
 
   useConfigureMaterial(material, opacityRef);
 
+  // The ball of light is a cloud of its own: one point, drawn after the
+  // stars and blended normally rather than added to them, so it covers
+  // the letter it has already laid down instead of glowing through it.
+  // (Everything in the star cloud blends additively — a sprite in there
+  // can only ever add light, never hide what's behind it.)
+  const ballBuffers = useMemo(() => {
+    const b = createStarGeometry(1, width + height, true);
+    b.balls[0] = 1;
+    b.ballsAttr.needsUpdate = true;
+    b.positions[2] = Z_STARS;
+    return b;
+  }, [width, height]);
+
+  const ballMaterial = useMemo(() => {
+    const m = createStarMaterial(TEXT_GLOW_COLOR, TEXT_GLOW_STRENGTH);
+    m.blending = THREE.NormalBlending;
+    return m;
+  }, []);
+
+  useConfigureMaterial(ballMaterial, opacityRef);
+
   useEffect(() => () => data.buffers.geometry.dispose(), [data]);
   useEffect(() => () => material.dispose(), [material]);
+  useEffect(() => () => ballBuffers.geometry.dispose(), [ballBuffers]);
+  useEffect(() => () => ballMaterial.dispose(), [ballMaterial]);
 
   useFrame((_, delta) => {
     // Fully faded out: the group is hidden, so skip the gravity sim too
@@ -617,12 +735,12 @@ const TextStars = ({
 
     for (let i = 0; i < count; i++) {
       if (pen && formation && formation.order[i] > sim.drawn) {
+        // Riding inside the ball, which draws itself (below)
         positions[i * 2] = pen.x;
         positions[i * 2 + 1] = pen.y;
         data.buffers.positions[i * 3] = domToWorldX(pen.x, width);
         data.buffers.positions[i * 3 + 1] = domToWorldY(pen.y, height);
-        data.buffers.sizes[i] = Math.max(targets[i].r, ballSize) * ballScale;
-        data.buffers.brightens[i] = crowd;
+        data.buffers.sizes[i] = 0;
         continue;
       }
       let x = positions[i * 2];
@@ -682,6 +800,20 @@ const TextStars = ({
       data.buffers.brightens[i] = brighten;
     }
 
+    // The ball's own point: on the pen while there's still a crowd
+    // inside it, and gone the moment the last star has been laid down
+    if (pen && crowd > 0) {
+      ballBuffers.positions[0] = domToWorldX(pen.x, width);
+      ballBuffers.positions[1] = domToWorldY(pen.y, height);
+      ballBuffers.sizes[0] = Math.max(BALL_MIN_RADIUS_PX, ballSize) * ballScale;
+    } else if (formation && sim.drawn < 1) {
+      ballBuffers.sizes[0] = 0;
+    }
+    if (formation && sim.drawn < 1) {
+      ballBuffers.positionsAttr.needsUpdate = true;
+      ballBuffers.sizesAttr.needsUpdate = true;
+    }
+
     sim.numCloseToCursor = numClose;
     // The glide clamps its last step to the remaining distance, so "all
     // settled" is exact
@@ -691,7 +823,17 @@ const TextStars = ({
     data.buffers.brightensAttr.needsUpdate = true;
   });
 
-  return <points geometry={data.buffers.geometry} material={material} />;
+  return (
+    <>
+      <points geometry={data.buffers.geometry} material={material} />
+      {/* Last of the star clouds, so it covers what it has drawn */}
+      <points
+        geometry={ballBuffers.geometry}
+        material={ballMaterial}
+        renderOrder={2}
+      />
+    </>
+  );
 };
 
 // ─── The "andrewhunt" name header ────────────────────────────────────────

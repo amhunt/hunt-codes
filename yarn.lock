@@ -6382,6 +6382,15 @@ __metadata:
   languageName: node
   linkType: hard
 
+"glslx@npm:^0.4.5":
+  version: 0.4.5
+  resolution: "glslx@npm:0.4.5"
+  bin:
+    glslx: glslx
+  checksum: 10c0/e333b585a697d3bec9db91f816fc1d18e5ccce078a0cded1173302bc8e8b54eb02d465a4500aa5607f91c409ace8df83bf3ee73950c5839ffe1c172c1cba6333
+  languageName: node
+  linkType: hard
+
 "goober@npm:^2.1.16":
   version: 2.1.19
   resolution: "goober@npm:2.1.19"
@@ -6545,6 +6554,7 @@ __metadata:
     eslint-plugin-unicorn: "npm:^73.0.0"
     eslint-plugin-unused-imports: "npm:^4.4.1"
     globals: "npm:^17.12.0"
+    glslx: "npm:^0.4.5"
     husky: "npm:^9.1.7"
     jszip: "npm:^3.10.2"
     knip: "npm:^6.35.1"
