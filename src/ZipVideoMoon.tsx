@@ -1,14 +1,8 @@
 import React, { useCallback, useEffect } from "react";
 
 import ZipVideoPopover from "./ZipVideoPopover";
-import {
-  Tooltip,
-  TooltipContent,
-  TooltipTrigger,
-  TOOLTIP_BODY_DELAY_MS,
-} from "./ui/tooltip";
 import { MOON_VIDEO_LINK_ID, MOON_VIDEO_OUTLINE_ID } from "./solarAnchorIds";
-import { BodyOutline } from "./SolarOverlays";
+import { BodyLink } from "./SolarOverlays";
 import { hoverState } from "./solarHover";
 
 /**
@@ -49,31 +43,31 @@ const ZipVideoMoon = ({
   if (!moonLinkActive) return null;
 
   return (
-    <Tooltip disableHoverableContent delayDuration={TOOLTIP_BODY_DELAY_MS}>
-      <TooltipTrigger asChild>
+    <BodyLink
+      anchorId={MOON_VIDEO_LINK_ID}
+      outlineId={MOON_VIDEO_OUTLINE_ID}
+      className="moon-link"
+      label="Zip brand redesign launch video"
+      onHover={() => {
+        hoverState.moon = true;
+      }}
+      onUnhover={() => {
+        hoverState.moon = false;
+      }}
+    >
+      {({ outline, ...props }) => (
         <button
           type="button"
-          id={MOON_VIDEO_LINK_ID}
-          className="moon-link"
-          aria-label="Zip brand redesign launch video"
           onClick={() => {
             hoverState.moon = false;
             onOpenChange(true);
           }}
-          onPointerEnter={() => {
-            hoverState.moon = true;
-          }}
-          onPointerLeave={() => {
-            hoverState.moon = false;
-          }}
+          {...props}
         >
-          <BodyOutline outlineId={MOON_VIDEO_OUTLINE_ID} />
+          {outline}
         </button>
-      </TooltipTrigger>
-      <TooltipContent updatePositionStrategy="always">
-        <p>Zip brand redesign launch video</p>
-      </TooltipContent>
-    </Tooltip>
+      )}
+    </BodyLink>
   );
 };
 

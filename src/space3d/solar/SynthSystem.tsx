@@ -6,6 +6,7 @@ import { applyWireSkin } from "./wireSkin";
 
 import { projectBody, type ProjectedBody } from "./projection";
 import { rigState } from "./constants";
+import { useOrbitRing } from "./orbitRing";
 import { liveElementById } from "../svgTracking";
 import {
   SYNTH_KNOBS,
@@ -196,21 +197,7 @@ function KnobPlanet({
   );
   const appliedStep = useRef(-1);
 
-  const orbitLine = useMemo(() => {
-    const points: THREE.Vector3[] = [];
-    for (let i = 0; i <= 128; i++) {
-      const a = (i / 128) * Math.PI * 2;
-      points.push(
-        new THREE.Vector3(
-          Math.cos(a) * spec.orbitRadius,
-          0,
-          Math.sin(a) * spec.orbitRadius,
-        ),
-      );
-    }
-    return new THREE.BufferGeometry().setFromPoints(points);
-  }, [spec.orbitRadius]);
-  useEffect(() => () => orbitLine.dispose(), [orbitLine]);
+  const orbitLine = useOrbitRing(spec.orbitRadius);
 
   useFrame(({ clock }, delta) => {
     const t = clock.elapsedTime;

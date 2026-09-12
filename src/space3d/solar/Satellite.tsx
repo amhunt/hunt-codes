@@ -25,6 +25,7 @@ import { applyShimmer } from "./shimmerBand";
 import { applyWireSkin } from "./wireSkin";
 import { createEnergyWave } from "./energyWave";
 import InteractiveGlow from "./InteractiveGlow";
+import { useBodyFade } from "./bodyFade";
 
 /**
  * The Sputnik-style satellite: a polished metal sphere trailing a cone of
@@ -61,8 +62,6 @@ import InteractiveGlow from "./InteractiveGlow";
  * off the tips — and lands facing the camera by construction.
  */
 
-const FADE_IN_SECONDS = 3;
-const FADE_OUT_SECONDS = 1;
 /** The parts' fade, riding the 2s swoop into and out of the close-up */
 const PARTS_REVEAL_SECONDS = 1;
 
@@ -292,7 +291,7 @@ export default function Satellite({
   });
   const penPhase = useRef(0);
   const scrollPhase = useRef(0);
-  const opacity = useRef(visible ? 1 : 0);
+  const { opacity, advance } = useBodyFade(visible);
   const partsOpacity = useRef(partsActive ? 1 : 0);
   /** parts × body opacity: what the part halos follow */
   const partsShown = useRef(partsOpacity.current * opacity.current);
@@ -612,15 +611,11 @@ export default function Satellite({
     if (group.current) {
       planetPosition(config, t, group.current.position);
 
-      // Same landing-view fade as the asteroids
-      const step = visible
-        ? delta / FADE_IN_SECONDS
-        : -delta / FADE_OUT_SECONDS;
-      opacity.current = THREE.MathUtils.clamp(opacity.current + step, 0, 1);
-      group.current.visible = opacity.current > 0.005;
-      bodyMaterials.forEach((material) => {
-        material.opacity = opacity.current;
-      });
+      if (advance(group.current, visible, delta)) {
+        bodyMaterials.forEach((material) => {
+          material.opacity = opacity.current;
+        });
+      }
     }
 
     // The link parts ride the swoop: in on the way to the close-up, out

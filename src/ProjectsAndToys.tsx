@@ -1,14 +1,8 @@
+import { BackLink } from "ui/BackLink";
 import React, { useEffect, useState } from "react";
 import cx from "classnames";
 import { Link, useNavigate } from "react-router-dom";
-import { ArrowLeftCircleIcon } from "lucide-react";
 
-import {
-  Tooltip,
-  TooltipContent,
-  TooltipTrigger,
-  TOOLTIP_BODY_DELAY_MS,
-} from "./ui/tooltip";
 import {
   asteroidAnchorId,
   asteroidOutlineId,
@@ -16,7 +10,7 @@ import {
   satellitePartOutlineId,
   type SatellitePart,
 } from "./solarAnchorIds";
-import { BodyOutline } from "./SolarOverlays";
+import { BodyLink } from "./SolarOverlays";
 import { hoverState } from "./solarHover";
 import { journeyState, startSynthJourney } from "./rocketJourney";
 import { ensureAudio } from "./synthAudio";
@@ -49,44 +43,32 @@ const PART_TOOLTIP = {
 } as const satisfies Record<SatellitePart, string>;
 
 const partHoverProps = (part: SatellitePart) => ({
-  onPointerEnter: () => {
+  onHover: () => {
     hoverState.satellitePart = part;
   },
-  onPointerLeave: () => {
+  onUnhover: () => {
     if (hoverState.satellitePart === part) hoverState.satellitePart = null;
   },
 });
 
-/** One part's overlay: the tooltip-wrapped hit target around the shared
- *  outline */
+/** One satellite part's overlay — BodyLink with this part's ids and copy
+ *  looked up for it */
 const PartLink = ({
   part,
   children,
 }: {
   part: SatellitePart;
-  children: (props: {
-    id: string;
-    className: string;
-    "aria-label": string;
-    onPointerEnter: () => void;
-    onPointerLeave: () => void;
-    outline: React.ReactNode;
-  }) => React.ReactElement;
+  children: React.ComponentProps<typeof BodyLink>["children"];
 }) => (
-  <Tooltip disableHoverableContent delayDuration={TOOLTIP_BODY_DELAY_MS}>
-    <TooltipTrigger asChild>
-      {children({
-        id: satellitePartAnchorId(part),
-        className: "satellite-link",
-        "aria-label": PART_TOOLTIP[part],
-        ...partHoverProps(part),
-        outline: <BodyOutline outlineId={satellitePartOutlineId(part)} />,
-      })}
-    </TooltipTrigger>
-    <TooltipContent updatePositionStrategy="always">
-      <p>{PART_TOOLTIP[part]}</p>
-    </TooltipContent>
-  </Tooltip>
+  <BodyLink
+    anchorId={satellitePartAnchorId(part)}
+    outlineId={satellitePartOutlineId(part)}
+    className="satellite-link"
+    label={PART_TOOLTIP[part]}
+    {...partHoverProps(part)}
+  >
+    {children}
+  </BodyLink>
 );
 
 const ProjectsAndToys = () => {
@@ -115,14 +97,7 @@ const ProjectsAndToys = () => {
   return (
     <>
       <div className="homePageBackLink">
-        <Link className="mt-4 flex items-center gap-1" to="/home">
-          <ArrowLeftCircleIcon
-            aria-hidden="true"
-            className="starIcon"
-            size={16}
-          />
-          <span>Home</span>
-        </Link>
+        <BackLink className="mt-4" />
       </div>
       <main className={cx("projects-caption", captionShown && "show")}>
         <h1>Projects & toys</h1>
@@ -179,44 +154,40 @@ const ProjectsAndToys = () => {
               AudioContext inside this click is what lets the beat start
               the moment you land. */}
           {!isPhone && (
-            <Tooltip
-              disableHoverableContent
-              delayDuration={TOOLTIP_BODY_DELAY_MS}
+            <BodyLink
+              anchorId={asteroidAnchorId("synthpad")}
+              outlineId={asteroidOutlineId("synthpad")}
+              className="satellite-link"
+              label="Space Synth"
+              onHover={() => {
+                hoverState.asteroid = "synthpad";
+              }}
+              onUnhover={() => {
+                if (hoverState.asteroid === "synthpad") {
+                  hoverState.asteroid = null;
+                }
+              }}
             >
-              <TooltipTrigger asChild>
+              {({ outline, ...props }) => (
                 <button
                   type="button"
-                  id={asteroidAnchorId("synthpad")}
-                  className="satellite-link"
-                  aria-label="Space Synth"
                   onClick={() => {
                     ensureAudio();
                     startSynthJourney();
-                    // The studio lives at /synth: flip the URL as the
-                    // ride boards (shareable, back-button aborts the
-                    // trip) rather than after the warp lands. Only if
-                    // the journey actually launched — the 3D driver
-                    // may be dead (crashed canvas).
+                    // Flip the URL as the ride boards (shareable,
+                    // back-button aborts) rather than after the warp
+                    // lands — but only if it actually launched, since
+                    // the 3D driver may be dead.
                     if (journeyState.phase !== "idle") {
                       void navigate("/synth");
                     }
                   }}
-                  onPointerEnter={() => {
-                    hoverState.asteroid = "synthpad";
-                  }}
-                  onPointerLeave={() => {
-                    if (hoverState.asteroid === "synthpad") {
-                      hoverState.asteroid = null;
-                    }
-                  }}
+                  {...props}
                 >
-                  <BodyOutline outlineId={asteroidOutlineId("synthpad")} />
+                  {outline}
                 </button>
-              </TooltipTrigger>
-              <TooltipContent updatePositionStrategy="always">
-                <p>Space Synth</p>
-              </TooltipContent>
-            </Tooltip>
+              )}
+            </BodyLink>
           )}
         </>
       )}

@@ -5,6 +5,7 @@ import * as THREE from "three";
 import { EARTH, planetPosition, type SolarPlanetConfig } from "./constants";
 import { asteroidOutlineId } from "../../solarAnchorIds";
 import { writeSilhouette } from "./outline";
+import { useBodyFade } from "./bodyFade";
 import { hoverState } from "../../solarHover";
 
 /**
@@ -22,8 +23,6 @@ import { hoverState } from "../../solarHover";
  * that roll instead of spinning through, keeping the window in view.
  */
 
-const FADE_IN_SECONDS = 3;
-const FADE_OUT_SECONDS = 1;
 const HOVER_EMISSIVE = 0.7;
 
 /** Sideways lean of the nose off world-up, in the co-rotating frame */
@@ -66,10 +65,7 @@ export default function Rocket({
   const body = useRef<THREE.Group>(null); // sways around the roll axis
   const flameOuter = useRef<THREE.Mesh>(null);
   const flameInner = useRef<THREE.Mesh>(null);
-  const opacity = useRef(visible ? 1 : 0);
-  // Out-of-band so the first frame always initializes the materials
-  // (JSX materials mount at opacity 1 regardless of the fade state)
-  const appliedOpacity = useRef(-1);
+  const { opacity, advance } = useBodyFade(visible);
   // Sway/bob phases advance only while un-hovered, freezing the pose
   // under the silhouette outline (same trick as the asteroid spins)
   const swayPhase = useRef(0);
@@ -198,14 +194,7 @@ export default function Rocket({
       // the un-bobbed orbit position, still covers the ship)
       group.current.position.y += Math.sin(bobPhase.current) * 0.07;
 
-      // Same landing-view fade as the asteroids
-      const step = visible
-        ? delta / FADE_IN_SECONDS
-        : -delta / FADE_OUT_SECONDS;
-      opacity.current = THREE.MathUtils.clamp(opacity.current + step, 0, 1);
-      if (opacity.current !== appliedOpacity.current) {
-        appliedOpacity.current = opacity.current;
-        group.current.visible = opacity.current > 0.005;
+      if (advance(group.current, visible, delta)) {
         Object.values(materials).forEach((material) => {
           material.opacity = opacity.current;
         });
