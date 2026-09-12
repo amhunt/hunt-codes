@@ -85,10 +85,11 @@ const Space3DBackground = ({
         />
         {/* The corner "hunt.codes" medallion rides the star canvas rather
             than bringing its own WebGL context (three contexts tripped
-            Chrome's per-domain cap and strobed the stars). Hidden only
-            where something else owns the corner: mesh-view /home (the
-            Golden Gate Bridge). */}
-        {!(isHomePage && !isSpaceView) && (
+            Chrome's per-domain cap and strobed the stars). Hidden on
+            /home, where the scene switches dock in its corner (App.scss's
+            `body.on-home`) and day mode gives it to the Golden Gate
+            Bridge anyway. */}
+        {!isHomePage && (
           <BadgeBoundary>
             <Suspense fallback={null}>
               <BadgeMedallion isLanding={isLanding} />

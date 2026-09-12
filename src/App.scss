@@ -2466,25 +2466,22 @@ body.life-timeline-present {
   }
 }
 
-// ─── Landing page dock (md+) ────────────────
-// With the title stacked in a left column (starSampling, $breakpoint-sm
-// up) the coin's hit target parks top-right, off the title's line —
-// BadgeMedallion moves the coin itself to match. That frees the
-// bottom-right corner for both switches, which dock there in a row under
-// the coin, inset a touch tighter than it is so the two corners read as a
-// pair rather than lining up exactly. The view chip takes the corner and
-// the music switch sits inboard of it. `on-landing` rides <body> while
-// Landing.tsx is mounted.
+// ─── The landing / home dock (md+) ────────────────
+// Both pages leave the bottom-right corner to the switches, which dock
+// there in a row: the view chip takes the corner and the music switch
+// sits inboard of it. On the landing the coin's hit target parks
+// top-right instead, off the stacked title's line (starSampling,
+// $breakpoint-sm up; BadgeMedallion moves the coin itself to match),
+// inset 8px wider than the dock so the two corners read as a pair rather
+// than lining up exactly. /home has no coin at all — it sat in this
+// corner, and the dock is worth more there than the medallion — so the
+// switches hold their exact position across the hop between the two
+// pages. `on-landing` and `on-home` ride <body> while their page is up.
 $landing-badge-inset: 48px;
 $landing-dock-inset: $landing-badge-inset - 8px;
-body.on-landing {
+body.on-landing,
+body.on-home {
   @media (min-width: $breakpoint-sm) {
-    .badge-link {
-      top: calc(#{$landing-badge-inset} + env(safe-area-inset-top, 0px));
-      right: calc(#{$landing-badge-inset} + env(safe-area-inset-right, 0px));
-      bottom: auto;
-    }
-
     .music-toggle {
       left: auto;
       right: calc(
@@ -2499,6 +2496,27 @@ body.on-landing {
       left: auto;
       right: calc(#{$landing-dock-inset} + env(safe-area-inset-right, 0px));
       bottom: calc(#{$landing-dock-inset} + env(safe-area-inset-bottom, 0px));
+    }
+  }
+}
+
+// Below lg the view chip sits /home out (ViewModeSwitch gives the corner
+// back to the scene there), so the music switch takes the corner alone
+// rather than leaving a chip-shaped hole beside it
+body.on-home {
+  @media (min-width: $breakpoint-sm) and (max-width: #{$breakpoint-md - 1px}) {
+    .music-toggle {
+      right: calc(#{$landing-dock-inset} + env(safe-area-inset-right, 0px));
+    }
+  }
+}
+
+body.on-landing {
+  @media (min-width: $breakpoint-sm) {
+    .badge-link {
+      top: calc(#{$landing-badge-inset} + env(safe-area-inset-top, 0px));
+      right: calc(#{$landing-badge-inset} + env(safe-area-inset-right, 0px));
+      bottom: auto;
     }
   }
 

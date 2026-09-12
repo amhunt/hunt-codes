@@ -52,8 +52,11 @@ the preview tool.
   width (`LANDING_SUN_X` in `CameraRig.tsx`), a tagline hangs under the
   title (`LandingTagline.tsx`) and the coin parks top-right
   (`body.on-landing` rules in App.scss, mirrored in
-  `BadgeMedallion.tsx`); the music + view switches keep their usual
-  bottom-left corner, and the scroll chevron sits the layout out. Phones
+  `BadgeMedallion.tsx`); the music + view switches dock in the
+  bottom-right under it, inset 8px tighter than the coin (the
+  `body.on-landing, body.on-home` block in App.scss — /home shares the
+  dock, so neither switch moves on the hop), and the scroll chevron sits
+  the layout out. Phones
   spell nothing at all: the stars fill Andrew's signature A instead
   (`generateStarsForSignature`, the thin-cut `public/signature-a-thin.svg`
   — the coin keeps the heavier `signature-a.svg`), 260px tall and centred
@@ -66,7 +69,8 @@ the preview tool.
   Sputnik satellite = blog/LinkedIn/GitHub links (home view only). "ABOUT
   ME" and the landing's "ENTER" are one pair of curved ring labels and
   share their proportions (`src/ringLabel.ts`) — size one and you size
-  both.
+  both. The coin sits this page out entirely (`BadgeLink` /
+  `Space3DBackground`): the switches dock in the corner it used to hold.
 - `/about` → `Resume.tsx` — the résumé page (frosted panel over the scene)
 - `/artifacts` → the shop, over the "artifacts" solar view: the camera
   perches over the moon's limb (the about view's Earth-perch, scaled to
