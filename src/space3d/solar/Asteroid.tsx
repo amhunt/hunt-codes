@@ -10,6 +10,7 @@ import { writeSilhouette } from "./outline";
 import { createLogoBadgeTexture, createPlanetTexture } from "../textures";
 import { hoverState } from "../../solarHover";
 import InteractiveGlow from "./InteractiveGlow";
+import { useBodyFade } from "./bodyFade";
 
 /**
  * A small rocky link-asteroid: a smooth-shaded icosphere with gentle
@@ -30,8 +31,6 @@ import InteractiveGlow from "./InteractiveGlow";
  * the asteroids are hidden in the landing view and fade in during the
  * swoop to the home perch.
  */
-const FADE_IN_SECONDS = 3;
-const FADE_OUT_SECONDS = 1;
 /** Badge stickers every 120° around the yaw circumference */
 const BADGE_YAWS = [0, (2 * Math.PI) / 3, (4 * Math.PI) / 3];
 
@@ -47,11 +46,7 @@ export default function Asteroid({
   const rockMaterial = useRef<THREE.MeshStandardMaterial>(null);
   // Start faded out when mounting into a view that hides asteroids
   // (landing, /about), fully shown when mounting straight into /home
-  const opacity = useRef(visible ? 1 : 0);
-  // Last opacity pushed into the group/materials; starts out-of-band so
-  // the first frame always initializes them (the JSX materials mount at
-  // opacity 1 regardless of the fade state)
-  const appliedOpacity = useRef(-1);
+  const { opacity, advance } = useBodyFade(visible);
 
   const texture = useMemo(() => createPlanetTexture(config.kind), [config]);
   useEffect(() => () => texture.dispose(), [texture]);
@@ -125,20 +120,9 @@ export default function Asteroid({
     if (group.current) {
       planetPosition(config, clock.elapsedTime, group.current.position);
 
-      // Linear ramp toward shown/hidden — a slow 3s reveal riding the
-      // landing->home swoop, a quicker 1s exit on the way back — pushed
-      // into the rock and decal materials (a group-level opacity doesn't
-      // exist in three)
-      const step = visible
-        ? delta / FADE_IN_SECONDS
-        : -delta / FADE_OUT_SECONDS;
-      opacity.current = THREE.MathUtils.clamp(opacity.current + step, 0, 1);
-      // Only walk the material tree when the pushed value actually
-      // changes (appliedOpacity starts at -1, so the first frame always
-      // initializes the group/material state)
-      if (opacity.current !== appliedOpacity.current) {
-        appliedOpacity.current = opacity.current;
-        group.current.visible = opacity.current > 0.005;
+      // Pushed into the rock and decal materials — three has no
+      // group-level opacity
+      if (advance(group.current, visible, delta)) {
         group.current.traverse((obj) => {
           const material = (obj as THREE.Mesh).material;
           if (material && !Array.isArray(material)) {

@@ -35,6 +35,70 @@ export const BodyOutline = ({ outlineId }: { outlineId: string }) => (
   </svg>
 );
 
+/**
+ * One body's hit target: the tooltip and the hover outline, wrapped around
+ * whatever element the link needs. `children` is a render prop because the
+ * element itself varies — a <Link> for an in-app route, an <a> for an
+ * outside one, a <button> for the rides that warp instead of navigating —
+ * while everything around it is the same every time.
+ *
+ * The className stays a caller's choice: `.asteroid-link` and
+ * `.satellite-link` are sized and placed differently in App.scss.
+ */
+export const BodyLink = ({
+  anchorId,
+  outlineId,
+  className,
+  label,
+  onHover,
+  onUnhover,
+  children,
+}: {
+  anchorId: string;
+  outlineId: string;
+  className: string;
+  /** Both the tooltip's copy and the accessible name */
+  label: string;
+  onHover: () => void;
+  onUnhover: () => void;
+  children: (props: {
+    id: string;
+    className: string;
+    "aria-label": string;
+    onPointerEnter: () => void;
+    onPointerLeave: () => void;
+    outline: React.ReactNode;
+  }) => React.ReactElement;
+}) => (
+  <Tooltip disableHoverableContent delayDuration={TOOLTIP_BODY_DELAY_MS}>
+    <TooltipTrigger asChild>
+      {children({
+        id: anchorId,
+        className,
+        "aria-label": label,
+        onPointerEnter: onHover,
+        onPointerLeave: onUnhover,
+        outline: <BodyOutline outlineId={outlineId} />,
+      })}
+    </TooltipTrigger>
+    <TooltipContent updatePositionStrategy="always">
+      <p>{label}</p>
+    </TooltipContent>
+  </Tooltip>
+);
+
+/** Set on enter, cleared on leave — but only when this rock is still the
+ *  hovered one, so a quick sweep between two can't have the first one's
+ *  leave wipe out the second one's enter. */
+const asteroidHoverProps = (name: string) => ({
+  onHover: () => {
+    hoverState.asteroid = name;
+  },
+  onUnhover: () => {
+    if (hoverState.asteroid === name) hoverState.asteroid = null;
+  },
+});
+
 // The blog-post rock ("recent") is parked: the post now lives on /about's
 // work-sample cards, and SolarScene skips its 3D rock to match. The
 // LinkedIn rock is parked too (see the commented block below).
@@ -76,58 +140,41 @@ const SolarOverlays = () => {
       {/* Sputnik: the door to /projects-and-toys, where the camera closes
           in and its parts become the links. Same swoop as Earth's. */}
       {!isNarrow && (
-        <Tooltip disableHoverableContent delayDuration={TOOLTIP_BODY_DELAY_MS}>
-          <TooltipTrigger asChild>
-            <Link
-              id={asteroidAnchorId("satellite")}
-              className="asteroid-link"
-              to="/projects-and-toys"
-              aria-label="Projects & creations"
-              onPointerEnter={() => {
-                hoverState.asteroid = "satellite";
-              }}
-              onPointerLeave={() => {
-                if (hoverState.asteroid === "satellite") {
-                  hoverState.asteroid = null;
-                }
-              }}
-            >
-              <BodyOutline outlineId={asteroidOutlineId("satellite")} />
+        <BodyLink
+          anchorId={asteroidAnchorId("satellite")}
+          outlineId={asteroidOutlineId("satellite")}
+          className="asteroid-link"
+          label="Projects & creations"
+          {...asteroidHoverProps("satellite")}
+        >
+          {({ outline, ...props }) => (
+            <Link to="/projects-and-toys" {...props}>
+              {outline}
             </Link>
-          </TooltipTrigger>
-          <TooltipContent updatePositionStrategy="always">
-            <p>Projects &amp; creations</p>
-          </TooltipContent>
-        </Tooltip>
+          )}
+        </BodyLink>
       )}
       {/* The LinkedIn rock is parked for now (its 3D body is skipped in
           SolarScene to match). Restore both to bring it back:
       {!isNarrow && (
-          <Tooltip disableHoverableContent delayDuration={TOOLTIP_BODY_DELAY_MS}>
-            <TooltipTrigger asChild>
+          <BodyLink
+            anchorId={asteroidAnchorId("linkedin")}
+            outlineId={asteroidOutlineId("linkedin")}
+            className="asteroid-link"
+            label="LinkedIn"
+            {...asteroidHoverProps("linkedin")}
+          >
+            {({ outline, ...props }) => (
               <a
-                id={asteroidAnchorId("linkedin")}
-                className="asteroid-link"
                 href="https://www.linkedin.com/in/andrewmhunt/"
                 target="_blank"
                 rel="noopener noreferrer"
-                aria-label="LinkedIn"
-                onPointerEnter={() => {
-                  hoverState.asteroid = "linkedin";
-                }}
-                onPointerLeave={() => {
-                  if (hoverState.asteroid === "linkedin") {
-                    hoverState.asteroid = null;
-                  }
-                }}
+                {...props}
               >
-                <BodyOutline outlineId={asteroidOutlineId("linkedin")} />
+                {outline}
               </a>
-            </TooltipTrigger>
-            <TooltipContent updatePositionStrategy="always">
-              <p>LinkedIn</p>
-            </TooltipContent>
-          </Tooltip>
+            )}
+          </BodyLink>
       )}
       */}
       {/* The rocket link is parked until the /journey copy is ready (the
@@ -135,38 +182,31 @@ const SolarOverlays = () => {
           warps to the /journey crawl, rocketJourney.ts flipping the route
           under the warp flash. Restore this block plus the
           startRocketJourney, journeyState and useNavigate imports.
-        <Tooltip disableHoverableContent delayDuration={TOOLTIP_BODY_DELAY_MS}>
-          <TooltipTrigger asChild>
+        <BodyLink
+          anchorId={asteroidAnchorId("rocket")}
+          outlineId={asteroidOutlineId("rocket")}
+          className="asteroid-link"
+          label="So u wanna be astronaut?"
+          {...asteroidHoverProps("rocket")}
+        >
+          {({ outline, ...props }) => (
             <button
               type="button"
-              id={asteroidAnchorId("rocket")}
-              className="asteroid-link"
-              aria-label="So u wanna be astronaut?"
               onClick={() => {
                 startRocketJourney();
-                // The ride flips the URL itself under its warp flash; if
-                // the 3D driver is dead (crashed canvas) fall through to
-                // the plain crawl page so the click still goes somewhere
+                // The ride flips the URL itself under its warp flash; if the 3D
+                // driver is dead (crashed canvas) fall through to the plain crawl
+                // page so the click still goes somewhere
                 if (journeyState.phase === "idle") {
                   void navigate("/journey");
                 }
               }}
-              onPointerEnter={() => {
-                hoverState.asteroid = "rocket";
-              }}
-              onPointerLeave={() => {
-                if (hoverState.asteroid === "rocket") {
-                  hoverState.asteroid = null;
-                }
-              }}
+              {...props}
             >
-              <BodyOutline outlineId={asteroidOutlineId("rocket")} />
+              {outline}
             </button>
-          </TooltipTrigger>
-          <TooltipContent updatePositionStrategy="always">
-            <p>So u wanna be astronaut?</p>
-          </TooltipContent>
-        </Tooltip>
+          )}
+        </BodyLink>
       */}
     </>
   );

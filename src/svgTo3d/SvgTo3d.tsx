@@ -1,5 +1,5 @@
+import { BackLink } from "../ui/BackLink";
 import React, { useCallback, useEffect, useMemo, useState } from "react";
-import { Link } from "react-router-dom";
 import { GitHub, Package, Sun } from "react-feather";
 import { Box, Download, RotateCcw, Upload } from "lucide-react";
 import {
@@ -168,13 +168,7 @@ const SvgTo3d = () => {
   return (
     <div className="svg3d-page">
       <div className="svg3d-back-link">
-        <Link
-          className="mt-4 flex items-center gap-1 transition-transform"
-          to="/home"
-        >
-          <Sun aria-hidden="true" className="starIcon" size={16} />
-          <span>Home</span>
-        </Link>
+        <BackLink className="mt-4 transition-transform" icon={Sun} />
       </div>
 
       <div className="svg3d-container">

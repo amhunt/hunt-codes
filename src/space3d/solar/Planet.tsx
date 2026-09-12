@@ -3,6 +3,7 @@ import { useFrame, useThree } from "@react-three/fiber";
 import * as THREE from "three";
 
 import { planetPosition, type SolarPlanetConfig } from "./constants";
+import { useOrbitRing } from "./orbitRing";
 import { applyOffAxisSquash } from "./offAxisSquash";
 import { createPlanetTexture } from "../textures";
 import { hoverState } from "../../solarHover";
@@ -33,11 +34,6 @@ const WAVE_HALF_WIDTH_RADII = 0.55;
 const WAVE_STRENGTH = 0.5;
 /** Fade duration for the landing-intro reveal */
 const REVEAL_SECONDS = 0.8;
-
-/** Segments in an orbit ring. Enough that Mercury's ellipse — the most
- *  eccentric, and so the most sharply curved at perihelion — reads as a
- *  smooth line rather than a polygon. */
-const ORBIT_SEGMENTS = 192;
 
 // >1 white multiplier on Earth's diffuse: the sun-facing side (diffuse =
 // map x color x sunlight) brightens, while the night side — lit almost
@@ -239,19 +235,7 @@ export default function Planet({
     [],
   );
 
-  const orbitLine = useMemo(() => {
-    // Sampled from planetPosition rather than drawn as a circle, so the
-    // ring is the path the planet actually takes — ellipse, inclination
-    // and all — and the two can't drift apart. One full period of mean
-    // anomaly covers the orbit whatever its phase.
-    const period = (Math.PI * 2) / config.orbitSpeed;
-    const points: THREE.Vector3[] = [];
-    for (let i = 0; i <= ORBIT_SEGMENTS; i++) {
-      points.push(planetPosition(config, (i / ORBIT_SEGMENTS) * period));
-    }
-    return new THREE.BufferGeometry().setFromPoints(points);
-  }, [config]);
-  useEffect(() => () => orbitLine.dispose(), [orbitLine]);
+  const orbitLine = useOrbitRing(config);
 
   useFrame(({ clock, camera, size }, delta) => {
     if (group.current) {
