@@ -21,6 +21,14 @@ modules (`solarHover.ts`, `starPan.ts`, `sunState`/`rigState` in
 Hover outlines share one pattern: `writeSilhouette` (convex hull of
 projected verts) → `.body-outline` SVG paths in `SolarOverlays.tsx`.
 
+Audio splits the same way the rest of the scene does: `src/ambientPad.ts`
+and `src/sfx.ts` are three-free and know only about sound (like
+`synthAudio.ts`), and `solar/AmbientPadDriver` is the half that reads the
+scene — camera distance to the sun, `wireState`, planetary conjunctions —
+and calls them. All three share one `AudioContext` (`src/audioContext.ts`),
+which suspends itself when the tab hides: App.tsx's hide handler sweeps
+`querySelectorAll("audio")` and cannot see a Web Audio graph.
+
 ## Invariants worth knowing
 
 - `SPEED_SCALE` in `solar/constants.ts` is the global orbital tempo; the

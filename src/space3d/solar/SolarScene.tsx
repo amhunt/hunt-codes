@@ -14,6 +14,7 @@ import SynthSystem from "./SynthSystem";
 import SunSvgAnchor from "./SunSvgAnchor";
 import BodyAnchors from "./BodyAnchors";
 import WireDriver from "./WireDriver";
+import AmbientPadDriver from "./AmbientPadDriver";
 import { ASTEROIDS, layoutState, PLANETS, SYNTH_PAD } from "./constants";
 import useWindowWidth from "../../useWindowWidth";
 
@@ -117,6 +118,10 @@ const SolarScene = ({
       {/* Eases the whole scene between the two views (one shared uniform)
           and flips the bodies' blend state on the way in and out */}
       <WireDriver meshView={!isSpaceView} />
+      {/* Feeds the generative background pad the scene's own state: this
+          view's chord, the camera's distance from the sun, a ping on each
+          planetary conjunction */}
+      <AmbientPadDriver view={view} />
       {/* From the home sun-perch the full glow would fill the frame and
           wash out the stars (and the crisp flare corona) — shrink it to
           hug the limb there */}
