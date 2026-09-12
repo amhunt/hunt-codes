@@ -22,6 +22,7 @@ export const PUBLIC_ROUTES: PublicRoute[] = [
   { path: "/home", title: DEFAULT_TITLE, priority: 0.8 },
   { path: "/about", title: "About Me | Andrew Hunt", priority: 0.8 },
   { path: "/draw", title: "SVG Studio | Andrew Hunt", priority: 0.5 },
+  { path: "/svg-to-3d", title: "SVG to 3D | Andrew Hunt", priority: 0.5 },
   { path: "/journey", title: "The Journey | Andrew Hunt", priority: 0.5 },
   { path: "/synth", title: "Space jam studio | Andrew Hunt", priority: 0.5 },
   { path: "/artifacts", title: "Artifacts | Andrew Hunt", priority: 0.5 },

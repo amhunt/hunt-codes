@@ -29,6 +29,7 @@ const chunks = {
   shop: () => import("./Shop"),
   projectsAndToys: () => import("./ProjectsAndToys"),
   svgGenerator: () => import("./SvgGenerator"),
+  svgTo3d: () => import("./svgTo3d/SvgTo3d"),
   synth: () => import("./Synth"),
   journey: () => import("./Journey"),
   notFound: () => import("./NotFound"),
@@ -39,6 +40,7 @@ export const Resume = lazy(chunks.resume);
 export const Shop = lazy(chunks.shop);
 export const ProjectsAndToys = lazy(chunks.projectsAndToys);
 export const SvgGenerator = lazy(chunks.svgGenerator);
+export const SvgTo3d = lazy(chunks.svgTo3d);
 export const Synth = lazy(chunks.synth);
 export const Journey = lazy(chunks.journey);
 export const NotFound = lazy(chunks.notFound);
@@ -54,6 +56,7 @@ const WARM_ORDER: Array<() => Promise<unknown>> = [
   chunks.shop,
   chunks.projectsAndToys,
   chunks.svgGenerator,
+  chunks.svgTo3d,
   chunks.synth,
   chunks.journey,
   chunks.notFound,

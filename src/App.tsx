@@ -19,6 +19,7 @@ import {
   Shop,
   Synth,
   SvgGenerator,
+  SvgTo3d,
   prefetchRoutes,
 } from "./routeChunks";
 import AppBackground from "AppBackground";
@@ -211,6 +212,7 @@ const App = () => {
             <Route path="/journey" element={<Journey />} />
             <Route path="/draw" element={<SvgGenerator />} />
             <Route path="/draw/:id" element={<SvgGenerator />} />
+            <Route path="/svg-to-3d" element={<SvgTo3d />} />
             <Route path="/artifacts" element={<Shop />} />
             {/* The shop lived at /shop until it was renamed; keep the old
                 path working for anyone holding that link */}
