@@ -61,6 +61,10 @@ const TRANSITION_SECONDS = 2;
 // deliberately run off the right and bottom edges.
 const LANDING_SUN_X = 0.75;
 const LANDING_HEIGHT_LG = 31;
+// Phones keep the one-line title across the top, so the sun sits low:
+// its centre this far down the viewport (a third of the way up from the
+// bottom), by the same pure-pan trick in −Z (screen-down)
+const LANDING_SUN_Y_SMALL = 2 / 3;
 
 // Home-view framing: the sun-perch. Offsets from the SUN's center (r 3),
 // on the far side from Earth, elevated well above the surface so the
@@ -256,8 +260,14 @@ function computeGoal(
       goalPos.set(-shift, LANDING_HEIGHT_LG, LANDING_POS.z);
       goalLook.set(-shift, 0, 0);
     } else {
-      goalPos.copy(LANDING_POS);
-      goalLook.copy(ORIGIN);
+      // Pan the camera + look target down (−Z) by the world distance
+      // that puts the sun at LANDING_SUN_Y_SMALL: NDC y = 1 − 2·Y, times
+      // the visible half-height at the sun's plane
+      const persp = camera as THREE.PerspectiveCamera;
+      const tanHalfV = Math.tan((persp.fov * Math.PI) / 360);
+      const drop = (2 * LANDING_SUN_Y_SMALL - 1) * tanHalfV * LANDING_POS.y;
+      goalPos.set(LANDING_POS.x, LANDING_POS.y, LANDING_POS.z - drop);
+      goalLook.set(0, 0, -drop);
     }
   } else if (view === "projects") {
     // Perch just above the satellite, on the far side from the sun,
