@@ -1,19 +1,22 @@
 import React, { useState } from "react";
 import type { Meta, StoryObj } from "@storybook/react";
-import { expect, spyOn, userEvent, within } from "storybook/test";
+import { expect, userEvent, within } from "storybook/test";
 
 import ViewModeSwitch from "./ViewModeSwitch";
 import SpaceJamSwitch from "./SpaceJamSwitch";
 
 /**
- * The bottom-left music switch, with its muted (red-slashed speaker,
- * flatline) and playing (speaker, bouncing equaliser) dressings. Hovering
+ * The bottom-left music switch, with its playing (note, bouncing
+ * equaliser) and muted (red-slashed note, flatline) dressings. Hovering
  * or focusing it shows the "Play space jams" / "Pause space jams" tooltip.
  * The toolbar view switch (`.App.space` / `.App.mesh`) shows it over
  * both backdrops.
  *
- * Flipping the switch by hand plays the real track (`public/` is served
- * as Storybook's static dir).
+ * The switch starts on, so the default story is the playing dressing —
+ * silently, since autoplay policy refuses a cold `play()` and the switch
+ * deliberately shows intent rather than flipping itself off. Interacting
+ * with the page starts the real track (`public/` is served as Storybook's
+ * static dir).
  */
 const meta = {
   title: "Controls/Space jam switch",
@@ -26,32 +29,26 @@ const meta = {
 export default meta;
 type Story = StoryObj<typeof meta>;
 
-/** The resting state: charcoal track, flatline, slashed speaker. */
-export const Muted: Story = {};
+/** The resting state: purple track, equaliser, note. */
+export const Playing: Story = {};
 
 /**
- * After a flip on: purple track, equaliser, speaker. The click here is
- * synthetic, so the browser would refuse `play()` and the switch would
- * honestly fall back to muted — stub playback so the dressing can be
- * judged (listen for real in the Muted story).
+ * After a flip off: charcoal track, flatline, slashed note. `pause()` is
+ * synchronous and always allowed, so unlike the way on there is nothing
+ * to stub here.
  */
-export const Playing: Story = {
+export const Muted: Story = {
   play: async ({ canvasElement }) => {
-    const play = spyOn(HTMLMediaElement.prototype, "play").mockResolvedValue();
-    try {
-      const toggle = within(canvasElement).getByRole("switch", {
-        name: "Space jams",
-      });
-      await userEvent.click(toggle);
-      await expect(toggle).toHaveAttribute("aria-checked", "true");
-    } finally {
-      play.mockRestore();
-    }
+    const toggle = within(canvasElement).getByRole("switch", {
+      name: "Space jams",
+    });
+    await userEvent.click(toggle);
+    await expect(toggle).toHaveAttribute("aria-checked", "false");
   },
 };
 
-/** Mesh view, muted — the charcoal track over the wire-scene ground. */
-export const MutedMesh: Story = {
+/** Mesh view, playing — the purple track over the wire-scene ground. */
+export const PlayingMesh: Story = {
   globals: { palette: "mesh" },
 };
 

@@ -2,6 +2,7 @@ import React, { useEffect } from "react";
 import { Link } from "react-router-dom";
 import { SunInternals } from "SunSvg";
 import { hoverState } from "./solarHover";
+import { playEnter } from "./sfx";
 import useScrollJourney from "./useScrollJourney";
 import ScrollHint from "./ScrollHint";
 import AndClaude from "./AndClaude";
@@ -95,6 +96,10 @@ const Landing = () => {
             onPointerLeave={() => {
               hoverState.sun = false;
             }}
+            // The dive sound outlives this page — sfx.ts holds no node
+            // past its tail, so the riser keeps falling through the route
+            // change and lands about where the camera settles over /home
+            onClick={playEnter}
           >
             {/* The "ENTER" label itself is drawn by the WebGL sun; this SVG
                 supplies the clickable disc the label rings — sized to take
