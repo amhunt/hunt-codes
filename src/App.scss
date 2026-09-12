@@ -20,14 +20,13 @@ $breakpoint-phone-max: $breakpoint-sm - 1px;
   position: fixed;
 }
 
-// Every page is a stack of fixed, inset-0 layers, so the document itself
-// has no height and the root's own background is what iOS Safari paints
-// over any screen it isn't covering: the overscroll bounce, and the band
-// that opens under the page while the bottom toolbar resizes (the layout
-// viewport lags the visible one). Tailwind's base layer makes body white,
-// which showed up as a white strip under the stars on phones. Paint the
-// root the scene's own black (mesh: the foot of its ground), give the
-// document a real height, and stop the root rubber-banding — the journey
+// Every page is a stack of fixed, inset-0 layers, so the document has no
+// height and the root's background is what iOS Safari paints over any
+// screen it isn't covering: the overscroll bounce, and the band that
+// opens while the bottom toolbar resizes. Tailwind's base layer makes
+// body white, which showed as a white strip under the stars on phones.
+// Paint the root the scene's black (mesh: the foot of its ground), give
+// the document a real height, and stop it rubber-banding — the journey
 // scrub already claims touch drags, and nothing scrolls at the root.
 html,
 body {
@@ -622,15 +621,14 @@ p {
   animation: gg-fog-drift linear infinite;
 }
 
-// Blobs are white-cored with gray-blue bodies: the day background fades
-// to pure white at the bottom, so pure-white fog would vanish — the cool
-// gray rim is what makes the puffs read against it (and stays neutral
-// under the star field's hue rotation).
+// White-cored with gray-blue bodies: the day background fades to pure
+// white at the bottom, so pure-white fog would vanish — the cool rim is
+// what makes the puffs read against it, and stays neutral under the star
+// field's hue rotation.
 //
-// Periodicity: gradients clip at the tile boundary rather than wrapping,
-// so any blob whose reach (0.7 x its x-radius) crosses an edge gets a
-// duplicate shifted +/-100% — otherwise a hard vertical seam sweeps
-// across the bank once per drift loop.
+// Gradients clip at the tile boundary rather than wrapping, so any blob
+// whose reach (0.7 x its x-radius) crosses an edge gets a duplicate
+// shifted +/-100% — otherwise a hard seam sweeps across once per loop.
 .gg-fog-back > .gg-fog-drift {
   animation-duration: 90s;
   background-image:
@@ -950,15 +948,14 @@ p {
   z-index: 2;
   mix-blend-mode: multiply;
   max-height: 200px;
-  // No "nova-mono" here, deliberately. This element is `opacity-0` on
-  // every route that mounts it — the visible name is the star field's
-  // glyph sampling, which measures this box but renders its own letters
-  // in "Helvetica Neue" (space3d/starSampling.ts). Naming the webfont
-  // first cost a 127KB TTF download on /home, /about, /artifacts, /draw,
-  // /synth, /projects-and-toys and the 404 purely to shape text nobody
-  // ever sees. Leading with "Helvetica Neue" also means the box is now
-  // laid out in the same family the stars are sampled from.
-  // (/journey still loads the font for `.journey-title`, which is visible.)
+  // No "nova-mono" here, deliberately. This element is `opacity-0`
+  // wherever it mounts — the visible name is the star field's glyph
+  // sampling, which measures this box but draws its own letters in
+  // "Helvetica Neue" (space3d/starSampling.ts). Naming the webfont first
+  // cost a 127KB TTF on seven routes purely to shape text nobody sees,
+  // and leading with Helvetica Neue lays the box out in the family the
+  // stars are sampled from. (/journey still loads it for .journey-title,
+  // which is visible.)
   font-family:
     "Helvetica Neue", "Segoe UI", "Roboto", "Oxygen", "Ubuntu", "Cantarell",
     "Fira Sans", "Droid Sans", sans-serif;
@@ -1038,14 +1035,14 @@ li > ul > li {
   color: #eeeeee;
   transition-delay: 500ms;
 
-  // Left gutter for the moon (the Zip-video link): without it the panel
+  // Left gutter for the moon (the Zip-video link) — without it the panel
   // runs under the moon and the link reads as a dead spot over the text.
-  // Below lg the gutter shrinks with the viewport but keeps the panel at
-  // the same 680px the lg rule below yields at 1280 — so the layout is
-  // continuous across the breakpoint — and never drops under 200px, which
-  // is the moon's widest projection on a portrait tablet. Paired with
-  // aboutMoonNdcX() in CameraRig, which parks the moon at this gutter's
-  // center: change one, change the other.
+  // Below lg it shrinks with the viewport but holds the panel at the same
+  // 680px the lg rule yields at 1280, so the layout is continuous across
+  // the breakpoint, and never drops under 200px (the moon's widest
+  // projection on a portrait tablet). Paired with aboutMoonNdcX() in
+  // CameraRig, which parks the moon at this gutter's centre: change one,
+  // change the other.
   @media (min-width: $breakpoint-sm) {
     padding-left: max(200px, calc(100vw - 680px));
     // Room to scroll the last line clear of the fixed life bar
@@ -1083,12 +1080,11 @@ li > ul > li {
   scrollbar-color: transparent transparent;
 }
 
-// Translucent panel so the text stays legible over whatever the 3D scene
-// puts behind it (Earth's bright limb, the drifting moon). No
-// backdrop-filter: blurring a content-height panel over two animating
-// WebGL canvases forces a backdrop capture + re-blur every canvas frame
-// AND every scroll frame, which froze the background during scrolling —
-// a higher-opacity background gives the same legibility for free.
+// Translucent so the text stays legible over whatever the scene puts
+// behind it. No backdrop-filter: blurring a content-height panel over two
+// animating canvases forces a backdrop capture and re-blur every canvas
+// frame AND every scroll frame, which froze the background while
+// scrolling — higher opacity buys the same legibility for free.
 // The back-to-home link sits above this panel, outside the background;
 // the 24px top padding puts the panel edge just above "About Me".
 .resume-panel {
@@ -1497,13 +1493,11 @@ li > ul > li {
     text-align: left;
     font-size: 20px;
 
-    // Pinning the summary to the top while .homeInfoContainer is anchored
-    // to the bottom means the two grow toward each other: on a short
-    // viewport (a phone in landscape) the panel rises into the summary and
-    // the icon row lands on top of the text — measured 34px of overlap at
-    // 667x470, and fully inverted at 375px tall. The summary is already a
-    // child of the panel in the DOM, so dropping it back into normal flow
-    // removes the collision by construction and restores reading order.
+    // Pinned summary + bottom-anchored .homeInfoContainer grow toward
+    // each other: in landscape the panel rises into the summary and the
+    // icon row lands on the text (34px of overlap at 667x470, fully
+    // inverted at 375px tall). The summary is already a child of the
+    // panel, so normal flow removes the collision by construction.
     @media (max-height: 560px) {
       position: static;
       transform: none;
@@ -1851,9 +1845,8 @@ a:hover {
 }
 
 // ─── Zip brand-video popover (ZipVideoMoon) ────────────────
-// While the video plays, `video-mode` on <body> hides everything except
-// the stars: the solar canvas, the name letters, the mode toggle, the
-// music player/toggle, the phone-width Home link and the corner medallion.
+// While the video plays, `video-mode` on <body> hides everything but the
+// stars — canvas, name letters, both toggles, the Home link, the coin.
 // The resume panel hides itself (.video-hidden). The backdrop is
 // deliberately transparent (the stars stay), so anything not listed here
 // really does show through.
@@ -2196,12 +2189,11 @@ body.rocket-journey #rocket-cockpit {
 
 .App-background_mesh {
   // Mesh view's ground: a faint graticule over a deep midnight-blue
-  // radial, so the wire scene sits on something that reads as a chart
-  // rather than on flat black. Static paint — no fullscreen filter
-  // animation (the pink gradient this replaced ran a 20s hue-rotate,
-  // which on a committed blue-white palette would cycle it through green
-  // and magenta) and so nothing here for the reduced-motion block or the
-  // two ride guards to switch off.
+  // radial, so the wire scene reads as a chart rather than flat black.
+  // Static paint, deliberately — the pink gradient this replaced ran a
+  // 20s hue-rotate, which on a blue-white palette would cycle through
+  // green and magenta, so there's nothing here for reduced-motion or the
+  // ride guards to stop.
   background:
     repeating-linear-gradient(
       0deg,
@@ -2294,12 +2286,10 @@ $switch-ease: cubic-bezier(0.45, 0.05, 0.25, 1.2);
 }
 
 // ─── Scene view switch (ViewModeSwitch.tsx) ────────────────
-// The Space/Mesh switch, dressed like the music switch beside it: the
-// same charcoal track, the same inset shading and 34px height, and the
-// active segment sits on the same flat light disc the speaker rides —
-// stretched to a pill, sliding across. Unlike the pill switches it
-// carries its own chassis: two words need the width, and the segments
-// are buttons rather than a Radix switch.
+// Dressed like the music switch beside it — same charcoal track, inset
+// shading and 34px height, and the active segment rides the same flat
+// disc, stretched to a pill. It carries its own chassis though: two words
+// need the width, and the segments are buttons, not a Radix switch.
 
 .view-mode-switch {
   // Positioned by the Tailwind classes on the component (fixed top-right).
@@ -2417,17 +2407,14 @@ $switch-ease: cubic-bezier(0.45, 0.05, 0.25, 1.2);
 }
 
 // ─── Space jam switch (SpaceJamSwitch.tsx) ─────────────────
-// The bottom-left music toggle. Charcoal track with a flatline while
-// muted; purple with a bouncing equaliser while the jams play. The thumb
-// is a plain disc carrying a speaker (playing) or a red-slashed one
-// (muted). A tooltip ("Play space jams" / "Pause space jams") stands in
-// for the label the old pill carried.
+// The bottom-left music toggle: charcoal track and flatline while muted,
+// purple with a bouncing equaliser while the jams play. A tooltip stands
+// in for the label the old pill carried.
 //
-// The switch is its own tooltip trigger, and Radix's Tooltip.Trigger
-// writes its open/closed `data-state` over the Switch root's checked one
-// — so everything in this section keys off `aria-checked` instead. (The
-// thumb keeps its own `data-state`, which is what the shared
-// .scene-switch-thumb slide reads.)
+// The switch is its own tooltip trigger, and Radix's Trigger writes its
+// open/closed `data-state` over the Switch root's checked one — so
+// everything here keys off `aria-checked`. (The thumb keeps its own
+// `data-state`, which the shared .scene-switch-thumb slide reads.)
 
 // Placement: positioned by the Tailwind classes on the component (fixed
 // bottom-left); nudged inside the safe area now that viewport-fit=cover
@@ -2470,13 +2457,12 @@ body.life-timeline-present {
 }
 
 // ─── Landing page dock (md+) ────────────────
-// With the title stacked in a left column (starSampling's stacked
-// layout, from $breakpoint-sm up) the coin's hit target parks top-right,
-// off the title's line (BadgeMedallion moves the coin itself to match).
-// The view switch takes its lg+ spot beside the music switch at every
-// stacked size, since the coin now owns the top-right corner it would
-// otherwise sit in below lg. `on-landing` rides <body> while Landing.tsx
-// is mounted.
+// With the title stacked in a left column (starSampling, $breakpoint-sm
+// up) the coin's hit target parks top-right, off the title's line —
+// BadgeMedallion moves the coin itself to match. The view switch takes
+// its lg+ spot beside the music switch at every stacked size, since the
+// coin now owns the corner it would otherwise use. `on-landing` rides
+// <body> while Landing.tsx is mounted.
 body.on-landing {
   @media (min-width: $breakpoint-sm) {
     .badge-link {
@@ -2640,10 +2626,9 @@ body.on-landing {
 // ─── Tool pages: the drawing studio (/draw) and SVG → 3D ────
 //
 // Both are the same chassis — a fixed, scrollable overlay holding one
-// 720px column centred over the star field — so the shell, the title
-// block, the back link, the error line and the primary button are shared
-// rules rather than two copies that drift apart. Everything below the
-// composer is per-page.
+// 720px column over the star field — so the shell, title block, back
+// link, error line and primary button are shared rules rather than two
+// copies that drift apart. Everything below the composer is per-page.
 
 .svg-generator-page,
 .svg3d-page {
@@ -2964,7 +2949,6 @@ body.on-landing {
   }
 }
 
-// Spinner
 .svg-generator-spinner {
   width: 20px;
   height: 20px;
@@ -2980,7 +2964,6 @@ body.on-landing {
   }
 }
 
-// Error
 .svg-generator-error,
 .svg3d-error {
   color: #ff6b6b;
@@ -2990,7 +2973,6 @@ body.on-landing {
   text-align: center;
 }
 
-// Result area
 .svg-generator-result {
   width: 100%;
   margin-top: 32px;
@@ -3075,7 +3057,6 @@ body.on-landing {
   }
 }
 
-// SVG display
 .svg-generator-svg-wrapper {
   display: flex;
   align-items: center;
@@ -3099,7 +3080,6 @@ body.on-landing {
     // generation sees the real box (and nothing jumps when it loads)
     aspect-ratio: 1 / 1;
     height: auto;
-    // Slow color cycling — hue rotates through the full spectrum
     animation: svgGenColorCycle 18s linear infinite;
   }
 }
@@ -3729,18 +3709,14 @@ body.on-landing {
 }
 
 // ─── The life bar (/about) ─────────────────────────────────────────────
-// One strip along the bottom of the screen where every era is as wide as
-// it was long (LifeTimeline.tsx). Fixed rather than parked in the résumé
-// panel so it stays put while the résumé scrolls behind it. z 6: over the
-// panel (z 4) and the canvases (z 2), under the Radix tooltip portals
-// (z 50) it opens above itself.
-//
-// The band spans the whole viewport width (its slab runs edge to edge)
-// and sits on the bottom edge of the screen; the bar inside is inset by
-// `padding-right` to keep it off the corner medallion (140px,
-// bottom-right). The music switch and — at lg — the Space/Mesh switch
-// that joins it in the other corner climb above the band while it's
-// mounted (`body.life-timeline-present`, next to .music-toggle).
+// One strip along the bottom where every era is as wide as it was long
+// (LifeTimeline.tsx). Fixed rather than parked in the résumé panel so it
+// stays put while the résumé scrolls behind it. z 6: over the panel (z 4)
+// and the canvases (z 2), under the tooltip portals (z 50) it opens above
+// itself. The slab runs edge to edge; the bar inside is inset by
+// `padding-right` to clear the corner medallion (140px). The music switch
+// and, at lg, the Space/Mesh switch climb above the band while it's
+// mounted (`body.life-timeline-present`).
 .life-timeline {
   // The future tail's width — shared by the bar and the axis so the
   // "now" tick stays on the boundary
@@ -4118,11 +4094,10 @@ body.on-landing {
 
 // ─── SVG → 3D (/svg-to-3d) ─────────────────────────────────
 //
-// The page shell, title block, back link, error line and primary button
-// come from the shared tool-page rules above (see the /draw block); what
-// follows is the extruder's own furniture. It leans on the same
-// vocabulary as the studio — Inconsolata, translucent purple panels over
-// the stars, pill-shaped controls — so the two toys read as siblings.
+// Shell, title block, back link, error line and primary button come from
+// the shared tool-page rules above; what follows is the extruder's own
+// furniture, in the studio's vocabulary — Inconsolata, translucent purple
+// panels, pill controls — so the two toys read as siblings.
 
 // The download CTA is the end of a long form rather than a send button
 // beside a prompt, so it spans the column instead of hugging its label

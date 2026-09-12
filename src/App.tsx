@@ -130,12 +130,9 @@ const ViewTour = ({
   return null;
 };
 
-/**
- * The music switch rides every page but /synth, which brings its own
- * audio. It lives inside the Router so the rule is re-checked on
- * navigation — read off `window.location`, it was only ever right on a
- * fresh load, so navigating to /synth left two music controls up.
- */
+/** The music switch rides every page but /synth, which brings its own
+ *  audio. Inside the Router so the rule is re-checked on navigation —
+ *  off `window.location` it was only right on a fresh load. */
 const RoutedMusicSwitch = () => {
   const { pathname } = useLocation();
   return pathname === "/synth" ? null : <SpaceJamSwitch />;
