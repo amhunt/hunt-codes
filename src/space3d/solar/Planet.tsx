@@ -265,7 +265,10 @@ export default function Planet({
       }
     }
     if (mesh.current) {
-      mesh.current.rotation.y += delta * config.spinSpeed;
+      // Negated: the orbits sweep +X → +Z, a turn about -Y, so a prograde
+      // spin runs against a +Y `rotation.y`. Adding it spun every planet
+      // backwards against its own orbit.
+      mesh.current.rotation.y -= delta * config.spinSpeed;
     }
 
     // Landing-intro reveal: ramp opacity 0→1 (or back) and push it into the

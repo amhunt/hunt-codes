@@ -204,7 +204,9 @@ export default function Moon({
       // Absolute off the shared clock, not a `+=` accumulation: the lock
       // is a relationship with the orbit angle above, and summing frame
       // deltas would let it drift out of true over a long session.
-      mesh.current.rotation.y = MOON.spinPhase + t * MOON.spinSpeed;
+      // Subtracted for the reason Planet.tsx negates its spin too —
+      // prograde runs against a +Y `rotation.y` here.
+      mesh.current.rotation.y = MOON.spinPhase - t * MOON.spinSpeed;
     }
 
     // Reveal: the about view shows the moon + its orbit ring; elsewhere it

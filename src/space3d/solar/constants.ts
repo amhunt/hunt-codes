@@ -21,7 +21,11 @@ export interface SolarPlanetConfig {
   orbitSpeed: number;
   /** starting angle, radians */
   orbitPhase: number;
-  /** radians per second of self-rotation */
+  /** Radians per second of self-rotation, positive being prograde — the
+   *  same sense the body orbits in. `Planet.tsx` negates it on the way
+   *  into `rotation.y`, whose +Y turns against the orbits' -Y; the
+   *  asteroids only tumble for looks, so `Asteroid.tsx` spins on the raw
+   *  sign. */
   spinSpeed: number;
   /** Axial tilt (obliquity) off the orbital plane, radians: the body spins
    *  about this tilted pole instead of straight-up world Y. Venus's ~177°
@@ -121,8 +125,8 @@ export const PLANETS: SolarPlanetConfig[] = [
     radius: radiusVsEarth(6051.8),
     ...orbit(12),
     orbitPhase: 2.4,
-    // Positive, unlike before: Venus turns backwards because it is tipped
-    // almost fully over, and the 177° tilt below now supplies that.
+    // Prograde-positive like the rest: Venus turns backwards because it
+    // is tipped almost fully over, and the 177° tilt below supplies that.
     spinSpeed: 0.05 * SPEED_SCALE,
     axialTilt: tilt(177.36),
   },
@@ -378,14 +382,13 @@ export const MOON = {
   orbitSpeed: MOON_ORBIT_SPEED,
   orbitPhase: MOON_ORBIT_PHASE,
   /**
-   * Tidally locked: exactly one rotation per orbit, so the same face
-   * holds toward Earth. Negative because the orbits here sweep +X → +Z,
-   * which is a turn about -Y, while a positive `rotation.y` turns the
-   * other way — matching the rate with the wrong sign tumbles the moon
-   * through every face instead of pinning one. Moon.tsx drives the
-   * rotation off the same clock as the orbit so the lock can't drift.
+   * Tidally locked: exactly one prograde rotation per orbit, so the same
+   * face holds toward Earth. Moon.tsx drives the rotation off the same
+   * clock as the orbit rather than accumulating frame deltas, so the lock
+   * can't drift out of true — and negates it like Planet.tsx does, since
+   * prograde runs against a +Y `rotation.y` here.
    */
-  spinSpeed: -MOON_ORBIT_SPEED,
+  spinSpeed: MOON_ORBIT_SPEED,
   /** The `rotation.y` that squares the near side onto Earth at t=0 (the
    *  lock above holds it there): the body's +X points at Earth when
    *  rotation.y = π − orbit angle. */

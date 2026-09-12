@@ -33,13 +33,16 @@ projected verts) → `.body-outline` SVG paths in `SolarOverlays.tsx`.
   asteroids, which share Earth's, are the only bodies exempt. Planet
   radii come off `EARTH_RADIUS` by the real km ratio the same way.
 - Orbits sweep +X → +Z, which is a turn about **-Y**, while a positive
-  `rotation.y` turns about +Y — the two senses are opposite. So the moon's
-  tidal lock is `spinSpeed: -MOON.orbitSpeed` (matching the rate with the
-  wrong sign tumbles it through every face), and `Moon.tsx` drives
-  `rotation.y` absolutely off `clock.elapsedTime` rather than `+=`-ing
-  frame deltas, so the lock can't drift out of true. A consequence of the
-  same mismatch: every planet's spin currently runs retrograde against
-  its own orbit. Pre-existing, and only visible on Earth up close.
+  `rotation.y` turns about +Y — the two senses are opposite. So a
+  `spinSpeed` is prograde-positive and both `Planet.tsx` and `Moon.tsx`
+  negate it on the way into `rotation.y`; dropping either negation spins
+  that body backwards against its own orbit, which is what the whole
+  scene used to do. `Asteroid.tsx` is the exception — its rocks only
+  tumble for looks, so it spins on the raw sign.
+- The moon is tidally locked at `spinSpeed: MOON.orbitSpeed`, one
+  rotation per orbit, and `Moon.tsx` writes `rotation.y` absolutely off
+  `clock.elapsedTime` rather than `+=`-ing frame deltas so the lock can't
+  drift out of true. `MOON.spinPhase` squares the near side onto Earth.
 - The planets carry their real axial tilt, and `Planet.tsx` sets
   `rotation-order="ZYX"` so the composed rotation is Rz(tilt)·Ry(spin) —
   a spin about the tilted pole. The default XYZ order composes the other
