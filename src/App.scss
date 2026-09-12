@@ -1006,9 +1006,20 @@ p {
   display: flex;
   min-height: 16px;
 
+  // Phones stack the row and range it down the panel's left edge, so the
+  // pills and the typed greeting start on the same line as the summary
+  // pinned above them
   @media (max-width: $breakpoint-sm) {
     flex-direction: column;
-    align-items: center;
+    align-items: flex-start;
+  }
+}
+
+// Phones only: the captions sit 3px under their pills and the typed
+// greeting lands straight after them — give the row somewhere to end
+@media (max-width: $breakpoint-sm) {
+  .icon-pill-row {
+    padding-bottom: 12px;
   }
 }
 
@@ -1401,7 +1412,11 @@ li > ul > li {
       opacity 1000ms ease;
     left: 20px;
     right: 20px;
-    margin: auto;
+    // Left-anchored, not centered: on a wide phone the 360px cap floated
+    // the panel in the middle of the viewport and the pills sat in from
+    // both edges. `right` is ignored once max-width clamps the width, so
+    // dropping the auto margins parks it on the gutter at every width.
+    margin: 0;
     font-size: 18px;
     width: unset;
     max-width: min(360px, calc(100vw - 40px));
@@ -1470,15 +1485,19 @@ li > ul > li {
     // ~116px down at iPhone widths); tracks the same safe-area shift as
     // .nameTitle
     top: calc(128px + env(safe-area-inset-top, 0px));
-    width: 100%;
-    // Wide enough that the 14px availability line stays on one line at
-    // 360px+; the 300px cap it used to carry (max-w-75) wrapped it, and
-    // the extra line collided with Earth's ABOUT ME ring on short phones
-    max-width: calc(100% - 32px);
-    text-align: center;
+    // Left edge on the panel's content edge below (20px + its 8px
+    // padding) so the summary and the pills range off the same line. The
+    // insets still sum to the 32px the centered `max-width: 100% - 32px`
+    // spent, so the wrap threshold doesn't move: the 14px availability
+    // line needs 315px to hold one line, and the extra line collides with
+    // Earth's ABOUT ME ring on short phones.
+    left: calc(28px + env(safe-area-inset-left, 0px));
+    right: calc(4px + env(safe-area-inset-right, 0px));
+    width: auto;
+    max-width: none;
+    transform: none;
+    text-align: left;
     font-size: 20px;
-    left: 50%;
-    transform: translateX(-50%);
 
     // Pinning the summary to the top while .homeInfoContainer is anchored
     // to the bottom means the two grow toward each other: on a short
