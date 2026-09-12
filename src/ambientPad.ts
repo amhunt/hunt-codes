@@ -16,6 +16,11 @@ import { audioOutput, ensureAudioContext } from "./audioContext";
  * calls `setPadEnabled`. Sound needs a resumed AudioContext, which needs
  * a user gesture, so a pad switched on before the visitor has touched
  * anything waits for the first interaction (`armGestureUnlock`).
+ *
+ * Something with its own soundtrack can also ask the pad to get out of
+ * the way for a while (`setPadDucked` — the Zip reel does, while it
+ * plays) without touching the switch, so the visitor doesn't have to
+ * flip it back on afterwards.
  */
 
 interface PadScene {
@@ -53,10 +58,10 @@ const SCENES: Record<string, PadScene | null> = {
 };
 
 /** Where the pad should sit for the current view — 0 on the views that
- *  carry their own audio. */
+ *  carry their own audio, and 0 while something else has the room. */
 function sceneLevel(): number {
   const here = SCENES[scene];
-  return here ? PAD_BUS_GAIN * here.level : 0;
+  return here && !ducked ? PAD_BUS_GAIN * here.level : 0;
 }
 
 const VOICES = 4;
@@ -67,6 +72,11 @@ const OSC_GAIN = 0.09;
 const PAD_BUS_GAIN = 0.28;
 /** Ambient means slow: the pad breathes in and out over seconds */
 const FADE_SECONDS = 3;
+/** Except when it's ducking under something that has already started
+ *  talking — the Zip reel opens with sound straight away, and three
+ *  seconds of pad under its first line reads as a clash, not a fade. It
+ *  comes back afterwards at its usual pace. */
+const DUCK_SECONDS = 0.5;
 /** Chord changes glide rather than cut, over about the length of the
  *  camera's swoop between views (CameraRig's TRANSITION_SECONDS) */
 const GLIDE_SECONDS = 2;
@@ -89,6 +99,8 @@ interface Pad {
 
 let pad: Pad | null = null;
 let enabled = false;
+/** Faded out under something else's audio — see `setPadDucked` */
+let ducked = false;
 let scene = "landing";
 let unlockArmed = false;
 
@@ -156,16 +168,13 @@ function build(): Pad | null {
 
 /** Ramp the pad's own gain. Exponential ramps can't reach zero, hence
  *  the floor — inaudible, and it keeps the ramp well-defined. */
-function fadeTo(level: number): void {
+function fadeTo(level: number, seconds = FADE_SECONDS): void {
   if (!pad) return;
   const { ctx, bus } = pad;
   const now = ctx.currentTime;
   bus.gain.cancelScheduledValues(now);
   bus.gain.setValueAtTime(Math.max(bus.gain.value, 0.0001), now);
-  bus.gain.exponentialRampToValueAtTime(
-    Math.max(level, 0.0001),
-    now + FADE_SECONDS,
-  );
+  bus.gain.exponentialRampToValueAtTime(Math.max(level, 0.0001), now + seconds);
 }
 
 /** Autoplay policy only lets a context resume from inside a gesture, so
@@ -196,6 +205,21 @@ export function setPadEnabled(on: boolean): void {
   enabled = on;
   if (on) start();
   else fadeTo(0);
+}
+
+/**
+ * Fade the pad all the way out under something that carries its own
+ * sound — the Zip reel (ZipVideoPopover) while it plays — and back in
+ * when that's done. A hold rather than a mute: the switch stays where the
+ * visitor left it, and everything else (scene changes, the pings) keeps
+ * routing through `sceneLevel`, which reads 0 while this is on.
+ */
+export function setPadDucked(on: boolean): void {
+  if (on === ducked) return;
+  ducked = on;
+  if (!pad || !enabled) return;
+  if (on) fadeTo(0, DUCK_SECONDS);
+  else fadeTo(sceneLevel());
 }
 
 /** Glide the chord to whichever one this view holds. Views with their own
@@ -260,7 +284,7 @@ let lastPing = -Infinity;
  * anywhere sour however the orbits happen to line up.
  */
 export function padPing(index: number): void {
-  if (!pad || !enabled) return;
+  if (!pad || !enabled || ducked) return;
   const here = SCENES[scene];
   if (!here) return;
   const { ctx, bus } = pad;
