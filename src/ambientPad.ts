@@ -18,24 +18,46 @@ import { audioOutput, ensureAudioContext } from "./audioContext";
  * anything waits for the first interaction (`armGestureUnlock`).
  */
 
-/** MIDI note numbers. Each view gets a chord from one mode, so moving
- *  through the site modulates rather than lurching key to key. */
-const CHORDS: Record<string, number[] | null> = {
-  // Dm9, wide and unresolved — nothing has happened yet
-  landing: [38, 45, 53, 64],
-  // F major: warmer, you've arrived
-  home: [41, 48, 57, 64],
+interface PadScene {
+  /** MIDI note numbers, one per voice, low to high */
+  notes: number[];
+  /** Multiplier on PAD_BUS_GAIN. Voicing alone doesn't settle how loud a
+   *  chord lands — high, close voicings read louder than open low ones,
+   *  and the filter opens on the views where the camera sits near the
+   *  sun, which stacks on top. */
+  level: number;
+}
+
+/** Each view gets a chord from one mode, so moving through the site
+ *  modulates rather than lurching key to key. */
+const SCENES: Record<string, PadScene | null> = {
+  // D minor, plain: root, fifth, minor third, octave. The ninth that sat
+  // on top before (E4) ground against the D underneath it and gave the
+  // landing page an edge it didn't want.
+  landing: { notes: [38, 45, 53, 62], level: 1 },
+  // F6 — F A C D. Warm and settled, and a close relative of the landing's
+  // Dm (same notes, different bass), so arriving is a shift in colour
+  // rather than a change of subject. It sits well under the landing
+  // because /home puts the camera near the sun, which opens the filter.
+  home: { notes: [41, 48, 57, 62], level: 0.6 },
   // Bb maj7, low and reflective, for reading the résumé over
-  about: [34, 41, 50, 57],
+  about: { notes: [34, 41, 50, 57], level: 1 },
   // Gm, out at the moon
-  artifacts: [43, 50, 58, 65],
+  artifacts: { notes: [43, 50, 58, 65], level: 1 },
   // C, the brightest of them — the toy box
-  projects: [36, 43, 52, 59],
+  projects: { notes: [36, 43, 52, 59], level: 1 },
   // Both of these carry their own audio (the synth engine, the ship's
   // soundtrack), so the pad stands down rather than playing under them
   synth: null,
   journey: null,
 };
+
+/** Where the pad should sit for the current view — 0 on the views that
+ *  carry their own audio. */
+function sceneLevel(): number {
+  const here = SCENES[scene];
+  return here ? PAD_BUS_GAIN * here.level : 0;
+}
 
 const VOICES = 4;
 /** Spread between each voice's oscillator pair — enough to shimmer,
@@ -110,7 +132,7 @@ function build(): Pad | null {
   lfoGain.connect(filter.frequency);
   lfo.start();
 
-  const chord = CHORDS[scene] ?? CHORDS.landing!;
+  const chord = (SCENES[scene] ?? SCENES.landing!).notes;
   const voices: Voice[] = [];
   for (let i = 0; i < VOICES; i += 1) {
     const gain = ctx.createGain();
@@ -166,7 +188,7 @@ function start(): void {
   // No Web Audio at all — nothing to do, and nothing a gesture would fix
   if (!pad) return;
   if (pad.ctx.state !== "running") armGestureUnlock();
-  fadeTo(CHORDS[scene] ? PAD_BUS_GAIN : 0);
+  fadeTo(sceneLevel());
 }
 
 /** The space-jam switch's flip. */
@@ -183,21 +205,23 @@ export function setPadScene(next: string): void {
   if (next === scene) return;
   scene = next;
   if (!pad || !enabled) return;
-  const chord = CHORDS[scene];
-  if (!chord) {
+  const here = SCENES[scene];
+  if (!here) {
     fadeTo(0);
     return;
   }
   const now = pad.ctx.currentTime;
   pad.voices.forEach((voice, i) => {
-    const freq = midiToFreq(chord[i % chord.length]);
+    const freq = midiToFreq(here.notes[i % here.notes.length]);
     voice.oscillators.forEach((osc) => {
       osc.frequency.cancelScheduledValues(now);
       osc.frequency.setValueAtTime(osc.frequency.value, now);
       osc.frequency.exponentialRampToValueAtTime(freq, now + GLIDE_SECONDS);
     });
   });
-  fadeTo(PAD_BUS_GAIN);
+  // Glides to this view's own level, so the chord change and the balance
+  // between views arrive together
+  fadeTo(sceneLevel());
 }
 
 /**
@@ -237,13 +261,13 @@ let lastPing = -Infinity;
  */
 export function padPing(index: number): void {
   if (!pad || !enabled) return;
-  const chord = CHORDS[scene];
-  if (!chord) return;
+  const here = SCENES[scene];
+  if (!here) return;
   const { ctx, bus } = pad;
   const at = ctx.currentTime;
   if (at - lastPing < MIN_PING_GAP_SECONDS) return;
   lastPing = at;
-  const freq = midiToFreq(chord[index % chord.length] + 24);
+  const freq = midiToFreq(here.notes[index % here.notes.length] + 24);
   [
     [1, 0.16],
     [2.01, 0.05],

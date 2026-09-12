@@ -136,12 +136,14 @@ export function playEnter(): void {
   const t = ctx.currentTime;
   const DURATION = 1.15;
 
-  // The rush of the dive
+  // The rush of the dive. Levels through here sit about 6dB under where
+  // they started — the riser was loud enough to be the thing you noticed
+  // about the transition rather than something under it.
   sweptNoise(bus, t, {
     from: 220,
     to: 4200,
     q: 1.2,
-    peak: 0.32,
+    peak: 0.16,
     attack: DURATION * 0.75,
     duration: DURATION,
   });
@@ -153,7 +155,7 @@ export function playEnter(): void {
   tone.frequency.exponentialRampToValueAtTime(330, t + DURATION * 0.8);
   const toneGain = ctx.createGain();
   toneGain.gain.setValueAtTime(0.0001, t);
-  toneGain.gain.exponentialRampToValueAtTime(0.22, t + DURATION * 0.7);
+  toneGain.gain.exponentialRampToValueAtTime(0.11, t + DURATION * 0.7);
   toneGain.gain.exponentialRampToValueAtTime(0.0001, t + DURATION);
   tone.connect(toneGain);
   toneGain.connect(bus);
@@ -168,7 +170,7 @@ export function playEnter(): void {
   sub.frequency.exponentialRampToValueAtTime(45, land + 0.5);
   const subGain = ctx.createGain();
   subGain.gain.setValueAtTime(0.0001, land);
-  subGain.gain.exponentialRampToValueAtTime(0.5, land + 0.03);
+  subGain.gain.exponentialRampToValueAtTime(0.24, land + 0.03);
   subGain.gain.exponentialRampToValueAtTime(0.0001, land + 0.6);
   sub.connect(subGain);
   subGain.connect(bus);
@@ -191,23 +193,5 @@ export function playCoin(): void {
   const t = bus.context.currentTime;
   COIN_NOTES.forEach((freq, i) => {
     bell(bus, freq, t + i * COIN_STEP_SECONDS, 0.55 - i * 0.06);
-  });
-}
-
-/**
- * Flipping between Space and Mesh: a short sweep across the crossfade.
- * Mesh is the "up" direction — the scene resolving into wires — and
- * space is the way back down.
- */
-export function playViewSwitch(toSpace: boolean): void {
-  const bus = sfxBus("view");
-  if (!bus) return;
-  sweptNoise(bus, bus.context.currentTime, {
-    from: toSpace ? 3200 : 500,
-    to: toSpace ? 500 : 3200,
-    q: 3.5,
-    peak: 0.3,
-    attack: 0.04,
-    duration: 0.38,
   });
 }

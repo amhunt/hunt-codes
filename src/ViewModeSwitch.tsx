@@ -4,7 +4,6 @@ import cx from "classnames";
 import { GlobeIcon, StarIcon } from "lucide-react";
 
 import useWindowSize from "useWindowSize";
-import { playViewSwitch } from "./sfx";
 import {
   Tooltip,
   TooltipContent,
@@ -92,13 +91,7 @@ const ViewModeSwitch = ({
                 className="vms-option"
                 aria-label={name}
                 aria-pressed={isSpaceView === isSpace}
-                // On the click rather than in App.tsx's handler, so only a
-                // visitor working the switch gets the sweep — VIEW_TOUR
-                // flips the same state on the / → /home hop, silently
-                onClick={() => {
-                  if (isSpaceView !== isSpace) playViewSwitch(isSpace);
-                  onChange(isSpace);
-                }}
+                onClick={() => onChange(isSpace)}
               >
                 <Icon
                   size={18}
