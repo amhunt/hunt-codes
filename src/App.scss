@@ -739,7 +739,8 @@ p {
   .life-seg--future::before,
   .life-seg-label--future,
   // The shop's loading shimmer (/artifacts)
-  .shop-skeleton {
+  .shop-skeleton,
+  .svg3d-dropzone::before {
     animation: none !important;
   }
 }
@@ -2648,9 +2649,16 @@ body.on-landing {
   stroke: #e5484d;
 }
 
-// ─── SVG Generator Page ────────────────────────────────────
+// ─── Tool pages: the drawing studio (/draw) and SVG → 3D ────
+//
+// Both are the same chassis — a fixed, scrollable overlay holding one
+// 720px column centred over the star field — so the shell, the title
+// block, the back link, the error line and the primary button are shared
+// rules rather than two copies that drift apart. Everything below the
+// composer is per-page.
 
-.svg-generator-page {
+.svg-generator-page,
+.svg3d-page {
   position: fixed;
   inset: 0;
   z-index: 10;
@@ -2672,7 +2680,8 @@ body.on-landing {
   }
 }
 
-.svg-generator-back-link {
+.svg-generator-back-link,
+.svg3d-back-link {
   position: fixed;
   left: 16px;
   top: 0;
@@ -2692,7 +2701,8 @@ body.on-landing {
   }
 }
 
-.svg-generator-container {
+.svg-generator-container,
+.svg3d-container {
   // Centers in both axes while content fits, yields to scrolling when it
   // doesn't — see the note on .svg-generator-page
   margin: auto;
@@ -2715,7 +2725,8 @@ body.on-landing {
   }
 }
 
-.svg-generator-title {
+.svg-generator-title,
+.svg3d-title {
   font-family: "Inconsolata", monospace;
   font-size: 32px;
   font-weight: 700;
@@ -2725,7 +2736,8 @@ body.on-landing {
   text-shadow: 0 0 24px $purp-light-transparent;
 }
 
-.svg-generator-subtitle {
+.svg-generator-subtitle,
+.svg3d-subtitle {
   font-family: "Inconsolata", monospace;
   font-size: 14px;
   color: rgba(255, 255, 255, 0.8);
@@ -2857,7 +2869,8 @@ body.on-landing {
   }
 }
 
-.svg-generator-button {
+.svg-generator-button,
+.svg3d-button {
   display: flex;
   align-items: center;
   justify-content: center;
@@ -2980,7 +2993,8 @@ body.on-landing {
 }
 
 // Error
-.svg-generator-error {
+.svg-generator-error,
+.svg3d-error {
   color: #ff6b6b;
   font-family: "Inconsolata", monospace;
   font-size: 13px;
@@ -4112,4 +4126,422 @@ body.on-landing {
   font-size: 12px;
   line-height: 1.5;
   opacity: 0.85;
+}
+
+// ─── SVG → 3D (/svg-to-3d) ─────────────────────────────────
+//
+// The page shell, title block, back link, error line and primary button
+// come from the shared tool-page rules above (see the /draw block); what
+// follows is the extruder's own furniture. It leans on the same
+// vocabulary as the studio — Inconsolata, translucent purple panels over
+// the stars, pill-shaped controls — so the two toys read as siblings.
+
+// The download CTA is the end of a long form rather than a send button
+// beside a prompt, so it spans the column instead of hugging its label
+.svg3d-button {
+  width: 100%;
+  max-width: 320px;
+  margin-top: 28px;
+}
+
+@property --svg3d-border-angle {
+  syntax: "<angle>";
+  initial-value: 0deg;
+  inherits: false;
+}
+
+@keyframes svg3d-border-orbit {
+  to {
+    --svg3d-border-angle: 360deg;
+  }
+}
+
+// Drop target. The file input is stretched over the whole panel and made
+// invisible, so the click target is the panel and not just the label.
+.svg3d-dropzone {
+  position: relative;
+  width: 100%;
+  padding: 28px 20px;
+  background: rgba(101, 66, 214, 0.35);
+  border: 1px dashed rgba(158, 128, 249, 0.55);
+  border-radius: 16px;
+  box-sizing: border-box;
+  transition:
+    border-color 0.2s,
+    background-color 0.2s,
+    box-shadow 0.2s;
+
+  &::before {
+    position: absolute;
+    inset: -1px;
+    padding: 1px;
+    border-radius: inherit;
+    background: repeating-conic-gradient(
+      from var(--svg3d-border-angle),
+      $purp-light 0deg 5deg,
+      transparent 5deg 10deg
+    );
+    content: "";
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.2s;
+    -webkit-mask:
+      linear-gradient(#000 0 0) content-box,
+      linear-gradient(#000 0 0);
+    mask:
+      linear-gradient(#000 0 0) content-box,
+      linear-gradient(#000 0 0);
+    -webkit-mask-composite: xor;
+    mask-composite: exclude;
+  }
+
+  &:hover,
+  &.is-dragging {
+    border-color: transparent;
+    box-shadow: 0 0 24px rgba(150, 116, 249, 0.25);
+
+    &::before {
+      opacity: 1;
+      animation: svg3d-border-orbit 8s linear infinite;
+    }
+  }
+
+  &.is-dragging {
+    background: rgba(101, 66, 214, 0.5);
+  }
+
+  // With a file loaded the panel steps back — the artwork below it is the
+  // thing to look at now
+  &.has-file {
+    padding: 16px 20px;
+    background: rgba(0, 0, 0, 0.35);
+    border-style: solid;
+    border-color: rgba(255, 255, 255, 0.12);
+  }
+
+  input[type="file"] {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    opacity: 0;
+    cursor: pointer;
+  }
+
+  // The input above owns the clicks; the label is only the artwork
+  label {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 10px;
+    pointer-events: none;
+    font-family: "Inconsolata", monospace;
+    font-size: 14px;
+    letter-spacing: 0.5px;
+    color: rgba(255, 255, 255, 0.85);
+  }
+}
+
+// The uploaded artwork, flat. An <img> rather than inline markup — see
+// the note in SvgTo3d.tsx
+.svg3d-flat-preview {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  margin-top: 16px;
+  padding: 20px;
+  // Opaque-ish rather than a backdrop-filter: blurring over the canvases
+  // forces a backdrop re-capture every frame (see the /about regression)
+  background: rgba(0, 0, 0, 0.45);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 16px;
+  box-sizing: border-box;
+
+  img {
+    max-width: 100%;
+    max-height: 260px;
+  }
+}
+
+.svg3d-section {
+  width: 100%;
+  margin-top: 32px;
+}
+
+.svg3d-section-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.svg3d-section-title {
+  font-family: "Inconsolata", monospace;
+  font-size: 12px;
+  font-weight: 400;
+  letter-spacing: 2px;
+  text-transform: uppercase;
+  color: rgba(255, 255, 255, 0.6);
+  margin: 0 0 12px;
+}
+
+.svg3d-section-head .svg3d-section-title {
+  margin-bottom: 0;
+}
+
+// A quiet secondary button, borrowed from the studio's idea pills
+.svg3d-ghost {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin-bottom: 12px;
+  padding: 5px 12px;
+  background: transparent;
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  border-radius: 999px;
+  color: rgba(255, 255, 255, 0.75);
+  font-family: "Inconsolata", monospace;
+  font-size: 12px;
+  cursor: pointer;
+  transition:
+    color 0.2s,
+    border-color 0.2s,
+    background-color 0.2s;
+
+  &:hover {
+    color: $purp-light;
+    border-color: $purp-light-transparent;
+    background: $purp-light-transparent-25;
+  }
+}
+
+// The orbit viewer. Its renderer clears to transparent, so this
+// background is what the model actually floats on — and the stars keep
+// showing through it.
+.svg3d-viewer {
+  width: 100%;
+  height: 420px;
+  background: rgba(0, 0, 0, 0.45);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 16px;
+  overflow: hidden;
+
+  @media (max-width: $breakpoint-sm) {
+    height: 320px;
+  }
+
+  canvas {
+    display: block;
+    // OrbitControls wants the drags and the wheel; the page keeps the rest
+    touch-action: none;
+  }
+}
+
+.svg3d-hint,
+.svg3d-muted,
+.svg3d-empty,
+.svg3d-footnote {
+  font-family: "Inconsolata", monospace;
+  font-size: 12px;
+  color: rgba(255, 255, 255, 0.5);
+}
+
+.svg3d-hint {
+  margin: 10px 2px 0;
+}
+
+.svg3d-empty {
+  margin: 0;
+  font-size: 13px;
+}
+
+.svg3d-footnote {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  margin: 20px 0 0;
+  text-align: center;
+
+  // Two lines on a phone; the cube shouldn't get squeezed to make room
+  svg {
+    flex-shrink: 0;
+  }
+}
+
+// Settings panel + per-part cards share one surface
+.svg3d-panel,
+.svg3d-part {
+  width: 100%;
+  padding: 14px 16px;
+  background: rgba(0, 0, 0, 0.4);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 14px;
+  box-sizing: border-box;
+}
+
+.svg3d-panel {
+  display: grid;
+  gap: 14px;
+}
+
+.svg3d-row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 10px 16px;
+}
+
+.svg3d-row-label {
+  flex: 0 0 auto;
+  min-width: 170px;
+  font-family: "Inconsolata", monospace;
+  font-size: 13px;
+  letter-spacing: 0.5px;
+  color: rgba(255, 255, 255, 0.72);
+}
+
+// Two named choices rather than an on/off switch, so these are buttons
+// with aria-pressed — same call the corner view switch makes
+.svg3d-seg {
+  display: inline-flex;
+  gap: 6px;
+}
+
+.svg3d-seg-option {
+  padding: 6px 14px;
+  background: transparent;
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  border-radius: 999px;
+  color: rgba(255, 255, 255, 0.7);
+  font-family: "Inconsolata", monospace;
+  font-size: 12px;
+  letter-spacing: 0.5px;
+  cursor: pointer;
+  transition:
+    color 0.2s,
+    border-color 0.2s,
+    background-color 0.2s;
+
+  &:hover {
+    color: $purp-light;
+    border-color: $purp-light-transparent;
+  }
+
+  &[aria-pressed="true"] {
+    background: rgba(101, 66, 214, 0.55);
+    border-color: $purp-light;
+    color: #fff;
+  }
+}
+
+.svg3d-number {
+  width: 120px;
+  padding: 7px 10px;
+  background: rgba(0, 0, 0, 0.45);
+  border: 1px solid rgba(255, 255, 255, 0.18);
+  border-radius: 8px;
+  color: #fff;
+  font-family: "Inconsolata", monospace;
+  font-size: 14px;
+  outline: none;
+  transition: border-color 0.2s;
+
+  &:focus {
+    border-color: $purp-light;
+  }
+}
+
+.svg3d-parts {
+  list-style: none;
+  display: grid;
+  gap: 10px;
+  width: 100%;
+  margin: 0;
+  padding: 0;
+}
+
+.svg3d-part {
+  display: grid;
+  gap: 12px;
+}
+
+.svg3d-part-head {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 10px;
+  font-family: "Inconsolata", monospace;
+  font-size: 13px;
+  color: rgba(255, 255, 255, 0.9);
+}
+
+// The fill color this part came from
+.svg3d-chip {
+  width: 18px;
+  height: 18px;
+  border-radius: 5px;
+  border: 1px solid rgba(255, 255, 255, 0.25);
+}
+
+// Whether the solid is printable as-is: every edge shared by exactly two
+// triangles. A bad count means the slicer will have to guess.
+.svg3d-tag {
+  margin-left: auto;
+  padding: 2px 10px;
+  border-radius: 999px;
+  font-family: "Inconsolata", monospace;
+  font-size: 11px;
+  letter-spacing: 0.5px;
+
+  &.is-ok {
+    background: $green-light-transparent;
+    border: 1px solid rgba(108, 212, 155, 0.4);
+    color: #6cd49b;
+  }
+
+  &.is-warn {
+    background: rgba(224, 181, 114, 0.15);
+    border: 1px solid rgba(224, 181, 114, 0.4);
+    color: #e0b572;
+  }
+}
+
+.svg3d-part-controls {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-end;
+  gap: 12px 16px;
+}
+
+.svg3d-field {
+  display: grid;
+  gap: 5px;
+
+  span {
+    font-family: "Inconsolata", monospace;
+    font-size: 11px;
+    letter-spacing: 0.5px;
+    text-transform: uppercase;
+    color: rgba(255, 255, 255, 0.5);
+  }
+}
+
+.svg3d-check {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  padding-bottom: 8px;
+  font-family: "Inconsolata", monospace;
+  font-size: 13px;
+  color: rgba(255, 255, 255, 0.78);
+  cursor: pointer;
+
+  input {
+    width: 15px;
+    height: 15px;
+    accent-color: $purp-light;
+    cursor: pointer;
+  }
 }
