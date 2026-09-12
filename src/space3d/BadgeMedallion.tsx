@@ -32,10 +32,11 @@ import { applyWireSkin, wireState } from "./solar/wireSkin";
  * corner (BadgeLink, mounted app-wide in App.tsx) — the canvas itself
  * never takes pointer input. Hover flows through badgeHoverState, the
  * same plain-mutable-module pattern as solarHover: under the cursor the
- * coin grows a touch, slows its spin to half, and blinks its caret twice
- * as fast. A click comes through the same channel (badgeAimState): the
- * spin pauses and the face swings onto the confetti's launch heading for
- * the length of the volley, so the "A"s pour out of the coin's face.
+ * coin grows a touch, blinks its caret twice as fast, and swings its face
+ * onto the confetti's launch heading — so the pose a click fires from is
+ * the one the visitor is already looking at. badgeAimState holds that
+ * same pose for the length of a volley, which outlasts a pointer that has
+ * moved on, and the "A"s pour out of the coin's face either way.
  *
  * Mesh view: the coin body takes the wire skin on a square lattice, and
  * every cell between the wires is a mirror facet — the disco sun's look —
@@ -121,17 +122,19 @@ const CARET_HALF_PERIOD_S = 0.53;
 // Hover doubles the blink rate
 const CARET_BLINK_RATE_HOVER = 2;
 const SPIN_SPEED = 0.6; // rad/s → ~10s per revolution
-// Under the cursor the coin settles to half speed — a "look at me" hold
-// rather than a flourish
+// The free spin idles at half speed under the cursor. It is out of sight
+// there (the aim pose is what's rendered) — this is the angle the coin
+// picks back up from on release, and easing it down keeps that handoff
+// from looking like a jump.
 const SPIN_SPEED_HOVER = SPIN_SPEED * 0.5;
 const HOVER_SCALE = 1.05;
 // Hover ease rate (per second): ~0.1s time constant, so the scale and
 // spin changes read as a short transition rather than a snap
 const HOVER_EASE_RATE = 10;
 /**
- * Aim pose: on click the coin turns its face up the confetti's heading
- * (up and to the left) and tips this far off the camera axis — enough to
- * read as "pointed that way" while the signature stays legible.
+ * Aim pose: the coin turns its face up the confetti's heading (up and to
+ * the left) and tips this far off the camera axis — enough to read as
+ * "pointed that way" while the signature stays legible.
  */
 const AIM_TILT = THREE.MathUtils.degToRad(34);
 const AIM_HEADING = THREE.MathUtils.degToRad(BADGE_LAUNCH_ANGLE_DEG);
@@ -511,9 +514,13 @@ const BadgeMedallion = ({ isLanding }: { isLanding: boolean }) => {
         (SPIN_SPEED + (SPIN_SPEED_HOVER - SPIN_SPEED) * hoverEase.current);
     }
 
-    // Aim (a click, via badgeConfetti): swing the face onto the launch
-    // heading over AIM_S, hold it for the volley, then ease back
-    const aiming = badgeAimState.aiming && !reducedMotion.current;
+    // Aim: swing the face onto the launch heading over AIM_S and hold it
+    // there — while the cursor is on the coin, and for the length of a
+    // volley (badgeAimState), which carries the pose past a pointerleave
+    // mid-flight. Then ease back into the free spin.
+    const aiming =
+      (badgeHoverState.hovered || badgeAimState.aiming) &&
+      !reducedMotion.current;
     // Take the short way round from wherever the spin happens to be. Only
     // from a standing start: re-picking the target mid-swing (a click
     // during the ease-back) could shift it a full turn and jump the coin.
