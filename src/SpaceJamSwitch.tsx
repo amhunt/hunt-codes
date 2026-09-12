@@ -19,31 +19,35 @@ import { Tooltip, TooltipContent, TooltipTrigger } from "ui/tooltip";
  * click at them.
  *
  * It starts **off** — sound that arrives uninvited is worse than sound
- * nobody found — so the switch advertises itself instead: a beat after
- * load the tooltip opens on its own, then gets out of the way. Flipping
- * it on is itself the gesture autoplay policy wants, so the pad comes up
- * immediately.
+ * nobody found — so the switch advertises itself instead: a few seconds
+ * after load the tooltip opens on its own, then gets out of the way. The
+ * same line is what a hover brings up while the switch is off, so the
+ * advert and the label never disagree. Flipping it on is itself the
+ * gesture autoplay policy wants, so the pad comes up immediately.
  *
  * Phones only show it on /projects-and-toys; elsewhere it's hidden with
  * CSS rather than unmounted, so audio started there keeps playing.
  */
 
-/** The one-time advert. Swap the line here — nothing else reads it. */
+/** The advert, and the off-state hover label — one line, so the tooltip
+ *  that opens on its own and the one a hover brings up are the same
+ *  tooltip. Swap it here; nothing else reads it. */
 const SOUND_HINT = "Sound on for the full experience";
 /** The music isn't a track, and nobody would guess that from a speaker
  *  icon — so say what it is, once, and then never again. */
 const SOUND_TOAST =
   "Sound on — the music is generated live from the scene: a chord for each view, and a chime whenever two planets line up.";
-/** Long enough that the scene has assembled, short enough to still feel
- *  like a response to arriving */
-const HINT_DELAY_MS = 2000;
+/** Long enough that the scene has assembled and the visitor has taken it
+ *  in, short enough to still feel like a response to arriving */
+const HINT_DELAY_MS = 4000;
 /** How long it lingers before withdrawing on its own */
 const HINT_LINGER_MS = 8000;
 
 const SpaceJamSwitch = () => {
   const [enabled, setEnabled] = useState(audioPrefs.enabled);
   const [open, setOpen] = useState(false);
-  /** Whether the tooltip is the advert rather than its usual label */
+  /** Whether the tooltip opened on its own — and so closes on its own,
+   *  unless a hover takes it over first */
   const [hinting, setHinting] = useState(false);
   /** The advert gets one turn per page load, however it ends */
   const hintSpent = useRef(false);
@@ -80,8 +84,9 @@ const SpaceJamSwitch = () => {
     return () => clearTimeout(timer);
   }, [hinting]);
 
-  /** Any hover or focus ends the advert and hands the tooltip back to
-   *  its usual job, mid-appearance if need be. */
+  /** Any hover or focus takes the advert over — same line, but now it
+   *  stays as long as the pointer does rather than withdrawing on its
+   *  own timer. */
   const handleOpenChange = (next: boolean) => {
     setHinting(false);
     setOpen(next);
@@ -134,16 +139,10 @@ const SpaceJamSwitch = () => {
           <span aria-hidden className="sjs-scene sjs-scene-off" />
         </SceneSwitch>
       </TooltipTrigger>
-      {/* A sentence rather than two words, so it takes the padding the
-          thin hover pill does without */}
-      <TooltipContent side="top" className={hinting ? "py-1" : undefined}>
-        <p>
-          {hinting
-            ? SOUND_HINT
-            : enabled
-              ? "Pause space jams"
-              : "Play space jams"}
-        </p>
+      {/* The advert is a sentence rather than two words, so it takes the
+          padding the thin hover pill does without */}
+      <TooltipContent side="top" className={enabled ? undefined : "py-1"}>
+        <p>{enabled ? "Pause space jams" : SOUND_HINT}</p>
       </TooltipContent>
     </Tooltip>
   );
