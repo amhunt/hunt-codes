@@ -23,6 +23,11 @@ export interface SolarPlanetConfig {
   orbitPhase: number;
   /** radians per second of self-rotation */
   spinSpeed: number;
+  /** Axial tilt (obliquity) off the orbital plane, radians: the body spins
+   *  about this tilted pole instead of straight-up world Y. Venus's ~177°
+   *  is what makes its spin read retrograde, so its spinSpeed stays
+   *  positive, as the real one's does. */
+  axialTilt?: number;
   /** Vertical (world-Y) offset from the orbital plane, world units.
    *  Planets sit at y=0; asteroids float a bit higher (near the sun's
    *  top) so they don't read as level with the sun's equator. */
@@ -70,43 +75,74 @@ export const rigState = { settled: true };
  */
 const SPEED_SCALE = 0.5;
 
+/** Earth's orbit and body radius: the anchors the other three planets are
+ *  derived from below, so the system stays proportional to the real one. */
+const EARTH_ORBIT_RADIUS = 17.5;
 const EARTH_ORBIT_SPEED = 0.09 * SPEED_SCALE;
+const EARTH_RADIUS = 1.6;
+
+/**
+ * An orbit radius paired with the angular speed Kepler's third law gives
+ * it — T² ∝ a³, so ω ∝ a^-3/2 — anchored to Earth's. Spread into a
+ * config (`...orbit(12)`) so a radius and its speed can't drift apart.
+ *
+ * The radii themselves stay compressed (Mars renders 1.34 Earth orbits
+ * out, not 1.52), and deriving each speed from the radius the body
+ * actually renders at is the point: the system is Keplerian for the
+ * orbits you can see, which is what reads on screen. The periods land
+ * within ~17% of the real ones as a bonus.
+ */
+const orbit = (orbitRadius: number) => ({
+  orbitRadius,
+  orbitSpeed: EARTH_ORBIT_SPEED * (orbitRadius / EARTH_ORBIT_RADIUS) ** -1.5,
+});
+
+/** Sized off Earth by the real equatorial radius ratio (km, from NASA's
+ *  planetary fact sheets): the planets are true to each other even though
+ *  the sun — radius 3, against the 175 it would need — and the orbit
+ *  radii are not. */
+const radiusVsEarth = (km: number) => EARTH_RADIUS * (km / 6371);
+
+const tilt = (degrees: number) => THREE.MathUtils.degToRad(degrees);
+
 export const PLANETS: SolarPlanetConfig[] = [
   {
     name: "Mercury",
     kind: "mercury",
-    radius: 0.55,
-    orbitRadius: 7.5,
-    orbitSpeed: EARTH_ORBIT_SPEED,
+    radius: radiusVsEarth(2439.7),
+    ...orbit(7.5),
     orbitPhase: 0.6,
     spinSpeed: 0.12 * SPEED_SCALE,
+    axialTilt: tilt(0.034),
   },
   {
     name: "Venus",
     kind: "venus",
-    radius: 1.05,
-    orbitRadius: 12,
-    orbitSpeed: 0.14 * SPEED_SCALE,
+    radius: radiusVsEarth(6051.8),
+    ...orbit(12),
     orbitPhase: 2.4,
-    spinSpeed: -0.05 * SPEED_SCALE,
+    // Positive, unlike before: Venus turns backwards because it is tipped
+    // almost fully over, and the 177° tilt below now supplies that.
+    spinSpeed: 0.05 * SPEED_SCALE,
+    axialTilt: tilt(177.36),
   },
   {
     name: "Earth",
     kind: "earth",
-    radius: 1.6,
-    orbitRadius: 17.5,
-    orbitSpeed: EARTH_ORBIT_SPEED,
+    radius: EARTH_RADIUS,
+    ...orbit(EARTH_ORBIT_RADIUS),
     orbitPhase: 4.2,
     spinSpeed: 0.03 * SPEED_SCALE,
+    axialTilt: tilt(23.44),
   },
   {
     name: "Mars",
     kind: "mars",
-    radius: 0.85,
-    orbitRadius: 23.5,
-    orbitSpeed: 0.065 * SPEED_SCALE,
+    radius: radiusVsEarth(3389.5),
+    ...orbit(23.5),
     orbitPhase: 1.3,
     spinSpeed: 0.3 * SPEED_SCALE,
+    axialTilt: tilt(25.19),
   },
 ];
 

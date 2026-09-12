@@ -26,6 +26,18 @@ projected verts) → `.body-outline` SVG paths in `SolarOverlays.tsx`.
 - `SPEED_SCALE` in `solar/constants.ts` is the global orbital tempo; the
   asteroids must orbit at exactly `EARTH.orbitSpeed` (the home camera
   co-rotates with Earth, freezing them on screen).
+- Planet orbit speeds are derived, not tuned: `orbit(r)` in
+  `solar/constants.ts` hands back the radius with the speed Kepler's
+  third law gives it off Earth's, so moving an orbit radius re-times that
+  orbit automatically. Don't reintroduce a hand-set `orbitSpeed` — the
+  asteroids, which share Earth's, are the only bodies exempt. Planet
+  radii come off `EARTH_RADIUS` by the real km ratio the same way.
+- The planets carry their real axial tilt, and `Planet.tsx` sets
+  `rotation-order="ZYX"` so the composed rotation is Rz(tilt)·Ry(spin) —
+  a spin about the tilted pole. The default XYZ order composes the other
+  way and precesses the pole into a wobble. Venus's retrograde spin comes
+  from its ~177° tilt, so its `spinSpeed` is positive; negating it too
+  would cancel back to prograde.
 - `offAxisSquash` must apply R·S·R⁻¹ (wrapper rotation + inner
   counter-rotation); dropping the counter-rotation reorients textured
   globes (Earth reads upside down) — regression to watch for.
