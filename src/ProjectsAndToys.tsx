@@ -29,8 +29,9 @@ import { ZIP_BLOG_POST_URL } from "./workLinks";
  * scene — the camera swoops in from /home and the satellite's parts fade
  * in as the links (Satellite.tsx): the scroll off its antenna tips is
  * the Zip blog post, the screen on its head the launch reel, the pen
- * under the cone the SVG Studio, the vase on top the print store. The
- * 808 pad floating beside it opens the synth studio (DrumPad).
+ * under the cone the SVG Studio, the vase on top the print store, the
+ * extruded tile below the head the SVG-to-3D tool. The 808 pad floating
+ * beside it opens the synth studio (DrumPad).
  *
  * The canvases take no pointer input, so each part gets an invisible
  * overlay here that BodyAnchors glues to its projection every frame
@@ -46,6 +47,7 @@ const PART_TOOLTIP = {
   screen: "Zip - Internal Brand Launch Video",
   pen: "SVG Studio",
   vase: "3D Print Store",
+  tile: "SVG to 3D",
 } as const satisfies Record<SatellitePart, string>;
 
 const partHoverProps = (part: SatellitePart) => ({
@@ -171,6 +173,13 @@ const ProjectsAndToys = () => {
           <PartLink part="vase">
             {({ outline, ...props }) => (
               <Link {...props} to="/artifacts">
+                {outline}
+              </Link>
+            )}
+          </PartLink>
+          <PartLink part="tile">
+            {({ outline, ...props }) => (
+              <Link {...props} to="/svg-to-3d">
                 {outline}
               </Link>
             )}

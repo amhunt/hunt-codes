@@ -5406,7 +5406,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"earcut@npm:^3.2.3":
+"earcut@npm:^3.0.2":
   version: 3.2.3
   resolution: "earcut@npm:3.2.3"
   checksum: 10c0/38660ec1ce55eecbbbf11d5a0072934c9f33851527bf5e40923c6656c3a0c6b00bb449ae8f4b28f89a0b249fe18568e630a8ea9ee39ce2707a50a89531a2f995
@@ -6546,7 +6546,6 @@ __metadata:
     "@typescript-eslint/parser": "npm:^8.70.0"
     classnames: "npm:^2.5.1"
     clsx: "npm:^2.1.1"
-    earcut: "npm:^3.2.3"
     eslint: "npm:^10.10.0"
     eslint-import-resolver-typescript: "npm:^4.4.5"
     eslint-plugin-import-x: "npm:^4.17.1"
@@ -6556,11 +6555,9 @@ __metadata:
     globals: "npm:^17.12.0"
     glslx: "npm:^0.4.5"
     husky: "npm:^9.1.7"
-    jszip: "npm:^3.10.2"
     knip: "npm:^6.35.1"
     lint-staged: "npm:^17.5.0"
     lucide-react: "npm:^1.43.0"
-    polygon-clipping: "npm:^0.15.7"
     postcss: "npm:^8.5.28"
     prettier: "npm:^3.9.6"
     react: "npm:^19.3.0"
@@ -6572,6 +6569,7 @@ __metadata:
     serve: "npm:^14.2.6"
     storybook: "npm:^10.6.0"
     storybook-react-rsbuild: "npm:^3.4.2"
+    svg-to-3d: "npm:^0.1.0"
     tailwind-merge: "npm:^3.6.0"
     tailwindcss: "npm:^4.3.3"
     three: "npm:^0.185.1"
@@ -7027,7 +7025,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"jszip@npm:^3.10.2":
+"jszip@npm:^3.10.1":
   version: 3.10.2
   resolution: "jszip@npm:3.10.2"
   dependencies:
@@ -9659,6 +9657,19 @@ __metadata:
   version: 2.0.4
   resolution: "svg-parser@npm:2.0.4"
   checksum: 10c0/02f6cb155dd7b63ebc2f44f36365bc294543bebb81b614b7628f1af3c54ab64f7e1cec20f06e252bf95bdde78441ae295a412c68ad1678f16a6907d924512b7a
+  languageName: node
+  linkType: hard
+
+"svg-to-3d@npm:^0.1.0":
+  version: 0.1.0
+  resolution: "svg-to-3d@npm:0.1.0"
+  dependencies:
+    earcut: "npm:^3.0.2"
+    jszip: "npm:^3.10.1"
+    polygon-clipping: "npm:^0.15.7"
+  peerDependencies:
+    three: ">=0.185.0"
+  checksum: 10c0/792dbdfa8051d4b204e3dc5b5c44f9654f9f97657c2ae8f49b5517ef71055401f2fb51af559be159aff71c9c83d13e8f3918063ebc81d6c55ea60ac3f3405687
   languageName: node
   linkType: hard
 

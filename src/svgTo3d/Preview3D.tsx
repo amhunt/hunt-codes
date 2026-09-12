@@ -15,8 +15,7 @@ import {
   WebGLRenderer,
 } from "three";
 import { OrbitControls } from "three/examples/jsm/controls/OrbitControls.js";
-
-import type { ColorMesh } from "./svgProcessor";
+import type { ColorMesh } from "svg-to-3d";
 
 /** Build-plate grid, tinted to the site's purple rather than three's grey */
 const GRID_CENTER = 0x9e_80_f9;

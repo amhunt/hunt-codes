@@ -39,8 +39,9 @@ import InteractiveGlow from "./InteractiveGlow";
  * in (CameraRig's satellite perch) and the body's PARTS become the links:
  * a paper scroll floating off the antenna tips (the Zip blog post), a
  * little video screen set into the head (the Zip launch reel), a pen
- * floating under the cone (SVG Studio) and a mid-century vase standing
- * on top of the head (/artifacts, the 3D print store). The parts exist for that view only — they fade in on the way
+ * floating under the cone (SVG Studio), a mid-century vase standing
+ * on top of the head (/artifacts, the 3D print store) and an extruded
+ * tile off its screen-left (/svg-to-3d). The parts exist for that view only — they fade in on the way
  * there and out on the way back — and each gets the Earth treatment on
  * hover: brighten, pulsing silhouette outline, an always-on halo. The
  * same energy wave sweeps across the parts every few seconds — across
@@ -184,6 +185,40 @@ const SCROLL_WIRE_PITCH = 0.1;
  *  shows through under its wires (wireSkin `keep`) */
 const SCROLL_WIRE_KEEP = 0.2;
 const SCROLL_ROCK = 0.05;
+
+/** The extruded tile (/svg-to-3d): a flat vector composition — disc,
+ *  triangle and bar — standing proud of a chamfered plate, which is
+ *  exactly what the tool makes of a multi-color SVG. It floats below the
+ *  head mirroring the pen, which keeps it clear of the 808 pad off to
+ *  screen-left and inside the frame on phones, where the perch puts the
+ *  head left of centre and anything far to its left falls off the edge.
+ *  Center in head radii from the head's center; every other dimension is
+ *  in head radii as well, laid out on a plate of side TILE_SIZE centered
+ *  on its own origin. */
+const TILE_CENTER = { x: -1.5, y: -2, z: 0.35 };
+const TILE_SIZE = 0.95;
+const TILE_CORNER = 0.14;
+const TILE_PLATE_DEPTH = 0.1;
+const TILE_CELL_DEPTH = 0.075;
+/** Chamfer on every extruded edge — the tool's bevel option, in minature */
+const TILE_BEVEL = 0.016;
+/** Leans back a touch so the plate's top face catches the light rather
+ *  than presenting dead-on */
+const TILE_TILT = -0.28;
+/** Turning is the point — a flat drawing that keeps showing it has
+ *  depth — but it rocks through TILE_TURN rather than spinning: a full
+ *  revolution presents the blank back of the plate half the time, and
+ *  the three cells are what make it recognisable. */
+const TILE_TURN_SPEED = 0.55;
+const TILE_TURN = 0.72;
+const TILE_BOB = 0.04;
+/** The tile's self-glow (in its own colors), resting and hovered */
+const TILE_BASE_EMISSIVE = 0.55;
+const TILE_HOVER_EMISSIVE = 1.35;
+/** Mesh view: the tile is flat-faced like the scroll, so it takes the
+ *  cartesian lattice rather than lat/long — cell in head radii */
+const TILE_WIRE_PITCH = 0.11;
+const TILE_WIRE_KEEP = 0.25;
 /** The scroll's self-glow (in its own colors), resting and hovered */
 const SCROLL_BASE_EMISSIVE = 0.5;
 const SCROLL_HOVER_EMISSIVE = 1.3;
@@ -197,13 +232,13 @@ const prefersReducedMotion =
  *  center, 90 = the limb), `azimuth` degrees counter-clockwise from
  *  screen-right. The antenna cone reaches off screen-right, the beacon
  *  (capping the head opposite it) peeks past the upper-left limb on its
- *  own, and the pen and the scroll float off the head (PEN_CENTER,
- *  SCROLL_CENTER). The vase takes the
+ *  own, and the pen, the scroll and the tile float off the head
+ *  (PEN_CENTER, SCROLL_CENTER, TILE_CENTER). The vase takes the
  *  top of the head — just short of the limb, so its foot visibly rests
  *  on the curve — where its axis is screen-up and it stands upright on
  *  screen; the screen fills the lower right. */
 const HEAD_PART_PLACEMENTS: Record<
-  Exclude<SatellitePart, "scroll" | "pen">,
+  Exclude<SatellitePart, "scroll" | "pen" | "tile">,
   { polar: number; azimuth: number }
 > = {
   screen: { polar: 40, azimuth: -20 },
@@ -284,14 +319,17 @@ export default function Satellite({
   const legMeshes = useRef<THREE.Mesh[]>([]);
   const penMeshes = useRef<THREE.Mesh[]>([]);
   const scrollMeshes = useRef<THREE.Mesh[]>([]);
+  const tileMeshes = useRef<THREE.Mesh[]>([]);
   const partAnchors = useRef<Record<SatellitePart, THREE.Object3D | null>>({
     scroll: null,
     screen: null,
     pen: null,
     vase: null,
+    tile: null,
   });
   const penPhase = useRef(0);
   const scrollPhase = useRef(0);
+  const tilePhase = useRef(0);
   const opacity = useRef(visible ? 1 : 0);
   const partsOpacity = useRef(partsActive ? 1 : 0);
   /** parts × body opacity: what the part halos follow */
@@ -314,6 +352,11 @@ export default function Satellite({
   const registerScroll = useCallback((mesh: THREE.Mesh | null) => {
     if (mesh && !scrollMeshes.current.includes(mesh)) {
       scrollMeshes.current.push(mesh);
+    }
+  }, []);
+  const registerTile = useCallback((mesh: THREE.Mesh | null) => {
+    if (mesh && !tileMeshes.current.includes(mesh)) {
+      tileMeshes.current.push(mesh);
     }
   }, []);
   const anchorRef = useMemo(
@@ -450,6 +493,42 @@ export default function Satellite({
         emissiveIntensity: SCROLL_BASE_EMISSIVE * 0.6,
         transparent: true,
       }),
+      // The tile: a dark plate carrying three filament colors, each its
+      // own part the way the tool splits an SVG by fill. Glowing in
+      // their own colors like the rest of the parts on this shadowed
+      // side.
+      tilePlate: new THREE.MeshStandardMaterial({
+        color: "#3c2f6b",
+        metalness: 0.1,
+        roughness: 0.75,
+        emissive: "#3c2f6b",
+        emissiveIntensity: TILE_BASE_EMISSIVE * 0.7,
+        transparent: true,
+      }),
+      tileCellA: new THREE.MeshStandardMaterial({
+        color: "#9e80f9",
+        metalness: 0,
+        roughness: 0.6,
+        emissive: "#9e80f9",
+        emissiveIntensity: TILE_BASE_EMISSIVE,
+        transparent: true,
+      }),
+      tileCellB: new THREE.MeshStandardMaterial({
+        color: "#54d6c4",
+        metalness: 0,
+        roughness: 0.6,
+        emissive: "#54d6c4",
+        emissiveIntensity: TILE_BASE_EMISSIVE,
+        transparent: true,
+      }),
+      tileCellC: new THREE.MeshStandardMaterial({
+        color: "#ffc27a",
+        metalness: 0,
+        roughness: 0.6,
+        emissive: "#ffc27a",
+        emissiveIntensity: TILE_BASE_EMISSIVE,
+        transparent: true,
+      }),
     };
     // Mesh view's wire skin. The screen and the beacon bulb sit it out:
     // the display is live UI (the video still), the bulb is a light, and
@@ -467,6 +546,10 @@ export default function Satellite({
       parchment: "#ffe9b8",
       dowel: "#ffcfa0",
       ink: "#c3b0ff",
+      tilePlate: "#b9a6ff",
+      tileCellA: "#c9b8ff",
+      tileCellB: "#7fe9dc",
+      tileCellC: "#ffd9a8",
     };
     // The scroll is flat: lat/long lines all met at the sheet's centre
     // and read as a web, so its three materials take the cartesian
@@ -478,6 +561,14 @@ export default function Satellite({
       "dowel",
       "ink",
     ]);
+    // The tile is flat-faced for the same reason, so it takes the box
+    // grid too — on its own pitch, since it is a smaller slab.
+    const tileParts = new Set<keyof typeof set>([
+      "tilePlate",
+      "tileCellA",
+      "tileCellB",
+      "tileCellC",
+    ]);
     (Object.keys(set) as (keyof typeof set)[]).forEach((part) => {
       if (part === "display" || part === "bulb") return;
       applyWireSkin(set[part], {
@@ -486,6 +577,13 @@ export default function Satellite({
               grid: "box",
               pitch: SCROLL_WIRE_PITCH * config.radius,
               keep: SCROLL_WIRE_KEEP,
+            }
+          : {}),
+        ...(tileParts.has(part)
+          ? {
+              grid: "box",
+              pitch: TILE_WIRE_PITCH * config.radius,
+              keep: TILE_WIRE_KEEP,
             }
           : {}),
         // Small hardware, so a coarse grid — a fine one turns a 0.3-unit
@@ -513,6 +611,10 @@ export default function Satellite({
       set.parchment,
       set.dowel,
       set.ink,
+      set.tilePlate,
+      set.tileCellA,
+      set.tileCellB,
+      set.tileCellC,
     ].forEach((material) => applyShimmer(material, [partsWave.uniforms]));
     return set;
   }, [partsWave, wave, config.radius]);
@@ -531,6 +633,10 @@ export default function Satellite({
       materials.parchment,
       materials.dowel,
       materials.ink,
+      materials.tilePlate,
+      materials.tileCellA,
+      materials.tileCellB,
+      materials.tileCellC,
     ],
     [materials],
   );
@@ -603,6 +709,71 @@ export default function Satellite({
     [bodyRadius],
   );
   useEffect(() => () => vaseGeometry.dispose(), [vaseGeometry]);
+
+  /** The tile's four extrusions: a chamfered plate and the three cells
+   *  standing proud of it. Drawn flat on XY and pushed along +Z — the
+   *  same operation the tool performs on an SVG's fills — then centred
+   *  on the plate's mid-plane so the group turns about its own middle. */
+  const tileGeometry = useMemo(() => {
+    const u = bodyRadius;
+    const rounded = (w: number, h: number, r: number, cx = 0, cy = 0) => {
+      const shape = new THREE.Shape();
+      const x = cx - w / 2;
+      const y = cy - h / 2;
+      shape.moveTo(x + r, y);
+      shape.lineTo(x + w - r, y);
+      shape.quadraticCurveTo(x + w, y, x + w, y + r);
+      shape.lineTo(x + w, y + h - r);
+      shape.quadraticCurveTo(x + w, y + h, x + w - r, y + h);
+      shape.lineTo(x + r, y + h);
+      shape.quadraticCurveTo(x, y + h, x, y + h - r);
+      shape.lineTo(x, y + r);
+      shape.quadraticCurveTo(x, y, x + r, y);
+      return shape;
+    };
+    const extrude = (shape: THREE.Shape, depth: number) =>
+      new THREE.ExtrudeGeometry(shape, {
+        depth: depth * u,
+        bevelEnabled: true,
+        bevelSize: TILE_BEVEL * u,
+        bevelThickness: TILE_BEVEL * u,
+        bevelSegments: 1,
+        curveSegments: 12,
+      });
+
+    const plate = extrude(
+      rounded(TILE_SIZE * u, TILE_SIZE * u, TILE_CORNER * u),
+      TILE_PLATE_DEPTH,
+    );
+    plate.translate(0, 0, (-TILE_PLATE_DEPTH * u) / 2);
+
+    const disc = new THREE.Shape();
+    disc.absarc(-0.2 * u, 0.18 * u, 0.15 * u, 0, Math.PI * 2, false);
+
+    const tri = new THREE.Shape();
+    const tx = 0.21 * u;
+    const ty = 0.16 * u;
+    const ts = 0.17 * u;
+    tri.moveTo(tx, ty + ts);
+    tri.lineTo(tx + ts * 0.92, ty - ts * 0.7);
+    tri.lineTo(tx - ts * 0.92, ty - ts * 0.7);
+    tri.closePath();
+
+    const bar = rounded(0.58 * u, 0.15 * u, 0.075 * u, 0, -0.24 * u);
+
+    return {
+      plate,
+      cellA: extrude(disc, TILE_CELL_DEPTH),
+      cellB: extrude(tri, TILE_CELL_DEPTH),
+      cellC: extrude(bar, TILE_CELL_DEPTH),
+    };
+  }, [bodyRadius]);
+  useEffect(
+    () => () => {
+      for (const geometry of Object.values(tileGeometry)) geometry.dispose();
+    },
+    [tileGeometry],
+  );
 
   useFrame(({ clock, camera, size }, delta) => {
     const t = clock.elapsedTime;
@@ -701,6 +872,12 @@ export default function Satellite({
     glowTo(materials.parchment, scrollGlow);
     glowTo(materials.dowel, scrollGlow * 0.8);
     glowTo(materials.ink, scrollGlow * 0.6);
+    const tileGlow =
+      partHovered === "tile" ? TILE_HOVER_EMISSIVE : TILE_BASE_EMISSIVE;
+    glowTo(materials.tilePlate, tileGlow * 0.7);
+    glowTo(materials.tileCellA, tileGlow);
+    glowTo(materials.tileCellB, tileGlow);
+    glowTo(materials.tileCellC, tileGlow);
 
     // The pen drifts — a slow bob and a rock of its slant — frozen while
     // hovered so the outline is cut from a still pose (and held still
@@ -731,6 +908,26 @@ export default function Satellite({
         SCROLL_CENTER.z * bodyRadius,
       );
       scroll.rotation.z = SCROLL_SLANT + Math.sin(phase * 0.7) * SCROLL_ROCK;
+    }
+    // The tile rocks about its own upright: a flat drawing that keeps
+    // showing it has a thickness, without ever turning its blank back to
+    // the camera. Frozen while hovered so the outline is cut from a
+    // still pose, and held square under reduced motion.
+    const tile = partAnchors.current.tile;
+    if (tile) {
+      if (partHovered !== "tile" && !prefersReducedMotion) {
+        tilePhase.current += delta;
+      }
+      const phase = tilePhase.current;
+      tile.position.set(
+        TILE_CENTER.x * bodyRadius,
+        (TILE_CENTER.y + Math.sin(phase * 1.05) * TILE_BOB) * bodyRadius,
+        TILE_CENTER.z * bodyRadius,
+      );
+      tile.rotation.x = TILE_TILT;
+      tile.rotation.y = prefersReducedMotion
+        ? 0
+        : Math.sin(phase * TILE_TURN_SPEED) * TILE_TURN;
     }
 
     if (group.current) {
@@ -785,11 +982,13 @@ export default function Satellite({
           ? scrollMeshes.current
           : partHovered === "pen"
             ? penMeshes.current
-            : [
-                partHovered === "screen"
-                  ? screenBezel.current
-                  : vaseBody.current,
-              ].filter((mesh): mesh is THREE.Mesh => mesh !== null);
+            : partHovered === "tile"
+              ? tileMeshes.current
+              : [
+                  partHovered === "screen"
+                    ? screenBezel.current
+                    : vaseBody.current,
+                ].filter((mesh): mesh is THREE.Mesh => mesh !== null);
       writeSilhouette(
         satellitePartOutlineId(partHovered),
         meshes,
@@ -887,6 +1086,43 @@ export default function Satellite({
               />
               <InteractiveGlow
                 radius={satellitePartState.vase.radius}
+                opacityRef={partsShown}
+                enabled={partsActive}
+                strength={0.35}
+              />
+            </group>
+            {/* The extruded tile (/svg-to-3d): three filament colors
+                standing proud of a chamfered plate — what the tool makes
+                of a multi-color SVG. Its cells sit on the plate's top
+                face; the frame loop drives the pose (a bob and a slow
+                rock, so the thickness reads) and the group doubles as
+                the anchor. */}
+            <group ref={anchorRef.tile}>
+              <mesh
+                ref={registerTile}
+                geometry={tileGeometry.plate}
+                material={materials.tilePlate}
+              />
+              <mesh
+                ref={registerTile}
+                geometry={tileGeometry.cellA}
+                material={materials.tileCellA}
+                position={[0, 0, (TILE_PLATE_DEPTH / 2) * bodyRadius]}
+              />
+              <mesh
+                ref={registerTile}
+                geometry={tileGeometry.cellB}
+                material={materials.tileCellB}
+                position={[0, 0, (TILE_PLATE_DEPTH / 2) * bodyRadius]}
+              />
+              <mesh
+                ref={registerTile}
+                geometry={tileGeometry.cellC}
+                material={materials.tileCellC}
+                position={[0, 0, (TILE_PLATE_DEPTH / 2) * bodyRadius]}
+              />
+              <InteractiveGlow
+                radius={satellitePartState.tile.radius}
                 opacityRef={partsShown}
                 enabled={partsActive}
                 strength={0.35}
