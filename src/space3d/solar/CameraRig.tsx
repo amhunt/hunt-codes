@@ -18,6 +18,7 @@ import {
 import { starPanState } from "../starPan";
 import { JOURNEY_STOPS, scrollTransitionState } from "../../scrollTransition";
 import { journeyState } from "../../rocketJourney";
+import { LANDING_STACK_MIN_WIDTH_PX } from "../starSampling";
 import { SYNTH_CAM_HEIGHT, SYNTH_ORIGIN } from "../../synthSpec";
 
 /**
@@ -243,7 +244,7 @@ function computeGoal(
     );
     goalLook.set(SYNTH_ORIGIN.x, SYNTH_ORIGIN.y, SYNTH_ORIGIN.z);
   } else if (view === "landing") {
-    if (viewport.width >= LG_BREAKPOINT_PX) {
+    if (viewport.width >= LANDING_STACK_MIN_WIDTH_PX) {
       // Pan the camera + look target left (−X) by the world distance
       // that puts the sun at LANDING_SUN_X: NDC x = 2·X − 1, times the
       // visible half-width at the sun's plane

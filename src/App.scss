@@ -2461,19 +2461,29 @@ body.life-timeline-present {
   }
 }
 
-// ─── Landing page dock (lg+) ────────────────
+// ─── Landing page dock (md+) ────────────────
 // With the title stacked in a left column (starSampling's stacked
-// layout) the coin's hit target parks top-right, off the title's line
-// (BadgeMedallion moves the coin itself to match). The two switches used
-// to dock on the title's 5vw margin here; they sit in the same corner
-// they do everywhere else instead, so nothing jumps on the way to /home.
-// `on-landing` rides <body> while Landing.tsx is mounted.
+// layout, from $breakpoint-sm up) the coin's hit target parks top-right,
+// off the title's line (BadgeMedallion moves the coin itself to match).
+// The view switch takes its lg+ spot beside the music switch at every
+// stacked size, since the coin now owns the top-right corner it would
+// otherwise sit in below lg. `on-landing` rides <body> while Landing.tsx
+// is mounted.
 body.on-landing {
-  @media (min-width: $breakpoint-lg) {
+  @media (min-width: $breakpoint-sm) {
     .badge-link {
       top: calc(48px + env(safe-area-inset-top, 0px));
       right: calc(48px + env(safe-area-inset-right, 0px));
       bottom: auto;
+    }
+
+    .view-mode-switch {
+      top: auto;
+      right: auto;
+      left: calc(
+        1rem + #{$switch-width} + 20px + env(safe-area-inset-left, 0px)
+      );
+      bottom: calc(1rem + env(safe-area-inset-bottom, 0px));
     }
   }
 }
