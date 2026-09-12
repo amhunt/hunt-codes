@@ -1,12 +1,7 @@
 import React, { useEffect, useMemo, useRef, useState } from "react";
 import cx from "classnames";
 
-import {
-  Tooltip,
-  TooltipContent,
-  TooltipProvider,
-  TooltipTrigger,
-} from "./ui/tooltip";
+import { Tooltip, TooltipContent, TooltipTrigger } from "./ui/tooltip";
 import airbnbLogo from "./assets/logos/airbnb.svg";
 import argosLogo from "./assets/logos/argos.svg";
 import princetonLogo from "./assets/logos/princeton.svg";
@@ -32,29 +27,26 @@ type Blurb = {
 type Era = Blurb & {
   /** Segment fill. Life eras share a color; work walks up the purple ramp */
   color: string;
-  /** Company mark shown in the bar — three eras are all "Engineer", and
-   *  the logo is what tells them apart at a glance */
+  /** Three eras are all "Engineer"; the logo is what tells them apart */
   logo?: string;
-  /** The logo's rendered width at the bar's 16px logo height, for the
-   *  fit gate; square marks leave it off (LOGO_PX). Wordmarks run wider. */
+  /** Rendered width at the bar's 16px logo height, for the fit gate.
+   *  Square marks leave it off (LOGO_PX); wordmarks run wider. */
   logoWidth?: number;
-  /** What the bar says next to the logo, when it isn't the title: a
-   *  company name, or `null` for logo only (Zip's mark is its name). The
-   *  tooltip and aria-label always carry the title. */
+  /** What the bar says next to the logo when it isn't the title, or
+   *  `null` for logo only (Zip's mark is its name). The tooltip and
+   *  aria-label always carry the title. */
   label?: string | null;
   start: number;
   /** Left off for the era still running — it grows to today on its own */
   end?: number;
-  /**
-   * Childhood only: 18 years would swallow the bar, so it runs off the
-   * left edge of the screen and fades instead of starting somewhere
-   */
+  /** Childhood only: 18 years would swallow the bar, so it runs off the
+   *  left edge and fades instead of starting somewhere */
   openStart?: boolean;
 };
 
-// Month boundaries are approximate where the résumé only gives a year —
-// they set the segment widths, never the dates on screen. The tooltip
-// prints `dates`, which matches the résumé exactly.
+// Month boundaries are approximate where the résumé gives only a year —
+// they set segment widths, never the dates on screen (the tooltip prints
+// `dates`, which matches the résumé exactly).
 const eras: Era[] = [
   {
     title: "Child",
@@ -135,8 +127,8 @@ const eras: Era[] = [
 
 /**
  * The open slot after today: no duration, so no place in the time math —
- * it's a fixed-width tail (see --life-future-w) that fades out to the
- * right the way childhood fades in on the left.
+ * a fixed-width tail (--life-future-w) that fades out to the right the
+ * way childhood fades in on the left.
  */
 const future: Blurb = {
   title: "future",
@@ -147,9 +139,8 @@ const future: Blurb = {
 
 /**
  * Where the time axis starts: the first era that isn't `openStart`.
- * Childhood sits off the axis as a fixed-width stub on the left (see
- * --life-child-w) — at true scale it's over half a life so far, and the
- * interesting part is the right end, which now gets the whole track.
+ * Childhood sits off it as a fixed-width stub (--life-child-w) — at true
+ * scale it's over half a life, and the interesting part is the right end.
  */
 const VISIBLE_START = Math.min(
   ...eras.filter((era) => !era.openStart).map((era) => era.start),
@@ -157,8 +148,8 @@ const VISIBLE_START = Math.min(
 
 /**
  * Inconsolata's advance is half its size, so an 11px label is ~5.6px a
- * character; add the segment's own padding. A segment narrower than its
- * label renders bare and lets the color and the tooltip do the talking.
+ * character, plus the segment's padding. A segment narrower than its
+ * label renders bare and lets the color and tooltip do the talking.
  */
 const LABEL_PX_PER_CHAR = 5.6;
 const LABEL_PADDING_PX = 16;
@@ -167,11 +158,8 @@ const LABEL_PADDING_PX = 16;
 const LOGO_PX = 16;
 /** The gap between a logo and its text (.life-seg-label's gap) */
 const LOGO_GAP_PX = 5;
-/**
- * Labels may break onto two lines (the bar is tall enough for exactly
- * two), so the gate is the longer half of the best two-line split rather
- * than the whole title
- */
+/** Labels may break onto two lines (the bar fits exactly two), so the
+ *  gate is the longer half of the best split, not the whole title */
 const twoLineChars = (title: string) => {
   const words = title.split(" ");
   let longest = title.length;
@@ -184,11 +172,13 @@ const twoLineChars = (title: string) => {
 };
 /** A year tick needs room for four digits and its rule */
 const MIN_YEAR_PX = 42;
+/** Faster than the site standard: sweeping the bar to compare eras is the
+ *  whole interaction, and 500ms fights it */
+const BAR_DELAY_MS = 150;
 
-// The geometry never changes after load (the running era ends at this
-// month), so it's laid out once: each era's share of the track and the
-// narrowest segment its label fits in. Only the fits-or-not booleans
-// depend on the live bar width.
+// The geometry never changes after load, so it's laid out once: each
+// era's share of the track and the narrowest segment its label fits in.
+// Only the fits-or-not booleans depend on the live bar width.
 const now = new Date();
 const today = ym(now.getFullYear(), now.getMonth() + 1);
 const span = today - VISIBLE_START;
@@ -203,11 +193,9 @@ const layout = eras.map((era) => ({
   width: era.openStart
     ? 0
     : (((era.end ?? today) - Math.max(era.start, VISIBLE_START)) / span) * 100,
-  // The stub always shows its word: it's sized for it (.life-seg--open
-  // sets a smaller face), and the fit gate has nothing to measure it
-  // against since its width comes from CSS. Two gates for the rest: the
-  // logo alone, and the logo with its text — a segment too narrow for
-  // both still shows the mark.
+  // The stub always shows its word — it's sized for it and its width
+  // comes from CSS, so the gate has nothing to measure. Two gates for the
+  // rest: the logo alone, and the logo with its text.
   logoMinPx: era.logo
     ? (era.logoWidth ?? LOGO_PX) + LABEL_PADDING_PX
     : Infinity,
@@ -239,9 +227,9 @@ const LifeTimeline = ({
    *  visitor scrubs the camera back toward /home */
   ref?: React.Ref<HTMLDivElement>;
 }) => {
-  // Widths are percentages, so the pixel width of the track is the only
-  // thing that decides whether a label fits. Watched rather than read on
-  // render: the bar spans the viewport and resizes without a re-render.
+  // Widths are percentages, so the track's pixel width is all that
+  // decides whether a label fits. Watched rather than read on render —
+  // the bar spans the viewport and resizes without one.
   const trackRef = useRef<HTMLDivElement>(null);
   const [trackWidth, setTrackWidth] = useState(0);
   useEffect(() => {
@@ -254,9 +242,8 @@ const LifeTimeline = ({
     return () => observer.disconnect();
   }, []);
 
-  // The band sits on the bottom edge of the screen, so while it's mounted
-  // the bottom-left controls climb above it (App.scss, next to
-  // .music-toggle, keys off this class)
+  // The band sits on the bottom edge, so while it's mounted the
+  // bottom-left controls climb above it (App.scss keys off this class)
   useEffect(() => {
     document.body.classList.add("life-timeline-present");
     return () => document.body.classList.remove("life-timeline-present");
@@ -276,19 +263,17 @@ const LifeTimeline = ({
     [trackWidth],
   );
 
-  // Tooltips are controlled so a tap opens them: Radix only opens on
-  // hover and on keyboard focus, which leaves phones with no way in.
-  // Tap-to-toggle needs to know whether the tooltip was already open when
-  // the pointer went down, because Radix closes it on pointerdown before
-  // click ever fires.
+  // Controlled so a tap can open them — Radix opens on hover and focus
+  // only, which leaves phones with no way in. Tap-to-toggle has to know
+  // whether the tooltip was already open at pointerdown, since Radix
+  // closes it there before click ever fires.
   const [openKey, setOpenKey] = useState<string | null>(null);
   const wasOpen = useRef(false);
 
-  // Tap-off closes. Radix dismisses the card on a pointer-down outside
-  // it, but on touch it waits for the follow-up click (browsers delay
-  // that ~300ms), so close on the pointer-down itself and the tap on the
-  // résumé feels immediate. A tap on another segment is left to that
-  // segment's own toggle; one on the open card leaves it up.
+  // Tap-off closes. Radix dismisses on a pointer-down outside the card,
+  // but on touch it waits for the follow-up click (~300ms), so close on
+  // the pointer-down itself to feel immediate. A tap on another segment
+  // is left to that segment's toggle; one on the open card leaves it up.
   useEffect(() => {
     if (openKey === null) return;
     const onPointerDown = (event: PointerEvent) => {
@@ -309,6 +294,7 @@ const LifeTimeline = ({
   ) => (
     <Tooltip
       key={key}
+      delayDuration={BAR_DELAY_MS}
       open={openKey === key}
       onOpenChange={(open) => setOpenKey(open ? key : null)}
     >
@@ -320,10 +306,10 @@ const LifeTimeline = ({
             wasOpen.current = openKey === key;
           }}
           onClick={(event) => {
-            // Our toggle is the one that decides. Radix composes its own
-            // close-on-click after this handler and skips it once the
-            // event is default-prevented — without that, a tap that
-            // should open could be closed again in the same click.
+            // Our toggle decides. Radix composes its own close-on-click
+            // after this and skips it once the event is
+            // default-prevented — without that, a tap that should open
+            // could be closed again in the same click.
             event.preventDefault();
             setOpenKey(wasOpen.current ? null : key);
           }}
@@ -336,8 +322,7 @@ const LifeTimeline = ({
         side="top"
         sideOffset={10}
         collisionPadding={12}
-        // Strip the shared tooltip chrome (dark chip, tight padding,
-        // clipped overflow) — the card below brings its own
+        // Strip the shared tooltip chrome — the card brings its own
         className="overflow-visible bg-transparent p-0"
       >
         <div className="life-tip-card">
@@ -364,48 +349,44 @@ const LifeTimeline = ({
       role="group"
       aria-label="Timeline of my life"
     >
-      {/* Short delay: sweeping the bar to compare eras is the whole
-          interaction, and the site's standard 500ms fights it */}
-      <TooltipProvider delayDuration={150}>
-        <div className="life-timeline-bar">
-          {/* The eras share the bar with the fixed-width future tail, so
-              their percentages are of this inner track, not the bar */}
-          <div className="life-timeline-track" ref={trackRef}>
-            {segments.map(({ era, width, showLabel, showLogo, key }) =>
-              segment(
-                key,
-                era,
-                {
-                  className: cx("life-seg", era.openStart && "life-seg--open"),
-                  style: {
-                    width: cellWidth(width, era.openStart),
-                    background: era.color,
-                  },
+      <div className="life-timeline-bar">
+        {/* The eras share the bar with the future tail, so their
+            percentages are of this inner track, not the bar */}
+        <div className="life-timeline-track" ref={trackRef}>
+          {segments.map(({ era, width, showLabel, showLogo, key }) =>
+            segment(
+              key,
+              era,
+              {
+                className: cx("life-seg", era.openStart && "life-seg--open"),
+                style: {
+                  width: cellWidth(width, era.openStart),
+                  background: era.color,
                 },
-                (showLabel || showLogo) && (
-                  <span className="life-seg-label" aria-hidden="true">
-                    {era.logo && showLogo && (
-                      <img className="life-seg-logo" src={era.logo} alt="" />
-                    )}
-                    {showLabel && barText(era) && <span>{barText(era)}</span>}
-                  </span>
-                ),
+              },
+              (showLabel || showLogo) && (
+                <span className="life-seg-label" aria-hidden="true">
+                  {era.logo && showLogo && (
+                    <img className="life-seg-logo" src={era.logo} alt="" />
+                  )}
+                  {showLabel && barText(era) && <span>{barText(era)}</span>}
+                </span>
               ),
-            )}
-          </div>
-          {segment(
-            FUTURE_KEY,
-            future,
-            { className: "life-seg life-seg--future" },
-            <span className="life-seg-label life-seg-label--future">
-              {future.title}
-            </span>,
+            ),
           )}
         </div>
-      </TooltipProvider>
+        {segment(
+          FUTURE_KEY,
+          future,
+          { className: "life-seg life-seg--future" },
+          <span className="life-seg-label life-seg-label--future">
+            {future.title}
+          </span>,
+        )}
+      </div>
       {/* Year rules line up with the segment boundaries above. The
           childhood stub gets no tick (its start is decades off the axis);
-          the future tail's tick is today. */}
+          the future tail's is today. */}
       <div className="life-timeline-axis" aria-hidden="true">
         <div className="life-timeline-track">
           {segments.map(({ era, width, showYear, year, key }) => (

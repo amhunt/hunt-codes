@@ -3,10 +3,16 @@ import * as TooltipPrimitive from "@radix-ui/react-tooltip";
 import { cn } from "lib/utils";
 
 /**
- * Shared hover delay so every tooltip on the site opens with the same
- * slight pause (Radix's default 700ms feels sluggish, 0–100ms twitchy).
+ * Hover delays. One TooltipProvider at the root (App.tsx) carries the
+ * default and a <Tooltip> overrides it — which is also what makes the
+ * skip grace work: once one tooltip has opened, the next opens instantly
+ * instead of waiting again, so a row of controls sweeps as one group.
  */
+/** The site standard — Radix's own 700ms is sluggish, 0–100ms twitchy. */
 const TOOLTIP_DELAY_MS = 500;
+/** 3D body links: swept across rather than aimed at, and the tooltip is
+ *  the only thing naming what a body does, so it answers fast. */
+const TOOLTIP_BODY_DELAY_MS = 100;
 
 const TooltipProvider = TooltipPrimitive.Provider;
 
@@ -37,4 +43,5 @@ export {
   TooltipContent,
   TooltipProvider,
   TOOLTIP_DELAY_MS,
+  TOOLTIP_BODY_DELAY_MS,
 };

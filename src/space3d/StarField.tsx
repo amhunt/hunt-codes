@@ -40,38 +40,35 @@ import { nameHighlightState } from "../nameHighlight";
 import { NAME_TITLE_ID } from "../solarAnchorIds";
 
 /**
- * GPU star field. Replaces the legacy DOM/SVG stars (one element per star,
+ * GPU star field, replacing the legacy DOM/SVG stars (one element each,
  * re-rendered through React every 45ms) with THREE.Points clouds:
- * - background stars: fully static buffers, animated in the shader only
- *   (twinkle/disco pulse + the global 20s hue rotation that used to be a
- *   fullscreen CSS filter)
- * - text stars: same glyph layout and cursor-gravity behavior as before,
- *   but simulated into a Float32Array each frame with zero React work.
- * - name stars: the "andrewhunt" header on every page past the landing —
- *   the text stars' glyph sampling minus the cursor gravity (NameStars).
+ * - background: static buffers, animated in the shader only
+ * - text: the same glyph layout and cursor gravity as before, simulated
+ *   into a Float32Array each frame with zero React work
+ * - name: the "andrewhunt" header past the landing — the text stars'
+ *   sampling minus the cursor gravity (NameStars)
  */
 
 // The legacy interval advanced the phrase 3 times, then stopped (ending
 // back on the first phrase).
 const MAX_PHRASE_TRANSITIONS = 3;
 
-const HUE_ROTATION_PERIOD_S = 20; // starsHueAnim: 20s per full rotation
+const HUE_ROTATION_PERIOD_S = 20; // 20s per full rotation
 const DISCO_PERIOD_S = 8; // star-disco: 4s alternate = 8s round trip
 
-// The shader inherited the CSS stars' looping animations (hue rotation,
-// disco pulse) — and their prefers-reduced-motion coverage comes with
-// them (the App.scss reduced-motion block suppresses the CSS twins).
-// One-shot fades stay, twinkle is sub-pixel; the endless loops stop.
+// The shader inherited the CSS stars' looping animations, so it inherits
+// their reduced-motion coverage too: one-shot fades stay, twinkle is
+// sub-pixel, the endless loops stop.
 const prefersReducedMotion =
   typeof window !== "undefined" &&
   window.matchMedia?.("(prefers-reduced-motion: reduce)").matches;
 
 const HALO_FACTOR = 3; // sprite is 3x the dot diameter, for the glow halo
 
-// Twinkle (aTwinkle 0..1, the name header): the star's sprite is grown
-// TWINKLE_GROW× on the CPU (aSize) so the sparkle rays have room, while
-// the shader pulls the dot's core back in so it only grows TWINKLE_DOT_GROW×
-// instead of ballooning with the sprite.
+// Twinkle (aTwinkle 0..1, the name header): the sprite grows
+// TWINKLE_GROW× on the CPU (aSize) to give the rays room, while the
+// shader pulls the core back to TWINKLE_DOT_GROW× so the dot doesn't
+// balloon with it.
 const TWINKLE_GROW = 2.5;
 const TWINKLE_DOT_GROW = 1.6;
 
@@ -156,10 +153,9 @@ const fragmentShader = /* glsl */ `
   void main() {
     vec2 p = gl_PointCoord - 0.5;
     float d = length(p) * 2.0; // 0 at center, 1 at sprite edge
-    // The dot core fills 1/HALO_FACTOR of the sprite; the rest is glow.
-    // A slightly larger, softer-edged core makes the stars read bigger.
-    // While twinkling the sprite is TWINKLE_GROW× bigger, so the core
-    // thresholds shrink to keep the dot near its size (see TWINKLE_GROW).
+    // The core fills 1/HALO_FACTOR of the sprite, the rest is glow. While
+    // twinkling the sprite is TWINKLE_GROW× bigger, so the core thresholds
+    // shrink to hold the dot near its size.
     float coreScale = mix(
       1.0,
       ${TWINKLE_DOT_GROW.toFixed(1)} / (1.0 + ${TWINKLE_GROW.toFixed(1)}),
@@ -280,8 +276,8 @@ const useConfigureMaterial = (
   pansWithCamera = false,
 ) => {
   const gl = useThree((s) => s.gl);
-  // Chases journeyState.starDim so the stars ease back even when the
-  // ride ends abruptly (an aborted warp hard-resets the dim to 0)
+  // Chases journeyState.starDim so the stars ease back even when the ride
+  // ends abruptly — an aborted warp hard-resets the dim to 0
   const journeyDim = useRef(0);
   useEffect(() => {
     const ctx = gl.getContext();
@@ -300,8 +296,8 @@ const useConfigureMaterial = (
       ? 0
       : ((state.clock.elapsedTime / HUE_ROTATION_PERIOD_S) % 1) * Math.PI * 2;
     material.uniforms.uPixelRatio.value = state.gl.getPixelRatio();
-    // The rocket joyride dims the point stars while its warp streaks
-    // play (static dots under a lightspeed jump would give the trick away)
+    // The joyride dims the stars while its warp streaks play — static
+    // dots under a lightspeed jump would give the trick away
     journeyDim.current +=
       (journeyState.starDim - journeyDim.current) * Math.min(1, delta * 5);
     material.uniforms.uOpacity.value =
@@ -327,10 +323,9 @@ const TEXT_GLOW_STRENGTH = 0.25;
 const clampStep = (step: number) => Math.max(1, Math.min(10, step));
 
 /**
- * One tick of a text star's spring back toward its glyph position along
- * one axis: speed grows with distance² (STAR_MOVEMENT_SPEED_MULTIPLIER),
- * clamped to the legacy 1–10 px per tick and scaled by the frame's tick
- * fraction. Shared by the landing title and the name header.
+ * One tick of a text star's spring back toward its glyph, one axis: speed
+ * grows with distance² (STAR_MOVEMENT_SPEED_MULTIPLIER), clamped to the
+ * legacy 1–10 px per tick and scaled by the frame's tick fraction.
  */
 const glideToward = (
   pos: number,
@@ -372,8 +367,8 @@ const BackgroundStars = ({
       b.positions[i * 3 + 1] = domToWorldY(star.y, height);
       b.positions[i * 3 + 2] = Z_STARS;
       writeColor(b.colors, i * 3, star.color);
-      // The legacy stars were divs whose *width* was this value, so the
-      // visual radius is half of it (text stars use SVG circle r)
+      // Legacy stars were divs whose *width* was this, so the visual
+      // radius is half (text stars use SVG circle r)
       b.sizes[i] = star.widthPx / 2;
       b.phases[i] = Math.random();
       // Legacy: the smallest stars get the "disco" pulse animation
@@ -388,8 +383,8 @@ const BackgroundStars = ({
     [],
   );
 
-  // Background stars pan/wrap with the solar camera's rotation, so the
-  // sky turns with the co-rotating home and about views
+  // Background stars pan/wrap with the camera, so the sky turns with the
+  // co-rotating home and about views
   useConfigureMaterial(material, opacityRef, true);
 
   useEffect(() => () => buffers.geometry.dispose(), [buffers]);
@@ -417,9 +412,8 @@ const TextStars = ({
     setLandingPhrase(isLanding ? phrase : "");
   }, [isLanding, phrase]);
 
-  // Off the landing page there are no text stars, but the component stays
-  // mounted so the intro/phrase choreography doesn't replay on every
-  // route return (matching the legacy always-mounted Stars component).
+  // Off the landing there are no text stars, but the component stays
+  // mounted so the choreography doesn't replay on every route return.
   const targets: SampledStar[] = useMemo(
     () => (isLanding ? generateStarsForLetters(phrase, width, height) : []),
     [isLanding, phrase, width, height],
@@ -436,9 +430,9 @@ const TextStars = ({
      *  off course; once true it stays true. */
     formed: false,
   });
-  // Live star positions (DOM px, xy pairs); written every frame, read by
-  // the next phrase's useMemo for carry-over. The memo itself stays pure —
-  // the commit happens in the effect below.
+  // Live positions (DOM px, xy pairs), written every frame and read by
+  // the next phrase's useMemo for carry-over. The memo stays pure — the
+  // commit happens in the effect below.
   const livePositionsRef = useRef(new Float32Array(0));
 
   const data = useMemo(() => {
@@ -463,10 +457,9 @@ const TextStars = ({
         positions[i * 2] = targets[i].x;
         positions[i * 2 + 1] = targets[i].y;
       } else if (introSpawns) {
-        // Landing intro: start just outside the viewport, on every side,
-        // then fly in toward the title. The glide's 10px-per-tick cap
-        // means the farthest stars take a few seconds to land, which is
-        // the effect — a stream converging on the centre.
+        // Start just outside the viewport on every side and fly in. The
+        // glide's 10px-per-tick cap means the farthest stars take a few
+        // seconds — that's the effect, a stream converging on the centre.
         positions[i * 2] = introSpawns[i * 2];
         positions[i * 2 + 1] = introSpawns[i * 2 + 1];
       }
@@ -501,8 +494,7 @@ const TextStars = ({
   useEffect(() => () => material.dispose(), [material]);
 
   useFrame((_, delta) => {
-    // Fully faded out (fading toward unmount): the whole
-    // group is hidden, so don't burn CPU on the gravity sim either
+    // Fully faded out: the group is hidden, so skip the gravity sim too
     if (opacityRef.current <= 0.001) return;
     const sim = simRef.current;
     const deltaMs = Math.min(delta * 1000, 100);
@@ -524,12 +516,12 @@ const TextStars = ({
     const positions = data.positions;
     if (count === 0 || positions.length < count * 2) return;
 
-    // The legacy sim stepped once per 45ms; scale movement to keep the
-    // same speed at any frame rate (just smoother).
+    // The legacy sim stepped once per 45ms; scale movement to hold that
+    // speed at any frame rate.
     const factor = deltaMs / STAR_TICK_MS;
 
-    // No cursor gravity until the first phrase has formed: the intro's
-    // stream of stars should reach its glyphs untouched
+    // No cursor gravity until the first phrase forms — the intro's stream
+    // should reach its glyphs untouched
     const cursor = cursorRef.current;
     const cursorUsable =
       cursor != null &&
@@ -602,8 +594,8 @@ const TextStars = ({
     }
 
     sim.numCloseToCursor = numClose;
-    // The glide lands stars exactly on their glyphs (it clamps the last
-    // step to the remaining distance), so "all settled" is exact
+    // The glide clamps its last step to the remaining distance, so "all
+    // settled" is exact
     if (!sim.formed && unsettled === 0) sim.formed = true;
     data.buffers.positionsAttr.needsUpdate = true;
     data.buffers.sizesAttr.needsUpdate = true;
@@ -614,13 +606,12 @@ const TextStars = ({
 };
 
 // ─── The "andrewhunt" name header ────────────────────────────────────────
-// Off the landing page the name at the top of every page is the landing
-// title's glyph-sampled stars, laid out over the .nameTitle SVG (which
-// stays invisible but keeps the accessible text and — the part this
-// reads — the responsive box). Not interactive: no
-// cursor gravity, just the roving letter highlight AppBackground's ticker
-// drives, a random twinkle, and a one-shot assemble on mount. Thinned and
-// dimmed so it reads as a header rather than the show.
+// Past the landing, the name at the top of every page is the title's
+// glyph-sampled stars laid out over the .nameTitle SVG, which stays
+// invisible but keeps the accessible text and the responsive box this
+// reads. Not interactive: no cursor gravity, just the roving highlight
+// AppBackground's ticker drives, a random twinkle, and a one-shot
+// assemble. Thinned and dimmed so it reads as a header, not the show.
 const NAME_TEXT = "ANDREWHUNT";
 const NAME_STAR_OPACITY = 0.7;
 /** Stars per px of letter width; the landing title runs at 1 */

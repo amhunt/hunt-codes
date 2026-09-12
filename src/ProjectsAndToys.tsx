@@ -6,8 +6,8 @@ import { ArrowLeftCircleIcon } from "lucide-react";
 import {
   Tooltip,
   TooltipContent,
-  TooltipProvider,
   TooltipTrigger,
+  TOOLTIP_BODY_DELAY_MS,
 } from "./ui/tooltip";
 import {
   asteroidAnchorId,
@@ -26,19 +26,16 @@ import { ZIP_BLOG_POST_URL } from "./workLinks";
 
 /**
  * /projects-and-toys: the Sputnik satellite up close. The page IS the 3D
- * scene — the camera swoops in from /home (CameraRig's satellite perch)
- * and the satellite's parts fade in as the links (Satellite.tsx): the
- * scroll floating off its antenna tips opens the Zip blog post, the
- * screen on its head plays the Zip launch reel, the pen floating under
- * the cone is the SVG Studio and the vase standing on top is the 3D
- * print store. The canvases take no
- * pointer input, so each part gets an invisible fixed overlay here that
- * BodyAnchors glues to its projection every frame, with the same pulsing
- * silhouette outline the other link bodies use (`.satellite-link` in
- * App.scss starts hidden and fades in once the camera settles). The 808
- * drum pad floats beside the satellite here too (DrumPad — the door to
- * the synth studio), with the same kind of overlay. Beyond that: a
- * corner Home link and a one-line caption.
+ * scene — the camera swoops in from /home and the satellite's parts fade
+ * in as the links (Satellite.tsx): the scroll off its antenna tips is
+ * the Zip blog post, the screen on its head the launch reel, the pen
+ * under the cone the SVG Studio, the vase on top the print store. The
+ * 808 pad floating beside it opens the synth studio (DrumPad).
+ *
+ * The canvases take no pointer input, so each part gets an invisible
+ * overlay here that BodyAnchors glues to its projection every frame
+ * (`.satellite-link` starts hidden and fades in once the camera
+ * settles). Beyond that: a corner Home link and a one-line caption.
  */
 
 /** The arrival swoop lands at 2s; the caption follows a beat later */
@@ -60,8 +57,8 @@ const partHoverProps = (part: SatellitePart) => ({
   },
 });
 
-/** One part's overlay: the tooltip-wrapped hit target (whatever element
- *  the link needs) around the shared outline */
+/** One part's overlay: the tooltip-wrapped hit target around the shared
+ *  outline */
 const PartLink = ({
   part,
   children,
@@ -76,29 +73,27 @@ const PartLink = ({
     outline: React.ReactNode;
   }) => React.ReactElement;
 }) => (
-  <TooltipProvider delayDuration={100}>
-    <Tooltip disableHoverableContent>
-      <TooltipTrigger asChild>
-        {children({
-          id: satellitePartAnchorId(part),
-          className: "satellite-link",
-          "aria-label": PART_TOOLTIP[part],
-          ...partHoverProps(part),
-          outline: <BodyOutline outlineId={satellitePartOutlineId(part)} />,
-        })}
-      </TooltipTrigger>
-      <TooltipContent updatePositionStrategy="always">
-        <p>{PART_TOOLTIP[part]}</p>
-      </TooltipContent>
-    </Tooltip>
-  </TooltipProvider>
+  <Tooltip disableHoverableContent delayDuration={TOOLTIP_BODY_DELAY_MS}>
+    <TooltipTrigger asChild>
+      {children({
+        id: satellitePartAnchorId(part),
+        className: "satellite-link",
+        "aria-label": PART_TOOLTIP[part],
+        ...partHoverProps(part),
+        outline: <BodyOutline outlineId={satellitePartOutlineId(part)} />,
+      })}
+    </TooltipTrigger>
+    <TooltipContent updatePositionStrategy="always">
+      <p>{PART_TOOLTIP[part]}</p>
+    </TooltipContent>
+  </Tooltip>
 );
 
 const ProjectsAndToys = () => {
   const navigate = useNavigate();
   const [videoOpen, setVideoOpen] = useState(false);
   const [captionShown, setCaptionShown] = useState(false);
-  // No pad on phones (SolarScene hides the 3D pad to match): the
+  // No pad on phones (SolarScene hides the 3D one to match) — the
   // portrait close-up leaves no room beside the head
   const isPhone = useWindowSize() === "sm";
 
@@ -108,7 +103,7 @@ const ProjectsAndToys = () => {
   }, []);
 
   // Navigating away (or opening the video) doesn't fire pointerleave —
-  // don't leave a part's (or the pad's) hover glow stuck on
+  // don't leave a hover glow stuck on
   useEffect(
     () => () => {
       hoverState.satellitePart = null;
@@ -134,8 +129,8 @@ const ProjectsAndToys = () => {
         <p>Things I&rsquo;ve made - some for work, some for fun.</p>
       </main>
       {videoOpen ? (
-        // While the reel plays the overlays are unmounted — BodyAnchors
-        // skips absent elements, so nothing is left hovering over it
+        // While the reel plays the overlays unmount — BodyAnchors skips
+        // absent elements, so nothing hovers over it
         <ZipVideoPopover onClose={() => setVideoOpen(false)} />
       ) : (
         <>
@@ -180,47 +175,48 @@ const ProjectsAndToys = () => {
               </Link>
             )}
           </PartLink>
-          {/* The floating 808 pad: warps to the synth solar system
-              (/synth). Unlocking the AudioContext inside this click is
-              what lets the beat start playing the moment you land. */}
+          {/* The floating 808 pad: warps to /synth. Unlocking the
+              AudioContext inside this click is what lets the beat start
+              the moment you land. */}
           {!isPhone && (
-            <TooltipProvider delayDuration={100}>
-              <Tooltip disableHoverableContent>
-                <TooltipTrigger asChild>
-                  <button
-                    type="button"
-                    id={asteroidAnchorId("synthpad")}
-                    className="satellite-link"
-                    aria-label="Space Synth"
-                    onClick={() => {
-                      ensureAudio();
-                      startSynthJourney();
-                      // The studio lives at /synth: flip the URL as the
-                      // ride boards (shareable, back-button aborts the
-                      // trip) rather than after the warp lands. Only if
-                      // the journey actually launched — the 3D driver
-                      // may be dead (crashed canvas).
-                      if (journeyState.phase !== "idle") {
-                        void navigate("/synth");
-                      }
-                    }}
-                    onPointerEnter={() => {
-                      hoverState.asteroid = "synthpad";
-                    }}
-                    onPointerLeave={() => {
-                      if (hoverState.asteroid === "synthpad") {
-                        hoverState.asteroid = null;
-                      }
-                    }}
-                  >
-                    <BodyOutline outlineId={asteroidOutlineId("synthpad")} />
-                  </button>
-                </TooltipTrigger>
-                <TooltipContent updatePositionStrategy="always">
-                  <p>Space Synth</p>
-                </TooltipContent>
-              </Tooltip>
-            </TooltipProvider>
+            <Tooltip
+              disableHoverableContent
+              delayDuration={TOOLTIP_BODY_DELAY_MS}
+            >
+              <TooltipTrigger asChild>
+                <button
+                  type="button"
+                  id={asteroidAnchorId("synthpad")}
+                  className="satellite-link"
+                  aria-label="Space Synth"
+                  onClick={() => {
+                    ensureAudio();
+                    startSynthJourney();
+                    // The studio lives at /synth: flip the URL as the
+                    // ride boards (shareable, back-button aborts the
+                    // trip) rather than after the warp lands. Only if
+                    // the journey actually launched — the 3D driver
+                    // may be dead (crashed canvas).
+                    if (journeyState.phase !== "idle") {
+                      void navigate("/synth");
+                    }
+                  }}
+                  onPointerEnter={() => {
+                    hoverState.asteroid = "synthpad";
+                  }}
+                  onPointerLeave={() => {
+                    if (hoverState.asteroid === "synthpad") {
+                      hoverState.asteroid = null;
+                    }
+                  }}
+                >
+                  <BodyOutline outlineId={asteroidOutlineId("synthpad")} />
+                </button>
+              </TooltipTrigger>
+              <TooltipContent updatePositionStrategy="always">
+                <p>Space Synth</p>
+              </TooltipContent>
+            </Tooltip>
           )}
         </>
       )}

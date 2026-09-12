@@ -1,11 +1,9 @@
-/* CSS requires every @import to lead the file, so Tailwind and the animation
-   utilities are grouped here ahead of everything else. The Inconsolata webfont
-   is loaded non-render-blocking via <link> in public/index.html instead. */
+/* @import has to lead the file. Inconsolata is loaded non-render-blocking
+   via <link> in public/index.html instead. */
 @import "tailwindcss";
 @import "tw-animate-css";
 
-/* Keep driving the theme, dark-mode strategy, and plugins from the existing
-   JS config rather than porting them into @theme. */
+/* Theme and plugins stay in the JS config rather than moving to @theme. */
 @config "../tailwind.config.js";
 
 @font-face {
@@ -14,14 +12,14 @@
   font-display: swap;
 }
 
-/* Display font for the planet ring links ("ENTER", "About Me") */
+/* Planet ring links ("ENTER", "About Me") */
 @font-face {
   font-family: "Retro Floral";
   src: url("./RetroFloral.ttf");
   font-display: swap;
 }
 
-/* Display font for the shop's headings (/artifacts) */
+/* The shop's headings (/artifacts) */
 @font-face {
   font-family: "Rothefight";
   src: url("./ROTHEFIGHT.otf") format("opentype");
@@ -90,28 +88,6 @@ code {
     --destructive-foreground: 210 40% 98%;
     --ring: 215 20.2% 65.1%;
     --radius: 0.5rem;
-  }
-
-  .dark {
-    --background: 224 71% 4%;
-    --foreground: 213 31% 91%;
-    --muted: 223 47% 11%;
-    --muted-foreground: 215.4 16.3% 56.9%;
-    --accent: 216 34% 17%;
-    --accent-foreground: 210 40% 98%;
-    --popover: 224 71% 4%;
-    --popover-foreground: 215 20.2% 65.1%;
-    --border: 216 34% 17%;
-    --input: 216 34% 17%;
-    --card: 224 71% 4%;
-    --card-foreground: 213 31% 91%;
-    --primary: 210 40% 98%;
-    --primary-foreground: 222.2 47.4% 1.2%;
-    --secondary: 222.2 47.4% 11.2%;
-    --secondary-foreground: 210 40% 98%;
-    --destructive: 0 63% 31%;
-    --destructive-foreground: 210 40% 98%;
-    --ring: 216 34% 17%;
   }
 }
 
