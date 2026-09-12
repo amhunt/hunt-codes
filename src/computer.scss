@@ -2,6 +2,7 @@
 // is re-enabled; keep in sync with the App.scss breakpoints
 $breakpoint-sm: 768px;
 $breakpoint-lg: 1280px;
+$breakpoint-phone-max: $breakpoint-sm - 1px;
 
 body {
   background-color: #eee9e6;
@@ -26,7 +27,7 @@ body {
     top: calc(50vh - 200px);
   }
 
-  @media (max-width: $breakpoint-sm) {
+  @media (max-width: $breakpoint-phone-max) {
     display: none;
   }
   transform-style: preserve-3d;

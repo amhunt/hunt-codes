@@ -130,6 +130,17 @@ const ViewTour = ({
   return null;
 };
 
+/**
+ * The music switch rides every page but /synth, which brings its own
+ * audio. It lives inside the Router so the rule is re-checked on
+ * navigation — read off `window.location`, it was only ever right on a
+ * fresh load, so navigating to /synth left two music controls up.
+ */
+const RoutedMusicSwitch = () => {
+  const { pathname } = useLocation();
+  return pathname === "/synth" ? null : <SpaceJamSwitch />;
+};
+
 const App = () => {
   const [showBridge, setShowBridge] = useState(false);
   // The landing always opens in space (VIEW_TOUR); every other entry
@@ -158,8 +169,6 @@ const App = () => {
 
   usePauseAudioOnHideEventListener();
   useEffect(installClickTracking, []);
-
-  const isSynthRoute = window.location.pathname === "/synth";
 
   // Tint the mobile browser chrome to match the active view; mesh
   // matches the top of the App-background_mesh ground
@@ -231,9 +240,9 @@ const App = () => {
             </Routes>
           </Suspense>
           {/* Corner chrome sits after the routes so each page's own content
-            comes first in the tab order. The music switch rides every
-            page, mounted once so the track carries across routes. */}
-          {isSynthRoute ? null : <SpaceJamSwitch />}
+            comes first in the tab order. The music switch is mounted once
+            so the track carries across routes. */}
+          <RoutedMusicSwitch />
           <BadgeLink isSpaceView={isSpaceView} />
           {/* App-level so the windshield frame and warp flash survive the
             rides' mid-flight route hops — a per-page mount would cut the

@@ -4,11 +4,15 @@ $purp-light-transparent: #9674f999;
 $purp-light-transparent-25: #ab8ffd44;
 $green-light-transparent: #20880035;
 
-// Breakpoints
+// Breakpoints. `sm`/`md`/`lg` are the *lower* bound of each band, matching
+// useWindowSize's `< 768` / `< 1000` splits — so a phone query is
+// `$breakpoint-phone-max` (767px), never `max-width: $breakpoint-sm`,
+// which would fire at 768 alongside the min-width rules for that band.
 $breakpoint-sm: 768px;
 $breakpoint-md: 1000px;
 $breakpoint-lg: 1280px;
 $breakpoint-xl: 1440px;
+$breakpoint-phone-max: $breakpoint-sm - 1px;
 
 .App {
   cursor: pointer;
@@ -75,7 +79,7 @@ body:has(.App.mesh) {
     pointer-events: auto;
   }
 
-  @media (max-width: $breakpoint-sm) {
+  @media (max-width: $breakpoint-phone-max) {
     top: 30%;
     right: -200px;
     left: -200px;
@@ -256,16 +260,9 @@ body.journey-mode {
     margin: 0 0 1.1em;
   }
 
-  @media (max-width: $breakpoint-sm) {
+  @media (max-width: $breakpoint-phone-max) {
     font-size: 19px;
   }
-}
-
-.journey-overline {
-  color: $purp-light;
-  font-size: 18px;
-  font-weight: 400;
-  letter-spacing: 0.06em;
 }
 
 .journey-title {
@@ -274,7 +271,7 @@ body.journey-mode {
   letter-spacing: 0.08em;
   margin: 0.2em 0 0;
 
-  @media (max-width: $breakpoint-sm) {
+  @media (max-width: $breakpoint-phone-max) {
     font-size: 40px;
   }
 }
@@ -293,7 +290,7 @@ body.journey-mode {
     font-size: 34px;
     margin: 0.25em 0 0.6em;
 
-    @media (max-width: $breakpoint-sm) {
+    @media (max-width: $breakpoint-phone-max) {
       font-size: 26px;
     }
   }
@@ -358,7 +355,7 @@ body.journey-mode {
     transform: translate(-50%, -50%);
   }
 
-  @media (max-width: $breakpoint-sm) {
+  @media (max-width: $breakpoint-phone-max) {
     flex-direction: column;
     gap: 12px;
   }
@@ -465,7 +462,7 @@ body.rocket-journey .cockpit-controls {
     outline-offset: 4px;
   }
 
-  @media (max-width: $breakpoint-sm) {
+  @media (max-width: $breakpoint-phone-max) {
     width: 96px;
     height: 96px;
   }
@@ -628,7 +625,7 @@ p {
 // Blobs are white-cored with gray-blue bodies: the day background fades
 // to pure white at the bottom, so pure-white fog would vanish — the cool
 // gray rim is what makes the puffs read against it (and stays neutral
-// under the background's starsHueAnim hue rotation).
+// under the star field's hue rotation).
 //
 // Periodicity: gradients clip at the tile boundary rather than wrapping,
 // so any blob whose reach (0.7 x its x-radius) crosses an edge gets a
@@ -812,7 +809,7 @@ p {
 // is also where the sun's limb lands at portrait aspects, so the caption
 // and chevron carry a shadow to hold up over the orange (dark by night,
 // light by day, matching each palette's ink).
-@media (max-width: 767px) {
+@media (max-width: $breakpoint-phone-max) {
   .scroll-hint {
     bottom: 76px;
   }
@@ -1010,7 +1007,7 @@ p {
   // Phones stack the row and range it down the panel's left edge, so the
   // pills and the typed greeting start on the same line as the summary
   // pinned above them
-  @media (max-width: $breakpoint-sm) {
+  @media (max-width: $breakpoint-phone-max) {
     flex-direction: column;
     align-items: flex-start;
   }
@@ -1018,7 +1015,7 @@ p {
 
 // Phones only: the captions sit 3px under their pills and the typed
 // greeting lands straight after them — give the row somewhere to end
-@media (max-width: $breakpoint-sm) {
+@media (max-width: $breakpoint-phone-max) {
   .icon-pill-row {
     padding-bottom: 12px;
   }
@@ -1055,7 +1052,7 @@ li > ul > li {
     padding-bottom: 150px;
   }
 
-  @media (min-width: 1280px) {
+  @media (min-width: $breakpoint-lg) {
     padding-left: 600px;
   }
 }
@@ -1066,7 +1063,7 @@ li > ul > li {
   max-width: 800px;
   margin-bottom: 96px;
 
-  @media (min-width: 1280px) {
+  @media (min-width: $breakpoint-lg) {
     max-width: 980px;
     margin-top: 200px;
   }
@@ -1363,7 +1360,7 @@ li > ul > li {
   }
 }
 
-@media (max-width: $breakpoint-sm) {
+@media (max-width: $breakpoint-phone-max) {
   .resume-container {
     // Room to scroll the last line clear of the corner medallion (no life
     // bar on phones — see .life-timeline)
@@ -1650,15 +1647,6 @@ a:hover {
   }
 }
 
-@keyframes starsHueAnim {
-  0% {
-    filter: hue-rotate(0deg);
-  }
-  100% {
-    filter: hue-rotate(360deg);
-  }
-}
-
 .App-background {
   inset: 0;
   position: absolute;
@@ -1854,7 +1842,7 @@ a:hover {
     opacity: 0.8;
   }
 
-  @media (max-width: $breakpoint-sm) {
+  @media (max-width: $breakpoint-phone-max) {
     left: 24px;
     right: 24px;
     bottom: calc(160px + env(safe-area-inset-bottom, 0px));
@@ -2465,7 +2453,7 @@ $switch-ease: cubic-bezier(0.45, 0.05, 0.25, 1.2);
 // corner; below lg the Space/Mesh switch is top-right anyway.
 $timeline-band-clearance: 72px;
 body.life-timeline-present {
-  @media (min-width: #{$breakpoint-sm + 1px}) {
+  @media (min-width: $breakpoint-sm) {
     .music-toggle {
       bottom: calc(
         #{$timeline-band-clearance} + 1rem + env(safe-area-inset-bottom, 0px)
@@ -2511,7 +2499,7 @@ body.on-landing {
   // bottom-left one, inset 24px from both edges, so the one-line title
   // and the sun's top have the upper screen to themselves. (The music
   // switch already sits phones out here.)
-  @media (max-width: ($breakpoint-sm - 1px)) {
+  @media (max-width: $breakpoint-phone-max) {
     .view-mode-switch {
       top: auto;
       right: auto;
@@ -2675,7 +2663,7 @@ body.on-landing {
   // this is where the title lands, and it used to land on the letters
   padding: 150px 24px 40px;
 
-  @media (max-width: $breakpoint-sm) {
+  @media (max-width: $breakpoint-phone-max) {
     padding: 116px 16px 32px;
   }
 }
@@ -2929,7 +2917,7 @@ body.on-landing {
 
   // On a phone five wrapped pills ate a third of the screen — one row that
   // scrolls sideways instead, bleeding to the screen edge like a carousel
-  @media (max-width: $breakpoint-sm) {
+  @media (max-width: $breakpoint-phone-max) {
     flex-wrap: nowrap;
     overflow-x: auto;
     width: calc(100% + 32px);
@@ -3384,7 +3372,7 @@ body.on-landing {
   // The name stars are gated off below sm (StarField), so nothing needs
   // clearing up top — the "home" link sits 24px down and the heading
   // follows 16px under it.
-  @media (max-width: ($breakpoint-sm - 1px)) {
+  @media (max-width: $breakpoint-phone-max) {
     padding-top: 24px;
 
     h1 {
@@ -3811,7 +3799,7 @@ body.on-landing {
   // Phones sit the bar out: with the medallion and the music pill it
   // took ~210px of a 812px screen, and most eras were too narrow for
   // their labels anyway
-  @media (max-width: $breakpoint-sm) {
+  @media (max-width: $breakpoint-phone-max) {
     display: none;
   }
 
@@ -3848,7 +3836,7 @@ body.on-landing {
   overflow: hidden;
   pointer-events: auto;
 
-  @media (max-width: $breakpoint-sm) {
+  @media (max-width: $breakpoint-phone-max) {
     height: 28px;
   }
 }
@@ -4327,7 +4315,7 @@ body.on-landing {
   border-radius: 16px;
   overflow: hidden;
 
-  @media (max-width: $breakpoint-sm) {
+  @media (max-width: $breakpoint-phone-max) {
     height: 320px;
   }
 

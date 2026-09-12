@@ -55,7 +55,7 @@ import { NAME_TITLE_ID } from "../solarAnchorIds";
 // back on the first phrase).
 const MAX_PHRASE_TRANSITIONS = 3;
 
-const HUE_ROTATION_PERIOD_S = 20; // starsHueAnim: 20s per full rotation
+const HUE_ROTATION_PERIOD_S = 20; // 20s per full rotation
 const DISCO_PERIOD_S = 8; // star-disco: 4s alternate = 8s round trip
 
 // The shader inherited the CSS stars' looping animations (hue rotation,
