@@ -2,17 +2,18 @@ import React, { useCallback, useEffect, useMemo, useState } from "react";
 import { Link } from "react-router-dom";
 import { Sun } from "react-feather";
 import { Box, Download, RotateCcw, Upload } from "lucide-react";
-
-import Preview3D from "./Preview3D";
 import {
   analyzeSvg,
   DEFAULT_PART_OPTIONS,
+  exportToThreeMf,
   processAnalysis,
   type ColorMesh,
+  type GroupingMode,
   type PartOptions,
   type SvgAnalysis,
-} from "./svgProcessor";
-import { exportToThreeMf, type GroupingMode } from "./threeMfExporter";
+} from "svg-to-3d";
+
+import Preview3D from "./Preview3D";
 
 const GROUPINGS: { mode: GroupingMode; label: string; hint: string }[] = [
   {
