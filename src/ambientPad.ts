@@ -1,4 +1,4 @@
-import { ensureAudioContext } from "./audioContext";
+import { audioOutput, ensureAudioContext } from "./audioContext";
 
 /**
  * The site's background music: a generative drone that the solar scene
@@ -84,7 +84,8 @@ let unlockArmed = false;
  */
 function build(): Pad | null {
   const ctx = ensureAudioContext();
-  if (!ctx) return null;
+  const out = audioOutput();
+  if (!ctx || !out) return null;
 
   const bus = ctx.createGain();
   bus.gain.value = 0.0001;
@@ -94,7 +95,9 @@ function build(): Pad | null {
   filter.frequency.value = 900;
   filter.Q.value = 1.4;
   filter.connect(bus);
-  bus.connect(ctx.destination);
+  // The master, not the destination, so the pad ducks and fades with the
+  // rest of the layer when the visitor's attention moves
+  bus.connect(out);
 
   // Slow drift on the cutoff, so the pad moves even when the scene is
   // still — the same trick as the synth's "gravity wobble"

@@ -1,4 +1,4 @@
-import { ensureAudioContext } from "./audioContext";
+import { audioOutput, ensureAudioContext } from "./audioContext";
 import { audioPrefs } from "./audioPrefs";
 
 /**
@@ -34,11 +34,14 @@ const MIN_GAP_SECONDS = 0.08;
 function sfxBus(key: string): GainNode | null {
   if (!audioPrefs.enabled) return null;
   const ctx = ensureAudioContext();
-  if (!ctx) return null;
+  const out = audioOutput();
+  if (!ctx || !out) return null;
   if (!bus || bus.context !== ctx) {
     bus = ctx.createGain();
     bus.gain.value = SFX_BUS_GAIN;
-    bus.connect(ctx.destination);
+    // The master, not the destination, so clicks duck and fade with
+    // everything else when the visitor's attention moves
+    bus.connect(out);
   }
   const now = ctx.currentTime;
   if (now - (lastPlayed[key] ?? -Infinity) < MIN_GAP_SECONDS) return null;

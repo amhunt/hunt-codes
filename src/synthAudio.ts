@@ -1,6 +1,6 @@
 import type { SynthParam } from "./synthSpec";
 
-import { ensureAudioContext } from "./audioContext";
+import { audioOutput, ensureAudioContext } from "./audioContext";
 
 /**
  * The space synth's Web Audio engine — a little subtractive poly synth
@@ -92,7 +92,9 @@ export function ensureAudio(): boolean {
     ctx = shared;
     master = ctx.createGain();
     master.gain.value = 0.16;
-    master.connect(ctx.destination);
+    // The shared master, not the destination, so the synth ducks and
+    // fades with the rest of the layer when attention moves
+    master.connect(audioOutput() ?? ctx.destination);
 
     filter = ctx.createBiquadFilter();
     filter.type = "lowpass";
