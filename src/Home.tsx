@@ -171,7 +171,7 @@ const Home = () => {
         )}
         <div className="hoverableHomeItem justify-between gap-6">
           {!isSmall && (
-            <div className="max-w-75 text-left">
+            <div className="max-w-100 text-left">
               <div className="font-bold">
                 Frontend Engineer based in{" "}
                 <s className="opacity-70 decoration-[#ff6b6b] decoration-2">

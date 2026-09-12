@@ -65,7 +65,7 @@ const LANDING_HEIGHT_LG = 31;
 // on the far side from Earth, elevated well above the surface so the
 // sun's limb only fills the bottom ~20% of the frame, with Earth ~9deg
 // wide in the middle distance.
-const HOME_CAM_BEHIND = 1.6; // away from Earth
+const HOME_CAM_BEHIND = 0.75; // away from Earth
 const HOME_CAM_ABOVE = 5;
 // Phones perch a little higher: the sun's limb rides up under the scroll
 // hint at portrait aspects, and a higher perch drops it (Earth is

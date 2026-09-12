@@ -4,6 +4,7 @@ import * as THREE from "three";
 
 import { EARTH, rigState } from "./constants";
 import { hoverState } from "../../solarHover";
+import { ringLabelMetrics } from "../../ringLabel";
 import {
   createLetterPlane,
   measureCharWidths,
@@ -20,18 +21,14 @@ import {
  * the 3D scene. The clickable hit target stays in the DOM (SolarOverlays),
  * since the canvas takes no pointer input.
  *
- * Sizes are derived from the old overlay so the label lands in the same spot:
- * BodyAnchors sized the overlay to 1.55× Earth's projected diameter, the SVG
- * text path sat at 41/50 of that radius, and the font was 13/100 of the
- * viewBox — all reproduced here in Earth-radius world units.
+ * Its size and standoff come from ringLabel.ts, the proportions the sun's
+ * ENTER label shares — they were read off this label's old overlay, which is
+ * why it still lands exactly where the SVG ring did.
  */
 
 const ABOUT_TEXT = "ABOUT ME";
-const ABOUT_FONT_SIZE = 13; // matches the SVG textPath fontSize
+const ABOUT_FONT_SIZE = 14; // rasterization size for the glyph textures
 const ABOUT_FONT = retroFloralFont(ABOUT_FONT_SIZE);
-const ABOUT_RING_SCALE = 1.55; // BodyAnchors overlay diameter multiple
-const ABOUT_PATH_RADIUS_FRAC = 41 / 50; // text path radius within the overlay
-const ABOUT_FONT_FRAC = ABOUT_FONT_SIZE / 100; // font size as a viewBox fraction
 
 // The label was dark purple for the old light sky; mesh view is dark
 // too, so it takes the wire palette's blue-white instead
@@ -81,9 +78,9 @@ export default function AboutRing({
     const totalWidth = charWidths.reduce((sum, width) => sum + width, 0);
     if (totalWidth <= 0) return null;
 
-    const overlayRadius = EARTH.radius * ABOUT_RING_SCALE;
-    const worldRadius = overlayRadius * ABOUT_PATH_RADIUS_FRAC;
-    const worldFontSize = overlayRadius * 2 * ABOUT_FONT_FRAC;
+    const { radius: worldRadius, fontSize: worldFontSize } = ringLabelMetrics(
+      EARTH.radius,
+    );
     const worldArcLength = totalWidth * (worldFontSize / ABOUT_FONT_SIZE);
     const totalAngle = worldArcLength / worldRadius;
     // Center the word over the top of Earth (local +Y). Reading L→R runs
