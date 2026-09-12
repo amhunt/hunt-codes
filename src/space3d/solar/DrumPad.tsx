@@ -15,6 +15,7 @@ import { asteroidOutlineId } from "../../solarAnchorIds";
 import { writeSilhouette } from "./outline";
 import { hoverState } from "../../solarHover";
 import InteractiveGlow from "./InteractiveGlow";
+import { useBodyFade } from "./bodyFade";
 
 /**
  * The synth easter egg's front door: a little TR-808-style drum machine
@@ -41,8 +42,6 @@ import InteractiveGlow from "./InteractiveGlow";
  * pads.
  */
 
-const FADE_IN_SECONDS = 3;
-const FADE_OUT_SECONDS = 1;
 /** The pad floats on the shadowed side of the close-up (the sun sits
  *  below the frame, so the sun lights its underside and the pads face
  *  the dark), so like the satellite's pen and vase it glows in its own
@@ -102,9 +101,7 @@ export default function DrumPad({
   const rig = useRef<THREE.Group>(null); // face-to-camera basis
   const body = useRef<THREE.Group>(null); // sways around the face axis
   const led = useRef<THREE.Mesh>(null);
-  const opacity = useRef(visible ? 1 : 0);
-  // Out-of-band so the first frame always initializes the materials
-  const appliedOpacity = useRef(-1);
+  const { opacity, advance } = useBodyFade(visible);
   const swayPhase = useRef(0);
   const bobPhase = useRef(0);
 
@@ -231,14 +228,7 @@ export default function DrumPad({
         Math.sin(bobPhase.current) * config.radius * BOB_RADII;
       synthPadState.position.copy(group.current.position);
 
-      // Same landing-view fade as the asteroids
-      const step = visible
-        ? delta / FADE_IN_SECONDS
-        : -delta / FADE_OUT_SECONDS;
-      opacity.current = THREE.MathUtils.clamp(opacity.current + step, 0, 1);
-      if (opacity.current !== appliedOpacity.current) {
-        appliedOpacity.current = opacity.current;
-        group.current.visible = opacity.current > 0.005;
+      if (advance(group.current, visible, delta)) {
         allMaterials.forEach((material) => {
           material.opacity = opacity.current;
         });

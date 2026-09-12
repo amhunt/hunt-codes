@@ -1,8 +1,8 @@
+import { BackLink } from "ui/BackLink";
 import React, { useCallback, useEffect, useRef, useState } from "react";
 import cx from "classnames";
 import { ArrowLeftCircle, Calendar } from "react-feather";
 import {
-  ArrowLeftCircleIcon,
   ArrowUpRight,
   AudioWaveform,
   Clapperboard,
@@ -312,10 +312,7 @@ const Resume = () => {
           className="homePageBackLink resume-home-link"
           style={{ opacity: opacity ? 1 : 0, transition: "opacity 1s ease" }}
         >
-          <Link className="mt-4 flex items-center gap-1" to="/home">
-            <ArrowLeftCircleIcon className="starIcon" size={16} />
-            <span>Home</span>
-          </Link>
+          <BackLink className="mt-4" />
         </div>
       )}
       <main

@@ -3,6 +3,7 @@ import { useFrame, useThree } from "@react-three/fiber";
 import * as THREE from "three";
 
 import { planetPosition, type SolarPlanetConfig } from "./constants";
+import { useOrbitRing } from "./orbitRing";
 import { applyOffAxisSquash } from "./offAxisSquash";
 import { createPlanetTexture } from "../textures";
 import { hoverState } from "../../solarHover";
@@ -234,21 +235,7 @@ export default function Planet({
     [],
   );
 
-  const orbitLine = useMemo(() => {
-    const points: THREE.Vector3[] = [];
-    for (let i = 0; i <= 128; i++) {
-      const a = (i / 128) * Math.PI * 2;
-      points.push(
-        new THREE.Vector3(
-          Math.cos(a) * config.orbitRadius,
-          0,
-          Math.sin(a) * config.orbitRadius,
-        ),
-      );
-    }
-    return new THREE.BufferGeometry().setFromPoints(points);
-  }, [config.orbitRadius]);
-  useEffect(() => () => orbitLine.dispose(), [orbitLine]);
+  const orbitLine = useOrbitRing(config.orbitRadius);
 
   useFrame(({ clock, camera, size }, delta) => {
     if (group.current) {

@@ -4,6 +4,7 @@ import * as THREE from "three";
 import { DecalGeometry } from "three/examples/jsm/geometries/DecalGeometry.js";
 
 import { EARTH, MOON, planetPosition } from "./constants";
+import { useOrbitRing } from "./orbitRing";
 import { applyOffAxisSquash } from "./offAxisSquash";
 import { JOURNEY_STOPS, scrollTransitionState } from "../../scrollTransition";
 import { applyWireSkin } from "./wireSkin";
@@ -153,21 +154,7 @@ export default function Moon({
     [badgeGeometries],
   );
 
-  const orbitLine = useMemo(() => {
-    const points: THREE.Vector3[] = [];
-    for (let i = 0; i <= 128; i++) {
-      const a = (i / 128) * Math.PI * 2;
-      points.push(
-        new THREE.Vector3(
-          Math.cos(a) * MOON.orbitRadius,
-          0,
-          Math.sin(a) * MOON.orbitRadius,
-        ),
-      );
-    }
-    return new THREE.BufferGeometry().setFromPoints(points);
-  }, []);
-  useEffect(() => () => orbitLine.dispose(), [orbitLine]);
+  const orbitLine = useOrbitRing(MOON.orbitRadius);
 
   useFrame(({ clock, camera, size }, delta) => {
     const t = clock.elapsedTime;

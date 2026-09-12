@@ -1,3 +1,4 @@
+import { BackLink } from "ui/BackLink";
 import React, {
   useState,
   useRef,
@@ -521,13 +522,7 @@ const SvgGenerator = () => {
   return (
     <div className="svg-generator-page">
       <div className="svg-generator-back-link">
-        <Link
-          className="mt-4 flex items-center gap-1 transition-transform"
-          to="/home"
-        >
-          <Sun aria-hidden="true" className="starIcon" size={16} />
-          <span>Home</span>
-        </Link>
+        <BackLink className="mt-4 transition-transform" icon={Sun} />
       </div>
 
       <div className="svg-generator-container">

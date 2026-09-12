@@ -1,6 +1,7 @@
+import { BackLink } from "ui/BackLink";
 import React, { useEffect, useRef, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
-import { ArrowLeftCircleIcon, Volume2Icon, VolumeXIcon } from "lucide-react";
+import { Volume2Icon, VolumeXIcon } from "lucide-react";
 import cx from "classnames";
 
 import {
@@ -245,13 +246,7 @@ const Journey = () => {
   return (
     <>
       <div className="homePageBackLink">
-        <Link
-          className="mt-4 flex items-center gap-1 transition-transform"
-          to="/home"
-        >
-          <ArrowLeftCircleIcon className="starIcon" size={16} />
-          <span>Home</span>
-        </Link>
+        <BackLink className="mt-4 transition-transform" />
       </div>
       {/* Star Wars-style opener: the intro line fades up flat on the
           black, holds, and fades out; when the fade completes the crawl

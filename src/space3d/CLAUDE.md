@@ -67,7 +67,9 @@ which suspends itself when the tab hides: App.tsx's hide handler sweeps
   billboard — screen-space anchoring drifted twice.
 - Fade-in ramps write material opacity from `useFrame`; anything guarded
   by "only when changed" needs a first-frame initialization (JSX materials
-  mount at opacity 1).
+  mount at opacity 1). `solar/bodyFade.ts` owns that ramp and its guard —
+  a body supplies only the walk over its own materials, since three has no
+  group-level opacity.
 
 ## Mesh view (wire skin)
 
