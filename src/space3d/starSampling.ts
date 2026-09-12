@@ -698,30 +698,27 @@ export const generateStarsForSignature = (
 };
 
 /**
- * Where a landing text star starts before it flies in: a point in the
- * band just outside the viewport, uniform over the whole band, so the
- * stars converge on the title from every side — top, bottom, left and
- * right alike — rather than scattering around the glyphs. The band is
- * INTRO_SPAWN_BAND of the longer viewport edge deep. Rejection-sampled
- * from the enclosing rectangle; the band is two thirds of it, so this
- * rarely loops more than once.
+ * Where a landing text star starts before it flies in: anywhere on the
+ * screen, plus a margin past every edge so the field doesn't stop dead at
+ * the bezel and some stars arrive from off-frame. The sky is already full
+ * of stars when the title starts gathering, and they draw in from all
+ * over it rather than sweeping in off the edges.
  */
-export const INTRO_SPAWN_BAND = 0.3;
-export function introSpawnPoint(
+const INTRO_SPAWN_MARGIN_PX = 60;
+function introSpawnPoint(
   width: number,
   height: number,
 ): { x: number; y: number } {
-  const band = Math.max(width, height) * INTRO_SPAWN_BAND;
-  for (;;) {
-    const x = -band + Math.random() * (width + 2 * band);
-    const y = -band + Math.random() * (height + 2 * band);
-    if (x < 0 || x > width || y < 0 || y > height) return { x, y };
-  }
+  const margin = INTRO_SPAWN_MARGIN_PX;
+  return {
+    x: -margin + Math.random() * (width + 2 * margin),
+    y: -margin + Math.random() * (height + 2 * margin),
+  };
 }
 
 /**
  * A spawn point for every target glyph star, chosen so the fly-in
- * doesn't tangle: the spawns are still uniform around the band, but
+ * doesn't tangle: the spawns are still uniform over the rectangle, but
  * instead of handing them out in index order (which sent stars criss-
  * crossing the whole screen) both sets are sorted by angle around the
  * title's centre and matched rank for rank. The mapping is monotonic in

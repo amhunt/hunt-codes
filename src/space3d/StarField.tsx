@@ -568,8 +568,9 @@ const TextStars = ({
     const prev = livePositionsRef.current;
     const positions = new Float32Array(count * 2);
     const velocities = new Float32Array(count);
-    // Landing intro only: spawn points outside the viewport, matched to
-    // the glyphs by angle so the fly-in doesn't tangle
+    // Landing intro only: spawn points scattered over the screen (and a
+    // little past it), matched to the glyphs by angle so the fly-in
+    // doesn't tangle
     const introSpawns =
       sim.hasEverHadStars || formation
         ? null
@@ -589,9 +590,9 @@ const TextStars = ({
         positions[i * 2] = targets[i].x;
         positions[i * 2 + 1] = targets[i].y;
       } else if (introSpawns) {
-        // Start just outside the viewport on every side and fly in. The
-        // glide's 10px-per-tick cap means the farthest stars take a few
-        // seconds — that's the effect, a stream converging on the centre.
+        // Start scattered across the sky and draw in. The glide's
+        // 10px-per-tick cap means the farthest stars take a few seconds —
+        // that's the effect, a whole field gathering into the words.
         positions[i * 2] = introSpawns[i * 2];
         positions[i * 2 + 1] = introSpawns[i * 2 + 1];
       } else if (ballStart) {
