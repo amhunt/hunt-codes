@@ -856,6 +856,44 @@ p {
   }
 }
 
+/**
+ * md only (768-999): the pills leave the identity line's right-hand side
+ * and sit in one row under the typed greeting, so the availability line
+ * gets the panel's whole width instead of sharing it with four buttons.
+ *
+ * `display: contents` on the identity row dissolves its box so its two
+ * children order as siblings of the typed row — the pills can't move past
+ * the greeting while they're still nested one level down.
+ */
+.homeInfoContainer.pills-below {
+  display: flex;
+  flex-direction: column;
+
+  .identity-row {
+    display: contents;
+  }
+
+  .identity-text {
+    order: 1;
+  }
+
+  .availability-line {
+    order: 2;
+  }
+
+  .typed-row {
+    order: 3;
+  }
+
+  .icon-pill-row {
+    order: 4;
+    // Ranged down the panel's left edge with the text above it, rather
+    // than pinned right the way the side-by-side layout wants. The typed
+    // row's own h-20 supplies the space above, so no padding here.
+    justify-content: flex-start;
+  }
+}
+
 // The identity line carries the container's full size; the typed greeting
 // plays second fiddle
 .typed-greeting {
