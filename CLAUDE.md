@@ -49,7 +49,15 @@ the preview tool.
 
 ## Routes & structure
 
-- `/` → `Landing.tsx` — WebGL solar system; the sun is a clickable "ENTER"
+- `/` → `Landing.tsx` — WebGL solar system; the sun is a clickable "ENTER".
+  On lg+ (≥1280px) the star-glyph title stacks in a left column
+  (`HUNT.` / `CODES`, the later phrases likewise — `STACKED_LINES` in
+  `starSampling.ts`), the sun parks at 75% of the width (`LANDING_SUN_X`
+  in `CameraRig.tsx`), a tagline hangs under the title
+  (`LandingTagline.tsx`), the music + view switches dock bottom-left on
+  the title's 5vw margin and the coin parks top-right (`body.on-landing`
+  rules in App.scss, mirrored in `BadgeMedallion.tsx`); the scroll
+  chevron sits that layout out. Below lg it's the one-line banner.
 - `/home` → `Home.tsx` — social links; Earth = "ABOUT ME" link; asteroids +
   Sputnik satellite = blog/LinkedIn/GitHub links (home view only)
 - `/about` → `Resume.tsx` — the résumé page (frosted panel over the scene)
@@ -77,8 +85,12 @@ the preview tool.
   supplies each page's tab title. A new public page goes in that list
   (title + priority) and gets its `<Route>` in `App.tsx`.
 
-Space/Mesh is a user toggle in `App.tsx` (space default, remembered in
-`localStorage`, `.App.space` / `.App.mesh` on the root): space is the
+Space/Mesh is a user toggle in `App.tsx` (`.App.space` / `.App.mesh` on
+the root). The landing page always opens in space, and `VIEW_TOUR` flips
+to mesh on the `/` → `/home` hop and back on the return — until the
+visitor works the switch themselves, after which their pick holds for the
+session and is the only one remembered in `localStorage` (other entry
+points open in it). Space is the
 photographed scene, mesh redraws every 3D body as a glowing wire lattice
 (and the sun as a gold mirror ball) over a dark graticule ground. Both grounds are dark, so the
 two share one palette — there are no per-view text overrides left, and

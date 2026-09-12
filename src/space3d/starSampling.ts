@@ -33,6 +33,16 @@ export interface TextStarLayout {
   textWidth: number;
   /** Gap between consecutive letters */
   letterSpacing: number;
+  /** The sampled font size — the letters' height basis. Defaults to the
+   *  average glyph box width (textWidth / letters), which is how the
+   *  single-line title and the name header size themselves; the stacked
+   *  title sets it explicitly so every line's letters stand the same
+   *  height whatever their widths add up to. */
+  fontSize?: number;
+  /** Relative glyph widths, one per letter, that textWidth is divided
+   *  by; measured in the measuring font when absent. The stacked title
+   *  supplies its own (stackedLetterWidths). */
+  letterWidths?: number[];
 }
 
 const LANDING_TEXT_TOP_PX = 60;
@@ -99,7 +109,13 @@ const generateStarsForLetter = ({
         )
       ) {
         points.push({
-          x: (x * letterWidthPx) / ctxTextWidth + offsetX,
+          // Every glyph fills its box: a narrow one is stretched out to
+          // it, and one wider than the box (the fillText maxWidth
+          // squeezed it in) is left at the box's width rather than
+          // squeezed a second time
+          x:
+            (x * letterWidthPx) / Math.min(ctxTextWidth, letterWidthPx) +
+            offsetX,
           canvasX: x,
           y: (y * averageLetterHeight) / ctxTextHeight + offsetY,
           canvasY: y,
@@ -122,48 +138,30 @@ const percentageWidthOfText = 0.8;
 const percentageWidthOfSpacing = 0.1;
 const percentageWidthForSidePadding = 0.05;
 
-/**
- * The box one glyph of the landing title occupies, in CSS px: the same
- * measure-and-scale generateStarsForText runs, so `left` and `width` are
- * exactly where that glyph's stars land, and `bottom` is where the
- * letters end — they hang ~1.5x their average width below the top (see
- * generateStarsForLetter's averageLetterHeight). For DOM chrome that
- * wants to sit under a particular letter (the "(and Claude)" caption
- * under BUILT WITH ♥'s heart).
- */
-export function landingGlyphBox(
-  text: string,
-  index: number,
-  windowWidth: number,
-): { left: number; width: number; bottom: number } {
-  const layout = landingTextLayout(text, windowWidth);
-  const canvas = document.createElement("canvas");
-  const ctx = canvas.getContext("2d");
-  const averageLetterWidth = layout.textWidth / text.length;
-  const bottom = layout.y + averageLetterWidth * 1.5;
-  if (!ctx) {
-    return { left: layout.x, width: averageLetterWidth, bottom };
-  }
-  ctx.font = `100 40px ${fontFamily}`;
-  const letterWidths = text
+// Where a sampled glyph's ink sits inside its box, in font sizes below
+// the layout's y: capitals run from GLYPH_INK_TOP to GLYPH_INK_BOTTOM
+// (measured off the same canvas draw generateStarsForLetter makes —
+// the "." and the ♥ stray a little either way).
+const GLYPH_INK_TOP = 0.43;
+const GLYPH_INK_BOTTOM = 1.53;
+
+// The measuring font: letter widths are taken at this size and scaled,
+// so glyph boxes keep their relative proportions at any size
+const MEASURE_PX = 40;
+const MEASURE_FONT = `100 ${MEASURE_PX}px ${fontFamily}`;
+
+/** Each letter's width in the measuring font (all 0 without a 2D context) */
+function measureLetters(text: string): number[] {
+  const ctx = document.createElement("canvas").getContext("2d");
+  if (!ctx) return text.split("").map(() => 0);
+  ctx.font = MEASURE_FONT;
+  return text
     .split("")
     .map((letter) => Math.round(ctx.measureText(letter).width));
-  const total = letterWidths.reduce((sum, w) => sum + w, 0);
-  let left = layout.x;
-  for (let i = 0; i < index; i++) {
-    left +=
-      Math.round((letterWidths[i] / total) * layout.textWidth) +
-      layout.letterSpacing;
-  }
-  return {
-    left,
-    width: Math.round((letterWidths[index] / total) * layout.textWidth),
-    bottom,
-  };
 }
 
-/** The landing title's layout: 80% of the viewport width of glyphs, 10%
- *  of letter spacing, 5% of padding each side. */
+/** The landing title's single-line layout: 80% of the viewport width of
+ *  glyphs, 10% of letter spacing, 5% of padding each side. */
 const landingTextLayout = (
   text: string,
   windowWidth: number,
@@ -174,36 +172,213 @@ const landingTextLayout = (
   letterSpacing: (windowWidth * percentageWidthOfSpacing) / (text.length - 1),
 });
 
+// ─── The stacked title (lg+) ───────────────────
+// From LANDING_STACK_MIN_WIDTH_PX up the title stands in a left column on
+// two or three lines, vertically centred on the viewport, with the solar
+// system off to the right (CameraRig's landing pose parks the sun at
+// three quarters of the width). Narrower viewports keep the one-line
+// banner across the top.
+export const LANDING_STACK_MIN_WIDTH_PX = 1280; // $breakpoint-lg
+
+/** How each phrase breaks into lines when stacked */
+const STACKED_LINES: Record<string, string[]> = {
+  "HUNT.CODES": ["HUNT.", "CODES"],
+  "BUILT WITH ♥": ["BUILT", "WITH ♥"],
+  "BY ANDREW HUNT": ["BY", "ANDREW", "HUNT"],
+};
+/** Letter height (the sampled font size) as a fraction of the viewport
+ *  height — the two-line wordmark comes out ~40% of the height tall */
+const STACK_FONT_VH = 0.16;
+/** The column may reach this far across the viewport before the letters
+ *  shrink to fit: short of the sun's ENTER ring, centred at 75% */
+const STACK_COLUMN_RIGHT = 0.62;
+/** Glyph boxes are this much wider than the measuring font's natural
+ *  proportions (the one-line banner runs ~1.7× stretched) */
+const STACK_STRETCH = 1.5;
+/** Gap between letters and the pitch from one line to the next, in font
+ *  sizes (capitals are ~1.1 font sizes tall, so lines sit ~0.28 apart) */
+const STACK_LETTER_SPACING = 0.14;
+const STACK_LINE_PITCH = 1.38;
+
+export interface LandingLine {
+  text: string;
+  /** Index of the line's first glyph within the phrase */
+  start: number;
+  layout: TextStarLayout;
+}
+
+export interface LandingTitleLayout {
+  /** Whether the title is the stacked column (lg+) or the top banner */
+  stacked: boolean;
+  lines: LandingLine[];
+  /** The sampled font size — the average letter width */
+  fontSize: number;
+}
+
+const stackedLines = (phrase: string): string[] =>
+  STACKED_LINES[phrase] ?? phrase.split(" ");
+
+/**
+ * The ♥'s measured width for the stacked title. The measuring font has
+ * no heart, and the fallback face's is a full em (MEASURE_PX) — but the
+ * sampler stretches every glyph ~1.5× taller than its em while a box
+ * STACK_STRETCH wide only stretches the heart ~1.5× wider than its em
+ * once its side bearings are taken out, and a heart drawn ~1.36 font
+ * sizes tall needs a box ~1.66 wide to come out round (capitals get
+ * away with reading tall; a narrow heart just reads squashed).
+ */
+const STACK_HEART_WIDTH = 44;
+
+/** The measuring font's widths, with the ♥ opened out (STACK_HEART_WIDTH) */
+const stackedLetterWidths = (text: string): number[] =>
+  measureLetters(text).map((w, i) => (text[i] === "♥" ? STACK_HEART_WIDTH : w));
+
+/** A stacked line's width in font sizes: its glyph boxes plus the gaps */
+const lineUnits = (text: string): number =>
+  (stackedLetterWidths(text).reduce((sum, w) => sum + w, 0) / MEASURE_PX) *
+    STACK_STRETCH +
+  (text.length - 1) * STACK_LETTER_SPACING;
+
+/** Where the landing title's lines sit for this phrase and viewport. */
+export function landingTitleLayout(
+  phrase: string,
+  width: number,
+  height: number,
+): LandingTitleLayout {
+  if (width < LANDING_STACK_MIN_WIDTH_PX) {
+    const layout = landingTextLayout(phrase, width);
+    return {
+      stacked: false,
+      fontSize: layout.textWidth / phrase.length,
+      lines: [{ text: phrase, start: 0, layout }],
+    };
+  }
+  const margin = percentageWidthForSidePadding * width;
+  // One size for every phrase, so the stars glide between phrases without
+  // the title breathing in and out: the widest line of any phrase sets it
+  const widest = Math.max(
+    ...Object.values(STACKED_LINES).flat().map(lineUnits),
+  );
+  const fontSize = Math.min(
+    STACK_FONT_VH * height,
+    (STACK_COLUMN_RIGHT * width - margin) / widest,
+  );
+  const texts = stackedLines(phrase);
+  const pitch = STACK_LINE_PITCH * fontSize;
+  const inkHeight =
+    (GLYPH_INK_BOTTOM - GLYPH_INK_TOP) * fontSize + (texts.length - 1) * pitch;
+  const firstY = (height - inkHeight) / 2 - GLYPH_INK_TOP * fontSize;
+  const letterSpacing = STACK_LETTER_SPACING * fontSize;
+  let cursor = 0;
+  const lines = texts.map((text, i) => {
+    const start = Math.max(0, phrase.indexOf(text, cursor));
+    cursor = start + text.length;
+    return {
+      text,
+      start,
+      layout: {
+        x: margin,
+        y: firstY + i * pitch,
+        textWidth: Math.round(
+          (lineUnits(text) - (text.length - 1) * STACK_LETTER_SPACING) *
+            fontSize,
+        ),
+        letterSpacing,
+        fontSize,
+        letterWidths: stackedLetterWidths(text),
+      },
+    };
+  });
+  return { stacked: true, lines, fontSize };
+}
+
+/**
+ * The box one glyph of the landing title occupies, in CSS px: the same
+ * measure-and-scale generateStarsForText runs, so `left` and `width` are
+ * exactly where that glyph's stars land, and `bottom` is where the
+ * letters end (GLYPH_INK_BOTTOM). For DOM chrome that wants to sit under
+ * a particular letter (the "(and Claude)" caption under BUILT WITH ♥'s
+ * heart). `index` counts through the whole phrase, spaces included, so
+ * a stacked phrase's later lines are found by their `start`.
+ */
+export function landingGlyphBox(
+  phrase: string,
+  index: number,
+  windowWidth: number,
+  windowHeight: number,
+): { left: number; width: number; bottom: number } {
+  const { lines, fontSize } = landingTitleLayout(
+    phrase,
+    windowWidth,
+    windowHeight,
+  );
+  const line =
+    lines.find((l) => index >= l.start && index < l.start + l.text.length) ??
+    lines[0];
+  const { layout, text } = line;
+  const bottom = layout.y + GLYPH_INK_BOTTOM * fontSize;
+  const letterWidths = layout.letterWidths ?? measureLetters(text);
+  const total = letterWidths.reduce((sum, w) => sum + w, 0);
+  if (!total) return { left: layout.x, width: fontSize, bottom };
+  const i = index - line.start;
+  let left = layout.x;
+  for (let k = 0; k < i; k++) {
+    left +=
+      Math.round((letterWidths[k] / total) * layout.textWidth) +
+      layout.letterSpacing;
+  }
+  return {
+    left,
+    width: Math.round((letterWidths[i] / total) * layout.textWidth),
+    bottom,
+  };
+}
+
+/**
+ * The landing title's ink block — its left edge and the bottom of its
+ * last line — for chrome that hangs under the whole title (the tagline
+ * under the stacked wordmark, LandingTagline.tsx).
+ */
+export function landingTitleBox(
+  phrase: string,
+  windowWidth: number,
+  windowHeight: number,
+): { left: number; bottom: number; stacked: boolean } {
+  const { lines, fontSize, stacked } = landingTitleLayout(
+    phrase,
+    windowWidth,
+    windowHeight,
+  );
+  const last = lines[lines.length - 1];
+  return {
+    left: last.layout.x,
+    bottom: last.layout.y + GLYPH_INK_BOTTOM * fontSize,
+    stacked,
+  };
+}
+
 export interface TextStarOptions {
   /** Stars per px of letter width (1 = the landing title's full density) */
   density?: number;
   /** Multiplier on the 1.5–2.5px star radius, for small glyphs */
   radiusScale?: number;
+  /** Added to every star's glyph index — a stacked title samples one
+   *  line at a time, and each line's glyphs count on from the last */
+  letterOffset?: number;
 }
 
 /** Sample a line of text into stars at the given layout. */
 export const generateStarsForText = (
   text: string,
   layout: TextStarLayout,
-  { density = 1, radiusScale = 1 }: TextStarOptions = {},
+  { density = 1, radiusScale = 1, letterOffset = 0 }: TextStarOptions = {},
 ): SampledStar[] => {
-  const canvas = document.createElement("canvas");
-  const ctx = canvas.getContext("2d");
-  if (!ctx) return [];
-
-  // Set the font to match what we use in generateStarsForLetter
-  ctx.font = `100 40px ${fontFamily}`;
-
-  // Calculate total width including spacing between letters
-  let totalPrescaledCharWidths = 0;
-  const letterWidths = text.split("").map((letter) => {
-    const width = Math.round(ctx.measureText(letter).width);
-    totalPrescaledCharWidths += width;
-    return width;
-  });
+  const letterWidths = layout.letterWidths ?? measureLetters(text);
+  const totalPrescaledCharWidths = letterWidths.reduce((sum, w) => sum + w, 0);
+  if (!totalPrescaledCharWidths) return [];
 
   const totalStarsWidthPx = layout.textWidth;
-  const averageLetterWidth = totalStarsWidthPx / text.length;
+  const averageLetterWidth = layout.fontSize ?? totalStarsWidthPx / text.length;
   const scaledLetterWidths = letterWidths.map((letterWidthPx) =>
     Math.round((letterWidthPx / totalPrescaledCharWidths) * totalStarsWidthPx),
   );
@@ -213,7 +388,7 @@ export const generateStarsForText = (
   return text.split("").flatMap((letter, index) => {
     const stars = generateStarsForLetter({
       letter,
-      letterIndex: index,
+      letterIndex: index + letterOffset,
       offsetX: currentX,
       offsetY: layout.y,
       letterWidthPx: scaledLetterWidths[index],
@@ -227,12 +402,18 @@ export const generateStarsForText = (
   });
 };
 
-/** The landing title ("HUNT.CODES" and the phrases that follow it). */
+/** The landing title ("HUNT.CODES" and the phrases that follow it), one
+ *  line across the top or, on lg+, stacked in the left column. */
 export const generateStarsForLetters = (
-  text: string,
+  phrase: string,
   windowWidth: number,
+  windowHeight: number,
 ): SampledStar[] =>
-  generateStarsForText(text, landingTextLayout(text, windowWidth));
+  landingTitleLayout(phrase, windowWidth, windowHeight).lines.flatMap((line) =>
+    generateStarsForText(line.text, line.layout, {
+      letterOffset: line.start,
+    }),
+  );
 
 export const starPhrases = ["HUNT.CODES", "BUILT WITH ♥", "BY ANDREW HUNT"];
 export const starPhrasesSmall = ["ANDREW", "HUNT", "CODES ★"];

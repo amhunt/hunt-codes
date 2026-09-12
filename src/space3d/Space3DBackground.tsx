@@ -91,7 +91,7 @@ const Space3DBackground = ({
         {!(isHomePage && !isSpaceView) && (
           <BadgeBoundary>
             <Suspense fallback={null}>
-              <BadgeMedallion />
+              <BadgeMedallion isLanding={isLanding} />
             </Suspense>
           </BadgeBoundary>
         )}

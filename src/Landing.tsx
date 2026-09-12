@@ -5,8 +5,16 @@ import { hoverState } from "./solarHover";
 import useScrollJourney from "./useScrollJourney";
 import ScrollHint from "./ScrollHint";
 import AndClaude from "./AndClaude";
+import LandingTagline from "./LandingTagline";
 import { SUN_RADIUS_OFFSET, SUN_SIZE } from "./landingScene";
 import { JOURNEY_STOPS } from "./scrollTransition";
+import { LANDING_STACK_MIN_WIDTH_PX } from "./space3d/starSampling";
+import useWindowWidth from "./useWindowWidth";
+
+// While the landing page is up, the corner chrome (the music and view
+// switches, the coin's hit target) takes its lg+ dock positions from
+// App.scss `body.on-landing` rules
+const LANDING_BODY_CLASS = "on-landing";
 
 // The solar system's 4s-delayed fadeIn is first-visit choreography (the
 // stars assemble first). Landing remounts on every visit, and replaying
@@ -25,6 +33,17 @@ const Landing = () => {
   useEffect(() => {
     hasPlayedIntro = true;
   }, []);
+
+  useEffect(() => {
+    document.body.classList.add(LANDING_BODY_CLASS);
+    return () => document.body.classList.remove(LANDING_BODY_CLASS);
+  }, []);
+
+  // lg+ stacks the title in a left column with the sun off to the right
+  // (starSampling / CameraRig); ENTER is the only call to action there,
+  // so the scroll chevron sits that layout out
+  const { width } = useWindowWidth();
+  const stacked = width >= LANDING_STACK_MIN_WIDTH_PX;
 
   // Clicking ENTER navigates away without a pointerleave — don't leave
   // the sun's hover glow stuck on
@@ -73,15 +92,19 @@ const Landing = () => {
       </div>
       {/* "(and Claude)" under the title while the stars spell BUILT WITH ♥ */}
       <AndClaude />
+      {/* The line under the stacked wordmark (lg+ only) */}
+      <LandingTagline delayed={!skipIntroDelay} />
       {/* Gentle nudge that the page scrolls; disappears once it has done
           its job (the visitor scrubs) */}
-      <ScrollHint
-        target={JOURNEY_STOPS.home}
-        delayMs={
-          skipIntroDelay ? HINT_DELAY_RETURN_MS : HINT_DELAY_FIRST_VISIT_MS
-        }
-        hidden={engaged}
-      />
+      {!stacked && (
+        <ScrollHint
+          target={JOURNEY_STOPS.home}
+          delayMs={
+            skipIntroDelay ? HINT_DELAY_RETURN_MS : HINT_DELAY_FIRST_VISIT_MS
+          }
+          hidden={engaged}
+        />
+      )}
     </>
   );
 };

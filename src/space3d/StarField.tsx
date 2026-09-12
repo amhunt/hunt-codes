@@ -421,8 +421,8 @@ const TextStars = ({
   // mounted so the intro/phrase choreography doesn't replay on every
   // route return (matching the legacy always-mounted Stars component).
   const targets: SampledStar[] = useMemo(
-    () => (isLanding ? generateStarsForLetters(phrase, width) : []),
-    [isLanding, phrase, width],
+    () => (isLanding ? generateStarsForLetters(phrase, width, height) : []),
+    [isLanding, phrase, width, height],
   );
 
   // Choreography state persists across phrase changes and route hops
