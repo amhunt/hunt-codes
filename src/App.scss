@@ -2242,6 +2242,13 @@ $switch-width: 68px;
 $switch-height: 34px;
 $switch-thumb: 26px;
 $switch-pad: 4px;
+// The view chip's segments (.vms-option's floor) and the width the two of
+// them plus the chassis padding come to — the landing dock lines the
+// music switch up off it
+$vms-option: 38px;
+$vms-width: $vms-option * 2 + $switch-pad * 2;
+// The air between the two switches wherever they sit in a row
+$switch-row-gap: 12px;
 $switch-ease: cubic-bezier(0.45, 0.05, 0.25, 1.2);
 
 .scene-switch {
@@ -2305,7 +2312,10 @@ $switch-ease: cubic-bezier(0.45, 0.05, 0.25, 1.2);
   @media (min-width: $breakpoint-lg) {
     top: auto;
     right: auto;
-    left: calc(1rem + #{$switch-width} + 20px + env(safe-area-inset-left, 0px));
+    left: calc(
+      1rem + #{$switch-width} + #{$switch-row-gap} +
+        env(safe-area-inset-left, 0px)
+    );
     bottom: calc(1rem + env(safe-area-inset-bottom, 0px));
   }
   // No `position` here: the component's Tailwind `fixed` sets it, and a
@@ -2374,7 +2384,7 @@ $switch-ease: cubic-bezier(0.45, 0.05, 0.25, 1.2);
   // what the track's width comes from: a glyph with a thumb's worth of
   // room around it.
   flex: 1 1 0;
-  min-width: 38px;
+  min-width: $vms-option;
   border-radius: 999px;
   background: none;
   // The global `button:hover` underline has nothing to draw under, but
@@ -2459,25 +2469,36 @@ body.life-timeline-present {
 // ─── Landing page dock (md+) ────────────────
 // With the title stacked in a left column (starSampling, $breakpoint-sm
 // up) the coin's hit target parks top-right, off the title's line —
-// BadgeMedallion moves the coin itself to match. The view switch takes
-// its lg+ spot beside the music switch at every stacked size, since the
-// coin now owns the corner it would otherwise use. `on-landing` rides
-// <body> while Landing.tsx is mounted.
+// BadgeMedallion moves the coin itself to match. That frees the
+// bottom-right corner for both switches, which dock there in a row under
+// the coin, inset a touch tighter than it is so the two corners read as a
+// pair rather than lining up exactly. The view chip takes the corner and
+// the music switch sits inboard of it. `on-landing` rides <body> while
+// Landing.tsx is mounted.
+$landing-badge-inset: 48px;
+$landing-dock-inset: $landing-badge-inset - 8px;
 body.on-landing {
   @media (min-width: $breakpoint-sm) {
     .badge-link {
-      top: calc(48px + env(safe-area-inset-top, 0px));
-      right: calc(48px + env(safe-area-inset-right, 0px));
+      top: calc(#{$landing-badge-inset} + env(safe-area-inset-top, 0px));
+      right: calc(#{$landing-badge-inset} + env(safe-area-inset-right, 0px));
       bottom: auto;
+    }
+
+    .music-toggle {
+      left: auto;
+      right: calc(
+        #{$landing-dock-inset} + #{$vms-width} + #{$switch-row-gap} +
+          env(safe-area-inset-right, 0px)
+      );
+      bottom: calc(#{$landing-dock-inset} + env(safe-area-inset-bottom, 0px));
     }
 
     .view-mode-switch {
       top: auto;
-      right: auto;
-      left: calc(
-        1rem + #{$switch-width} + 20px + env(safe-area-inset-left, 0px)
-      );
-      bottom: calc(1rem + env(safe-area-inset-bottom, 0px));
+      left: auto;
+      right: calc(#{$landing-dock-inset} + env(safe-area-inset-right, 0px));
+      bottom: calc(#{$landing-dock-inset} + env(safe-area-inset-bottom, 0px));
     }
   }
 
