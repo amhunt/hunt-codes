@@ -57,8 +57,8 @@ const Home = () => {
 
   const size = useWindowSize();
   const isSmall = size === "sm";
-  // 768–999px: the pills squeezed the headline to ~100px, so the row
-  // wraps there — contact links on top, work sample underneath
+  // 768–999px: too little width to seat the pills beside the headline at
+  // all, so they leave the row and sit under the typed greeting
   const isMedium = size === "md";
 
   const typedEl = useRef<HTMLSpanElement>(null);
@@ -148,7 +148,13 @@ const Home = () => {
           </TooltipContent>
         </Tooltip>
       </div>
-      <main className={cx("homeInfoContainer", logoOpacity === 1 && "show")}>
+      <main
+        className={cx(
+          "homeInfoContainer",
+          isMedium && "pills-below",
+          logoOpacity === 1 && "show",
+        )}
+      >
         <h1 className="sr-only">Andrew Hunt — home</h1>
         {/* No max-width cap (App.scss sizes it to the phone): at 300px the
             availability line wrapped, orphaned "2026", and ran into
@@ -169,34 +175,22 @@ const Home = () => {
             </div>
           </div>
         )}
-        <div className="hoverableHomeItem justify-between gap-6">
+        <div className="hoverableHomeItem identity-row justify-between gap-6">
           {!isSmall && (
-            <div className="max-w-100 text-left">
-              <div className="font-bold">
-                Frontend Engineer based in{" "}
-                <s className="opacity-70 decoration-[#ff6b6b] decoration-2">
-                  SF
-                </s>{" "}
-                NYC
-              </div>
-              <div className="availability-line">
-                consulting now · open to full-time,{" "}
-                <span className="whitespace-nowrap">fall 2026</span>
-              </div>
+            <div className="identity-text max-w-100 text-left font-bold">
+              Frontend Engineer based in{" "}
+              <s className="opacity-70 decoration-[#ff6b6b] decoration-2">SF</s>{" "}
+              NYC
             </div>
           )}
-          {/* On md the pills wrap into two rows: contact links on top, the
-              shop pushed underneath via `order` on its slot (max-w-38 =
-              three 48px pills + gaps); elsewhere one row in DOM order.
+          {/* One row in DOM order at every width. On md the row leaves
+              the identity line's side entirely and drops under the typed
+              greeting (`.pills-below` in App.scss), which is what buys
+              the availability line the panel's full width there.
               Tooltips never open from a touch pointer, so on phones each
               pill also carries a caption — the only name the shopping bag
               gets there. */}
-          <div
-            className={cx(
-              "icon-pill-row flex items-start justify-end gap-1",
-              isMedium && "flex-wrap max-w-38",
-            )}
-          >
+          <div className="icon-pill-row flex items-start justify-end gap-1">
             <span className="icon-pill-slot">
               <Tooltip disableHoverableContent>
                 <TooltipTrigger asChild>
@@ -235,7 +229,7 @@ const Home = () => {
               </Tooltip>
               {isSmall && <span className="icon-pill-caption">GitHub</span>}
             </span>
-            <span className={cx("icon-pill-slot", isMedium && "order-1")}>
+            <span className="icon-pill-slot">
               <Tooltip disableHoverableContent>
                 <TooltipTrigger asChild>
                   <Link
@@ -286,7 +280,18 @@ const Home = () => {
         </div>
         {/* Moved to computer for large screens */}
         {/* {isMdOrLess && ( */}
-        <div className="hoverableHomeItem h-20 gap-0">
+        {/* Full panel width, below the row rather than inside it: beside
+            four 48px pills there is only ~230px left at 1280 and the line
+            needs 315, so it broke as "open to full-" / "time, fall 2026".
+            Widening the panel instead would have run it under the
+            satellite, which is placed to clear the old width. */}
+        {!isSmall && (
+          <div className="availability-line">
+            consulting now · open to full-time,{" "}
+            <span className="whitespace-nowrap">fall 2026</span>
+          </div>
+        )}
+        <div className="hoverableHomeItem typed-row h-20 gap-0">
           <div className="typed-greeting">
             <span
               ref={typedEl}
