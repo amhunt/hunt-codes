@@ -24,6 +24,8 @@ export const BADGE_AIM_MS = 250;
  * Set from the moment a click stages a volley until the last one has
  * been fired: the coin holds its spin and points its face up the launch
  * heading, so the confetti reads as pouring out of the signature "A".
+ * Hover poses the coin the same way (BadgeMedallion reads both flags), so
+ * this one's job is holding the pose past a pointerleave mid-volley.
  */
 export const badgeAimState = {
   aiming: false,

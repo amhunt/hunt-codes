@@ -8,9 +8,10 @@ import useReducedMotion from "./useReducedMotion";
 /**
  * The DOM hit target for the corner "hunt.codes" medallion (the coin
  * itself is drawn by space3d/BadgeMedallion in the star canvas, which
- * never takes pointer input). Hovering perks the coin up (BadgeMedallion
- * reads badgeHoverState per frame) and clicking fires a volley of
- * signature confetti from it (badgeConfetti) — that's the whole job. It
+ * never takes pointer input). Hovering perks the coin up and swings its
+ * face onto the confetti's launch heading (BadgeMedallion reads
+ * badgeHoverState per frame), and clicking fires a volley of signature
+ * confetti off that face (badgeConfetti) — that's the whole job. It
  * used to double as the site's wordmark and fly you back to the solar
  * system, but the click now aims the coin and pours confetti off its
  * face, and navigating mid-volley cuts that short; every page carries its
