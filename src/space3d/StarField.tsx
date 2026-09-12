@@ -27,9 +27,9 @@ import {
   generateStarsForSignature,
   generateStarsForText,
   introSpawnPositions,
-  signaturePenPosition,
-  signatureStrokeAt,
+  signaturePen,
   starPhrases,
+  type PenState,
   type SampledStar,
   type TextStarLayout,
   type TextStarOptions,
@@ -577,9 +577,7 @@ const TextStars = ({
     // The signature draws itself on instead: every star waits in one ball
     // of light at the head of the stroke
     const ballStart =
-      sim.hasEverHadStars || !formation
-        ? null
-        : signaturePenPosition(formation.pen, 0);
+      sim.hasEverHadStars || !formation ? null : signaturePen(formation.pen, 0);
     for (let i = 0; i < count; i++) {
       velocities[i] = Math.random() + 0.5;
       if (i * 2 + 1 < prev.length && sim.hasEverHadStars) {
@@ -689,16 +687,16 @@ const TextStars = ({
     // cursor-clump swell (size by the size of the crowd, brightened toward
     // white by it too) they read as a single ball of light, which thins out
     // and dims as the letter takes the stars off it.
-    let pen: { x: number; y: number } | null = null;
+    let pen: PenState | null = null;
     let ballSize = 0;
     let ballScale = 1;
     let crowd = 0;
     if (formation && sim.drawn < 1) {
-      sim.drawn = signatureStrokeAt(
+      pen = signaturePen(
         formation.pen,
         Math.max(0, sim.elapsedMs - STAR_INTRO_DELAY_MS) / SIGNATURE_DRAW_MS,
       );
-      pen = signaturePenPosition(formation.pen, sim.drawn);
+      sim.drawn = pen.drawn;
       for (let i = 0; i < targets.length; i++) {
         if (formation.order[i] > sim.drawn) crowd++;
       }

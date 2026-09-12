@@ -1,5 +1,10 @@
 import tinycolor from "tinycolor2";
 
+import {
+  LANDING_SUN_RADIUS_FRACTION,
+  LANDING_SUN_Y_SMALL,
+} from "../landingScene";
+
 /**
  * Star data produced by sampling text glyphs on an offscreen 2D canvas.
  * Coordinates are in CSS pixels relative to the viewport.
@@ -13,13 +18,6 @@ export interface SampledStar {
   color: string;
   /** Index of the glyph this star belongs to within the sampled text */
   letter: number;
-}
-
-// Sampling-internal: glyph-canvas coordinates used only for the
-// min-distance dedup between candidate points
-interface PlacedStar extends SampledStar {
-  canvasX: number;
-  canvasY: number;
 }
 
 /** Where a line of star text sits on screen (CSS px). */
@@ -48,7 +46,60 @@ export interface TextStarLayout {
 const LANDING_TEXT_TOP_PX = 60;
 const fontFamily = "Helvetica Neue";
 
-const MIN_PX_DIFF_BETWEEN_STARS = 3;
+/** Alpha above which a rasterized pixel counts as ink — high enough to
+ *  keep stars off the antialiased fringe of a glyph or a path */
+const INK_ALPHA = 128;
+/** The ink is diced into cells this big and each takes one star at most,
+ *  so the scatter can't clump. Small enough that it doesn't thin out the
+ *  name header's little glyphs, which ask for more stars than a letter
+ *  that size has room for. */
+const STAR_CELL_PX = 3;
+/** How many times to look for a free cell before giving that star up */
+const STAR_PLACEMENT_ATTEMPTS = 40;
+/** The ramp every sampled star is coloured off: mint at the left edge of
+ *  the shape through red at the right */
+const starColor = (fraction: number) =>
+  tinycolor.mix("#3effcc", "#ff2d2d", fraction * 100).toHexString();
+/** Stars run 1.5–2.5px, thinner where a caller asks for it */
+const starRadius = (scale = 1) => (Math.random() + 1.5) * scale;
+
+/**
+ * Well-spread points over whatever has been drawn on `ctx`: up to `count`
+ * of them, no two in the same cell. Canvas pixel coordinates — mapping
+ * them onto the screen is the caller's business, since a glyph stretches
+ * into its box while the signature only shifts. Shared by both samplers,
+ * so the title and the signature scatter alike.
+ */
+const scatterOverInk = (
+  ctx: CanvasRenderingContext2D,
+  count: number,
+): { x: number; y: number }[] => {
+  const { width, height } = ctx.canvas;
+  const { data } = ctx.getImageData(0, 0, width, height);
+  const ink: number[] = [];
+  for (let pixel = 0; pixel < width * height; pixel++) {
+    if (data[pixel * 4 + 3] > INK_ALPHA) ink.push(pixel);
+  }
+  if (ink.length === 0) return [];
+
+  const columns = Math.ceil(width / STAR_CELL_PX);
+  const taken = new Set<number>();
+  const points: { x: number; y: number }[] = [];
+  for (let i = 0; i < count; i++) {
+    for (let attempt = 0; attempt < STAR_PLACEMENT_ATTEMPTS; attempt++) {
+      const pixel = ink[Math.floor(Math.random() * ink.length)];
+      const x = pixel % width;
+      const y = Math.floor(pixel / width);
+      const cell =
+        Math.floor(y / STAR_CELL_PX) * columns + Math.floor(x / STAR_CELL_PX);
+      if (taken.has(cell)) continue;
+      taken.add(cell);
+      points.push({ x, y });
+      break;
+    }
+  }
+  return points;
+};
 
 const generateStarsForLetter = ({
   letter,
@@ -87,51 +138,17 @@ const generateStarsForLetter = ({
   const letterMetricsInCanvas = ctx.measureText(letter);
   const ctxTextWidth = letterMetricsInCanvas.width;
   const ctxTextHeight = letterMetricsInCanvas.fontBoundingBoxAscent;
-  const points: PlacedStar[] = [];
-  const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
 
-  for (let i = 0; i < numStars; i++) {
-    let foundPoint = false;
-    let remainingAttempts = 40;
-    while (!foundPoint && remainingAttempts > 0) {
-      const xRandom = Math.random();
-      const x = Math.floor(xRandom * canvas.width);
-      const y = Math.floor(Math.random() * canvas.height);
-      const index = (y * canvas.width + x) * 4;
-
-      // If the pixel is not transparent AND is not near an existing star, we've found a point in the letter
-      if (
-        imageData.data[index + 3] > 0 &&
-        !points.some(
-          (star) =>
-            Math.abs(star.canvasX - x) < MIN_PX_DIFF_BETWEEN_STARS &&
-            Math.abs(star.canvasY - y) < MIN_PX_DIFF_BETWEEN_STARS,
-        )
-      ) {
-        points.push({
-          // Every glyph fills its box: a narrow one is stretched out to
-          // it, and one wider than the box (the fillText maxWidth
-          // squeezed it in) is left at the box's width rather than
-          // squeezed a second time
-          x:
-            (x * letterWidthPx) / Math.min(ctxTextWidth, letterWidthPx) +
-            offsetX,
-          canvasX: x,
-          y: (y * averageLetterHeight) / ctxTextHeight + offsetY,
-          canvasY: y,
-          r: (Math.random() + 1.5) * radiusScale,
-          // Color should be a hex value between blue and red, based on the x and y coordinates. Blue in the top-left, red in the bottom-right.
-          color: tinycolor
-            .mix("#3effcc", "#ff2d2d", xRandom * 100)
-            .toHexString(),
-          letter: letterIndex,
-        });
-        foundPoint = true;
-      }
-      remainingAttempts--;
-    }
-  }
-  return points;
+  return scatterOverInk(ctx, numStars).map(({ x, y }) => ({
+    // Every glyph fills its box: a narrow one is stretched out to it, and
+    // one wider than the box (the fillText maxWidth squeezed it in) is
+    // left at the box's width rather than squeezed a second time
+    x: (x * letterWidthPx) / Math.min(ctxTextWidth, letterWidthPx) + offsetX,
+    y: (y * averageLetterHeight) / ctxTextHeight + offsetY,
+    r: starRadius(radiusScale),
+    color: starColor(x / canvas.width),
+    letter: letterIndex,
+  }));
 };
 
 const percentageWidthOfText = 0.8;
@@ -433,28 +450,14 @@ const SIGNATURE_VIEWBOX = { width: 166.5, height: 192.55 };
 const SIGNATURE_HEIGHT_PX = 260;
 const SIGNATURE_MAX_WIDTH_FRACTION = 0.75;
 const SIGNATURE_MAX_BAND_FRACTION = 0.75;
-// The phone landing parks the sun's centre two thirds of the way down
-// the viewport (LANDING_SUN_Y_SMALL, solar/CameraRig) and its sphere
-// (SUN_RADIUS 3, seen from the landing camera's height of 35 through the
-// scene's 55° fov) projects to 3 / (tan 27.5° · 35) of the visible
-// half-height — this fraction of the viewport's full height.
-const SUN_CENTER_Y_FRACTION = 2 / 3;
-const SUN_RADIUS_HEIGHT_FRACTION = 0.082;
 /** The room above the sun: the top of the viewport down to the top of
- *  the sun's sphere. The letter stands centred in it. */
+ *  the sun's sphere, both of them the landing scene's own numbers. The
+ *  letter stands centred in it. */
 const SIGNATURE_BAND_FRACTION =
-  SUN_CENTER_Y_FRACTION - SUN_RADIUS_HEIGHT_FRACTION;
+  LANDING_SUN_Y_SMALL - LANDING_SUN_RADIUS_FRACTION;
 const SIGNATURE_CENTER_Y_FRACTION = SIGNATURE_BAND_FRACTION / 2;
 /** Stars per px of letter height (~415 at the full 260px) */
 const SIGNATURE_STAR_DENSITY = 1.6;
-/** The fill is diced into cells this big and each takes one star at
- *  most, so the scatter can't clump (the min-distance dedup
- *  generateStarsForLetter runs, minus its quadratic scan) */
-const SIGNATURE_STAR_CELL_PX = 4;
-const SIGNATURE_PLACEMENT_ATTEMPTS = 40;
-/** Alpha above which a rasterized pixel counts as ink — high enough to
- *  keep stars off the path's antialiased fringe */
-const SIGNATURE_INK_ALPHA = 128;
 
 /**
  * The stroke Andrew's pen takes through the A, in viewBox units: the
@@ -595,52 +598,50 @@ const strokeOrder = (x: number, y: number, pen: PenPoint[]): number => {
   return order;
 };
 
+/** Where the pen is at a moment of the draw: how far along the stroke it
+ *  has come (0–1, which is what says whether a star has been laid down
+ *  yet) and where on screen that puts it */
+export interface PenState {
+  drawn: number;
+  x: number;
+  y: number;
+}
+
 /**
- * How far along the stroke (0–1) the pen has come at `time` (0–1 of the
- * draw). Each leg runs on a cubic with its end speeds set by how hard the
- * pen brakes at the corners either side (`ease`): through a reversal a
- * real hand's speed passes through zero, and that stop and run-up is most
- * of what separates a signature being written from a marquee — while a
- * joint that barely changes direction is taken at full tilt.
+ * The pen at `time` (0–1 of the draw). Each leg runs on a cubic with its
+ * end speeds set by how hard the pen brakes at the corners either side
+ * (`ease`): through a reversal a real hand's speed passes through zero,
+ * and that stop and run-up is most of what separates a signature being
+ * written from a marquee — while a joint that barely changes direction is
+ * taken at full tilt. A leg is a straight line, so the same eased
+ * fraction gives both how much of the stroke is behind the pen and where
+ * the pen itself stands.
  */
-export function signatureStrokeAt(pen: PenPoint[], time: number): number {
-  if (pen.length === 0) return 1;
+export function signaturePen(pen: PenPoint[], time: number): PenState {
+  if (pen.length === 0) return { drawn: 1, x: 0, y: 0 };
   const at = Math.min(1, Math.max(0, time));
   for (let i = 1; i < pen.length; i++) {
     if (at > pen[i].time && i < pen.length - 1) continue;
-    const span = pen[i].time - pen[i - 1].time;
-    const u = span > 0 ? Math.min(1, (at - pen[i - 1].time) / span) : 1;
+    const a = pen[i - 1];
+    const b = pen[i];
+    const span = b.time - a.time;
+    const u = span > 0 ? Math.min(1, (at - a.time) / span) : 1;
     // Hermite on the leg: speed 0 at an end the pen brakes into, full
     // stride at one it carries through. Braking at both ends is a plain
     // smoothstep; carrying through both is a leg taken at a run.
-    const from = (1 - pen[i - 1].ease) * SIGNATURE_CARRY_SPEED;
-    const to = (1 - pen[i].ease) * SIGNATURE_CARRY_SPEED;
+    const from = (1 - a.ease) * SIGNATURE_CARRY_SPEED;
+    const to = (1 - b.ease) * SIGNATURE_CARRY_SPEED;
     const eased =
       from * (u ** 3 - 2 * u ** 2 + u) +
       (3 * u ** 2 - 2 * u ** 3) +
       to * (u ** 3 - u ** 2);
-    return pen[i - 1].at + eased * (pen[i].at - pen[i - 1].at);
-  }
-  return 1;
-}
-
-/** Where the ball of light stands at `t` (0–1) of the stroke */
-export function signaturePenPosition(
-  pen: PenPoint[],
-  t: number,
-): { x: number; y: number } {
-  if (pen.length === 0) return { x: 0, y: 0 };
-  const at = Math.min(1, Math.max(0, t));
-  for (let i = 1; i < pen.length; i++) {
-    if (at > pen[i].at && i < pen.length - 1) continue;
-    const span = pen[i].at - pen[i - 1].at;
-    const f = span > 0 ? (at - pen[i - 1].at) / span : 0;
     return {
-      x: pen[i - 1].x + f * (pen[i].x - pen[i - 1].x),
-      y: pen[i - 1].y + f * (pen[i].y - pen[i - 1].y),
+      drawn: a.at + eased * (b.at - a.at),
+      x: a.x + eased * (b.x - a.x),
+      y: a.y + eased * (b.y - a.y),
     };
   }
-  return { x: pen[0].x, y: pen[0].y };
+  return { drawn: 1, x: pen[0].x, y: pen[0].y };
 }
 
 /**
@@ -675,45 +676,25 @@ export const generateStarsForSignature = (
   // The art is an evenodd path — filled nonzero, the counters fill in
   ctx.fill(new Path2D(SIGNATURE_PATH), "evenodd");
 
-  const { data } = ctx.getImageData(0, 0, canvas.width, canvas.height);
-  const ink: number[] = [];
-  for (let pixel = 0; pixel < canvas.width * canvas.height; pixel++) {
-    if (data[pixel * 4 + 3] > SIGNATURE_INK_ALPHA) ink.push(pixel);
-  }
-  if (ink.length === 0) return empty;
-
   const offsetX = (windowWidth - width) / 2;
   const offsetY = SIGNATURE_CENTER_Y_FRACTION * windowHeight - height / 2;
   const pen = penPath(scale, offsetX, offsetY);
-  const columns = Math.ceil(canvas.width / SIGNATURE_STAR_CELL_PX);
-  const taken = new Set<number>();
-  const stars: SampledStar[] = [];
-  const order: number[] = [];
-  const count = Math.round(height * SIGNATURE_STAR_DENSITY);
-  for (let i = 0; i < count; i++) {
-    for (let attempt = 0; attempt < SIGNATURE_PLACEMENT_ATTEMPTS; attempt++) {
-      const pixel = ink[Math.floor(Math.random() * ink.length)];
-      const x = pixel % canvas.width;
-      const y = Math.floor(pixel / canvas.width);
-      const cell =
-        Math.floor(y / SIGNATURE_STAR_CELL_PX) * columns +
-        Math.floor(x / SIGNATURE_STAR_CELL_PX);
-      if (taken.has(cell)) continue;
-      taken.add(cell);
-      stars.push({
-        x: offsetX + x,
-        y: offsetY + y,
-        r: Math.random() + 1.5,
-        color: tinycolor
-          .mix("#3effcc", "#ff2d2d", (x / canvas.width) * 100)
-          .toHexString(),
-        letter: 0,
-      });
-      order.push(strokeOrder(offsetX + x, offsetY + y, pen));
-      break;
-    }
-  }
-  return { stars, order: new Float32Array(order), pen };
+  const stars: SampledStar[] = scatterOverInk(
+    ctx,
+    Math.round(height * SIGNATURE_STAR_DENSITY),
+  ).map(({ x, y }) => ({
+    x: offsetX + x,
+    y: offsetY + y,
+    r: starRadius(),
+    color: starColor(x / canvas.width),
+    letter: 0,
+  }));
+  if (stars.length === 0) return empty;
+
+  const order = new Float32Array(
+    stars.map((star) => strokeOrder(star.x, star.y, pen)),
+  );
+  return { stars, order, pen };
 };
 
 /**
