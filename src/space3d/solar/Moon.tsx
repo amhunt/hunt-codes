@@ -201,7 +201,10 @@ export default function Moon({
       }
     }
     if (mesh.current) {
-      mesh.current.rotation.y += delta * MOON.spinSpeed;
+      // Absolute off the shared clock, not a `+=` accumulation: the lock
+      // is a relationship with the orbit angle above, and summing frame
+      // deltas would let it drift out of true over a long session.
+      mesh.current.rotation.y = MOON.spinPhase + t * MOON.spinSpeed;
     }
 
     // Reveal: the about view shows the moon + its orbit ring; elsewhere it

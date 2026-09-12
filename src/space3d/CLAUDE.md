@@ -32,6 +32,14 @@ projected verts) → `.body-outline` SVG paths in `SolarOverlays.tsx`.
   orbit automatically. Don't reintroduce a hand-set `orbitSpeed` — the
   asteroids, which share Earth's, are the only bodies exempt. Planet
   radii come off `EARTH_RADIUS` by the real km ratio the same way.
+- Orbits sweep +X → +Z, which is a turn about **-Y**, while a positive
+  `rotation.y` turns about +Y — the two senses are opposite. So the moon's
+  tidal lock is `spinSpeed: -MOON.orbitSpeed` (matching the rate with the
+  wrong sign tumbles it through every face), and `Moon.tsx` drives
+  `rotation.y` absolutely off `clock.elapsedTime` rather than `+=`-ing
+  frame deltas, so the lock can't drift out of true. A consequence of the
+  same mismatch: every planet's spin currently runs retrograde against
+  its own orbit. Pre-existing, and only visible on Earth up close.
 - The planets carry their real axial tilt, and `Planet.tsx` sets
   `rotation-order="ZYX"` so the composed rotation is Rz(tilt)·Ry(spin) —
   a spin about the tilted pole. The default XYZ order composes the other

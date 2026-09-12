@@ -132,7 +132,7 @@ export const PLANETS: SolarPlanetConfig[] = [
     radius: EARTH_RADIUS,
     ...orbit(EARTH_ORBIT_RADIUS),
     orbitPhase: 4.2,
-    spinSpeed: 0.03 * SPEED_SCALE,
+    spinSpeed: 0.039 * SPEED_SCALE,
     axialTilt: tilt(23.44),
   },
   {
@@ -368,14 +368,28 @@ export function satelliteViewFrame(
 }
 
 /** Earth's moon — orbits Earth (not the sun), in the same XZ plane. */
+const MOON_ORBIT_SPEED = 0.18 * SPEED_SCALE;
+const MOON_ORBIT_PHASE = 1.1;
 export const MOON = {
   radius: 0.42,
   /** orbit radius around Earth's center */
   orbitRadius: 4,
   /** radians per second — slow, so the /about camera drifts gently */
-  orbitSpeed: 0.18 * SPEED_SCALE,
-  orbitPhase: 1.1,
-  spinSpeed: 0.05 * SPEED_SCALE,
+  orbitSpeed: MOON_ORBIT_SPEED,
+  orbitPhase: MOON_ORBIT_PHASE,
+  /**
+   * Tidally locked: exactly one rotation per orbit, so the same face
+   * holds toward Earth. Negative because the orbits here sweep +X → +Z,
+   * which is a turn about -Y, while a positive `rotation.y` turns the
+   * other way — matching the rate with the wrong sign tumbles the moon
+   * through every face instead of pinning one. Moon.tsx drives the
+   * rotation off the same clock as the orbit so the lock can't drift.
+   */
+  spinSpeed: -MOON_ORBIT_SPEED,
+  /** The `rotation.y` that squares the near side onto Earth at t=0 (the
+   *  lock above holds it there): the body's +X points at Earth when
+   *  rotation.y = π − orbit angle. */
+  spinPhase: Math.PI - MOON_ORBIT_PHASE,
 };
 
 /** Position of a planet at elapsed time t (seconds), honoring the
