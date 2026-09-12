@@ -27,7 +27,7 @@ import {
  */
 
 const ABOUT_TEXT = "ABOUT ME";
-const ABOUT_FONT_SIZE = 13; // matches the SVG textPath fontSize
+const ABOUT_FONT_SIZE = 14; // rasterization size for the glyph textures
 const ABOUT_FONT = retroFloralFont(ABOUT_FONT_SIZE);
 
 // The label was dark purple for the old light sky; mesh view is dark

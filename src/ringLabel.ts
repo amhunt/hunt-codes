@@ -8,7 +8,7 @@
  * The numbers come from the DOM overlay the "ABOUT ME" ring replaced:
  * BodyAnchors sized that overlay to 1.55x the body's projected diameter, the
  * SVG text path sat at 41/50 of its radius, and the font was 13/100 of the
- * viewBox.
+ * viewBox — the font has since been nudged up a point.
  *
  * Sizes come back in the same units as the `bodyRadius` handed in, so this
  * works equally in three.js world units and in the landing SVG's viewBox
@@ -19,7 +19,7 @@
 
 const OVERLAY_SCALE = 1.55;
 const PATH_RADIUS_FRAC = 41 / 50;
-const FONT_FRAC = 13 / 100;
+const FONT_FRAC = 14 / 100;
 
 export interface RingLabelMetrics {
   /** Radius the glyph centers ride */
