@@ -63,6 +63,13 @@ const ENTER_TEXT = "ENTER";
  */
 const ENTER_RASTER_PX = 22;
 const ENTER_FONT = retroFloralFont(ENTER_RASTER_PX);
+/**
+ * Extra tracking between the glyphs, as a fraction of each letter's own
+ * advance — five letters on the sun's big ring read better spread out
+ * than Earth's tighter-set "ABOUT ME" does. Rides the layout only; the
+ * letters keep the shared ring's size and standoff.
+ */
+const ENTER_TRACKING = 0.5;
 const ENTER_TEXT_COLOR = new THREE.Color("#ffffff");
 // Mesh view keeps the label bright — the old dark purple was there to
 // read against the light sky this view replaced
@@ -89,9 +96,10 @@ function orientLetter(quaternion: THREE.Quaternion, angle: number) {
 }
 
 /**
- * Curved "ENTER" text above the sun. Same construction and same proportions
- * as Earth's "ABOUT ME" ring (ringLabel.ts) — the two are the site's only
- * planet links, and they should read as a pair.
+ * Curved "ENTER" text above the sun. Same construction and same size and
+ * standoff as Earth's "ABOUT ME" ring (ringLabel.ts) — the two are the
+ * site's only planet links, and they should read as a pair. Tracking is
+ * the one thing it sets for itself (ENTER_TRACKING).
  */
 function EnterRing({
   isSpaceView,
@@ -117,7 +125,11 @@ function EnterRing({
 
     const { radius: worldRadius, fontSize: worldFontSize } =
       ringLabelMetrics(SUN_RADIUS);
-    const worldArcLength = totalWidth * (worldFontSize / ENTER_RASTER_PX);
+    // Widening every letter's slot by the tracking spaces the word out
+    // without moving its center: the half-slot that lands outside the
+    // first and last glyph is padding on an otherwise empty ring.
+    const worldArcLength =
+      totalWidth * (1 + ENTER_TRACKING) * (worldFontSize / ENTER_RASTER_PX);
     const totalAngle = worldArcLength / worldRadius;
     // Center the word at the top of the screen (−Z is screen-up for the
     // top-down landing camera); increasing angle runs left→right.
