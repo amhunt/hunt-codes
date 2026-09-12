@@ -51,7 +51,7 @@ export const Hint: Story = {
   play: async () => {
     // Radix portals its tooltip to the body, outside the story canvas
     const hint = await within(document.body).findByText(
-      "Enable sound for the full experience",
+      "Sound on for the full experience",
       undefined,
       { timeout: 5000 },
     );

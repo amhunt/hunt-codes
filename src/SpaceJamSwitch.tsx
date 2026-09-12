@@ -2,6 +2,7 @@ import React, { useEffect, useRef, useState } from "react";
 import { useLocation } from "react-router-dom";
 import cx from "classnames";
 import { MusicIcon } from "lucide-react";
+import toast from "react-hot-toast";
 
 import SceneSwitch from "ui/SceneSwitch";
 import useWindowSize from "useWindowSize";
@@ -39,7 +40,14 @@ import {
  */
 
 /** The one-time advert. Swap the line here — nothing else reads it. */
-const SOUND_HINT = "Enable sound for the full experience";
+const SOUND_HINT = "Sound on for the full experience";
+/**
+ * What the visitor gets told the first time they switch it on. The music
+ * isn't a track, and nobody would guess that from a speaker icon — so say
+ * what it actually is, once, and then never again.
+ */
+const SOUND_TOAST =
+  "Sound on — the music is generated live from the scene: a chord for each view, and a chime whenever two planets line up.";
 /** Long enough after load that the scene has assembled and the visitor
  *  is looking at it, short enough to still feel like a response to
  *  arriving */
@@ -55,6 +63,9 @@ const SpaceJamSwitch = () => {
   const [hinting, setHinting] = useState(false);
   /** The advert gets one turn per page load, however it ends */
   const hintSpent = useRef(false);
+  /** So does the explanation — flipping off and back on is not a request
+   *  to be told again */
+  const toastSpent = useRef(false);
   const { pathname } = useLocation();
   const size = useWindowSize();
   const hiddenOnPhone = size === "sm" && pathname !== "/projects-and-toys";
@@ -117,6 +128,10 @@ const SpaceJamSwitch = () => {
                 setHinting(false);
                 setOpen(false);
                 setEnabled(on);
+                if (on && !toastSpent.current) {
+                  toastSpent.current = true;
+                  toast(SOUND_TOAST);
+                }
               }}
               // A stable name — aria-checked carries the state, and the
               // tooltip names the flip
