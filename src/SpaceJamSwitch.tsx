@@ -12,39 +12,30 @@ import { setPadEnabled } from "./ambientPad";
 import { Tooltip, TooltipContent, TooltipTrigger } from "ui/tooltip";
 
 /**
- * The bottom-left music switch: the site's one audio control. The thumb
- * carries a note while the jams play and a red-slashed one while they're
- * muted; hovering (or focusing) it shows what a flip would do — "Play
- * space jams" or "Pause space jams".
- *
- * It governs the whole audio layer: the generative pad the solar scene
- * plays (ambientPad.ts) and, through `audioPrefs.enabled`, the
- * interaction sounds (sfx.ts). A visitor who mutes the site should not
- * still hear it click at them.
+ * The bottom-left music switch: the site's one audio control. It governs
+ * the whole audio layer — the solar scene's generative pad
+ * (ambientPad.ts) and, through `audioPrefs.enabled`, the interaction
+ * sounds (sfx.ts). A visitor who mutes the site shouldn't still hear it
+ * click at them.
  *
  * It starts **off** — sound that arrives uninvited is worse than sound
  * nobody found — so the switch advertises itself instead: a beat after
- * load the tooltip opens on its own to say there is something to hear,
- * then gets out of the way. Flipping it on is itself the gesture autoplay
- * policy wants, so the pad comes up immediately rather than waiting.
+ * load the tooltip opens on its own, then gets out of the way. Flipping
+ * it on is itself the gesture autoplay policy wants, so the pad comes up
+ * immediately.
  *
- * Phones only show the switch on /projects-and-toys; elsewhere it's
- * hidden with CSS rather than unmounted, so audio started there keeps
- * playing across the rest of the site.
+ * Phones only show it on /projects-and-toys; elsewhere it's hidden with
+ * CSS rather than unmounted, so audio started there keeps playing.
  */
 
 /** The one-time advert. Swap the line here — nothing else reads it. */
 const SOUND_HINT = "Sound on for the full experience";
-/**
- * What the visitor gets told the first time they switch it on. The music
- * isn't a track, and nobody would guess that from a speaker icon — so say
- * what it actually is, once, and then never again.
- */
+/** The music isn't a track, and nobody would guess that from a speaker
+ *  icon — so say what it is, once, and then never again. */
 const SOUND_TOAST =
   "Sound on — the music is generated live from the scene: a chord for each view, and a chime whenever two planets line up.";
-/** Long enough after load that the scene has assembled and the visitor
- *  is looking at it, short enough to still feel like a response to
- *  arriving */
+/** Long enough that the scene has assembled, short enough to still feel
+ *  like a response to arriving */
 const HINT_DELAY_MS = 2000;
 /** How long it lingers before withdrawing on its own */
 const HINT_LINGER_MS = 8000;
@@ -52,13 +43,12 @@ const HINT_LINGER_MS = 8000;
 const SpaceJamSwitch = () => {
   const [enabled, setEnabled] = useState(audioPrefs.enabled);
   const [open, setOpen] = useState(false);
-  /** Whether the tooltip is currently the advert rather than its usual
-   *  "here is what a flip would do" label */
+  /** Whether the tooltip is the advert rather than its usual label */
   const [hinting, setHinting] = useState(false);
   /** The advert gets one turn per page load, however it ends */
   const hintSpent = useRef(false);
-  /** So does the explanation — flipping off and back on is not a request
-   *  to be told again */
+  /** So does the explanation — flipping off and on isn't a request to be
+   *  told again */
   const toastSpent = useRef(false);
   const { pathname } = useLocation();
   const size = useWindowSize();
@@ -70,7 +60,7 @@ const SpaceJamSwitch = () => {
   }, [enabled]);
 
   // Nothing to advertise to someone who already switched it on, or on a
-  // phone where the switch isn't on screen to point at
+  // phone where the switch isn't on screen
   useEffect(() => {
     if (hintSpent.current || enabled || hiddenOnPhone) return;
     const timer = setTimeout(() => {
@@ -90,8 +80,8 @@ const SpaceJamSwitch = () => {
     return () => clearTimeout(timer);
   }, [hinting]);
 
-  /** Any hover or focus of the switch ends the advert and hands the
-   *  tooltip back to its usual job, mid-appearance if need be. */
+  /** Any hover or focus ends the advert and hands the tooltip back to
+   *  its usual job, mid-appearance if need be. */
   const handleOpenChange = (next: boolean) => {
     setHinting(false);
     setOpen(next);
@@ -103,10 +93,9 @@ const SpaceJamSwitch = () => {
       open={open}
       onOpenChange={handleOpenChange}
     >
-      {/* The switch is the trigger itself (no wrapper), so the
-          tooltip's aria-describedby lands on the button. Radix's trigger
-          overwrites the root's data-state with its own open/closed one —
-          the App.scss styles read aria-checked. */}
+      {/* The switch is the trigger itself, so aria-describedby lands on
+          the button. Radix's trigger overwrites data-state with its own
+          open/closed, so the App.scss styles read aria-checked. */}
       <TooltipTrigger asChild>
         <SceneSwitch
           // music-toggle: hook for the video-mode / rocket-journey
@@ -145,8 +134,8 @@ const SpaceJamSwitch = () => {
           <span aria-hidden className="sjs-scene sjs-scene-off" />
         </SceneSwitch>
       </TooltipTrigger>
-      {/* The advert is a sentence rather than two words, so it takes
-          the vertical padding the thin hover pill does without */}
+      {/* A sentence rather than two words, so it takes the padding the
+          thin hover pill does without */}
       <TooltipContent side="top" className={hinting ? "py-1" : undefined}>
         <p>
           {hinting

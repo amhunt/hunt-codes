@@ -15,11 +15,11 @@ import { Tooltip, TooltipContent, TooltipTrigger } from "./ui/tooltip";
 import { Link } from "react-router-dom";
 
 const typedOptions = {
-  // The one-shot typing intro stays under reduced motion (it's a
-  // deliberate entrance, same policy as the CSS one-shots); only the
-  // infinite erase/retype cycle stops.
+  // The one-shot intro stays under reduced motion (a deliberate
+  // entrance, same policy as the CSS one-shots); only the infinite
+  // erase/retype cycle stops.
   loop: !window.matchMedia?.("(prefers-reduced-motion: reduce)").matches,
-  // This needs to be disabled if switching back to the Mac view
+  // Disable this if switching back to the Mac view
   showCursor: true,
   smartBackspace: true,
   fadeOut: true,
@@ -30,30 +30,30 @@ const typedOptions = {
   autoInsertCss: false,
 };
 
-// Chromium-based browsers (Chrome, Edge, Brave, Opera) all include "Chrome"
-// in their UA, so this matches the whole family
+// Chrome, Edge, Brave and Opera all carry "Chrome" in their UA, so this
+// matches the whole family
 const isChromium = navigator.userAgent.includes("Chrome");
 
-// Touch screens: the copy tooltip says "tap", and its 2s reset doesn't
-// consult :hover — iOS Safari leaves an element hovered after a tap, which
-// kept the tooltip open (with the idle text) until the next tap
+// Touch screens: the copy tooltip says "tap", and its 2s reset ignores
+// :hover — iOS Safari leaves an element hovered after a tap, which kept
+// the tooltip open until the next one
 const isTouch = window.matchMedia?.("(hover: none)").matches ?? false;
 
-// The arrival swoop lands at 2s and the content fade runs a beat past it;
-// the hint follows once the page has settled
+// The arrival swoop lands at 2s, the content fade runs a beat past it,
+// and the hint follows once the page has settled
 const HINT_DELAY_MS = 3800;
 
 const Home = () => {
   const [logoOpacity, setLogoOpacity] = useState(0);
 
-  // Scroll-scrubbed travel: up retreats toward the landing view, down
-  // continues out to /about (scrollTransition.ts)
+  // Scroll-scrubbed travel: up retreats to the landing, down continues
+  // out to /about (scrollTransition.ts)
   const engaged = useScrollJourney(1);
 
   const size = useWindowSize();
   const isSmall = size === "sm";
-  // 768–999px: the icon pills squeezed the headline to ~100px, so the
-  // row wraps there — contact links on top, the work sample underneath
+  // 768–999px: the pills squeezed the headline to ~100px, so the row
+  // wraps there — contact links on top, work sample underneath
   const isMedium = size === "md";
 
   const typedEl = useRef<HTMLSpanElement>(null);
@@ -65,9 +65,8 @@ const Home = () => {
     };
   }, [isSmall]);
 
-  // Reveal the page content as the 2s arrival swoop lands (the 1s fade
-  // starts right at touchdown; typed.js starts at 1s so the greeting is
-  // already mid-type as the container fades in)
+  // Reveal the content as the 2s swoop lands. typed.js starts at 1s, so
+  // the greeting is already mid-type as the container fades in.
   useEffect(() => {
     const timeout = setTimeout(() => setLogoOpacity(1), 2000);
     return () => clearTimeout(timeout);
@@ -97,7 +96,7 @@ const Home = () => {
     try {
       await navigator.clipboard.writeText("andrew@hunt.codes");
       setCopied(true);
-      // Rapid re-clicks must not let an older timer un-pin the fresh state
+      // An older timer must not un-pin the fresh state on rapid re-clicks
       clearTimeout(copyResetTimer.current);
       copyResetTimer.current = setTimeout(() => {
         setCopied(false);
@@ -115,10 +114,9 @@ const Home = () => {
   return (
     <>
       <SolarOverlays />
-      {/* Icon-only: the label lives in a tooltip (and the aria-label), so
-          the corner stays a chevron and a galaxy. The chevron is part of
-          the link and bounces while any of it is hovered (App.scss
-          .back-to-orbit). */}
+      {/* Icon-only: the label lives in the tooltip and aria-label, so the
+          corner stays a chevron and a galaxy. The chevron bounces while
+          any of the link is hovered (App.scss .back-to-orbit). */}
       <div className="homePageBackLink">
         <Tooltip disableHoverableContent>
           <TooltipTrigger asChild>
@@ -142,15 +140,15 @@ const Home = () => {
       </div>
       <main className={cx("homeInfoContainer", logoOpacity === 1 && "show")}>
         <h1 className="sr-only">Andrew Hunt — home</h1>
-        {/* No max-width cap on the summary (App.scss sizes it to the
-            phone): at 300px the availability line wrapped, orphaned "2026",
-            and the extra line ran into Earth's ABOUT ME ring on short phones */}
+        {/* No max-width cap (App.scss sizes it to the phone): at 300px the
+            availability line wrapped, orphaned "2026", and ran into
+            Earth's ABOUT ME ring on short phones */}
         {isSmall && (
           <div className="sm-screen-summary-line text-center">
             Frontend Engineer ·{" "}
-            {/* Keep the city pair together — at 240px this broke after the
-                strikethrough and orphaned "NYC" onto its own line, which
-                doubled the block's height and pushed it into the icons */}
+            {/* Keep the city pair together — at 240px this broke after
+                the strikethrough and orphaned "NYC", doubling the block's
+                height and pushing it into the icons */}
             <span className="whitespace-nowrap">
               <s className="opacity-70 decoration-[#ff6b6b] decoration-2">SF</s>{" "}
               NYC
@@ -177,16 +175,12 @@ const Home = () => {
               </div>
             </div>
           )}
-          {/* Every icon opens with the same slight hover delay, and sliding
-              along the row skips it, like native toolbar tooltips — that's
-              the app-wide TooltipProvider's skip grace (App.tsx) */}
-          {/* On md the pills wrap into two rows: contact links (LinkedIn,
-                GitHub, mail) on top, the shop pushed underneath via `order`
-                on its slot; max-w-38 = three 48px pills + gaps. Everywhere
-                else it's one row in DOM order. */}
-          {/* Tooltips never open from a touch pointer, so on phones each
-                pill also carries a caption — the only name the shopping bag
-                (the one non-universal icon) gets there */}
+          {/* On md the pills wrap into two rows: contact links on top, the
+              shop pushed underneath via `order` on its slot (max-w-38 =
+              three 48px pills + gaps); elsewhere one row in DOM order.
+              Tooltips never open from a touch pointer, so on phones each
+              pill also carries a caption — the only name the shopping bag
+              gets there. */}
           <div
             className={cx(
               "icon-pill-row flex items-start justify-end gap-1",
@@ -313,8 +307,8 @@ const Home = () => {
         )}
       </main>
       {/* Home is a waypoint, not the end of the line — the resume is one
-          more scroll further out, and nothing else says so. Waits for the
-          arrival swoop and the content fade (~2s) to finish first. */}
+          scroll further out and nothing else says so. Waits ~2s for the
+          swoop and content fade first. */}
       <ScrollHint
         target={JOURNEY_STOPS.about}
         delayMs={HINT_DELAY_MS}

@@ -32,12 +32,9 @@ import { installClickTracking, trackPageView } from "./analytics";
 import { TooltipProvider, TOOLTIP_DELAY_MS } from "ui/tooltip";
 import { NOT_FOUND_TITLE, ROUTE_TITLES, SITE_ORIGIN } from "./routes";
 
-// Pause audio when the page is hidden; resume on return whatever was
-// playing. Every <audio> is covered — the space-jam track (mounted
-// app-wide once switched on) and /journey's soundtrack can both be up at
-// once. The set lives in a ref (not a plain `let`) so it survives
-// re-renders — otherwise the "was playing" state would reset every render
-// and playback would never resume.
+// Pause audio when the page is hidden; resume whatever was playing. The
+// set lives in a ref (not a plain `let`) so it survives re-renders —
+// otherwise "was playing" would reset and playback would never resume.
 const usePauseAudioOnHideEventListener = () => {
   const playingOnHide = useRef(new Set<HTMLAudioElement>());
 
@@ -52,8 +49,8 @@ const usePauseAudioOnHideEventListener = () => {
           audio.pause();
         });
       } else {
-        // Playback can still be denied by autoplay policies — the visible
-        // controls remain the fallback
+        // Autoplay policy can still deny this — the visible controls are
+        // the fallback
         wasPlaying.forEach((audio) => {
           if (audio.isConnected) void audio.play().catch(() => {});
         });
@@ -69,9 +66,9 @@ const usePauseAudioOnHideEventListener = () => {
   }, []);
 };
 
-// The static index.html head serves every route of the SPA; keep the tab
-// title and canonical URL in sync as the visitor navigates (titles come
-// from routes.ts, the same list the sitemap is generated from)
+// One static index.html head serves every route, so keep the tab title
+// and canonical URL in sync as the visitor navigates (titles from
+// routes.ts, the same list the sitemap comes from)
 const RouteMeta = () => {
   const { pathname } = useLocation();
   useEffect(() => {
@@ -91,30 +88,23 @@ const RouteMeta = () => {
   return null;
 };
 
-/** Remembers the visitor's own pick between the two scene views */
-/** Long enough to read a sentence that explains itself, rather than the
- *  library's 4s, which suits "Saved!" and not much else */
+/** Long enough to read a sentence, rather than the library's 4s — which
+ *  suits "Saved!" and not much else */
 const TOAST_DURATION_MS = 7000;
 
 const VIEW_STORAGE_KEY = "hunt-codes-scene-view";
 
-/**
- * How long after a tooltip closes the next one still opens instantly.
- * Radix's own default, named here because the single root provider makes
- * it matter site-wide: it's what turns the corner chrome, and each row of
- * 3D body links, into one group you can sweep rather than a set of
- * separate waits.
- */
+/** How long after a tooltip closes the next still opens instantly.
+ *  Radix's own default, named because the single root provider makes it
+ *  matter site-wide — it's what lets a row of controls sweep as a group. */
 const TOOLTIP_SKIP_DELAY_MS = 300;
 
 /**
- * The scene-view tour: the landing page always opens in space view (its
- * stars-then-sun intro is choreographed for the photographed scene), the
- * trip in to /home flips the scene to mesh — a free demo of the corner
- * switch — and the trip back returns it to space. Each step is a route
- * hop, from → to. The tour stops the moment the visitor works the switch
- * themselves (App's `userPickedView`): from then on their pick holds
- * across every route until the next full load.
+ * The scene-view tour. The landing always opens in space (its
+ * stars-then-sun intro is choreographed for it); the hop in to /home
+ * flips to mesh as a free demo of the corner switch, and the hop back
+ * returns it. The tour stops the moment the visitor works the switch
+ * themselves, after which their pick holds until the next full load.
  */
 const VIEW_TOUR: { from: string; to: string; space: boolean }[] = [
   { from: "/", to: "/home", space: false },
@@ -142,12 +132,10 @@ const ViewTour = ({
 
 const App = () => {
   const [showBridge, setShowBridge] = useState(false);
-  // The landing page always opens in space view (see VIEW_TOUR). Any
-  // other entry point opens in the view the visitor last picked for
-  // themselves, remembered across visits: a chosen view that resets on
-  // every reload reads as a bug. (Same guarded read as the drawing
-  // studio's: storage throws outright in a browser set to block site
-  // data.)
+  // The landing always opens in space (VIEW_TOUR); every other entry
+  // point opens in the view last picked, remembered across visits — a
+  // chosen view that resets on reload reads as a bug. Guarded because
+  // storage throws outright in a browser set to block site data.
   const [isSpaceView, setIsSpaceView] = useState(() => {
     if (window.location.pathname === "/") return true;
     try {
@@ -156,8 +144,7 @@ const App = () => {
       return true;
     }
   });
-  // Whether the visitor has worked the switch this session — which ends
-  // the tour's automatic flips and is the only pick worth remembering
+  // Ends the tour's automatic flips, and is the only pick worth keeping
   const [userPickedView, setUserPickedView] = useState(false);
   const pickView = (isSpace: boolean) => {
     setUserPickedView(true);
@@ -174,16 +161,14 @@ const App = () => {
 
   const isSynthRoute = window.location.pathname === "/synth";
 
-  // Tint the mobile browser chrome (iOS Safari tab bar, Android status
-  // bar) to match the active view; mesh matches the top of the
-  // App-background_mesh ground
+  // Tint the mobile browser chrome to match the active view; mesh
+  // matches the top of the App-background_mesh ground
   useEffect(() => {
     document
       .querySelector('meta[name="theme-color"]')
       ?.setAttribute("content", isSpaceView ? "#000000" : "#050f22");
   }, [isSpaceView]);
 
-  // fade home content in once mounted
   useEffect(() => {
     // eslint-disable-next-line no-console -- intentional easter egg
     console.log("bro what r u doing in the console...");
@@ -191,9 +176,9 @@ const App = () => {
     return () => clearTimeout(timer);
   }, []);
 
-  // Warm the other routes' chunks once this one has finished loading —
-  // after `load`, not on mount, so the prefetch never competes with the
-  // 3D chunk and its textures for a phone's bandwidth.
+  // Warm the other routes' chunks after `load`, not on mount, so the
+  // prefetch never competes with the 3D chunk and its textures for a
+  // phone's bandwidth.
   useEffect(() => {
     if (document.readyState === "complete") {
       prefetchRoutes();
@@ -206,10 +191,8 @@ const App = () => {
   return (
     <div className={cx("App", isSpaceView ? "space" : "mesh")}>
       {/* The site's one tooltip provider. Radix scopes its open/close
-          grace to a provider, so mounting one per tooltip (as this used
-          to) made every tooltip its own island that re-served the full
-          delay — the delays and the skip window live here instead, and
-          a <Tooltip> overrides `delayDuration` when it needs to. */}
+          grace to a provider, so one per tooltip (as this used to be)
+          made each an island that re-served the full delay. */}
       <TooltipProvider
         delayDuration={TOOLTIP_DELAY_MS}
         skipDelayDuration={TOOLTIP_SKIP_DELAY_MS}
@@ -238,8 +221,7 @@ const App = () => {
               <Route path="/draw/:id" element={<SvgGenerator />} />
               <Route path="/svg-to-3d" element={<SvgTo3d />} />
               <Route path="/artifacts" element={<Shop />} />
-              {/* The shop lived at /shop until it was renamed; keep the old
-                path working for anyone holding that link */}
+              {/* The shop lived at /shop until it was renamed */}
               <Route
                 path="/shop"
                 element={<Navigate to="/artifacts" replace />}
@@ -248,21 +230,17 @@ const App = () => {
               <Route path="*" element={<NotFound />} />
             </Routes>
           </Suspense>
-          {/* Fixed corner chrome sits after the routes so each page's own
-            content — the landing's ENTER sun — comes first in the tab
-            order. The "Space jam" switch rides every page, the landing
-            included: the site starts muted, so the landing is where
-            visitors look for the music; mounted once, app-wide, the track
-            carries across routes. */}
+          {/* Corner chrome sits after the routes so each page's own content
+            comes first in the tab order. The music switch rides every
+            page, mounted once so the track carries across routes. */}
           {isSynthRoute ? null : <SpaceJamSwitch />}
           <BadgeLink isSpaceView={isSpaceView} />
           {/* App-level so the windshield frame and warp flash survive the
-            rides' mid-flight route hops (/home → /journey → /home) —
-            per-page mounts cut the flash short at every navigation */}
+            rides' mid-flight route hops — a per-page mount would cut the
+            flash short at every navigation */}
           <RocketCockpit />
-          {/* Bottom centre, clear of the music switch (bottom-left) and the
-            coin (bottom-right). Dressed like the tooltips — the site's
-            surfaces are dark, and the library's default is a white card. */}
+          {/* Bottom centre, clear of the music switch and the coin. Dressed
+            like the tooltips — the library's default is a white card. */}
           <Toaster
             position="bottom-center"
             toastOptions={{

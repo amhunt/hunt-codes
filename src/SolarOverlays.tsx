@@ -18,16 +18,14 @@ import useWindowSize from "./useWindowSize";
 
 /**
  * DOM overlays for the home page's 3D bodies. The canvases never take
- * pointer input, so every clickable body gets an invisible fixed-position
- * element here that BodyAnchors glues to the body's projection each
- * frame. Everything starts `visibility: hidden` (App.scss) and is
- * revealed once positioned.
+ * pointer input, so every clickable body gets an invisible element here
+ * that BodyAnchors glues to its projection each frame. All start
+ * `visibility: hidden` (App.scss), revealed once positioned.
  */
 
-/** Hover outline shared by every link body (Earth, the moon, asteroids,
- *  satellite): the body's projected silhouette, drawn by the 3D scene into
- *  these paths (viewBox matches the anchor box; pathLength normalizes the
- *  dash pulse). */
+/** Hover outline shared by every link body: its projected silhouette,
+ *  drawn by the 3D scene into these paths (viewBox matches the anchor
+ *  box; pathLength normalizes the dash pulse). */
 export const BodyOutline = ({ outlineId }: { outlineId: string }) => (
   <svg className="body-outline" viewBox="0 0 100 100" aria-hidden>
     <g id={outlineId}>
@@ -58,11 +56,9 @@ const SolarOverlays = () => {
 
   return (
     <>
-      {/* Earth is the /about link. The "ABOUT ME" label curving over the top
-          is now rendered in WebGL (space3d/solar/AboutRing) around the 3D
-          Earth; this element is just the circular hit target (Earth included)
-          that BodyAnchors glues to Earth's projection — the canvas itself
-          takes no pointer input. */}
+      {/* Earth is the /about link. Its "ABOUT ME" label is drawn in WebGL
+          (space3d/solar/AboutRing); this is just the circular hit
+          target. */}
       <Link
         to="/about"
         id={EARTH_ABOUT_RING_ID}
@@ -77,9 +73,8 @@ const SolarOverlays = () => {
       >
         <BodyOutline outlineId={EARTH_ABOUT_OUTLINE_ID} />
       </Link>
-      {/* The Sputnik satellite: the door to /projects-and-toys, where the
-          camera closes in on it and its parts become the links
-          (ProjectsAndToys). Same swoop-on-click as Earth's /about link. */}
+      {/* Sputnik: the door to /projects-and-toys, where the camera closes
+          in and its parts become the links. Same swoop as Earth's. */}
       {!isNarrow && (
         <Tooltip disableHoverableContent delayDuration={TOOLTIP_BODY_DELAY_MS}>
           <TooltipTrigger asChild>
@@ -135,13 +130,11 @@ const SolarOverlays = () => {
           </Tooltip>
       )}
       */}
-      {/* The rocket (spaceship) link is parked until the /journey copy is
-          ready — the ship itself is parked too (SolarScene). Restore this
-          block (and the startRocketJourney, journeyState and useNavigate
-          imports) to re-arm it.
-         The rocket easter egg: clicking it boards the ship and warps to
-          the /journey story crawl (rocketJourney.ts flips the route under
-          the warp flash). Same anchor plumbing as the asteroid links.
+      {/* The rocket link is parked until the /journey copy is ready (the
+          ship itself too — SolarScene). Clicking it boards the ship and
+          warps to the /journey crawl, rocketJourney.ts flipping the route
+          under the warp flash. Restore this block plus the
+          startRocketJourney, journeyState and useNavigate imports.
         <Tooltip disableHoverableContent delayDuration={TOOLTIP_BODY_DELAY_MS}>
           <TooltipTrigger asChild>
             <button

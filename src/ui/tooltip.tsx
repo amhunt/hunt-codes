@@ -3,23 +3,15 @@ import * as TooltipPrimitive from "@radix-ui/react-tooltip";
 import { cn } from "lib/utils";
 
 /**
- * Hover delays, in Radix's `delayDuration` terms. The site mounts a
- * single TooltipProvider at the root (App.tsx), so the provider carries
- * the default and an individual <Tooltip> overrides it where it needs to.
- *
- * One provider rather than one per tooltip is what makes the skip grace
- * work: once any tooltip has opened, the next one the pointer reaches
- * opens instantly instead of serving its delay again. That's what lets a
- * sweep along the view switch, or across the satellite's parts, read as
- * one group of controls rather than a series of separate waits.
+ * Hover delays. One TooltipProvider at the root (App.tsx) carries the
+ * default and a <Tooltip> overrides it — which is also what makes the
+ * skip grace work: once one tooltip has opened, the next opens instantly
+ * instead of waiting again, so a row of controls sweeps as one group.
  */
-/** The site standard — Radix's own 700ms feels sluggish, 0–100ms twitchy. */
+/** The site standard — Radix's own 700ms is sluggish, 0–100ms twitchy. */
 const TOOLTIP_DELAY_MS = 500;
-/**
- * The 3D body links (Earth, the asteroids, the satellite's parts, the
- * 808 pad). These get swept across rather than aimed at, and the tooltip
- * is the only thing that names what a body does — so they answer fast.
- */
+/** 3D body links: swept across rather than aimed at, and the tooltip is
+ *  the only thing naming what a body does, so it answers fast. */
 const TOOLTIP_BODY_DELAY_MS = 100;
 
 const TooltipProvider = TooltipPrimitive.Provider;

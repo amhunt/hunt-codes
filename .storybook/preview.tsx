@@ -4,16 +4,15 @@ import { MemoryRouter } from "react-router-dom";
 
 import { TooltipProvider, TOOLTIP_DELAY_MS } from "../src/ui/tooltip";
 
-// The real stylesheets, in the order index.js loads them — Tailwind and the
-// site's SCSS both carry layout the stories depend on
+// The real stylesheets, in the order index.js loads them — both carry
+// layout the stories depend on
 import "../src/index.css";
 import "../src/App.scss";
 
 /**
- * The site's own breakpoints, not generic device presets.
- * `useWindowSize` splits at 768 and 1000 (sm / md / lg), so the widths
- * below sit deliberately inside each band; `xl` is the same `lg` branch
- * on a big desktop, where the layout has the most room to look empty.
+ * The site's own breakpoints, not generic device presets: `useWindowSize`
+ * splits at 768 and 1000, so each width sits inside a band. `xl` is the
+ * same `lg` branch with the most room to look empty.
  */
 const VIEWPORTS = {
   sm: {
@@ -39,18 +38,11 @@ const VIEWPORTS = {
 };
 
 /**
- * Stories render the page's *settled* state.
- *
- * Home's entrance is a 2s timer followed by a 1s opacity transition, and
- * the scroll hint waits several seconds more. Any context that doesn't
- * paint continuously — a screenshot tool, a visual-regression runner, a
- * background tab — throttles the animation clock, so the transition never
- * advances and the story captures a blank page. (Measured: opacity stuck
- * at 0.019 across five seconds.)
- *
- * These stories exist to judge layout, so they skip the choreography and
- * show where things land (the day/night switch's own delayed fade-in
- * included). Judge the intro itself in the real app.
+ * Stories render the page's *settled* state. Anything that doesn't paint
+ * continuously — a screenshot tool, a visual-regression runner, a
+ * background tab — throttles the animation clock, so Home's 3s entrance
+ * never advances and the story captures a blank page (measured: opacity
+ * stuck at 0.019 across five seconds). Judge the intro in the real app.
  */
 const SETTLED_ENTRANCES = `
   .homeInfoContainer {
@@ -76,9 +68,8 @@ const preview: Preview = {
     viewport: { options: VIEWPORTS },
     controls: { expanded: true },
   },
-  // Space is the site's default view; the toolbar switch flips
-  // stories to mesh so both can be checked (App.scss keys off
-  // .App.space/.App.mesh)
+  // Space is the default; the toolbar switch flips stories to mesh so
+  // both can be checked (App.scss keys off .App.space/.App.mesh)
   globalTypes: {
     palette: {
       description: "Scene view",
@@ -99,21 +90,16 @@ const preview: Preview = {
       const palette = (context.globals.palette as string) ?? "space";
       return (
         <MemoryRouter initialEntries={["/home"]}>
-          {/* App.tsx mounts one of these around the whole site, so the
-              components below expect to find it (Radix throws without
-              one). Same job as the .App class and the backdrop here:
-              stand in for the app shell the story renders outside of. */}
+          {/* Radix throws without one in scope. Same job as the .App
+              class and the backdrop: stand in for the app shell. */}
           <TooltipProvider delayDuration={TOOLTIP_DELAY_MS}>
             <style>{SETTLED_ENTRANCES}</style>
             <div
               className={`App ${palette}`}
               style={{
                 minHeight: "100vh",
-                // In the real app this is the WebGL canvases showing through,
-                // which stories leave out on purpose. Without standing in for
-                // them the page is white-on-white and unreadable — these are
-                // the two views' backdrop colours (see the theme-color
-                // switch in App.tsx).
+                // Standing in for the WebGL canvases, which stories leave
+                // out — without this the page is white-on-white
                 background: palette === "mesh" ? "#050f22" : "#000",
               }}
             >
