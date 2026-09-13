@@ -17,6 +17,14 @@ export interface PublicRoute {
   priority: number;
 }
 
+/**
+ * The Zip Request Details Page performance case study, filed under
+ * /projects-and-toys. Named because it is the one route several files
+ * key off: the <Route>, its title here, the 3D backdrop (AppBackground),
+ * the coin (BadgeLink) and /about's work card.
+ */
+export const RDP_CASE_STUDY_PATH = "/projects-and-toys/rdp-case-study";
+
 export const PUBLIC_ROUTES: PublicRoute[] = [
   { path: "/", title: DEFAULT_TITLE, priority: 1 },
   { path: "/home", title: DEFAULT_TITLE, priority: 0.8 },
@@ -29,6 +37,11 @@ export const PUBLIC_ROUTES: PublicRoute[] = [
   {
     path: "/projects-and-toys",
     title: "Projects / Toys | Andrew Hunt",
+    priority: 0.5,
+  },
+  {
+    path: RDP_CASE_STUDY_PATH,
+    title: "Making a complex request page feel fast | Andrew Hunt",
     priority: 0.5,
   },
 ];

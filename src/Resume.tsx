@@ -6,6 +6,7 @@ import {
   ArrowUpRight,
   AudioWaveform,
   Clapperboard,
+  Gauge,
   PenLine,
   Wand2,
 } from "lucide-react";
@@ -16,6 +17,7 @@ import { JOURNEY_STOPS } from "./scrollTransition";
 import LifeTimeline from "./LifeTimeline";
 import ZipVideoMoon from "./ZipVideoMoon";
 import { ZIP_BLOG_POST_URL } from "./workLinks";
+import { RDP_CASE_STUDY_PATH } from "./routes";
 import { loadCelebration } from "./celebration";
 import egg1 from "./assets/eggs/egg-1.png";
 import egg2 from "./assets/eggs/egg-2.png";
@@ -386,13 +388,21 @@ const Resume = () => {
             <div className="resume-divider" />
             <h2>Projects</h2>
             {/* Proof for the intro's claims, up top where a skim lands: the
-                Zip reel the moon opens and the one published post — whose
-                card replaced the /home blog asteroid — first, then the two
+                request-page case study, the Zip reel the moon opens and the
+                one published post — whose card replaced the /home blog
+                asteroid — first, then the two
                 toys built for this site (also linked from /home), tagged
                 "Silly" so nobody mistakes the synth for client work, and
                 the satellite close-up, which below lg has no other way in
                 (the Sputnik link body sits out of /home's scene there). */}
             <div className="work-samples">
+              <Link className="work-card" to={RDP_CASE_STUDY_PATH}>
+                <WorkCardBody
+                  icon={<Gauge size={20} />}
+                  title="Making a complex request page feel fast"
+                  subtitle="A case study in re-architecting how Zip's request page loads"
+                />
+              </Link>
               <button
                 type="button"
                 className="work-card"

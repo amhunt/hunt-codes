@@ -1,5 +1,6 @@
 import React, { useEffect } from "react";
 import { useLocation } from "react-router-dom";
+import { RDP_CASE_STUDY_PATH } from "./routes";
 
 import { fireBadgeConfetti, preloadBadgeConfetti } from "./badgeConfetti";
 import { badgeHoverState } from "./badgeState";
@@ -36,7 +37,8 @@ const BadgeLink = () => {
       pathname === "/about" ||
       pathname.startsWith("/draw") ||
       pathname === "/artifacts" ||
-      pathname === "/projects-and-toys");
+      pathname === "/projects-and-toys" ||
+      pathname === RDP_CASE_STUDY_PATH);
 
   // The hit target can vanish without a pointerleave — a route change
   // swaps the element — so don't leave the coin posed for a hover that
