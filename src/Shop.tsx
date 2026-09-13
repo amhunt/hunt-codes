@@ -1,12 +1,7 @@
+import { BackLink } from "ui/BackLink";
 import React, { useCallback, useEffect, useRef, useState } from "react";
 import cx from "classnames";
-import { Link } from "react-router-dom";
-import {
-  ArrowLeftCircleIcon,
-  ArrowUpRight,
-  ChevronLeft,
-  ChevronRight,
-} from "lucide-react";
+import { ArrowUpRight, ChevronLeft, ChevronRight } from "lucide-react";
 
 import useCameraSettled from "./useCameraSettled";
 
@@ -233,10 +228,7 @@ const Shop = () => {
 
   return (
     <main className={cx("shop-page", !cameraSettled && "shop-page--arriving")}>
-      <Link className="flex items-center gap-1" to="/home">
-        <ArrowLeftCircleIcon className="starIcon" size={16} />
-        <span>home</span>
-      </Link>
+      <BackLink label="home" />
       <h1>
         Artifacts <span className="shop-title-byline">by Andy</span>
       </h1>
