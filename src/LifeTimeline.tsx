@@ -249,6 +249,15 @@ const LifeTimeline = ({
     return () => document.body.classList.remove("life-timeline-present");
   }, []);
 
+  // Those same controls sit the arrival out. Coming from /home they'd
+  // otherwise hop straight from that page's dock into this corner while
+  // the camera is still swooping, so they're held out of sight until the
+  // bar is in and then bloom out of a blur behind it (App.scss).
+  useEffect(() => {
+    document.body.classList.toggle("life-timeline-arriving", !visible);
+    return () => document.body.classList.remove("life-timeline-arriving");
+  }, [visible]);
+
   const segments = useMemo(
     () =>
       layout.map((cell) => {
