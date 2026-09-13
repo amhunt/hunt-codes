@@ -131,10 +131,10 @@ const eras: Era[] = [
  * way childhood fades in on the left.
  */
 const future: Blurb = {
-  title: "future",
-  dates: "Fall 2026 – ?",
+  title: "Now",
+  dates: "September 2026",
   blurb:
-    "Looking to go full-time again this fall. If you're building something good, say hi: andrew@hunt.codes",
+    "Currently looking to return to a full-time Staff frontend engineering role. Say hi: andrew@hunt.codes",
 };
 
 /**
@@ -367,7 +367,12 @@ const LifeTimeline = ({
               (showLabel || showLogo) && (
                 <span className="life-seg-label" aria-hidden="true">
                   {era.logo && showLogo && (
-                    <img className="life-seg-logo" src={era.logo} alt="" />
+                    <img
+                      className="life-seg-logo"
+                      src={era.logo}
+                      alt=""
+                      aria-hidden="true"
+                    />
                   )}
                   {showLabel && barText(era) && <span>{barText(era)}</span>}
                 </span>

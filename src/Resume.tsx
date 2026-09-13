@@ -304,23 +304,17 @@ const Resume = () => {
 
   return (
     <>
-      {/* On phones the Home link takes the same corner slot and sizing as
-          /home's "Back to orbit" link, outside the scroller so it stays
-          put (body.video-mode hides .homePageBackLink) */}
-      {isSmall && (
-        <div
-          className="homePageBackLink resume-home-link"
-          style={{ opacity: opacity ? 1 : 0, transition: "opacity 1s ease" }}
-        >
-          <BackLink className="mt-4" />
-        </div>
-      )}
       <main
         ref={scrollerRef}
         className="resume-container"
         style={{ opacity: opacity ? 1 : 0 }}
         onScroll={handleScroll}
       >
+        {isSmall && (
+          <header className="homePageBackLink resume-home-link resume-mobile-header">
+            <BackLink />
+          </header>
+        )}
         {/* The moon doubles as the Zip brand-video link (overlay + popover).
             Its click target stays off on phones: the panel is full-bleed
             there and the moon sits behind it (CameraRig's aboutMoonNdcX
@@ -373,8 +367,8 @@ const Resume = () => {
               — most recently as a staff engineer — before stepping away in 2025
               for a proper sabbatical. A few months of recharging later, I eased
               back in through consulting, helping teams ship polished,
-              AI-powered web products. Come fall 2026 I’m looking to go
-              full-time again — reach out to{" "}
+              AI-powered web products. I’m currently looking to return to a
+              full-time Staff frontend engineering role — reach out to{" "}
               <a
                 className="inverse"
                 href="mailto:andrew@hunt.codes?Subject=Hey%20Andrew"
