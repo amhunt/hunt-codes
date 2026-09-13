@@ -41,7 +41,7 @@ export const PUBLIC_ROUTES: PublicRoute[] = [
   },
   {
     path: RDP_CASE_STUDY_PATH,
-    title: "Making a complex request page feel fast | Andrew Hunt",
+    title: "Everything on one page. The right things first. | Andrew Hunt",
     priority: 0.5,
   },
 ];

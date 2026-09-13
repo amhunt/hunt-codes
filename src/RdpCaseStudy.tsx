@@ -14,24 +14,22 @@ import { ZIP_BLOG_POST_URL } from "./workLinks";
  * borrows /about's shell: AppBackground gives the route the about view
  * (the Earth perch, the moon in the left gutter) and the panel wears
  * .resume-container / .resume-panel, with the case study's own furniture
- * — stat tiles, the entry-mix bars, the before/after flow, the mock
- * waterfalls, the tool list, the bar chart, the numbered takeaways —
+ * — stat tiles, the entry-mix bars, dependency schematics,
+ * the tool disclosure, the bar chart, the numbered takeaways —
  * layered on in App.scss ("Case study").
  *
- * The outcome numbers, the traffic mix and the rollout are the ones on
- * the record. The diagrams are recreations, the waterfalls are drawn to
- * the headline outcomes rather than from a trace (and say so), and the
- * descriptions stay high-level on purpose: nothing here is internal
- * source, a dashboard or a schema.
+ * The outcomes are reported historical figures, not revalidated measurements:
+ * the original data is no longer available. The diagrams show dependencies,
+ * not reconstructed trace timings. Nothing here is internal source, a
+ * dashboard or a schema.
  */
 
 /** Mirrors /about: overlap the tail of the arrival swoop rather than
  *  waiting it out */
 const REVEAL_DELAY_MS = 1000;
 
-/** The percentile every product-defined TTI figure on the page is quoted at.
- *  The source write-up says p90 throughout; if the dashboards said p95, this
- *  is the one place to change it. */
+/** Percentile reported in the historical write-up. The original measurement
+ *  data is unavailable; do not infer trace durations from these aggregates. */
 const PERCENTILE = "p90";
 
 /** The Request Details Page's product-defined interaction-ready milestone, in
@@ -46,9 +44,9 @@ const ENTRY_POINTS = [
     share: "30%+ of views",
     before: 6.8,
     after: 4.6,
-    given: "Nothing cached yet",
+    given: "No request data in the in-memory client cache",
     strategy:
-      "Nothing's cached, so we still have to fetch what the first view needs. The win here was fetching only that and deferring the rest.",
+      "Fetch the data the destination needs for its first interaction. Other sections no longer have to hold up that milestone.",
   },
   {
     key: "requests",
@@ -58,7 +56,7 @@ const ENTRY_POINTS = [
     after: 2.1,
     given: "Most of the top of the page already cached",
     strategy:
-      "The search result already had most of what the top of the page shows. So we render from that right away and only fetch what's missing.",
+      "Render supported field groups from the request search result, while separate queries supply the remaining data needed for the first interaction.",
   },
   {
     key: "approvals",
@@ -68,7 +66,7 @@ const ENTRY_POINTS = [
     after: 2.8,
     given: "Part of the request already cached",
     strategy:
-      "The approval result had part of the picture. We reuse what we have and fetch the rest of what the first interaction needs.",
+      "The approval result includes a smaller set of fields for its linked request. Reuse supported cached fields and fetch the remaining critical data.",
   },
 ] as const;
 
@@ -99,92 +97,37 @@ const DEFERRED_SECTIONS: { name: string; tip?: string }[] = [
   { name: "Approval attributes" },
 ];
 
-/**
- * Mock request waterfalls, one per headline number. Illustrative: the
- * bars are drawn so each panel lands on its headline outcome, and the
- * shape — a large shared query and the tab's own query both awaited
- * before; one critical fetch, render, then the deferred sections after;
- * and a render straight off the search data when arriving from search —
- * is the architecture, not a trace.
- */
-type WaterfallKind = "shell" | "critical" | "render" | "deferred";
-const WATERFALLS: {
-  key: string;
-  title: string;
-  tti: number;
-  rows: { label: string; start: number; end: number; kind: WaterfallKind }[];
-}[] = [
+/** Dependency sketches, deliberately without durations or request-start times.
+ *  The baseline is the consolidated page before optimization, not the old tabs. */
+const LOADING_MODELS = [
   {
     key: "before",
-    title: "Before · direct load",
-    tti: 6.8,
-    rows: [
-      { label: "App shell (HTML + JS)", start: 0, end: 1.2, kind: "shell" },
-      {
-        label: "Page query (data shared across tabs)",
-        start: 1.2,
-        end: 4.4,
-        kind: "critical",
-      },
-      {
-        label: "Tab query (everything else the tab shows)",
-        start: 1.2,
-        end: 6.5,
-        kind: "critical",
-      },
-      { label: "Render", start: 6.5, end: 6.8, kind: "render" },
+    title: "Before optimization · new consolidated page",
+    steps: [
+      "Page queries include data beyond the first interaction",
+      "Required responses hold up usable request content",
     ],
+    independent: null,
   },
   {
     key: "after-direct",
-    title: "After · direct load",
-    tti: 4.6,
-    rows: [
-      { label: "App shell (HTML + JS)", start: 0, end: 1.2, kind: "shell" },
-      {
-        label: "Critical request data",
-        start: 1.2,
-        end: 3.6,
-        kind: "critical",
-      },
-      {
-        label: "Header, details, first sections",
-        start: 3.6,
-        end: 4.6,
-        kind: "render",
-      },
-      { label: "Deferred sections", start: 4.6, end: 7, kind: "deferred" },
+    title: "After optimization · direct load",
+    steps: [
+      "Fetch critical data for the destination section",
+      "Header, details, and first relevant sections become usable",
     ],
+    independent: "Other sections load outside this readiness requirement.",
   },
   {
     key: "after-search",
-    title: "After · from Requests Search",
-    tti: 2.1,
-    rows: [
-      { label: "Client-side navigation", start: 0, end: 0.2, kind: "shell" },
-      {
-        label: "Header + details from search data",
-        start: 0.2,
-        end: 0.9,
-        kind: "render",
-      },
-      {
-        label: "Remaining critical data",
-        start: 0.2,
-        end: 1.8,
-        kind: "critical",
-      },
-      { label: "First sections", start: 1.8, end: 2.1, kind: "render" },
-      { label: "Deferred sections", start: 2.1, end: 4.4, kind: "deferred" },
+    title: "After optimization · from Requests Search",
+    steps: [
+      "Render supported cached fields while fetching remaining critical data",
+      "Header, details, and first relevant sections become usable",
     ],
+    independent: "Other sections load outside this readiness requirement.",
   },
-];
-const WATERFALL_LEGEND: { kind: WaterfallKind; label: string }[] = [
-  { kind: "shell", label: "App shell" },
-  { kind: "critical", label: "Critical-path data" },
-  { kind: "render", label: "Render" },
-  { kind: "deferred", label: "Deferred (after RDP TTI)" },
-];
+] as const;
 
 /** Each tool, what it is, and the question it answered */
 const TOOLS = [
@@ -201,12 +144,12 @@ const TOOLS = [
   [
     "Datadog",
     "Production monitoring: latency and error dashboards per query, from real traffic.",
-    "Real-world BE performance stats in prod, per query",
+    "Backend latency in production, per query",
   ],
   [
     "React Profiler",
     "Records which components rendered, how often, and why.",
-    "Ensuring that data was properly memoized, and that we weren't adding unnecessary re-renders by splitting up queries",
+    "Whether splitting queries introduced avoidable component re-renders",
   ],
   [
     "FullStory",
@@ -246,37 +189,33 @@ const TEAM_QUOTES = [
 
 const TAKEAWAYS = [
   [
-    "Define the metric around the product experience.",
-    "A useful product-specific TTI definition made prioritization concrete and prevented the team from optimizing the wrong milestone.",
+    "Give cache reuse a boundary.",
+    "Supporting a few known field selections keeps reuse understandable. Each additional partial-data shape is another case to reason about; more cache coverage is not free.",
   ],
   [
-    "Treat navigation context as data.",
-    "A user arriving from search may already have enough information to make the destination useful immediately.",
+    "Critical follows the destination.",
+    "Documents can wait on a general visit, but not when a link takes someone there to read a document. Screen position alone cannot decide what is critical.",
   ],
   [
-    "Progressive loading is a product decision.",
-    "Deferring content requires deciding which information is critical, not simply splitting queries mechanically.",
-  ],
-  [
-    "Validate across the stack.",
-    "Browser profiling, GraphQL instrumentation, production telemetry, and React render analysis answered different questions.",
+    "Cold loads have a different constraint.",
+    "With no request data in memory, the page still needs to fetch essential fields. The remaining direct-load time is a separate optimization problem; cache reuse on other paths cannot solve it.",
   ],
 ] as const;
 
 /** Short explainers for the terms a reader outside Zip won't know */
 const TIPS = {
   request:
-    "Zip's core object, aka a purchase requisition: someone asking to buy something, routed through approvals.",
+    "A purchase requisition: someone asking to buy something, routed through approvals.",
   directLoad:
-    "A fresh page load (typed URL, refresh, link from email or Slack). Nothing cached yet.",
+    "A page load with no request data in the in-memory client cache, such as an email link into a new app session. Browser assets or server responses may still be cached.",
   requestsSearch:
     "The Requests Search page: where users find and filter requests.",
   approvalsSearch:
-    "The Approvals Search page: where users search over approvals. Each request's workflow has multiple approvals.",
+    "The Approvals Search page: where users search over approvals. A request's workflow can include multiple approvals.",
   apollo:
     "Apollo Client, our GraphQL client. Its cache is what lets one page reuse data another page fetched.",
   fragments:
-    "Reusable sets of fields in a GraphQL query. Shared fragments mean shared cached data.",
+    "Reusable field selections in GraphQL. Apollo reuses fields stored under the same normalized object identity; sharing a fragment name does not itself make data reusable or trim a network request.",
   designPartners:
     "A handful of customers who try new features early and give feedback.",
 };
@@ -387,10 +326,6 @@ export const Term = ({
   </DefinitionTrigger>
 );
 
-const FlowArrow = () => (
-  <ArrowRight className="rdp-flow-arrow" aria-hidden="true" size={20} />
-);
-
 const TimeAxis = () => (
   <div className="rdp-chart-axis">
     {AXIS_TICKS.map((tick) => (
@@ -434,18 +369,22 @@ const RdpCaseStudy = () => {
                 <span aria-hidden="true">/</span>
                 <span>Case study</span>
               </p>
-              <h1 className="mt-0">Making a complex request page feel fast</h1>
+              <h1 className="mt-0">
+                Everything on one page. The right things first.
+              </h1>
               <p className="case-study-lede">
-                This project involved a redesign and near-complete rebuild of
-                Zip&rsquo;s Request Details Page (RDP), the product&rsquo;s
-                most-accessed page at 10k+ views a day. This write-up covers one
-                piece of it: the loading architecture, which prioritized the
-                content users needed first, reused data from search entry
-                points, and progressively loaded lower-priority sections.
+                I led the redesign and near-complete rebuild of Zip&rsquo;s
+                Request Details Page (RDP), its busiest page at 10,000+ daily
+                views. This case study focuses on the loading architecture:
+                reusing data from the previous screen and prioritizing the
+                content people needed to act.
               </p>
               <p className="case-study-stats-note">
-                RDP {PERCENTILE} product-defined Time to Interactive (TTI),
-                broken down by how users got there
+                Reported {PERCENTILE} time to usable, by entry point.{" "}
+                <a className="inverse" href="#cs-measurement">
+                  Baseline and measurement notes
+                </a>
+                .
               </p>
               <dl className="case-study-stats">
                 {ENTRY_POINTS.map((entry) => (
@@ -483,19 +422,16 @@ const RdpCaseStudy = () => {
                 enterprise workflow
               </h2>
               <p>
-                A <Term tip={TIPS.request}>Request</Term> in Zip is a purchase
-                request working its way through approvals and cross-functional
-                workflows. The Request Details Page (RDP) pulls together lots of
-                information about a request: details from the initial request,
-                pricing and purchase info, billing details, linked documents,
-                request-related chat messages, and information requested from
-                the vendor.
+                A <Term tip={TIPS.request}>Request</Term> in Zip tracks a
+                purchase through approvals. Its details page brings together
+                pricing, billing, documents, vendor information, and the
+                conversations and decisions around that purchase.
               </p>
               <p>
                 How people got to the page mattered a lot. A{" "}
-                <Term tip={TIPS.directLoad}>direct load</Term> starts with
-                nothing cached. Someone coming from the{" "}
-                <Term tip={TIPS.requestsSearch}>Requests Search</Term> or{" "}
+                <Term tip={TIPS.directLoad}>direct load</Term> starts with no
+                request data in the in-memory client cache. Someone coming from
+                the <Term tip={TIPS.requestsSearch}>Requests Search</Term> or{" "}
                 <Term tip={TIPS.approvalsSearch}>Approvals Search</Term> pages
                 already has some of the request&rsquo;s data on the client.
               </p>
@@ -538,13 +474,11 @@ const RdpCaseStudy = () => {
               </figure>
               <h3>The trigger</h3>
               <p>
-                By 2023, the Request Details Page had a lot of overdue technical
-                and design debt. It was split into tabs, and many
-                customers&rsquo; workflows involved bouncing between several of
-                them. So the redesign turned it into one long, data-heavy page.
-                Pros: less navigation, Cmd+F works across everything, and
-                comments moved to a sidebar so you can comment while looking at
-                the thing you&rsquo;re referencing.
+                The old page made customers bounce between tabs to complete a
+                single workflow. The redesign brought those sections onto one
+                long, data-heavy page: less tab hopping, browser Find across
+                sections once their content has loaded, and a comments sidebar
+                beside the information being discussed.
               </p>
               <p>
                 We kept the tabs in the UI, but as links that auto-scroll to
@@ -556,68 +490,26 @@ const RdpCaseStudy = () => {
               <p>
                 The old page ran one large query for the header and the data
                 shared across tabs, plus a second, tab-specific query for
-                everything else that tab needed (low-priority stuff included).
-                You waited on both before seeing anything. Tabs at least kept
-                each fetch smaller than the whole page, but the loading strategy
-                followed the UI structure, not what the user actually needed
-                first. It also didn&rsquo;t reuse cached data well: if you came
-                from Requests Search, the client already had a bunch of the
-                request&rsquo;s fields, and the page waited for its own queries
-                anyway.
+                everything else that tab needed (lower-priority data included).
+                Both queries ran concurrently, but request content waited for
+                both responses. Tabs at least kept each fetch smaller than the
+                whole page, but the loading strategy followed the UI structure,
+                not what the user actually needed first. It also didn&rsquo;t
+                reuse cached data well: if you came from Requests Search, the
+                client already had a bunch of the request&rsquo;s fields, and
+                the page waited for its own queries anyway.
               </p>
-              <figure className="case-study-figure">
-                <figcaption>Loading architecture, before and after</figcaption>
-                <div className="rdp-flow">
-                  <span className="rdp-flow-label">Before</span>
-                  <div className="rdp-flow-row">
-                    <div className="rdp-node-stack">
-                      <div className="rdp-node rdp-node-root">
-                        Page query
-                        <small>header + data shared across tabs</small>
-                      </div>
-                      <div className="rdp-node rdp-node-root">
-                        Tab query
-                        <small>everything else the tab shows</small>
-                      </div>
-                    </div>
-                    <FlowArrow />
-                    <div className="rdp-node">
-                      Tab renders
-                      <small>only once both are back</small>
-                    </div>
-                  </div>
-                  <p className="rdp-flow-note">
-                    Each tab waited on both the big shared query and its own
-                    query (low-pri data included) before rendering.
-                  </p>
-                </div>
-                <div className="rdp-flow">
-                  <span className="rdp-flow-label">After</span>
-                  <div className="rdp-flow-row">
-                    <div className="rdp-node rdp-node-root">
-                      Critical request data
-                      <small>for immediate interaction</small>
-                    </div>
-                    <FlowArrow />
-                    <div className="rdp-node-stack">
-                      <div className="rdp-node">Header + details panel</div>
-                      <div className="rdp-node">First visible sections</div>
-                    </div>
-                    <FlowArrow />
-                    <div className="rdp-node rdp-node-deferred">
-                      Deferred sections
-                      <small>loaded progressively</small>
-                    </div>
-                  </div>
-                  <p className="rdp-flow-note">
-                    Load what the first interaction needs, defer the rest.
-                  </p>
-                </div>
-              </figure>
+              <p>
+                Consolidating the page didn&rsquo;t solve those waits on its
+                own. The before/after figures below compare the initially slow
+                new page with that same redesigned page after optimization. Most
+                old tab routes had also been similarly slow, but that is
+                context, not a separate measured baseline.
+              </p>
               <p>
                 The challenge was deciding which info had to be interactive
                 first, what we could reuse from the previous screen, and what
-                could load later without blocking anyone.
+                could load separately without blocking that first interaction.
               </p>
             </section>
 
@@ -630,22 +522,37 @@ const RdpCaseStudy = () => {
                 interaction
               </h2>
               <p>
-                To focus our perf efforts on improving the user&rsquo;s ability
-                to get their specific work done, we defined a product-specific
-                interaction-ready milestone: the moment the header, details
-                panel, and first two relevant sections were interactive. The
-                team called it Time to Interactive (TTI) in 2023. It is distinct
-                from Lighthouse&rsquo;s legacy TTI metric, which Lighthouse 10
-                removed. Our definition gave us a concrete constraint: make the
-                stuff people actually need first fast.
+                We defined &ldquo;time to usable&rdquo; around a concrete
+                milestone: the header, details panel, and first two relevant
+                sections were interactive. The destination link determined which
+                sections mattered; the top of the page was the default.
+                Rendering some cached text was a head start, not completion of
+                that milestone. We compared direct loads and client-side
+                arrivals from search separately.
               </p>
               <aside className="case-study-aside">
-                <strong>
-                  {PERCENTILE} product-defined TTI, in plain language.
-                </strong>{" "}
+                <strong>{PERCENTILE} time to usable, in plain language.</strong>{" "}
                 {PERCENTILE} means 90% of page loads reached that milestone in
                 this time or less; the slowest 10% took longer. It describes the
                 slow end, not the average.
+              </aside>
+              <aside className="case-study-aside" id="cs-measurement">
+                <strong>About the reported results.</strong>
+                <p>
+                  These are historical {PERCENTILE} figures for the new page
+                  before and after optimization, using the same intended
+                  readiness milestone. The original measurement data is no
+                  longer available. I can&rsquo;t revalidate the values,
+                  sampling window, exact timer-start events, or treatment of
+                  errors and abandoned navigations; this is not a reproducible
+                  benchmark or a claim about every visit.
+                </p>
+                <p>
+                  The team called this product-defined metric Time to
+                  Interactive (TTI) in 2023. It is distinct from
+                  Lighthouse&rsquo;s legacy TTI metric, which Lighthouse 10
+                  removed.
+                </p>
               </aside>
               <h3>Where it got hairy</h3>
               <p>
@@ -664,20 +571,38 @@ const RdpCaseStudy = () => {
                 </li>
                 <li>
                   <strong>
-                    Every referrer has a different subset of the data cached.
+                    The previous page determines what is already cached.
                   </strong>{" "}
-                  Multiple search pages and other object pages link to the RDP,
-                  and each one leaves a different slice of the request in{" "}
-                  <Term tip={TIPS.apollo}>Apollo</Term>&rsquo;s cache.
+                  Requests Search fetched request objects. Approvals Search
+                  fetched a smaller set of fields for each approval&rsquo;s
+                  linked request. A bill or vendor detail page could also leave
+                  related request data in <Term tip={TIPS.apollo}>Apollo</Term>
+                  &rsquo;s cache before navigation to the RDP.
                 </li>
               </ul>
               <p>
                 Supporting every possible combination would have been a mess of
                 loading states and dependencies between fields. So we balanced
-                query complexity against performance: the RDP renders from cache
-                for a limited set of{" "}
-                <Term tip={TIPS.fragments}>GraphQL fragments</Term> (the ones
-                the biggest referrers use) and fetches everything else.
+                query complexity against performance by supporting a bounded set
+                of <Term tip={TIPS.fragments}>GraphQL fragments</Term> used by
+                the biggest referrers. Complete supported field groups could
+                render from cache while separate operations fetched the
+                remaining data. A missing or unsupported group still needed a
+                fetch; we didn&rsquo;t try to handle every possible partial
+                shape.
+              </p>
+              <p>
+                Fragments describe field selections; Apollo&rsquo;s normalized
+                object identities make fields reusable across queries. This was
+                a change to query boundaries and rendering gates, not automatic
+                removal of cached fields from a network request.
+              </p>
+              <p className="case-study-note">
+                Cache reuse explains earlier rendering, not freshness. Data from
+                the previous screen could still be stale, and a partial request
+                was not enough to declare the destination ready. This account
+                does not reconstruct the original refresh, invalidation, or
+                approval-action safeguards.
               </p>
               <h3>Three entry points, three strategies</h3>
               <ul className="case-study-cards">
@@ -692,11 +617,16 @@ const RdpCaseStudy = () => {
                 ))}
               </ul>
               <p>
-                Lower-priority sections load after the first interaction is
-                ready. They&rsquo;re below the fold anyway, so nobody&rsquo;s
-                waiting on them:
+                For a default arrival at the top of the page, these sections
+                could sit outside the initial readiness requirement. A direct
+                link to Documents promoted Documents into the critical set.
+                &ldquo;Deferred&rdquo; meant not blocking that first
+                interaction, not unimportant or guaranteed to be out of view:
               </p>
-              <ul className="case-study-pills" aria-label="Deferred sections">
+              <ul
+                className="case-study-pills"
+                aria-label="Default lower-priority sections"
+              >
                 {DEFERRED_SECTIONS.map(({ name, tip }) =>
                   tip ? (
                     <li
@@ -718,71 +648,34 @@ const RdpCaseStudy = () => {
                 )}
               </ul>
               <figure className="case-study-figure">
-                <figcaption>
-                  What the critical path looked like, before and after
-                </figcaption>
-                <div aria-hidden="true">
-                  {WATERFALLS.map((panel) => (
-                    <div className="rdp-waterfall" key={panel.key}>
-                      <span className="rdp-waterfall-title">{panel.title}</span>
-                      {panel.rows.map((row, i) => (
-                        <React.Fragment key={row.label}>
-                          <span className="rdp-waterfall-label">
-                            {row.label}
-                          </span>
-                          <div className="rdp-waterfall-track">
-                            <div
-                              className={`rdp-waterfall-bar rdp-waterfall-${row.kind}`}
-                              style={{
-                                left: timeShare(row.start),
-                                width: timeShare(row.end - row.start),
-                              }}
-                            />
-                            {/* The product-defined TTI marker, a segment per track that
-                                overshoots the row gap so they read as one
-                                line; the label rides the first */}
-                            <span
-                              className="rdp-waterfall-tti"
-                              style={{ left: timeShare(panel.tti) }}
-                            >
-                              {i === 0 && <em>RDP TTI {seconds(panel.tti)}</em>}
-                            </span>
-                          </div>
-                        </React.Fragment>
-                      ))}
-                      <TimeAxis />
+                <figcaption>What readiness depends on</figcaption>
+                <p className="case-study-figure-note">
+                  Illustrative dependencies; not to scale and not a trace.
+                  Arrows show what readiness depends on, not when requests
+                  start. Historical totals are shown separately in the results.
+                </p>
+                <div className="rdp-loading-models">
+                  {LOADING_MODELS.map((model) => (
+                    <div className="rdp-loading-model" key={model.key}>
+                      <h4>{model.title}</h4>
+                      <ol className="rdp-sequence">
+                        {model.steps.map((step) => (
+                          <li key={step}>{step}</li>
+                        ))}
+                      </ol>
+                      {model.independent && (
+                        <p className="rdp-sequence-independent">
+                          {model.independent}
+                        </p>
+                      )}
                     </div>
                   ))}
-                  <ul className="rdp-chart-legend">
-                    {WATERFALL_LEGEND.map((item) => (
-                      <li key={item.kind}>
-                        <span
-                          className={`rdp-swatch rdp-waterfall-${item.kind}`}
-                        />
-                        {item.label}
-                      </li>
-                    ))}
-                    <li>
-                      <span className="rdp-swatch rdp-swatch-tti" />
-                      Product-defined Time to Interactive (TTI)
-                    </li>
-                  </ul>
                 </div>
-                <p className="sr-only">
-                  Illustrative waterfalls. Before, on a direct load, a large
-                  page-level query and the tab&rsquo;s own query both had to
-                  finish before anything rendered, and the page reached the
-                  product-defined TTI milestone at 6.8 seconds. After, one
-                  critical request query then a render reached the milestone at
-                  4.6 seconds, with the deferred sections loading afterwards.
-                  Arriving from Requests Search, the header and details rendered
-                  from the search data while the rest of the critical data
-                  loaded, and the page reached the milestone at 2.1 seconds.
-                </p>
                 <p className="case-study-figure-note">
-                  Timings are illustrative (drawn to match the {PERCENTILE}{" "}
-                  numbers, not from a real trace). It&rsquo;s the shape that
-                  matters.
+                  The original per-section scheduling triggers are not available
+                  here. These sketches do not imply that every deferred request
+                  started after readiness, or that the implementation used
+                  GraphQL <code>@defer</code>.
                 </p>
               </figure>
             </section>
@@ -792,20 +685,27 @@ const RdpCaseStudy = () => {
             <section aria-labelledby="cs-validation">
               <p className="case-study-kicker">03 · Validation</p>
               <h2 id="cs-validation">Measure locally, verify in production</h2>
-              <p>No single tool tells the whole story, so I used a few:</p>
-              <dl className="case-study-tools">
-                {TOOLS.map(([tool, what, answered]) => (
-                  <div key={tool}>
-                    <dt>{tool}</dt>
-                    <dd>
-                      <span className="case-study-tool-description">
-                        {what}
-                      </span>
-                      {answered}
-                    </dd>
-                  </div>
-                ))}
-              </dl>
+              <p>
+                I checked the loading change from several angles: browser waits,
+                query and cache behavior, component renders, and production
+                usage.
+              </p>
+              <details className="case-study-disclosure">
+                <summary>Tools used to validate the changes</summary>
+                <dl className="case-study-tools">
+                  {TOOLS.map(([tool, what, answered]) => (
+                    <div key={tool}>
+                      <dt>{tool}</dt>
+                      <dd>
+                        <span className="case-study-tool-description">
+                          {what}
+                        </span>
+                        {answered}
+                      </dd>
+                    </div>
+                  ))}
+                </dl>
+              </details>
               <h3>Leadership scope</h3>
               <p>
                 I led the project: 2 designers, 1 PM, and 5 engineers (3
@@ -838,16 +738,17 @@ const RdpCaseStudy = () => {
               </p>
               <h3>Outcome</h3>
               <p>
-                The biggest win was coming from search: the page already had
-                most of what it needed, so it stopped waiting. Direct loads
-                improved by about a third. For this phase, the critical query
-                remained the floor on a cold load; further gains would have
-                required optimizing or eliminating work inside it.
+                The reported results show the largest reduction for arrivals
+                from Requests Search, where cached fields could be reused.
+                Direct loads improved by about a third but still took 4.6
+                seconds at {PERCENTILE}. Query splitting left critical request
+                data on that path; reaching the readiness milestone sooner did
+                not make the remaining network work disappear.
               </p>
               <figure className="case-study-figure">
                 <figcaption>
-                  RDP {PERCENTILE} product-defined Time to Interactive (TTI) by
-                  entry point, in seconds
+                  Reported {PERCENTILE} time to usable by entry point, in
+                  seconds
                 </figcaption>
                 {/* The bars are decoration for the table below them, which
                     is what a screen reader gets. The sr-only class sits on a
@@ -878,25 +779,25 @@ const RdpCaseStudy = () => {
                   <ul className="rdp-chart-legend">
                     <li>
                       <span className="rdp-swatch rdp-bar-before" />
-                      Before
+                      New page · before optimization
                     </li>
                     <li>
                       <span className="rdp-swatch rdp-bar-after" />
-                      After
+                      New page · after optimization
                     </li>
                   </ul>
                 </div>
                 <div className="sr-only">
                   <table>
                     <caption>
-                      RDP {PERCENTILE} product-defined Time to Interactive (TTI)
-                      by entry point, in seconds
+                      Reported {PERCENTILE} time to usable by entry point, in
+                      seconds
                     </caption>
                     <thead>
                       <tr>
                         <th scope="col">Arriving from</th>
-                        <th scope="col">Before</th>
-                        <th scope="col">After</th>
+                        <th scope="col">New page before optimization</th>
+                        <th scope="col">New page after optimization</th>
                       </tr>
                     </thead>
                     <tbody>
@@ -910,6 +811,13 @@ const RdpCaseStudy = () => {
                     </tbody>
                   </table>
                 </div>
+                <p className="case-study-figure-note">
+                  Historical figures, not revalidated from original data.{" "}
+                  <a className="inverse" href="#cs-measurement">
+                    Measurement scope and limitations
+                  </a>
+                  .
+                </p>
               </figure>
               <h3>What my team said</h3>
               <ul className="case-study-quotes">
@@ -928,15 +836,10 @@ const RdpCaseStudy = () => {
 
             <section aria-labelledby="cs-takeaways">
               <p className="case-study-kicker">04 · Takeaways</p>
-              <h2 id="cs-takeaways">
-                The optimization was architectural, not cosmetic
-              </h2>
+              <h2 id="cs-takeaways">Three tradeoffs I&rsquo;d carry forward</h2>
               <p>
-                The biggest improvement didn&rsquo;t come from shaving
-                milliseconds off render code. It came from changing what we
-                load, and when: from UI tabs and page boundaries to whatever the
-                user&rsquo;s next interaction actually needs. Slapping a spinner
-                on the old model wouldn&rsquo;t have gotten us there.
+                Making the page usable sooner meant drawing explicit boundaries,
+                not making every section load as quickly as possible.
               </p>
               <ol className="case-study-takeaways">
                 {TAKEAWAYS.map(([title, body]) => (
@@ -952,12 +855,11 @@ const RdpCaseStudy = () => {
 
             <footer className="case-study-footer">
               <p className="case-study-note">
-                <strong>Note:</strong> the diagrams are recreations and the
-                details are intentionally high-level. No internal code,
-                dashboards, or schemas here.
+                Diagrams are high-level recreations, not production traces. No
+                internal code, dashboards, or schemas are reproduced here.
               </p>
               <p>
-                More from my time at Zip:{" "}
+                <strong>Related engineering work:</strong>{" "}
                 <a
                   className="inverse"
                   href={ZIP_BLOG_POST_URL}
@@ -966,19 +868,25 @@ const RdpCaseStudy = () => {
                 >
                   Rewriting our component library with Material UI
                 </a>
-                . More about me on the{" "}
+                .
+              </p>
+              <nav
+                className="case-study-footer-links"
+                aria-label="More from Andrew"
+              >
                 <Link className="inverse" to="/about">
-                  about page
+                  About
                 </Link>
-                . Questions? Email me at{" "}
+                <Link className="inverse" to="/projects-and-toys">
+                  Back to Projects
+                </Link>
                 <a
                   className="inverse"
                   href="mailto:andrew@hunt.codes?Subject=Request%20page%20case%20study"
                 >
-                  andrew@hunt.codes
+                  Email Andrew
                 </a>
-                .
-              </p>
+              </nav>
             </footer>
           </article>
         </div>

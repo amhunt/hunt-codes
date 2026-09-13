@@ -4650,7 +4650,7 @@ body.on-landing {
 // A reading page in /about's shell (.resume-container + .resume-panel
 // over the about view), so these rules only add the case study's own
 // furniture: the crumbs and kicker labels, the stat tiles, the
-// before/after loading flow, the strategy cards, the tool list, the bar
+// loading dependencies, the strategy cards, the tool disclosure, the bar
 // chart and the numbered takeaways. The chart's two hues were checked
 // against the panel for colour-vision separation (dataviz validator):
 // "after" is the site purple a shade deeper than $purp-light, "before" a
@@ -4800,86 +4800,66 @@ $rdp-label: #c9b8ff;
   }
 }
 
-// The loading flow: a root node, an arrow, a stack of what it fans out
-// to (and, after, the sections deferred past them)
-.rdp-flow {
+// Dependency sketches have no time scale. Keep the ordered steps vertical at
+// every width so their reading order never depends on a wrapping flow row.
+.rdp-loading-models {
   display: grid;
-  grid-template-columns: 56px 1fr;
-  gap: 8px 12px;
-  align-items: start;
-
-  & + & {
-    margin-top: 20px;
-    padding-top: 20px;
-    border-top: 1px solid $rdp-line-faint;
-  }
+  gap: 16px;
+  margin-top: 16px;
 }
 
-.rdp-flow-label {
-  padding-top: 12px;
-  font-family: "Inconsolata", monospace;
-  font-size: 11px;
-  letter-spacing: 0.12em;
-  text-transform: uppercase;
-  color: $purp-light;
-}
-
-.rdp-flow-row {
-  display: flex;
-  align-items: center;
-  flex-wrap: wrap;
-  gap: 10px;
-}
-
-.rdp-node {
-  padding: 10px 14px;
+.rdp-loading-model {
+  min-width: 0;
+  padding: 14px 16px;
   border: 1px solid $rdp-line;
   border-radius: 10px;
   background: rgba(150, 116, 249, 0.08);
-  font-family: "Inconsolata", monospace;
-  font-size: 13px;
-  line-height: 1.3;
-  text-align: center;
 
-  small {
-    display: block;
-    margin-top: 2px;
-    font-size: 11px;
-    font-weight: 400;
-    opacity: 0.7;
+  h4 {
+    margin: 0 0 14px;
+    font-family: "Inconsolata", monospace;
+    font-size: 13px;
+    line-height: 1.4;
+    color: $rdp-label;
   }
 }
 
-.rdp-node-root {
-  border-color: $purp-light;
-  background: rgba(150, 116, 249, 0.2);
-  font-weight: 700;
-}
-
-.rdp-node-deferred {
-  border-style: dashed;
-  background: transparent;
-  opacity: 0.85;
-}
-
-.rdp-node-stack {
-  display: flex;
-  flex-direction: column;
-  gap: 8px;
-}
-
-.rdp-flow-arrow {
-  flex: none;
-  color: $purp-light;
-  opacity: 0.8;
-}
-
-.rdp-flow-note {
-  grid-column: 2;
+.rdp-sequence {
   margin: 0;
-  font-size: 13px;
+  padding-left: 24px;
+  font-size: 14px;
   line-height: 1.5;
-  opacity: 0.8;
+
+  > li {
+    margin: 0;
+    padding: 0 0 0 4px;
+
+    &::marker {
+      font-family: "Inconsolata", monospace;
+      font-weight: 700;
+      color: $rdp-label;
+    }
+
+    // An empty CSS shape is decorative; the native ordered list carries the
+    // sequence for assistive technology without announcing an arrow glyph.
+    &:not(:last-child)::after {
+      content: "";
+      display: block;
+      width: 8px;
+      height: 8px;
+      margin: 10px 0 14px 4px;
+      border-right: 2px solid $purp-light;
+      border-bottom: 2px solid $purp-light;
+      rotate: 45deg;
+    }
+  }
+}
+
+.case-study section .rdp-sequence-independent {
+  margin: 16px 0 0;
+  padding-top: 12px;
+  border-top: 1px dashed $rdp-line;
+  font-size: 13px;
 }
 
 // One card per entry point: what the page already knew, and what the
@@ -4932,6 +4912,46 @@ $rdp-label: #c9b8ff;
   > li {
     margin: 0;
     padding: 3px 10px;
+  }
+}
+
+// Native details keeps its disclosure indicator and keyboard behavior.
+.case-study-disclosure {
+  margin: 16px 0 24px;
+  border: 1px solid $rdp-line;
+  border-radius: 10px;
+  background: rgba(150, 116, 249, 0.08);
+
+  > summary {
+    min-height: 44px;
+    padding: 12px 16px;
+    box-sizing: border-box;
+    border-radius: 9px;
+    font-weight: 700;
+    line-height: 1.5;
+
+    &::marker {
+      color: $rdp-label;
+    }
+
+    &:hover {
+      color: $rdp-label;
+    }
+
+    &:focus-visible {
+      outline: 2px solid $purp-light;
+      outline-offset: 3px;
+    }
+  }
+
+  &[open] > summary {
+    border-bottom: 1px solid $rdp-line-faint;
+    border-radius: 9px 9px 0 0;
+  }
+
+  .case-study-tools {
+    margin: 0;
+    padding: 4px 16px 12px;
   }
 }
 
@@ -5026,7 +5046,7 @@ $rdp-label: #c9b8ff;
   grid-column: 2;
   position: relative;
   height: 20px;
-  // Matches .rdp-chart-bars' label gutter; the waterfalls have none
+  // Matches .rdp-chart-bars' label gutter
   margin-right: 48px;
   border-top: 1px solid $rdp-line;
 
@@ -5140,11 +5160,16 @@ $rdp-label: #c9b8ff;
   font-size: 14px;
   line-height: 1.6;
   max-width: 72ch;
+  scroll-margin-top: 20px;
 
   strong {
     display: block;
     margin-bottom: 4px;
     font-size: 15px;
+  }
+
+  p:last-child {
+    margin-bottom: 0;
   }
 }
 
@@ -5163,103 +5188,6 @@ $rdp-label: #c9b8ff;
       color: $purp-light;
     }
   }
-}
-
-// The mock request waterfalls: one panel per headline number, each a
-// title row, a label + track row per request, a dashed TTI marker down
-// the tracks, and the shared time axis
-.rdp-waterfall {
-  display: grid;
-  grid-template-columns: minmax(120px, 190px) 1fr;
-  gap: 6px 12px;
-  align-items: center;
-  font-family: "Inconsolata", monospace;
-  font-size: 12px;
-
-  & + & {
-    margin-top: 18px;
-    padding-top: 14px;
-    border-top: 1px solid $rdp-line-faint;
-  }
-}
-
-.rdp-waterfall-title {
-  grid-column: 1 / -1;
-  // Room under it for the TTI label, which hangs above the first track
-  margin-bottom: 14px;
-  font-size: 11px;
-  letter-spacing: 0.12em;
-  text-transform: uppercase;
-  color: $purp-light;
-}
-
-.rdp-waterfall-label {
-  text-align: right;
-  line-height: 1.25;
-  opacity: 0.85;
-}
-
-.rdp-waterfall-track {
-  position: relative;
-  height: 12px;
-}
-
-.rdp-waterfall-bar {
-  position: absolute;
-  top: 0;
-  bottom: 0;
-  border-radius: 3px;
-}
-
-.rdp-waterfall-shell {
-  background: rgba(232, 230, 245, 0.35);
-}
-
-.rdp-waterfall-critical {
-  background: $rdp-after;
-}
-
-.rdp-waterfall-render {
-  background: $rdp-label;
-}
-
-.rdp-waterfall-deferred {
-  border: 1px dashed rgba(232, 230, 245, 0.5);
-  background: rgba(232, 230, 245, 0.08);
-}
-
-// A segment per track rather than one element spanning the rows: an
-// explicitly placed spanning cell would claim the track column and push
-// every auto-placed track into the next row. Overshooting each row's
-// 6px gap by half joins the segments into one line.
-.rdp-waterfall-tti {
-  position: absolute;
-  top: -3px;
-  bottom: -3px;
-  border-left: 1px dashed $rdp-before;
-  pointer-events: none;
-
-  em {
-    position: absolute;
-    top: -15px;
-    left: 0;
-    translate: -50% 0;
-    font-style: normal;
-    font-size: 11px;
-    font-weight: 700;
-    white-space: nowrap;
-    color: $rdp-before;
-  }
-}
-
-.rdp-waterfall .rdp-chart-axis {
-  margin-right: 0;
-}
-
-.rdp-swatch-tti {
-  width: 0;
-  border-left: 2px dashed $rdp-before;
-  border-radius: 0;
 }
 
 // Two short review quotes, side by side where there's room
@@ -5350,6 +5278,18 @@ $rdp-label: #c9b8ff;
   line-height: 1.6;
 }
 
+.case-study-footer-links {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px 24px;
+
+  > a {
+    display: inline-flex;
+    align-items: center;
+    min-height: 44px;
+  }
+}
+
 .case-study-note {
   font-size: 13px;
   opacity: 0.7;
@@ -5362,30 +5302,6 @@ $rdp-label: #c9b8ff;
 
   .case-study-stats dd {
     font-size: 24px;
-  }
-
-  // The flow stacks: label above, the fan-out top to bottom with the
-  // arrows turned to match
-  .rdp-flow {
-    grid-template-columns: 1fr;
-  }
-
-  .rdp-flow-label {
-    padding-top: 0;
-  }
-
-  .rdp-flow-row {
-    flex-direction: column;
-    align-items: stretch;
-  }
-
-  .rdp-flow-arrow {
-    align-self: center;
-    rotate: 90deg;
-  }
-
-  .rdp-flow-note {
-    grid-column: 1;
   }
 
   .case-study-tools {
@@ -5420,18 +5336,5 @@ $rdp-label: #c9b8ff;
 
   .rdp-chart-legend {
     margin-top: 8px;
-  }
-
-  // Narrower label column so the tracks keep most of the width. The
-  // waterfalls keep their two columns, so their axis stays under the
-  // tracks rather than following the chart's single-column rule above.
-  .rdp-waterfall {
-    grid-template-columns: minmax(84px, 32%) 1fr;
-    font-size: 11px;
-
-    .rdp-chart-axis {
-      grid-column: 2;
-      margin-top: 0;
-    }
   }
 }

@@ -399,7 +399,7 @@ const Resume = () => {
               <Link className="work-card" to={RDP_CASE_STUDY_PATH}>
                 <WorkCardBody
                   icon={<Gauge size={20} />}
-                  title="Making a complex request page feel fast"
+                  title="Everything on one page. The right things first."
                   subtitle="A case study in re-architecting how Zip's request page loads"
                 />
               </Link>
