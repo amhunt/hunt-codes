@@ -35,16 +35,7 @@ export const BodyOutline = ({ outlineId }: { outlineId: string }) => (
   </svg>
 );
 
-/**
- * One body's hit target: the tooltip and the hover outline, wrapped around
- * whatever element the link needs. `children` is a render prop because the
- * element itself varies — a <Link> for an in-app route, an <a> for an
- * outside one, a <button> for the rides that warp instead of navigating —
- * while everything around it is the same every time.
- *
- * The className stays a caller's choice: `.asteroid-link` and
- * `.satellite-link` are sized and placed differently in App.scss.
- */
+/** Shared tooltip and outline; children supplies the link or button target. */
 export const BodyLink = ({
   anchorId,
   outlineId,
@@ -57,7 +48,7 @@ export const BodyLink = ({
   anchorId: string;
   outlineId: string;
   className: string;
-  /** Both the tooltip's copy and the accessible name */
+  /** Tooltip copy and accessible name */
   label: string;
   onHover: () => void;
   onUnhover: () => void;
@@ -87,9 +78,7 @@ export const BodyLink = ({
   </Tooltip>
 );
 
-/** Set on enter, cleared on leave — but only when this rock is still the
- *  hovered one, so a quick sweep between two can't have the first one's
- *  leave wipe out the second one's enter. */
+/** A guarded clear keeps stale pointerleave events from wiping a new hover. */
 const asteroidHoverProps = (name: string) => ({
   onHover: () => {
     hoverState.asteroid = name;
@@ -194,9 +183,7 @@ const SolarOverlays = () => {
               type="button"
               onClick={() => {
                 startRocketJourney();
-                // The ride flips the URL itself under its warp flash; if the 3D
-                // driver is dead (crashed canvas) fall through to the plain crawl
-                // page so the click still goes somewhere
+                // Fall back to the plain page if the 3D ride cannot start.
                 if (journeyState.phase === "idle") {
                   void navigate("/journey");
                 }

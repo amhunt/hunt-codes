@@ -120,8 +120,7 @@ export default function Asteroid({
     if (group.current) {
       planetPosition(config, clock.elapsedTime, group.current.position);
 
-      // Pushed into the rock and decal materials — three has no
-      // group-level opacity
+      // Three has no group opacity, so update the rock and decal materials.
       if (advance(group.current, visible, delta)) {
         group.current.traverse((obj) => {
           const material = (obj as THREE.Mesh).material;

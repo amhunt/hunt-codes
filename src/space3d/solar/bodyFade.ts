@@ -1,32 +1,21 @@
 import { useCallback, useRef } from "react";
 import * as THREE from "three";
 
-/**
- * The landing→home reveal every body in the scene shares: bodies hidden in
- * the landing view fade up over the swoop to the home perch, and back out
- * on the way home. Three seconds in, one back out — leaving is quicker
- * than arriving, so the scene clears before the next view settles.
- */
+/** Shared 3s-in/1s-out reveal for bodies hidden on the landing view. */
 const FADE_IN_SECONDS = 3;
 const FADE_OUT_SECONDS = 1;
 
-/** Below this the group is hidden outright rather than drawn transparent */
+/** Hide fully transparent groups instead of drawing them. */
 const VISIBLE_EPSILON = 0.005;
 
 export function useBodyFade(initiallyVisible: boolean) {
-  /** The live 0..1 reveal. Readable every frame — the satellite hands it
-   *  to its energy wave — and it advances whether or not anything is
-   *  repainted. */
   const opacity = useRef(initiallyVisible ? 1 : 0);
+  // Force callers to initialize material opacity on the first frame.
   const applied = useRef(-1);
 
   /**
-   * Step the ramp one frame and toggle the group's visibility. Returns
-   * whether the value actually moved: three is happy to be handed the
-   * same opacity every frame, but walking a body's material tree to do it
-   * is the expensive half, so callers apply `opacity.current` to their own
-   * materials only when this says so. (`applied` starts at -1, so the
-   * first frame always counts as a change and initializes the group.)
+   * Advances opacity and visibility. Returns true when callers need to update
+   * materials, including on the first frame.
    */
   const advance = useCallback(
     (group: THREE.Object3D, visible: boolean, delta: number) => {

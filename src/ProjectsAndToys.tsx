@@ -53,8 +53,6 @@ const partHoverProps = (part: SatellitePart) => ({
   },
 });
 
-/** One satellite part's overlay — BodyLink with this part's ids and copy
- *  looked up for it */
 const PartLink = ({
   part,
   children,
@@ -183,10 +181,7 @@ const ProjectsAndToys = () => {
                   onClick={() => {
                     ensureAudio();
                     startSynthJourney();
-                    // Flip the URL as the ride boards (shareable,
-                    // back-button aborts) rather than after the warp
-                    // lands — but only if it actually launched, since
-                    // the 3D driver may be dead.
+                    // Keep the URL unchanged if the 3D ride failed to start.
                     if (journeyState.phase !== "idle") {
                       void navigate("/synth");
                     }
