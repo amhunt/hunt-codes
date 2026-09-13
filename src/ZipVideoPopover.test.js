@@ -10,18 +10,23 @@ globalThis.IS_REACT_ACT_ENVIRONMENT = true;
 let root;
 let container;
 let ducked;
+let paused;
 
 beforeEach(() => {
   ducked = spyOn(ambientPad, "setPadDucked").mockImplementation(() => {});
   container = document.createElement("div");
   document.body.appendChild(container);
   root = createRoot(container);
+  paused = spyOn(HTMLMediaElement.prototype, "pause").mockImplementation(
+    () => {},
+  );
 });
 
 afterEach(async () => {
   await act(async () => root.unmount());
   container.remove();
   ducked.mockRestore();
+  paused.mockRestore();
 });
 
 const render = (onClose = () => {}) =>
@@ -32,7 +37,7 @@ const lastDuck = () => ducked.mock.calls.at(-1)?.[0];
 
 const fire = (type) =>
   act(async () => {
-    container.querySelector("video").dispatchEvent(new Event(type));
+    document.querySelector("video").dispatchEvent(new Event(type));
   });
 
 test("ducks the pad while the reel plays and restores it on pause", async () => {
@@ -72,4 +77,61 @@ test("a re-render with a new onClose doesn't hand the room back early", async ()
   // new identity for the keydown effect to re-run on
   await render(() => {});
   expect(ducked).not.toHaveBeenCalledWith(false);
+});
+
+test("renders an inert-background modal and focuses its close button", async () => {
+  const trigger = document.createElement("button");
+  container.appendChild(trigger);
+  trigger.focus();
+
+  await render();
+
+  const dialog = document.querySelector('[role="dialog"]');
+  const close = document.querySelector('[aria-label="Close video"]');
+  expect(dialog.getAttribute("aria-modal")).toBe("true");
+  expect(dialog.getAttribute("aria-labelledby")).toBe("zip-video-title");
+  expect(container.inert).toBe(true);
+  expect(container.getAttribute("aria-hidden")).toBe("true");
+  expect(document.activeElement).toBe(close);
+});
+
+test("traps Tab and Shift+Tab inside the modal", async () => {
+  await render();
+  const close = document.querySelector('[aria-label="Close video"]');
+  const video = document.querySelector("video");
+
+  close.focus();
+  document.dispatchEvent(
+    new KeyboardEvent("keydown", { key: "Tab", shiftKey: true, bubbles: true }),
+  );
+  expect(document.activeElement).toBe(video);
+
+  document.dispatchEvent(
+    new KeyboardEvent("keydown", { key: "Tab", bubbles: true }),
+  );
+  expect(document.activeElement).toBe(close);
+});
+
+test("Escape closes, pauses, and restores focus to the opener", async () => {
+  const trigger = document.createElement("button");
+  document.body.insertBefore(trigger, container);
+  trigger.focus();
+  let closed = false;
+  await render(() => {
+    closed = true;
+    root.render(null);
+  });
+
+  await act(async () => {
+    document.dispatchEvent(
+      new KeyboardEvent("keydown", { key: "Escape", bubbles: true }),
+    );
+  });
+
+  expect(closed).toBe(true);
+  expect(paused).toHaveBeenCalled();
+  expect(container.inert).toBe(false);
+  expect(container.hasAttribute("aria-hidden")).toBe(false);
+  expect(document.activeElement).toBe(trigger);
+  trigger.remove();
 });
