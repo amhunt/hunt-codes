@@ -4963,6 +4963,14 @@ $rdp-label: #c9b8ff;
   }
 }
 
+.case-study-tool-description {
+  display: block;
+  margin-bottom: 3px;
+  font-size: 13px;
+  font-weight: 400;
+  opacity: 0.75;
+}
+
 // The before/after bars. Thin marks, the value beside each bar's end in
 // text colour, ticks every two seconds under them; the legend names the
 // two hues.
@@ -5057,22 +5065,19 @@ $rdp-label: #c9b8ff;
   border-radius: 3px;
 }
 
-// A defined term in the running text (the Term component): the word and
-// its info glyph are one hover/focus target for the explainer tooltip.
-// Scoped under .case-study to outrank the global button rules.
-.case-study .case-study-term {
-  display: inline-flex;
-  align-items: baseline;
-  gap: 3px;
+// Shared button foundation for inline terms and the one unfamiliar deferred
+// section. The controlled tooltip makes the same definition available through
+// hover, focus, keyboard activation and click/tap.
+.case-study .case-study-definition {
   margin: 0;
   padding: 0;
   border: 0;
-  border-bottom: 1px dotted $purp-light;
   border-radius: 0;
   background: none;
   font: inherit;
   line-height: inherit;
   color: inherit;
+  touch-action: manipulation;
   // No cursor override: the site's own pointing hand applies on hover
   text-decoration: none;
 
@@ -5085,14 +5090,47 @@ $rdp-label: #c9b8ff;
   &:focus-visible {
     color: $rdp-label;
   }
+
+  &:focus-visible {
+    outline: 2px solid $purp-light;
+    outline-offset: 3px;
+    border-radius: 2px;
+  }
 }
 
-.case-study-term-tip p {
-  margin: 0;
-  line-height: 1.5;
+// A defined term in running text (the Term component): the word and info glyph
+// share one compact target. Scoped under .case-study to outrank global buttons.
+.case-study .case-study-term {
+  display: inline-flex;
+  align-items: baseline;
+  gap: 3px;
+  border-bottom: 1px dotted $purp-light;
 }
 
-// The plain-language p90 TTI explainer
+.case-study-pills > li.case-study-definition-pill {
+  padding: 0;
+}
+
+.case-study .case-study-pill-term {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 3px 10px;
+  border-radius: 16px;
+}
+
+.case-study-term-tip {
+  box-sizing: border-box;
+  max-inline-size: min(20rem, calc(100vw - 24px));
+  overflow-wrap: anywhere;
+
+  p {
+    margin: 0;
+    line-height: 1.5;
+  }
+}
+
+// The plain-language p90 product-defined TTI explainer
 .case-study-aside {
   margin: 4px 0 20px;
   padding: 14px 16px;
@@ -5318,6 +5356,10 @@ $rdp-label: #c9b8ff;
 }
 
 @media (max-width: $breakpoint-phone-max) {
+  .case-study-home-link {
+    margin-left: 0;
+  }
+
   .case-study-stats dd {
     font-size: 24px;
   }

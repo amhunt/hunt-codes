@@ -1,16 +1,16 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useId, useRef, useState } from "react";
 import { Link } from "react-router-dom";
 import { ArrowLeftCircle } from "react-feather";
-import { ArrowLeftCircleIcon, ArrowRight, Info } from "lucide-react";
+import { ArrowRight, Info } from "lucide-react";
 
 import { Tooltip, TooltipContent, TooltipTrigger } from "./ui/tooltip";
-import useWindowSize from "./useWindowSize";
 import { ZIP_BLOG_POST_URL } from "./workLinks";
 
 /**
  * /projects-and-toys/rdp-case-study: the Request Details Page performance case
- * study — the project Andrew led at Zip in 2023 that cut the page's time to interactive by changing what loads first, not by shaving
- * render time. Filed under /projects-and-toys but a reading page, so it
+ * study — the project Andrew led at Zip in 2023 that cut the page's
+ * product-defined interaction-ready time by changing what loads first, not by
+ * shaving render time. Filed under /projects-and-toys but a reading page, so it
  * borrows /about's shell: AppBackground gives the route the about view
  * (the Earth perch, the moon in the left gutter) and the panel wears
  * .resume-container / .resume-panel, with the case study's own furniture
@@ -29,14 +29,16 @@ import { ZIP_BLOG_POST_URL } from "./workLinks";
  *  waiting it out */
 const REVEAL_DELAY_MS = 1000;
 
-/** The percentile every TTI figure on the page is quoted at. The source
- *  write-up says p90 throughout; if the dashboards said p95, this is
- *  the one place to change it. */
+/** The percentile every product-defined TTI figure on the page is quoted at.
+ *  The source write-up says p90 throughout; if the dashboards said p95, this
+ *  is the one place to change it. */
 const PERCENTILE = "p90";
 
-/** The Request Details Page's own time to interactive, in seconds, split
- *  by where the visitor came from (a "Requests Search" row is the RDP's TTI for visitors arriving from Requests Search — not that page's), with
- *  the share of daily views each way in carried */
+/** The Request Details Page's product-defined interaction-ready milestone, in
+ *  seconds, split by where the visitor came from (a "Requests Search" row is
+ *  the RDP's result for visitors arriving from Requests Search — not that
+ *  page's), with the share of daily views each way in carried. The team called
+ *  this metric TTI in 2023; it is not Lighthouse's legacy TTI metric. */
 const ENTRY_POINTS = [
   {
     key: "direct",
@@ -87,10 +89,7 @@ const MIX_MAX_SHARE = 40;
 /** Sections that could arrive after the first useful interaction; a tip
  *  where the name alone doesn't say what's in it */
 const DEFERRED_SECTIONS: { name: string; tip?: string }[] = [
-  {
-    name: "Documents",
-    tip: "Files attached to the request (quotes, contracts) and vendor surveys.",
-  },
+  { name: "Documents" },
   { name: "Vendor details" },
   { name: "Payment" },
   {
@@ -184,7 +183,7 @@ const WATERFALL_LEGEND: { kind: WaterfallKind; label: string }[] = [
   { kind: "shell", label: "App shell" },
   { kind: "critical", label: "Critical-path data" },
   { kind: "render", label: "Render" },
-  { kind: "deferred", label: "Deferred (after TTI)" },
+  { kind: "deferred", label: "Deferred (after RDP TTI)" },
 ];
 
 /** Each tool, what it is, and the question it answered */
@@ -248,7 +247,7 @@ const TEAM_QUOTES = [
 const TAKEAWAYS = [
   [
     "Define the metric around the product experience.",
-    "A useful TTI definition made prioritization concrete and prevented the team from optimizing the wrong milestone.",
+    "A useful product-specific TTI definition made prioritization concrete and prevented the team from optimizing the wrong milestone.",
   ],
   [
     "Treat navigation context as data.",
@@ -292,35 +291,100 @@ const timeShare = (s: number) => `${(s / CHART_MAX_S) * 100}%`;
 const mixShare = (pct: number) => `${(pct / MIX_MAX_SHARE) * 100}%`;
 
 /** The tooltip body the terms and pills share */
-const Tip = ({ tip }: { tip: string }) => (
-  <TooltipContent className="case-study-term-tip max-w-xs px-3 py-1.5">
+const Tip = ({ tip, id }: { tip: string; id: string }) => (
+  <TooltipContent
+    id={id}
+    collisionPadding={12}
+    className="case-study-term-tip px-3 py-1.5"
+  >
     <p>{tip}</p>
   </TooltipContent>
 );
 
 /**
- * A defined term in the running text: the word (bold italic) and an info
- * glyph are one hover target for a short explainer. A button rather than
- * a span so the keyboard reaches it — Radix opens the tooltip on focus.
+ * Shared operable definition: Radix supplies hover, focus, Escape and
+ * assistive tooltip semantics; the controlled state extends that primitive
+ * with a reliable click/tap toggle.
  */
-const Term = ({
+const DefinitionTrigger = ({
+  tip,
+  children,
+  className,
+}: {
+  tip: string;
+  children: React.ReactNode;
+  className: string;
+}) => {
+  const [open, setOpen] = useState(false);
+  const contentId = useId();
+  const triggerRef = useRef<HTMLButtonElement>(null);
+  const wasOpenAtPointerDown = useRef(false);
+
+  // Radix dismisses on outside interaction, but doing this on pointerdown
+  // makes tap-off immediate instead of waiting for the compatibility click.
+  useEffect(() => {
+    if (!open) return;
+    const closeOnOutsidePointerDown = (event: PointerEvent) => {
+      const target = event.target as Node | null;
+      const content = document.getElementById(contentId);
+      if (
+        !target ||
+        triggerRef.current?.contains(target) ||
+        content?.contains(target)
+      )
+        return;
+      setOpen(false);
+    };
+    document.addEventListener("pointerdown", closeOnOutsidePointerDown);
+    return () =>
+      document.removeEventListener("pointerdown", closeOnOutsidePointerDown);
+  }, [contentId, open]);
+
+  return (
+    <Tooltip open={open} onOpenChange={setOpen}>
+      <TooltipTrigger asChild>
+        <button
+          ref={triggerRef}
+          type="button"
+          className={`case-study-definition ${className}`}
+          aria-expanded={open}
+          aria-controls={open ? contentId : undefined}
+          onPointerDown={() => {
+            // Radix closes an open tooltip before click, so remember the
+            // pre-pointer state and make the following click authoritative.
+            wasOpenAtPointerDown.current = open;
+          }}
+          onClick={(event) => {
+            // Prevent Radix's composed close-on-click from undoing our toggle.
+            event.preventDefault();
+            // Keyboard and assistive-tech clicks have no pointerdown. Focus
+            // already opens the definition; activation must keep it exposed.
+            setOpen(event.detail === 0 || !wasOpenAtPointerDown.current);
+          }}
+        >
+          {children}
+          <Info aria-hidden="true" size={14} />
+        </button>
+      </TooltipTrigger>
+      <Tip tip={tip} id={contentId} />
+    </Tooltip>
+  );
+};
+
+/** A defined term in running text: bold italic text and its info glyph form
+ *  one semantic button, without nested interactive controls. */
+export const Term = ({
   tip,
   children,
 }: {
   tip: string;
   children: React.ReactNode;
 }) => (
-  <Tooltip>
-    <TooltipTrigger asChild>
-      <button type="button" className="case-study-term">
-        <em>
-          <strong>{children}</strong>
-        </em>
-        <Info aria-hidden="true" size={14} />
-      </button>
-    </TooltipTrigger>
-    <Tip tip={tip} />
-  </Tooltip>
+  <DefinitionTrigger tip={tip} className="case-study-term">
+    <em>
+      <strong>{children}</strong>
+    </em>
+  </DefinitionTrigger>
 );
 
 const FlowArrow = () => (
@@ -339,7 +403,6 @@ const TimeAxis = () => (
 
 const RdpCaseStudy = () => {
   const [shown, setShown] = useState(false);
-  const isSmall = useWindowSize() === "sm";
 
   useEffect(() => {
     const timer = setTimeout(() => setShown(true), REVEAL_DELAY_MS);
@@ -348,36 +411,20 @@ const RdpCaseStudy = () => {
 
   return (
     <>
-      {/* On phones the Home link takes /about's corner pill, outside the
-          scroller so it stays put */}
-      {isSmall && (
-        <div
-          className="homePageBackLink resume-home-link"
-          style={{ opacity: shown ? 1 : 0, transition: "opacity 1s ease" }}
-        >
-          <Link className="mt-4 flex items-center gap-1" to="/home">
-            <ArrowLeftCircleIcon className="starIcon" size={16} />
-            <span>Home</span>
-          </Link>
-        </div>
-      )}
       <main
         className="resume-container case-study"
         style={{ opacity: shown ? 1 : 0 }}
       >
         <div className="resume-inner-container">
-          {/* Unlike /about's, this link scrolls away with the page rather
-              than sticking: it has no scroll-scrubbed slide to carry it
-              clear of the panel */}
-          {!isSmall && (
-            <Link
-              className="back-to-home-link flex w-fit items-center gap-4 mb-6 inverse -ml-8"
-              to="/home"
-            >
-              <ArrowLeftCircle size={40} />
-              Home
-            </Link>
-          )}
+          {/* Keep Home in the document flow at every width so it scrolls away
+              instead of covering headings, charts or focused controls. */}
+          <Link
+            className="case-study-home-link back-to-home-link flex w-fit items-center gap-4 mb-6 inverse -ml-8"
+            to="/home"
+          >
+            <ArrowLeftCircle size={40} />
+            Home
+          </Link>
           <article className="resume-panel">
             <header>
               <p className="case-study-crumbs">
@@ -397,16 +444,8 @@ const RdpCaseStudy = () => {
                 points, and progressively loaded lower-priority sections.
               </p>
               <p className="case-study-stats-note">
-                {PERCENTILE}{" "}
-                <a
-                  className="inverse"
-                  href="https://web.dev/articles/tti"
-                  target="_blank"
-                  rel="noopener noreferrer"
-                >
-                  Time to Interactive (TTI)
-                </a>{" "}
-                of the RDP, broken down by how users got there
+                RDP {PERCENTILE} product-defined Time to Interactive (TTI),
+                broken down by how users got there
               </p>
               <dl className="case-study-stats">
                 {ENTRY_POINTS.map((entry) => (
@@ -592,18 +631,21 @@ const RdpCaseStudy = () => {
               </h2>
               <p>
                 To focus our perf efforts on improving the user&rsquo;s ability
-                to get their specific work done, we defined Time to Interactive
-                (TTI) for this page as the moment the header, details panel, and
-                first two visible sections were interactive. That gave us a
-                concrete constraint: make the stuff people actually see first
-                fast.
+                to get their specific work done, we defined a product-specific
+                interaction-ready milestone: the moment the header, details
+                panel, and first two relevant sections were interactive. The
+                team called it Time to Interactive (TTI) in 2023. It is distinct
+                from Lighthouse&rsquo;s legacy TTI metric, which Lighthouse 10
+                removed. Our definition gave us a concrete constraint: make the
+                stuff people actually need first fast.
               </p>
               <aside className="case-study-aside">
-                <strong>{PERCENTILE} TTI, in plain language.</strong> TTI is
-                when the page is actually usable, not just visible. {PERCENTILE}{" "}
-                means 90% of page loads were at least this fast, so it describes
-                the slow end, not the average. (Which is the end people complain
-                about.)
+                <strong>
+                  {PERCENTILE} product-defined TTI, in plain language.
+                </strong>{" "}
+                {PERCENTILE} means 90% of page loads reached that milestone in
+                this time or less; the slowest 10% took longer. It describes the
+                slow end, not the average.
               </aside>
               <h3>Where it got hairy</h3>
               <p>
@@ -657,14 +699,17 @@ const RdpCaseStudy = () => {
               <ul className="case-study-pills" aria-label="Deferred sections">
                 {DEFERRED_SECTIONS.map(({ name, tip }) =>
                   tip ? (
-                    <Tooltip key={name}>
-                      <TooltipTrigger asChild>
-                        <li className="pill tool-pill" tabIndex={0}>
-                          {name}
-                        </li>
-                      </TooltipTrigger>
-                      <Tip tip={tip} />
-                    </Tooltip>
+                    <li
+                      className="case-study-definition-pill pill tool-pill"
+                      key={name}
+                    >
+                      <DefinitionTrigger
+                        className="case-study-pill-term"
+                        tip={tip}
+                      >
+                        {name}
+                      </DefinitionTrigger>
+                    </li>
                   ) : (
                     <li className="pill tool-pill" key={name}>
                       {name}
@@ -693,14 +738,14 @@ const RdpCaseStudy = () => {
                                 width: timeShare(row.end - row.start),
                               }}
                             />
-                            {/* The TTI marker, a segment per track that
+                            {/* The product-defined TTI marker, a segment per track that
                                 overshoots the row gap so they read as one
                                 line; the label rides the first */}
                             <span
                               className="rdp-waterfall-tti"
                               style={{ left: timeShare(panel.tti) }}
                             >
-                              {i === 0 && <em>TTI {seconds(panel.tti)}</em>}
+                              {i === 0 && <em>RDP TTI {seconds(panel.tti)}</em>}
                             </span>
                           </div>
                         </React.Fragment>
@@ -719,20 +764,20 @@ const RdpCaseStudy = () => {
                     ))}
                     <li>
                       <span className="rdp-swatch rdp-swatch-tti" />
-                      Time to Interactive (TTI)
+                      Product-defined Time to Interactive (TTI)
                     </li>
                   </ul>
                 </div>
                 <p className="sr-only">
                   Illustrative waterfalls. Before, on a direct load, a large
                   page-level query and the tab&rsquo;s own query both had to
-                  finish before anything rendered, and the page was interactive
-                  at 6.8 seconds. After, one critical request query then a
-                  render made the page interactive at 4.6 seconds, with the
-                  deferred sections loading afterwards. Arriving from Requests
-                  Search, the header and details rendered from the search data
-                  while the rest of the critical data loaded, and the page was
-                  interactive at 2.1 seconds.
+                  finish before anything rendered, and the page reached the
+                  product-defined TTI milestone at 6.8 seconds. After, one
+                  critical request query then a render reached the milestone at
+                  4.6 seconds, with the deferred sections loading afterwards.
+                  Arriving from Requests Search, the header and details rendered
+                  from the search data while the rest of the critical data
+                  loaded, and the page reached the milestone at 2.1 seconds.
                 </p>
                 <p className="case-study-figure-note">
                   Timings are illustrative (drawn to match the {PERCENTILE}{" "}
@@ -751,10 +796,13 @@ const RdpCaseStudy = () => {
               <dl className="case-study-tools">
                 {TOOLS.map(([tool, what, answered]) => (
                   <div key={tool}>
-                    <dt>
-                      <Term tip={what}>{tool}</Term>
-                    </dt>
-                    <dd>{answered}</dd>
+                    <dt>{tool}</dt>
+                    <dd>
+                      <span className="case-study-tool-description">
+                        {what}
+                      </span>
+                      {answered}
+                    </dd>
                   </div>
                 ))}
               </dl>
@@ -792,14 +840,14 @@ const RdpCaseStudy = () => {
               <p>
                 The biggest win was coming from search: the page already had
                 most of what it needed, so it stopped waiting. Direct loads
-                improved by about a third, and that&rsquo;s where the remaining
-                time is. With nothing cached, you can&rsquo;t get faster than
-                the critical query.
+                improved by about a third. For this phase, the critical query
+                remained the floor on a cold load; further gains would have
+                required optimizing or eliminating work inside it.
               </p>
               <figure className="case-study-figure">
                 <figcaption>
-                  RDP {PERCENTILE} Time to Interactive (TTI) by entry point, in
-                  seconds
+                  RDP {PERCENTILE} product-defined Time to Interactive (TTI) by
+                  entry point, in seconds
                 </figcaption>
                 {/* The bars are decoration for the table below them, which
                     is what a screen reader gets. The sr-only class sits on a
@@ -841,8 +889,8 @@ const RdpCaseStudy = () => {
                 <div className="sr-only">
                   <table>
                     <caption>
-                      RDP {PERCENTILE} Time to Interactive (TTI) by entry point,
-                      in seconds
+                      RDP {PERCENTILE} product-defined Time to Interactive (TTI)
+                      by entry point, in seconds
                     </caption>
                     <thead>
                       <tr>

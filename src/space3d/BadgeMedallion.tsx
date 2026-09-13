@@ -473,7 +473,7 @@ const BadgeMedallion = ({ isLanding }: { isLanding: boolean }) => {
     // everywhere but the lg+ landing page, which parks it top-right.
     // A route change glides it between the two rather than snapping.
     const { width, height } = state.size;
-    const slot = width <= SMALL_BREAKPOINT_PX ? SLOT_PX_SMALL : SLOT_PX;
+    const slot = width < SMALL_BREAKPOINT_PX ? SLOT_PX_SMALL : SLOT_PX;
     const topRight = isLanding && width >= LANDING_STACK_MIN_WIDTH_PX;
     cornerTarget.set(
       width / 2 - (topRight ? LANDING_MARGIN_PX : MARGIN_PX) - slot / 2,
