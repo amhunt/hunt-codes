@@ -13,6 +13,9 @@ $breakpoint-md: 1000px;
 $breakpoint-lg: 1280px;
 $breakpoint-xl: 1440px;
 $breakpoint-phone-max: $breakpoint-sm - 1px;
+// Full fixed timeline slab + bar + axis. Shared by page clearance and
+// the corner controls that climb above it.
+$timeline-band-clearance: 72px;
 
 .App {
   cursor: pointer;
@@ -1073,6 +1076,11 @@ li > ul > li {
   color: #eeeeee;
   transition-delay: 500ms;
 
+  // Keep browser-driven focus scrolling above the fixed life timeline.
+  scroll-padding-block-end: calc(
+    #{$timeline-band-clearance} + 24px + env(safe-area-inset-bottom, 0px)
+  );
+
   // Left gutter for the moon (the Zip-video link) — without it the panel
   // runs under the moon and the link reads as a dead spot over the text.
   // Below lg it shrinks with the viewport but holds the panel at the same
@@ -1082,9 +1090,17 @@ li > ul > li {
   // CameraRig, which parks the moon at this gutter's centre: change one,
   // change the other.
   @media (min-width: $breakpoint-sm) {
+    // End the scroll viewport above the timeline's full slab, not merely
+    // above its visible bar. Content can approach the edge and be clipped
+    // by its own scroller, but it can never paint underneath the fixed nav.
+    max-height: calc(
+      100% - #{$timeline-band-clearance} - env(safe-area-inset-bottom, 0px)
+    );
     padding-left: max(200px, calc(100vw - 680px));
     // Room to scroll the last line clear of the fixed life bar
-    padding-bottom: 150px;
+    padding-bottom: calc(
+      #{$timeline-band-clearance} + 78px + env(safe-area-inset-bottom, 0px)
+    );
   }
 
   @media (min-width: $breakpoint-lg) {
@@ -1399,10 +1415,43 @@ li > ul > li {
     // Room to scroll the last line clear of the corner medallion (no life
     // bar on phones — see .life-timeline)
     padding-bottom: 140px;
-    padding-top: 40px;
+    padding-top: 0;
+    scroll-padding-block-start: calc(58px + env(safe-area-inset-top, 0px));
     // Keep the panel off the screen edges (it has no moon gutter here)
     padding-left: calc(12px + env(safe-area-inset-left, 0px));
     padding-right: calc(12px + env(safe-area-inset-right, 0px));
+  }
+
+  .resume-mobile-header {
+    position: sticky;
+    top: 0;
+    left: auto;
+    min-height: calc(58px + env(safe-area-inset-top, 0px));
+    margin: 0 -12px;
+    padding: calc(12px + env(safe-area-inset-top, 0px)) 12px 8px;
+    display: flex;
+    align-items: flex-start;
+    background: linear-gradient(
+      to bottom,
+      rgba(6, 4, 22, 0.96) 0%,
+      rgba(6, 4, 22, 0.82) 72%,
+      rgba(6, 4, 22, 0) 100%
+    );
+
+    > a {
+      margin: 0;
+    }
+  }
+
+  .resume-inner-container {
+    margin-top: 24px;
+  }
+
+  .resume-panel :is(h1, h2, h3, a, button):focus-visible,
+  .resume-panel :is(h1, h2, h3) {
+    scroll-margin-block-start: calc(
+      58px + env(safe-area-inset-top, 0px) + 12px
+    );
   }
 
   .splitRow {
@@ -2199,6 +2248,15 @@ body.rocket-journey #rocket-cockpit {
   color: #cfcbe4;
 }
 
+.zip-video-description {
+  margin: 6px auto 0;
+  max-width: 62ch;
+  text-align: center;
+  font-size: 0.78rem;
+  line-height: 1.45;
+  color: #aaa5c2;
+}
+
 .zip-video-close {
   position: absolute;
   top: -44px;
@@ -2441,6 +2499,8 @@ $switch-ease: cubic-bezier(0.45, 0.05, 0.25, 1.2);
   // a segment off inside the round track — same fix the pill switches
   // carry
   &:focus-visible {
+    outline: 3px solid #fff;
+    outline-offset: 2px;
     border-radius: 999px;
   }
 
@@ -2452,7 +2512,7 @@ $switch-ease: cubic-bezier(0.45, 0.05, 0.25, 1.2);
     transition: opacity 300ms ease;
   }
 
-  &[aria-pressed="true"] svg,
+  &[aria-checked="true"] svg,
   &:hover svg {
     opacity: 1;
   }
@@ -2490,7 +2550,6 @@ $switch-ease: cubic-bezier(0.45, 0.05, 0.25, 1.2);
 // it: the band (34px bar + 18px axis + 6px padding) plus its slab's 14px
 // fade-up, plus the usual 1rem. Phones hide the timeline and keep the
 // corner; below lg the Space/Mesh switch is top-right anyway.
-$timeline-band-clearance: 72px;
 // A beat after the bar has finished fading up (its own fade is 1s on a
 // 500ms delay, started 1s into the page), so the corner fills in behind
 // it rather than alongside it

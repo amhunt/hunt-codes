@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useRef } from "react";
 import { useLocation } from "react-router-dom";
 import cx from "classnames";
 import { GlobeIcon, StarIcon } from "lucide-react";
@@ -43,6 +43,7 @@ const ViewModeSwitch = ({
   isSpaceView: boolean;
   onChange: (isSpace: boolean) => void;
 }) => {
+  const groupRef = useRef<HTMLDivElement>(null);
   const { pathname } = useLocation();
   const size = useWindowSize();
   const onLanding = pathname === "/";
@@ -54,7 +55,8 @@ const ViewModeSwitch = ({
   const onNarrowHome = pathname === "/home" && size !== "lg";
   return (
     <div
-      role="group"
+      ref={groupRef}
+      role="radiogroup"
       aria-label="Scene view"
       className={cx(
         "view-mode-switch fixed right-12 top-4 z-[5000]",
@@ -67,15 +69,39 @@ const ViewModeSwitch = ({
         aria-hidden
         className={cx("vms-indicator", !isSpaceView && "vms-indicator-end")}
       />
-      {VIEWS.map(({ isSpace, name, Icon, fill }) => (
+      {VIEWS.map(({ isSpace, name, Icon, fill }, index) => (
         <Tooltip key={name} disableHoverableContent>
           <TooltipTrigger asChild>
             <button
               type="button"
               className="vms-option"
+              role="radio"
               aria-label={name}
-              aria-pressed={isSpaceView === isSpace}
+              aria-checked={isSpaceView === isSpace}
+              tabIndex={isSpaceView === isSpace ? 0 : -1}
+              data-view-index={index}
               onClick={() => onChange(isSpace)}
+              onKeyDown={(event) => {
+                if (
+                  !["ArrowLeft", "ArrowRight", "ArrowUp", "ArrowDown"].includes(
+                    event.key,
+                  )
+                ) {
+                  return;
+                }
+                event.preventDefault();
+                const movesBackward =
+                  event.key === "ArrowLeft" || event.key === "ArrowUp";
+                const nextIndex = movesBackward
+                  ? (index - 1 + VIEWS.length) % VIEWS.length
+                  : (index + 1) % VIEWS.length;
+                onChange(VIEWS[nextIndex].isSpace);
+                groupRef.current
+                  ?.querySelector<HTMLElement>(
+                    `[data-view-index="${nextIndex}"]`,
+                  )
+                  ?.focus();
+              }}
             >
               <Icon
                 size={18}
