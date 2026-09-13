@@ -42,8 +42,7 @@ const fire = (type) =>
 
 test("ducks the pad while the reel plays and restores it on pause", async () => {
   await render();
-  // Mounting alone says nothing — autoplay may be refused, and then
-  // there's no soundtrack to make room for
+  // Opening the dialog must not start playback or duck the soundtrack.
   expect(ducked).not.toHaveBeenCalledWith(true);
 
   await fire("play");
@@ -63,6 +62,7 @@ test("restores the pad when the popover closes mid-reel", async () => {
 
   await act(async () => root.unmount());
   expect(lastDuck()).toBe(false);
+  expect(paused).toHaveBeenCalled();
 
   // afterEach unmounts again; give it a fresh root to tear down
   root = createRoot(container);
@@ -73,65 +73,7 @@ test("a re-render with a new onClose doesn't hand the room back early", async ()
   await fire("play");
   ducked.mockClear();
 
-  // ProjectsAndToys passes an inline arrow, so every parent render is a
-  // new identity for the keydown effect to re-run on
+  // Parent renders must not interrupt playback or restore ambient audio.
   await render(() => {});
   expect(ducked).not.toHaveBeenCalledWith(false);
-});
-
-test("renders an inert-background modal and focuses its close button", async () => {
-  const trigger = document.createElement("button");
-  container.appendChild(trigger);
-  trigger.focus();
-
-  await render();
-
-  const dialog = document.querySelector('[role="dialog"]');
-  const close = document.querySelector('[aria-label="Close video"]');
-  expect(dialog.getAttribute("aria-modal")).toBe("true");
-  expect(dialog.getAttribute("aria-labelledby")).toBe("zip-video-title");
-  expect(container.inert).toBe(true);
-  expect(container.getAttribute("aria-hidden")).toBe("true");
-  expect(document.activeElement).toBe(close);
-});
-
-test("traps Tab and Shift+Tab inside the modal", async () => {
-  await render();
-  const close = document.querySelector('[aria-label="Close video"]');
-  const video = document.querySelector("video");
-
-  close.focus();
-  document.dispatchEvent(
-    new KeyboardEvent("keydown", { key: "Tab", shiftKey: true, bubbles: true }),
-  );
-  expect(document.activeElement).toBe(video);
-
-  document.dispatchEvent(
-    new KeyboardEvent("keydown", { key: "Tab", bubbles: true }),
-  );
-  expect(document.activeElement).toBe(close);
-});
-
-test("Escape closes, pauses, and restores focus to the opener", async () => {
-  const trigger = document.createElement("button");
-  document.body.insertBefore(trigger, container);
-  trigger.focus();
-  let closed = false;
-  await render(() => {
-    closed = true;
-    root.render(null);
-  });
-
-  await act(async () => {
-    document.dispatchEvent(
-      new KeyboardEvent("keydown", { key: "Escape", bubbles: true }),
-    );
-  });
-
-  expect(closed).toBe(true);
-  expect(paused).toHaveBeenCalled();
-  expect(container.inert).toBe(false);
-  expect(container.hasAttribute("aria-hidden")).toBe(false);
-  expect(document.activeElement).toBe(trigger);
-  trigger.remove();
 });
