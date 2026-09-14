@@ -29,6 +29,7 @@ const chunks = {
   shop: () => import("./Shop"),
   projectsAndToys: () => import("./ProjectsAndToys"),
   rdpCaseStudy: () => import("./RdpCaseStudy"),
+  brand2CaseStudy: () => import("./Brand2CaseStudy"),
   svgGenerator: () => import("./SvgGenerator"),
   svgTo3d: () => import("./svgTo3d/SvgTo3d"),
   synth: () => import("./Synth"),
@@ -41,6 +42,7 @@ export const Resume = lazy(chunks.resume);
 export const Shop = lazy(chunks.shop);
 export const ProjectsAndToys = lazy(chunks.projectsAndToys);
 export const RdpCaseStudy = lazy(chunks.rdpCaseStudy);
+export const Brand2CaseStudy = lazy(chunks.brand2CaseStudy);
 export const SvgGenerator = lazy(chunks.svgGenerator);
 export const SvgTo3d = lazy(chunks.svgTo3d);
 export const Synth = lazy(chunks.synth);
@@ -58,6 +60,7 @@ const WARM_ORDER: Array<() => Promise<unknown>> = [
   chunks.shop,
   chunks.projectsAndToys,
   chunks.rdpCaseStudy,
+  chunks.brand2CaseStudy,
   chunks.svgGenerator,
   chunks.svgTo3d,
   chunks.synth,
