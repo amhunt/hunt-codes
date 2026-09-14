@@ -1283,7 +1283,8 @@ li > ul > li {
   opacity: 0.7;
 }
 
-// Corner label on the toy cards ("Silly")
+// Corner label on the toy cards ("Silly"): the location pill's green, so
+// it reads as a different kind of label from the purple card under it
 .work-card-tag {
   position: absolute;
   top: 8px;
@@ -1295,8 +1296,8 @@ li > ul > li {
   font-weight: 700;
   letter-spacing: 0.08em;
   text-transform: uppercase;
-  color: #e8e6f5;
-  background: rgba(158, 128, 249, 0.28);
+  color: #eafff0;
+  background: rgba(31, 122, 61, 0.7);
 }
 
 .work-card-subtitle {
@@ -4701,5 +4702,698 @@ body.on-landing {
     height: 15px;
     accent-color: $purp-light;
     cursor: pointer;
+  }
+}
+
+// ─── Case study (/projects-and-toys/rdp-case-study, RdpCaseStudy) ───────
+// A reading page in /about's shell (.resume-container + .resume-panel
+// over the about view), so these rules only add the case study's own
+// furniture: the crumbs and kicker labels, the stat tiles, the
+// loading dependencies, the strategy cards, the tool disclosure, the bar
+// chart and the numbered takeaways. The chart's two hues were checked
+// against the panel for colour-vision separation (dataviz validator):
+// "after" is the site purple a shade deeper than $purp-light, "before" a
+// muted amber — far enough apart in hue and lightness that neither a
+// red-green nor a blue-yellow deficiency folds them together.
+$rdp-after: #8f7be6;
+$rdp-before: #b8823a;
+$rdp-line: rgba(158, 128, 249, 0.35);
+$rdp-line-faint: rgba(158, 128, 249, 0.2);
+$rdp-label: #c9b8ff;
+
+.case-study {
+  h1 {
+    font-size: clamp(1.7rem, 3.2vw, 2.4rem);
+    line-height: 1.15;
+    margin-bottom: 14px;
+  }
+
+  h3 {
+    margin: 28px 0 8px;
+    font-size: 1.1rem;
+  }
+
+  section p {
+    margin: 0 0 12px;
+    line-height: 1.65;
+  }
+
+  // The site's h2 leads with 40px of top margin; here each section's
+  // kicker sits above its heading and the dividers space the sections
+  .case-study-kicker + h2 {
+    margin: 6px 0 12px;
+    font-size: 1.5rem;
+    line-height: 1.25;
+  }
+}
+
+.case-study-crumbs,
+.case-study-kicker {
+  margin: 0;
+  font-family: "Inconsolata", monospace;
+  font-size: 12px;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+}
+
+.case-study-crumbs {
+  display: flex;
+  gap: 8px;
+  margin-bottom: 12px;
+  opacity: 0.85;
+}
+
+.case-study-kicker {
+  color: $purp-light;
+}
+
+.case-study-lede {
+  font-size: 1.05rem;
+  line-height: 1.6;
+  margin: 0 0 24px;
+}
+
+// The headline numbers, one tile per way into the page
+.case-study-stats {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 12px;
+  margin: 0 0 16px;
+
+  > div {
+    padding: 12px 14px;
+    border-radius: 12px;
+    border: 1px solid rgba(150, 116, 249, 0.3);
+    background: rgba(150, 116, 249, 0.12);
+  }
+
+  dt {
+    margin-bottom: 8px;
+    font-family: "Inconsolata", monospace;
+    font-size: 11px;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    opacity: 0.75;
+  }
+
+  dd {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    margin: 0;
+    font-family: "Inconsolata", monospace;
+    font-size: 26px;
+    font-weight: 700;
+    line-height: 1;
+
+    svg {
+      flex: none;
+      color: $purp-light;
+    }
+  }
+}
+
+.case-study-stats-note {
+  margin: 0 0 10px;
+  font-family: "Inconsolata", monospace;
+  font-size: 13px;
+  line-height: 1.4;
+  opacity: 0.8;
+}
+
+.case-study-before {
+  opacity: 0.55;
+}
+
+.case-study-after {
+  color: $rdp-label;
+}
+
+.case-study-facts {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px 14px;
+  margin: 0;
+  font-family: "Inconsolata", monospace;
+  font-size: 13px;
+  line-height: 1.4;
+  opacity: 0.85;
+}
+
+// A framed diagram or chart with a small-caps caption
+.case-study-figure {
+  margin: 20px 0 24px;
+  padding: 16px;
+  border-radius: 12px;
+  border: 1px solid $rdp-line-faint;
+  background: rgba(0, 0, 0, 0.25);
+
+  figcaption {
+    margin-bottom: 14px;
+    font-family: "Inconsolata", monospace;
+    font-size: 12px;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    opacity: 0.8;
+  }
+}
+
+// Dependency sketches have no time scale. Keep the ordered steps vertical at
+// every width so their reading order never depends on a wrapping flow row.
+.rdp-loading-models {
+  display: grid;
+  gap: 16px;
+  margin-top: 16px;
+}
+
+.rdp-loading-model {
+  min-width: 0;
+  padding: 14px 16px;
+  border: 1px solid $rdp-line;
+  border-radius: 10px;
+  background: rgba(150, 116, 249, 0.08);
+
+  h4 {
+    margin: 0 0 14px;
+    font-family: "Inconsolata", monospace;
+    font-size: 13px;
+    line-height: 1.4;
+    color: $rdp-label;
+  }
+}
+
+.rdp-sequence {
+  margin: 0;
+  padding-left: 24px;
+  font-size: 14px;
+  line-height: 1.5;
+
+  > li {
+    margin: 0;
+    padding: 0 0 0 4px;
+
+    &::marker {
+      font-family: "Inconsolata", monospace;
+      font-weight: 700;
+      color: $rdp-label;
+    }
+
+    // An empty CSS shape is decorative; the native ordered list carries the
+    // sequence for assistive technology without announcing an arrow glyph.
+    &:not(:last-child)::after {
+      content: "";
+      display: block;
+      width: 8px;
+      height: 8px;
+      margin: 10px 0 14px 4px;
+      border-right: 2px solid $purp-light;
+      border-bottom: 2px solid $purp-light;
+      rotate: 45deg;
+    }
+  }
+}
+
+.case-study section .rdp-sequence-independent {
+  margin: 16px 0 0;
+  padding-top: 12px;
+  border-top: 1px dashed $rdp-line;
+  font-size: 13px;
+}
+
+// One card per entry point: what the page already knew, and what the
+// redesign did with it
+.case-study-cards {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 12px;
+  list-style: none;
+  margin: 12px 0 20px;
+  padding: 0;
+
+  > li {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    margin: 0;
+    padding: 14px 16px;
+    border-radius: 12px;
+    border: 1px solid rgba(150, 116, 249, 0.3);
+    background: rgba(150, 116, 249, 0.12);
+  }
+
+  strong {
+    font-size: 15px;
+  }
+
+  p {
+    margin: 0;
+    max-width: none;
+    font-size: 14px;
+    line-height: 1.5;
+  }
+}
+
+.case-study-card-given {
+  font-family: "Inconsolata", monospace;
+  font-size: 12px;
+  color: $rdp-label;
+}
+
+.case-study-pills {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  list-style: none;
+  margin: 0 0 8px;
+  padding: 0;
+
+  > li {
+    margin: 0;
+    padding: 3px 10px;
+  }
+}
+
+// Native details keeps its disclosure indicator and keyboard behavior.
+.case-study-disclosure {
+  margin: 16px 0 24px;
+  border: 1px solid $rdp-line;
+  border-radius: 10px;
+  background: rgba(150, 116, 249, 0.08);
+
+  > summary {
+    min-height: 44px;
+    padding: 12px 16px;
+    box-sizing: border-box;
+    border-radius: 9px;
+    font-weight: 700;
+    line-height: 1.5;
+
+    &::marker {
+      color: $rdp-label;
+    }
+
+    &:hover {
+      color: $rdp-label;
+    }
+
+    &:focus-visible {
+      outline: 2px solid $purp-light;
+      outline-offset: 3px;
+    }
+  }
+
+  &[open] > summary {
+    border-bottom: 1px solid $rdp-line-faint;
+    border-radius: 9px 9px 0 0;
+  }
+
+  .case-study-tools {
+    margin: 0;
+    padding: 4px 16px 12px;
+  }
+}
+
+// Tool → what it answered, as ruled rows
+.case-study-tools {
+  display: grid;
+  grid-template-columns: max-content 1fr;
+  margin: 12px 0 0;
+
+  > div {
+    display: contents;
+  }
+
+  dt,
+  dd {
+    margin: 0;
+    padding: 10px 0;
+    border-bottom: 1px solid $rdp-line-faint;
+  }
+
+  dt {
+    padding-right: 24px;
+    font-weight: 700;
+    white-space: nowrap;
+  }
+
+  dd {
+    opacity: 0.9;
+  }
+}
+
+.case-study-tool-description {
+  display: block;
+  margin-bottom: 3px;
+  font-size: 13px;
+  font-weight: 400;
+  opacity: 0.75;
+}
+
+// The before/after bars. Thin marks, the value beside each bar's end in
+// text colour, ticks every two seconds under them; the legend names the
+// two hues.
+.rdp-chart {
+  display: grid;
+  grid-template-columns: minmax(96px, 150px) 1fr;
+  gap: 14px 16px;
+  align-items: center;
+  font-family: "Inconsolata", monospace;
+  font-size: 13px;
+}
+
+.rdp-chart-label {
+  text-align: right;
+  line-height: 1.3;
+  opacity: 0.85;
+}
+
+.rdp-chart-bars {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  // Room for the value label past the longest bar
+  padding-right: 48px;
+}
+
+.rdp-bar {
+  position: relative;
+  height: 14px;
+  min-width: 2px;
+  border-radius: 0 4px 4px 0;
+
+  > span {
+    position: absolute;
+    left: calc(100% + 8px);
+    top: 50%;
+    translate: 0 -50%;
+    font-size: 12px;
+    white-space: nowrap;
+    color: #e8e6f5;
+  }
+}
+
+.rdp-bar-before {
+  background: $rdp-before;
+}
+
+.rdp-bar-after {
+  background: $rdp-after;
+}
+
+.rdp-chart-axis {
+  grid-column: 2;
+  position: relative;
+  height: 20px;
+  // Matches .rdp-chart-bars' label gutter
+  margin-right: 48px;
+  border-top: 1px solid $rdp-line;
+
+  > span {
+    position: absolute;
+    top: 4px;
+    translate: -50% 0;
+    font-size: 11px;
+    opacity: 0.7;
+  }
+}
+
+.rdp-chart-legend {
+  grid-column: 1 / -1;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px 16px;
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  font-size: 12px;
+
+  > li {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    margin: 0;
+    padding: 0;
+  }
+}
+
+.rdp-swatch {
+  display: inline-block;
+  width: 12px;
+  height: 12px;
+  border-radius: 3px;
+}
+
+// Shared button foundation for inline terms and the one unfamiliar deferred
+// section. The controlled tooltip makes the same definition available through
+// hover, focus, keyboard activation and click/tap.
+.case-study .case-study-definition {
+  margin: 0;
+  padding: 0;
+  border: 0;
+  border-radius: 0;
+  background: none;
+  font: inherit;
+  line-height: inherit;
+  color: inherit;
+  touch-action: manipulation;
+  // No cursor override: the site's own pointing hand applies on hover
+  text-decoration: none;
+
+  svg {
+    align-self: center;
+    color: $purp-light;
+  }
+
+  &:hover,
+  &:focus-visible {
+    color: $rdp-label;
+  }
+
+  &:focus-visible {
+    outline: 2px solid $purp-light;
+    outline-offset: 3px;
+    border-radius: 2px;
+  }
+}
+
+// A defined term in running text (the Term component): the word and info glyph
+// share one compact target. Scoped under .case-study to outrank global buttons.
+.case-study .case-study-term {
+  display: inline-flex;
+  align-items: baseline;
+  gap: 3px;
+  border-bottom: 1px dotted $purp-light;
+}
+
+.case-study-pills > li.case-study-definition-pill {
+  padding: 0;
+}
+
+.case-study .case-study-pill-term {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 3px 10px;
+  border-radius: 16px;
+}
+
+.case-study-term-tip {
+  box-sizing: border-box;
+  max-inline-size: min(20rem, calc(100vw - 24px));
+  overflow-wrap: anywhere;
+
+  p {
+    margin: 0;
+    line-height: 1.5;
+  }
+}
+
+// The plain-language p90 product-defined TTI explainer
+.case-study-aside {
+  margin: 4px 0 20px;
+  padding: 14px 16px;
+  border-left: 3px solid $purp-light;
+  border-radius: 0 10px 10px 0;
+  background: rgba(150, 116, 249, 0.1);
+  font-size: 14px;
+  line-height: 1.6;
+  max-width: 72ch;
+  scroll-margin-top: 20px;
+
+  strong {
+    display: block;
+    margin-bottom: 4px;
+    font-size: 15px;
+  }
+
+  p:last-child {
+    margin-bottom: 0;
+  }
+}
+
+// A plain bulleted list in the running text (the calls that were mine)
+.case-study-list {
+  margin: 0 0 12px;
+  padding-left: 20px;
+
+  > li {
+    margin: 0 0 6px;
+    padding: 0;
+    max-width: 72ch;
+    line-height: 1.6;
+
+    &::marker {
+      color: $purp-light;
+    }
+  }
+}
+
+// Two short review quotes, side by side where there's room
+.case-study-quotes {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+  gap: 12px;
+  list-style: none;
+  margin: 12px 0 0;
+  padding: 0;
+
+  > li {
+    margin: 0;
+    padding: 0;
+  }
+
+  blockquote {
+    height: 100%;
+    margin: 0;
+    padding: 14px 16px;
+    border-left: 3px solid $purp-light;
+    border-radius: 0 10px 10px 0;
+    background: rgba(150, 116, 249, 0.1);
+    box-sizing: border-box;
+  }
+
+  p {
+    margin: 0 0 8px;
+    font-size: 14px;
+    line-height: 1.55;
+    max-width: none;
+  }
+
+  footer {
+    font-family: "Inconsolata", monospace;
+    font-size: 12px;
+    letter-spacing: 0.04em;
+    opacity: 0.7;
+  }
+}
+
+.case-study-figure-note {
+  margin: 14px 0 0;
+  font-size: 12px;
+  line-height: 1.5;
+  opacity: 0.7;
+}
+
+.case-study-takeaways {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  counter-reset: takeaway;
+  list-style: none;
+  margin: 16px 0 0;
+  padding: 0;
+
+  > li {
+    position: relative;
+    margin: 0;
+    padding: 0 0 0 44px;
+    max-width: 72ch;
+    line-height: 1.6;
+
+    &::before {
+      counter-increment: takeaway;
+      content: counter(takeaway, decimal-leading-zero);
+      position: absolute;
+      left: 0;
+      top: 2px;
+      font-family: "Inconsolata", monospace;
+      font-size: 14px;
+      font-weight: 700;
+      letter-spacing: 0.08em;
+      color: $purp-light;
+    }
+  }
+
+  strong {
+    display: block;
+    margin-bottom: 2px;
+    font-size: 15px;
+  }
+}
+
+.case-study-footer p {
+  margin: 0 0 12px;
+  line-height: 1.6;
+}
+
+.case-study-footer-links {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px 24px;
+
+  > a {
+    display: inline-flex;
+    align-items: center;
+    min-height: 44px;
+  }
+}
+
+.case-study-note {
+  font-size: 13px;
+  opacity: 0.7;
+}
+
+@media (max-width: $breakpoint-phone-max) {
+  .case-study-home-link {
+    margin-left: 0;
+  }
+
+  .case-study-stats dd {
+    font-size: 24px;
+  }
+
+  .case-study-tools {
+    grid-template-columns: 1fr;
+
+    dt {
+      padding-bottom: 2px;
+      border-bottom: none;
+      white-space: normal;
+    }
+
+    dd {
+      padding-top: 0;
+    }
+  }
+
+  // Labels above their bars rather than beside them
+  .rdp-chart {
+    grid-template-columns: 1fr;
+    gap: 6px 0;
+  }
+
+  .rdp-chart-label {
+    margin-top: 8px;
+    text-align: left;
+  }
+
+  .rdp-chart-axis {
+    grid-column: 1;
+    margin-top: 4px;
+  }
+
+  .rdp-chart-legend {
+    margin-top: 8px;
   }
 }

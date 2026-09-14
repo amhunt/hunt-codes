@@ -20,6 +20,7 @@ import useWindowSize from "useWindowSize";
 import { onSynthNote } from "./synthAudio";
 import { nameHighlightState } from "./nameHighlight";
 import { NAME_TITLE_ID } from "./solarAnchorIds";
+import { RDP_CASE_STUDY_PATH } from "./routes";
 
 // import RetroMac from "./RetroMac";
 
@@ -78,16 +79,23 @@ const AppBackground = ({
   }, []);
 
   const isHomePage = location.pathname.includes("home");
-  // /draw and /artifacts share the about-page background (Earth + moon in
-  // the 3D scene)
+  // The Zip case study is filed under /projects-and-toys but is a reading
+  // page, so it borrows the about view (the Earth perch, the moon in the
+  // panel's left gutter) rather than the satellite close-up its parent
+  // path would otherwise pull in
+  const isCaseStudyPage = location.pathname.startsWith(RDP_CASE_STUDY_PATH);
+  // /draw, /artifacts and the case study share the about-page background
+  // (Earth + moon in the 3D scene)
   const isAboutPage =
     location.pathname.includes("about") ||
     location.pathname.includes("draw") ||
-    location.pathname.includes("artifacts");
+    location.pathname.includes("artifacts") ||
+    isCaseStudyPage;
   // The shop, which keeps the name stars but parks their roving highlight
   const isArtifactsPage = location.pathname.includes("artifacts");
   // The satellite close-up (the Sputnik link's destination)
-  const isProjectsPage = location.pathname.includes("projects");
+  const isProjectsPage =
+    location.pathname.includes("projects") && !isCaseStudyPage;
   // The synth solar system (the 808-pad easter egg's destination)
   const isSynthPage = location.pathname.includes("synth");
   // The /journey story crawl's open-space cruise

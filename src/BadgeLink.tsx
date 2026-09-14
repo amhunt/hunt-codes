@@ -1,10 +1,12 @@
 import React, { useEffect } from "react";
 import { useLocation } from "react-router-dom";
+import { RDP_CASE_STUDY_PATH } from "./routes";
 
 import { fireBadgeConfetti, preloadBadgeConfetti } from "./badgeConfetti";
 import { badgeHoverState } from "./badgeState";
 import { playCoin } from "./sfx";
 import useReducedMotion from "./useReducedMotion";
+import useWindowSize from "./useWindowSize";
 
 /**
  * The DOM hit target for the corner "hunt.codes" medallion (the coin
@@ -23,6 +25,7 @@ import useReducedMotion from "./useReducedMotion";
 const BadgeLink = () => {
   const { pathname } = useLocation();
   const reducedMotion = useReducedMotion();
+  const isPhone = useWindowSize() === "sm";
   const isLanding = pathname === "/";
   // /home is the one page the coin sits out: the scene switches dock in
   // its corner there (App.scss's `body.on-home`), and the coin itself is
@@ -36,7 +39,10 @@ const BadgeLink = () => {
       pathname === "/about" ||
       pathname.startsWith("/draw") ||
       pathname === "/artifacts" ||
-      pathname === "/projects-and-toys");
+      pathname === "/projects-and-toys" ||
+      // The case study's phone-width panel covers the canvas medallion. Do
+      // not leave its transparent hit target floating above the document.
+      (pathname === RDP_CASE_STUDY_PATH && !isPhone));
 
   // The hit target can vanish without a pointerleave — a route change
   // swaps the element — so don't leave the coin posed for a hover that

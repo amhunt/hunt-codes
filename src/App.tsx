@@ -21,6 +21,7 @@ import {
   Synth,
   SvgGenerator,
   SvgTo3d,
+  RdpCaseStudy,
   prefetchRoutes,
 } from "./routeChunks";
 import AppBackground from "AppBackground";
@@ -30,7 +31,12 @@ import SpaceJamSwitch from "SpaceJamSwitch";
 import ViewModeSwitch from "ViewModeSwitch";
 import { installClickTracking, trackPageView } from "./analytics";
 import { TooltipProvider, TOOLTIP_DELAY_MS } from "ui/tooltip";
-import { NOT_FOUND_TITLE, ROUTE_TITLES, SITE_ORIGIN } from "./routes";
+import {
+  NOT_FOUND_TITLE,
+  ROUTE_TITLES,
+  SITE_ORIGIN,
+  RDP_CASE_STUDY_PATH,
+} from "./routes";
 
 // Pause audio when the page is hidden; resume whatever was playing. The
 // set lives in a ref (not a plain `let`) so it survives re-renders —
@@ -233,6 +239,7 @@ const App = () => {
                 element={<Navigate to="/artifacts" replace />}
               />
               <Route path="/projects-and-toys" element={<ProjectsAndToys />} />
+              <Route path={RDP_CASE_STUDY_PATH} element={<RdpCaseStudy />} />
               <Route path="*" element={<NotFound />} />
             </Routes>
           </Suspense>
