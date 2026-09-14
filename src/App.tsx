@@ -12,6 +12,7 @@ import "./App.scss";
 
 import RocketCockpit from "./RocketCockpit";
 import {
+  Brand2CaseStudy,
   Home,
   Journey,
   NotFound,
@@ -35,6 +36,7 @@ import {
   NOT_FOUND_TITLE,
   ROUTE_TITLES,
   SITE_ORIGIN,
+  BRAND2_CASE_STUDY_PATH,
   RDP_CASE_STUDY_PATH,
 } from "./routes";
 
@@ -240,6 +242,10 @@ const App = () => {
               />
               <Route path="/projects-and-toys" element={<ProjectsAndToys />} />
               <Route path={RDP_CASE_STUDY_PATH} element={<RdpCaseStudy />} />
+              <Route
+                path={BRAND2_CASE_STUDY_PATH}
+                element={<Brand2CaseStudy />}
+              />
               <Route path="*" element={<NotFound />} />
             </Routes>
           </Suspense>

@@ -1,6 +1,6 @@
 import React, { useEffect } from "react";
 import { useLocation } from "react-router-dom";
-import { RDP_CASE_STUDY_PATH } from "./routes";
+import { CASE_STUDY_PREFIX } from "./routes";
 
 import { fireBadgeConfetti, preloadBadgeConfetti } from "./badgeConfetti";
 import { badgeHoverState } from "./badgeState";
@@ -40,9 +40,9 @@ const BadgeLink = () => {
       pathname.startsWith("/draw") ||
       pathname === "/artifacts" ||
       pathname === "/projects-and-toys" ||
-      // The case study's phone-width panel covers the canvas medallion. Do
+      // The case studies' phone-width panels cover the canvas medallion. Do
       // not leave its transparent hit target floating above the document.
-      (pathname === RDP_CASE_STUDY_PATH && !isPhone));
+      (pathname.startsWith(CASE_STUDY_PREFIX) && !isPhone));
 
   // The hit target can vanish without a pointerleave — a route change
   // swaps the element — so don't leave the coin posed for a hover that

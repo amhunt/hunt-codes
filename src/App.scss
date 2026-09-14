@@ -4705,10 +4705,10 @@ body.on-landing {
   }
 }
 
-// ─── Case study (/projects-and-toys/rdp-case-study, RdpCaseStudy) ───────
-// A reading page in /about's shell (.resume-container + .resume-panel
-// over the about view), so these rules only add the case study's own
-// furniture: the crumbs and kicker labels, the stat tiles, the
+// ─── Case studies (/projects-and-toys/rdp-case-study and brand-2-case-study) ───
+// Reading pages in /about's shell (.resume-container + .resume-panel
+// over the about view), so these rules only add the case studies' own
+// furniture, shared between them (the `.rdp-` chart pieces included): the crumbs and kicker labels, the stat tiles, the
 // loading dependencies, the strategy cards, the tool disclosure, the bar
 // chart and the numbered takeaways. The chart's two hues were checked
 // against the panel for colour-vision separation (dataviz validator):
@@ -5285,6 +5285,58 @@ $rdp-label: #c9b8ff;
     font-size: 12px;
     letter-spacing: 0.04em;
     opacity: 0.7;
+  }
+}
+
+// A before/after image inside a figure (the Brand 2.0 launch art)
+.case-study-compare {
+  display: block;
+  width: 100%;
+  height: auto;
+  border-radius: 10px;
+}
+
+// A rollout as a vertical timeline: a rail down the left, a dot per
+// milestone, the date in mono beside it
+.case-study-timeline {
+  position: relative;
+  list-style: none;
+  margin: 4px 0 0;
+  padding: 0 0 0 22px;
+  border-left: 1px solid $rdp-line;
+
+  > li {
+    position: relative;
+    margin: 0;
+    padding: 0 0 14px;
+    max-width: 72ch;
+    line-height: 1.55;
+
+    &::before {
+      content: "";
+      position: absolute;
+      left: -27px;
+      top: 7px;
+      width: 9px;
+      height: 9px;
+      border-radius: 50%;
+      background: $purp-light;
+      box-shadow: 0 0 0 3px rgba(8, 6, 28, 0.9);
+    }
+
+    &:last-child {
+      padding-bottom: 0;
+    }
+  }
+
+  time {
+    display: block;
+    margin-bottom: 2px;
+    font-family: "Inconsolata", monospace;
+    font-size: 12px;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: $purp-light;
   }
 }
 

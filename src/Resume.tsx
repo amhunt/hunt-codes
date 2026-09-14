@@ -7,6 +7,7 @@ import {
   AudioWaveform,
   Clapperboard,
   Gauge,
+  Palette,
   PenLine,
   Wand2,
 } from "lucide-react";
@@ -17,7 +18,7 @@ import { JOURNEY_STOPS } from "./scrollTransition";
 import LifeTimeline from "./LifeTimeline";
 import ZipVideoMoon from "./ZipVideoMoon";
 import { ZIP_BLOG_POST_URL } from "./workLinks";
-import { RDP_CASE_STUDY_PATH } from "./routes";
+import { BRAND2_CASE_STUDY_PATH, RDP_CASE_STUDY_PATH } from "./routes";
 import { loadCelebration } from "./celebration";
 import egg1 from "./assets/eggs/egg-1.png";
 import egg2 from "./assets/eggs/egg-2.png";
@@ -382,8 +383,8 @@ const Resume = () => {
             <div className="resume-divider" />
             <h2>Projects</h2>
             {/* Proof for the intro's claims, up top where a skim lands: the
-                request-page case study, the Zip reel the moon opens and the
-                one published post — whose card replaced the /home blog
+                two Zip case studies, the Zip reel the moon opens and the one
+                published post — whose card replaced the /home blog
                 asteroid — first, then the two
                 toys built for this site (also linked from /home), tagged
                 "Silly" so nobody mistakes the synth for client work, and
@@ -395,6 +396,13 @@ const Resume = () => {
                   icon={<Gauge size={20} />}
                   title="Everything on one page. The right things first."
                   subtitle="A case study in re-architecting how Zip's request page loads"
+                />
+              </Link>
+              <Link className="work-card" to={BRAND2_CASE_STUDY_PATH}>
+                <WorkCardBody
+                  icon={<Palette size={20} />}
+                  title="Rebranding a live enterprise app, one flag at a time"
+                  subtitle="A case study in shipping Zip's Brand 2.0 to every customer without a cutover"
                 />
               </Link>
               <button
