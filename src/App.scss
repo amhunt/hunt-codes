@@ -2432,8 +2432,12 @@ $switch-ease: cubic-bezier(0.45, 0.05, 0.25, 1.2);
     0 2px 6px rgba(0, 0, 0, 0.25);
   opacity: 1;
   // The 1.5s opacity delay is the fade-in after leaving the landing page:
-  // the camera swoop leads, then the switch appears
-  transition: opacity 800ms ease 1500ms;
+  // the camera swoop leads, then the switch appears. /about serves its
+  // own delay through --chrome-bloom-delay (body.life-timeline-present),
+  // where the switch blooms out of a blur behind the life bar.
+  transition:
+    opacity 800ms ease var(--chrome-bloom-delay, 1500ms),
+    filter 800ms ease var(--chrome-bloom-delay, 1500ms);
 
   &.vms-hidden {
     // Hidden on phones and narrow /home; disappear instantly (no delay)
@@ -2547,7 +2551,13 @@ $switch-ease: cubic-bezier(0.45, 0.05, 0.25, 1.2);
 // it: the band (34px bar + 18px axis + 6px padding) plus its slab's 14px
 // fade-up, plus the usual 1rem. Phones hide the timeline and keep the
 // corner; below lg the Space/Mesh switch is top-right anyway.
+// A beat after the bar has finished fading up (its own fade is 1s on a
+// 500ms delay, started 1s into the page), so the corner fills in behind
+// it rather than alongside it
+$timeline-chrome-delay: 1200ms;
 body.life-timeline-present {
+  --chrome-bloom-delay: #{$timeline-chrome-delay};
+
   @media (min-width: $breakpoint-sm) {
     .music-toggle {
       bottom: calc(
@@ -2561,6 +2571,23 @@ body.life-timeline-present {
         #{$timeline-band-clearance} + 1rem + env(safe-area-inset-bottom, 0px)
       );
     }
+  }
+}
+
+// /about keeps both switches out of the corner while it arrives: the hop
+// in from /home moves them from that page's bottom-right dock to this
+// one, and landing there mid-swoop reads as a snap. LifeTimeline holds
+// this class on <body> until the bar fades in; dropping it hands the
+// switches back to the bloom above.
+body.life-timeline-arriving {
+  .music-toggle,
+  .view-mode-switch {
+    opacity: 0;
+    filter: blur(8px);
+    pointer-events: none;
+    // Gone the instant the route changes — fading them out here would
+    // show the corner hop this exists to hide
+    transition: none;
   }
 }
 
@@ -2634,7 +2661,12 @@ body.on-landing {
 
 .space-jam-switch {
   background: #34333f;
-  transition: background 500ms ease;
+  // The track crossfade, plus the blur-and-fade /about brings it in with
+  // (--chrome-bloom-delay); nowhere else touches this switch's opacity.
+  transition:
+    background 500ms ease,
+    opacity 800ms ease var(--chrome-bloom-delay, 0ms),
+    filter 800ms ease var(--chrome-bloom-delay, 0ms);
 
   &[aria-checked="true"] {
     background: #5a3bc8;
