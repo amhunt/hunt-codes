@@ -18,12 +18,16 @@ export interface PublicRoute {
 }
 
 /**
- * The Zip Request Details Page performance case study, filed under
- * /projects-and-toys. Named because it is the one route several files
- * key off: the <Route>, its title here, the 3D backdrop (AppBackground),
- * the coin (BadgeLink) and /about's work card.
+ * The case studies are filed under /projects-and-toys. The prefix is what
+ * the 3D backdrop (AppBackground) and the coin (BadgeLink) key off; each
+ * study's own path names its <Route>, its title here and its work card on
+ * /about.
  */
+export const CASE_STUDY_PREFIX = "/projects-and-toys/";
+/** The Zip Request Details Page performance case study */
 export const RDP_CASE_STUDY_PATH = "/projects-and-toys/rdp-case-study";
+/** The Zip Brand 2.0 migration case study */
+export const BRAND2_CASE_STUDY_PATH = "/projects-and-toys/brand-2-case-study";
 
 export const PUBLIC_ROUTES: PublicRoute[] = [
   { path: "/", title: DEFAULT_TITLE, priority: 1 },
@@ -42,6 +46,11 @@ export const PUBLIC_ROUTES: PublicRoute[] = [
   {
     path: RDP_CASE_STUDY_PATH,
     title: "Everything on one page. The right things first. | Andrew Hunt",
+    priority: 0.5,
+  },
+  {
+    path: BRAND2_CASE_STUDY_PATH,
+    title: "Rebranding a live app, one flag at a time | Andrew Hunt",
     priority: 0.5,
   },
 ];
