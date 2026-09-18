@@ -115,7 +115,7 @@ const Landing = () => {
           </Link>
         </svg>
       </div>
-      {/* "(and Claude)" under the title while the stars spell BUILT WITH ♥ */}
+      {/* "(and Claude)" beside HUNT while the stars spell BY ANDREW HUNT */}
       <AndClaude />
       {/* The line under the stacked wordmark (lg+ only) */}
       <LandingTagline delayed={!skipIntroDelay} />

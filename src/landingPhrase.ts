@@ -1,8 +1,8 @@
 /**
  * Which phrase the landing title's stars are spelling right now,
  * published by the star field (StarField's LandingTextStars) for DOM
- * chrome that wants to react to it — the "(and Claude)" caption under
- * "BUILT WITH ♥". Plain module with listeners rather than React state:
+ * chrome that wants to react to it — the "(and Claude)" caption beside
+ * "BY ANDREW HUNT", the tagline under the title. Plain module with listeners rather than React state:
  * the phrase lives inside the WebGL canvas tree, and the caption sits
  * outside it. "" when the landing title isn't up.
  */

@@ -312,19 +312,28 @@ export function landingTitleLayout(
 /**
  * The box one glyph of the landing title occupies, in CSS px: the same
  * measure-and-scale generateStarsForText runs, so `left` and `width` are
- * exactly where that glyph's stars land, and `bottom` is where the
- * letters end (GLYPH_INK_BOTTOM). For DOM chrome that wants to sit under
- * a particular letter (the "(and Claude)" caption under BUILT WITH ♥'s
- * heart). `index` counts through the whole phrase, spaces included, so
- * a stacked phrase's later lines are found by their `start`.
+ * exactly where that glyph's stars land, and `top` / `bottom` are where
+ * the capitals begin and end (GLYPH_INK_TOP / GLYPH_INK_BOTTOM). For DOM
+ * chrome that wants to sit against a particular letter (the
+ * "(and Claude)" caption beside the last T of BY ANDREW HUNT), which
+ * also gets the title's `fontSize` to scale itself by. `index` counts
+ * through the whole phrase, spaces included, so a stacked phrase's later
+ * lines are found by their `start`.
  */
 export function landingGlyphBox(
   phrase: string,
   index: number,
   windowWidth: number,
   windowHeight: number,
-): { left: number; width: number; bottom: number } {
-  const { lines, fontSize } = landingTitleLayout(
+): {
+  left: number;
+  width: number;
+  top: number;
+  bottom: number;
+  fontSize: number;
+  stacked: boolean;
+} {
+  const { lines, fontSize, stacked } = landingTitleLayout(
     phrase,
     windowWidth,
     windowHeight,
@@ -333,10 +342,15 @@ export function landingGlyphBox(
     lines.find((l) => index >= l.start && index < l.start + l.text.length) ??
     lines[0];
   const { layout, text } = line;
-  const bottom = layout.y + GLYPH_INK_BOTTOM * fontSize;
+  const band = {
+    top: layout.y + GLYPH_INK_TOP * fontSize,
+    bottom: layout.y + GLYPH_INK_BOTTOM * fontSize,
+    fontSize,
+    stacked,
+  };
   const letterWidths = layout.letterWidths ?? measureLetters(text);
   const total = letterWidths.reduce((sum, w) => sum + w, 0);
-  if (!total) return { left: layout.x, width: fontSize, bottom };
+  if (!total) return { left: layout.x, width: fontSize, ...band };
   const i = index - line.start;
   let left = layout.x;
   for (let k = 0; k < i; k++) {
@@ -347,7 +361,7 @@ export function landingGlyphBox(
   return {
     left,
     width: Math.round((letterWidths[i] / total) * layout.textWidth),
-    bottom,
+    ...band,
   };
 }
 

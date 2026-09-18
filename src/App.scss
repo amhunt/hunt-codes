@@ -95,14 +95,16 @@ body:has(.App.mesh) {
   }
 }
 
-// "(and Claude)" under the landing title's heart (AndClaude.tsx): blurs
-// in once the stars have spelled BUILT WITH ♥, blurs out as they leave.
-// Positioned and sized inline — centred under the heart glyph, as wide as
-// it. Above the star canvas (z 2), never in the way of the sun link.
+// "(and Claude)" beside the landing title's byline (AndClaude.tsx): blurs
+// in once the stars have spelled BY ANDREW HUNT, blurs out as they leave.
+// Positioned and sized inline — its left edge just past the T of HUNT,
+// its `top` the middle of that line's capitals, which the translate
+// centres it on. Above the star canvas (z 2), never in the way of the
+// sun link.
 .and-claude {
   position: fixed;
   margin: 0;
-  transform: translateX(-50%);
+  transform: translateY(-50%);
   white-space: nowrap;
   z-index: 3;
   pointer-events: none;
