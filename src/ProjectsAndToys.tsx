@@ -1,4 +1,5 @@
 import { BackLink } from "ui/BackLink";
+import SignatureIcon from "ui/SignatureIcon";
 import { WorkCardBody } from "ui/WorkCard";
 import React, { useEffect, useState } from "react";
 import cx from "classnames";
@@ -8,7 +9,6 @@ import {
   Clapperboard,
   Cuboid,
   PenLine,
-  ShoppingBag,
   Wand2,
 } from "lucide-react";
 
@@ -99,7 +99,7 @@ const ProjectsAndToys = () => {
           <Link className="work-card" to="/artifacts">
             <WorkCardBody
               tag="Shop"
-              icon={<ShoppingBag size={20} />}
+              icon={<SignatureIcon size={20} />}
               title="Artifacts by Andy"
               subtitle="3D-printed goods, made by me! Browse here, order on Etsy"
             />

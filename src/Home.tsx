@@ -3,12 +3,13 @@ import Typed from "typed.js";
 import cx from "classnames";
 
 import { GitHub, Linkedin, Mail } from "react-feather";
-import { ChevronLeft, ShoppingBag } from "lucide-react";
+import { ChevronLeft } from "lucide-react";
 import useWindowSize from "./useWindowSize";
 import useScrollJourney from "./useScrollJourney";
 import SolarOverlays from "./SolarOverlays";
 import ScrollHint from "./ScrollHint";
 import GalaxyIcon from "./ui/GalaxyIcon";
+import SignatureIcon from "./ui/SignatureIcon";
 import { JOURNEY_STOPS } from "./scrollTransition";
 
 import { Tooltip, TooltipContent, TooltipTrigger } from "./ui/tooltip";
@@ -188,8 +189,8 @@ const Home = () => {
               greeting (`.pills-below` in App.scss), which is what buys
               the availability line the panel's full width there.
               Tooltips never open from a touch pointer, so on phones each
-              pill also carries a caption — the only name the shopping bag
-              gets there. */}
+              pill also carries a caption — the only name the shop's
+              signature A gets there. */}
           <div className="icon-pill-row flex items-start justify-end gap-1">
             <span className="icon-pill-slot">
               <Tooltip disableHoverableContent>
@@ -237,7 +238,9 @@ const Home = () => {
                     to="/artifacts"
                     className="icon-pill flex size-12 items-center justify-center rounded-full p-1"
                   >
-                    <ShoppingBag size={20} />
+                    {/* 22 like the feather icons beside it (the bag it
+                        replaced ran 20: a box that solid read large) */}
+                    <SignatureIcon size={22} />
                   </Link>
                 </TooltipTrigger>
                 <TooltipContent>
