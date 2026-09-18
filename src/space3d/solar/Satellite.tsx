@@ -49,6 +49,12 @@ import { useBodyFade } from "./bodyFade";
  * the screen there rather than down the antennas — so the clickable
  * pieces stand out from the head they sit on, hovered or not.
  *
+ * The parts are parked for now: /projects-and-toys lists its links as
+ * cards, so SolarScene passes `partsActive={false}` and the close-up
+ * shows the bare body. Everything below still builds and fades on that
+ * flag — flipping it back (and restoring the overlays in
+ * ProjectsAndToys) hangs the parts back on.
+ *
  * Orientation: the home camera co-rotates with Earth's orbit, so a fixed
  * world heading would slowly wheel around on screen. The rig therefore
  * re-aims the leg cone every frame (satelliteLegsDirection — fixed in the

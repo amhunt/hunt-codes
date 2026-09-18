@@ -201,7 +201,13 @@ const SolarScene = ({
             // without it); on /home it sits out below lg like the rocks
             visible={isProjects || (view === "home" && !isNarrow)}
             bodyLink={view === "home"}
-            partsActive={isProjects}
+            // The part links (the scroll, screen, pen, vase and tile) are
+            // parked, not deleted: /projects-and-toys lists its links as
+            // cards now (ProjectsAndToys), so the close-up shows the
+            // bare Sputnik. `partsActive={isProjects}` here — plus the
+            // pad below and the overlays ProjectsAndToys used to render
+            // — hangs them back on.
+            partsActive={false}
           />
         ) : (
           <Asteroid
@@ -211,13 +217,16 @@ const SolarScene = ({
           />
         );
       })}
-      {/* The 808 pad — the synth studio's door — floats beside the
-          satellite in the close-up only (DrumPad places itself from that
-          view's framing); it fades in along the arrival swoop from /home
-          and out on the way back. No pad on phones: the portrait close-up
-          leaves no room beside the head, and ProjectsAndToys hides its
-          button too */}
-      <DrumPad config={SYNTH_PAD} visible={isProjects && !isPhone} />
+      {/* The 808 pad — the synth studio's door — is parked with the
+          satellite's parts (above): the synth card on /projects-and-toys
+          is the door now. It stays mounted, invisible, because that
+          card's 808 transit still boards over the spot the pad publishes
+          from the close-up's framing (synthPadState). To float it beside
+          the satellite again: `visible={isProjects && !isPhone}` — it
+          fades in along the arrival swoop from /home and out on the way
+          back, and sat out phones, where the portrait close-up leaves no
+          room beside the head. */}
+      <DrumPad config={SYNTH_PAD} visible={false} />
       {/* The second solar system, far below this one: six knob-planets
           around a beat-pulsing sun (the space synth) */}
       {view === "synth" && <SynthSystem isSpaceView={isSpaceView} />}
