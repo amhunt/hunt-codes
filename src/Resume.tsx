@@ -1,9 +1,9 @@
 import { BackLink } from "ui/BackLink";
+import { WorkCardBody } from "ui/WorkCard";
 import React, { useCallback, useEffect, useRef, useState } from "react";
 import cx from "classnames";
 import { ArrowLeftCircle, Calendar } from "react-feather";
 import {
-  ArrowUpRight,
   AudioWaveform,
   Clapperboard,
   Gauge,
@@ -90,45 +90,6 @@ const experienceItems = [
     ],
   },
 ];
-
-/** The inside of a work-sample card. The wrapper decides what the card is:
- *  a router Link, an external <a>, or a <button> (the Zip reel popover). */
-const WorkCardBody = ({
-  icon,
-  title,
-  subtitle,
-  external = false,
-  tag,
-}: {
-  icon: React.ReactNode;
-  title: string;
-  subtitle: string;
-  /** Opens in a new tab — flag it with the arrow */
-  external?: boolean;
-  /** Corner label — "Silly" marks the toys, so the résumé's tone is
-   *  clear before a recruiter clicks into a synth */
-  tag?: string;
-}) => (
-  <>
-    {tag && <span className="work-card-tag">{tag}</span>}
-    <span className="work-card-icon" aria-hidden="true">
-      {icon}
-    </span>
-    <span className="work-card-text">
-      <span className="work-card-title">
-        {title}
-        {external && (
-          <ArrowUpRight
-            className="work-card-external"
-            size={14}
-            aria-hidden="true"
-          />
-        )}
-      </span>
-      <span className="work-card-subtitle">{subtitle}</span>
-    </span>
-  </>
-);
 
 // The Home link's scroll-scrubbed slide: it travels SLIDE_DISTANCE_PX
 // leftward over the first SLIDE_RANGE_PX of the container's scroll

@@ -95,14 +95,16 @@ body:has(.App.mesh) {
   }
 }
 
-// "(and Claude)" under the landing title's heart (AndClaude.tsx): blurs
-// in once the stars have spelled BUILT WITH ♥, blurs out as they leave.
-// Positioned and sized inline — centred under the heart glyph, as wide as
-// it. Above the star canvas (z 2), never in the way of the sun link.
+// "(and Claude)" beside the landing title's byline (AndClaude.tsx): blurs
+// in once the stars have spelled BY ANDREW HUNT, blurs out as they leave.
+// Positioned and sized inline — its left edge just past the T of HUNT,
+// its `top` the middle of that line's capitals, which the translate
+// centres it on. Above the star canvas (z 2), never in the way of the
+// sun link.
 .and-claude {
   position: fixed;
   margin: 0;
-  transform: translateX(-50%);
+  transform: translateY(-50%);
   white-space: nowrap;
   z-index: 3;
   pointer-events: none;
@@ -1873,6 +1875,8 @@ a:hover {
 // each glued to its part by BodyAnchors — and the 808 pad floating
 // beside the satellite, glued the same way. Same contract as Earth's
 // ring: hidden until placed, faded in once the camera's swoop settles.
+// Parked with the parts themselves (SolarScene): the page lists its
+// links as cards now and renders none of these overlays.
 .satellite-link {
   position: fixed;
   visibility: hidden;
@@ -1888,26 +1892,61 @@ a:hover {
   background: none;
 }
 
-// /projects-and-toys is the 3D close-up; this is its only copy — a
-// caption in the bottom-right, the one corner the composition leaves
-// dark (the sun's limb rides the bottom-left), revealed after the
-// arrival swoop. Inset past the 140px corner medallion (.badge-link).
-// Phones center it above the medallion and the "Space jam" pill instead.
-.projects-caption {
+// /projects-and-toys: the card index over the satellite close-up
+// (ProjectsAndToys). The panel docks to the right of the frame — the
+// perch parks the head left of center with the antenna cone reaching
+// right, so only the cone tips run behind it — in the band between the
+// name stars and the corner chrome (the 140px coin, .badge-link), and
+// scrolls if a short window can't fit the grid. It fades up as the
+// arrival swoop lands. Phones take the full width instead and scroll
+// over the satellite, with room under the last card for the coin and
+// the "Space jam" pill.
+.projects-panel {
+  // Where the name stars end: .nameTitle's box starts 40px down and is
+  // a fifth of its width tall (a 5:1 viewBox below lg, 10:1 from lg —
+  // AppBackground), with the same clamped inset off each edge
+  --name-bottom: calc(40px + (100vw - 2 * clamp(32px, 4.5vw, 80px)) / 5);
   position: fixed;
-  right: calc(164px + env(safe-area-inset-right, 0px));
-  bottom: calc(44px + env(safe-area-inset-bottom, 0px));
+  top: calc(var(--name-bottom) + 16px + env(safe-area-inset-top, 0px));
+  right: calc(24px + env(safe-area-inset-right, 0px));
+  // Clear of the coin (8px in, 140px tall) with a little air
+  bottom: calc(156px + env(safe-area-inset-bottom, 0px));
+  width: min(640px, calc(100vw - 48px));
   z-index: 3;
-  text-align: right;
-  font-family: "Inconsolata", monospace;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  // A short window scrolls the grid; keep the bar quiet against the sky
+  scrollbar-width: thin;
+  scrollbar-color: rgba(150, 116, 249, 0.4) transparent;
   color: #e8e6f5;
   opacity: 0;
   transition: opacity 1s ease;
-  pointer-events: none;
 
   &.show {
     opacity: 1;
   }
+
+  @media (min-width: $breakpoint-md) {
+    --name-bottom: calc(40px + (100vw - 2 * clamp(32px, 4.5vw, 80px)) / 10);
+  }
+
+  @media (max-width: $breakpoint-phone-max) {
+    // Phones inset the name 28px and drop it to 52px (.nameTitle)
+    --name-bottom: calc(52px + (100vw - 56px) / 5);
+    top: calc(var(--name-bottom) + 16px + env(safe-area-inset-top, 0px));
+    left: calc(12px + env(safe-area-inset-left, 0px));
+    right: calc(12px + env(safe-area-inset-right, 0px));
+    bottom: 0;
+    width: auto;
+    // Scroll the last card clear of the 96px coin and the music pill
+    padding-bottom: calc(124px + env(safe-area-inset-bottom, 0px));
+  }
+}
+
+// The page's one line of copy, heading the grid
+.projects-caption {
+  margin-bottom: 12px;
+  font-family: "Inconsolata", monospace;
 
   h1 {
     margin: 0;
@@ -1923,12 +1962,30 @@ a:hover {
     letter-spacing: 0.5px;
     opacity: 0.8;
   }
+}
 
-  @media (max-width: $breakpoint-phone-max) {
-    left: 24px;
-    right: 24px;
-    bottom: calc(160px + env(safe-area-inset-bottom, 0px));
-    text-align: center;
+// The cards sit on the bare scene, not a panel, so each brings its own
+// backing: /about's purple tint pre-blended onto the résumé panel's
+// slab (rgba(150, 116, 249, 0.12) over rgba(8, 6, 28, 0.82); 0.22 on
+// hover), so a card reads the same on both pages and the hover still
+// runs through .work-card's background-color transition
+.projects-grid {
+  margin-top: 0;
+  // A touch tighter than /about's 16px: six cards have to share the
+  // band with the heading on a laptop screen
+  gap: 12px;
+
+  .work-card {
+    // Every card here wears a tag, and at this width the longer titles
+    // ran under it — so the tag gets its own band above the icon and
+    // text instead of the corner of the title's line
+    padding-top: 28px;
+    background: rgba(28, 22, 60, 0.84);
+
+    &:hover,
+    &:focus-visible {
+      background: rgba(44, 34, 85, 0.86);
+    }
   }
 }
 
@@ -1945,7 +2002,7 @@ body.video-mode {
   .music-toggle,
   .homePageBackLink,
   .life-timeline,
-  .projects-caption,
+  .projects-panel,
   .satellite-link,
   .badge-link {
     opacity: 0 !important;
@@ -1972,7 +2029,7 @@ body.rocket-journey {
   .music-toggle,
   .asteroid-link,
   .satellite-link,
-  .projects-caption,
+  .projects-panel,
   .earth-about-ring,
   .synthBackLink,
   .synth-knob,

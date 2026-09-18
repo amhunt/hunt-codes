@@ -77,6 +77,20 @@ the preview tool.
   the moon) on the far side from Mars, swinging around the moon to keep
   Mars in the background and holding its heading while Mars is behind
   the sun or a planet (`CameraRig.tsx`, `marsBlocked`)
+- Links to the shop wear Andrew's signature A, not a shopping bag:
+  `src/ui/SignatureIcon.tsx` — `public/signature-a.svg`'s path on
+  lucide's chassis (`createLucideIcon`, like `GalaxyIcon`), so it takes
+  `size` like any imported icon. It fills with `currentColor`; a test
+  holds its path to the SVG's.
+- `/projects-and-toys` → `ProjectsAndToys.tsx` — the index of projects
+  as a grid of cards docked over the Sputnik close-up (the camera still
+  perches on the satellite: `CameraRig.tsx`'s projects view). The cards
+  are /about's work cards — `WorkCardBody` in `src/ui/WorkCard.tsx`,
+  corner tag included. The satellite's 3D part links (scroll, screen,
+  pen, vase, tile) and the 808 pad are **parked, not deleted**
+  (`partsActive={false}` / `visible={false}` in `SolarScene.tsx`, with
+  restore notes); the pad stays mounted invisible because the synth
+  card's 808 ride still boards over the spot it publishes.
 - `/draw` → `SvgGenerator.tsx` — AI SVG generator; `/draw/:id` are
   shareable permalinks. Backed by the `/api` Lambda (see `server/`), not a
   browser-side key. **Other people's drawings render as inert
